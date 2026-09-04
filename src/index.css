@@ -1880,3 +1880,608 @@ a {
     display: none;
   }
 }
+
+/* ── Hardware wallet simulation ── */
+
+.hw-wallet-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.hw-wallet-device {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px 24px 24px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  background: linear-gradient(160deg, #2a2d30, #1a1d1f);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.theme-light .hw-wallet-device {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: linear-gradient(160deg, #d8d4cc, #c4c0b8);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.hw-wallet-bezel {
+  position: relative;
+  width: 280px;
+  height: 340px;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  background: #0a0b0c;
+  overflow: hidden;
+}
+
+.theme-light .hw-wallet-bezel {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.hw-wallet-screen {
+  flex: 1;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0a0b0c;
+}
+
+.hw-screen-off {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: rgba(167, 232, 67, 0.25);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.theme-light .hw-screen-off {
+  color: rgba(100, 120, 50, 0.3);
+}
+
+.hw-screen-boot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.hw-boot-logo {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-family: 'Manrope', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--green);
+  border: 2px solid rgba(167, 232, 67, 0.4);
+  border-radius: 50%;
+  animation: hw-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes hw-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(167, 232, 67, 0.3); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(167, 232, 67, 0); }
+}
+
+.hw-boot-text {
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.hw-boot-bar {
+  width: 140px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(167, 232, 67, 0.15);
+  overflow: hidden;
+}
+
+.hw-boot-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--green);
+  transition: width 400ms ease;
+}
+
+.hw-screen-menu {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hw-screen-title {
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.hw-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: rgba(167, 232, 67, 0.5);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  border: 1px solid transparent;
+  transition: all 180ms ease;
+}
+
+.hw-menu-item.active {
+  color: var(--green);
+  border-color: rgba(167, 232, 67, 0.4);
+  background: rgba(167, 232, 67, 0.08);
+  box-shadow: 0 0 12px rgba(167, 232, 67, 0.1);
+}
+
+.hw-menu-item.active svg {
+  color: var(--green);
+}
+
+.hw-screen-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: hw-fade-in 300ms ease;
+}
+
+@keyframes hw-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hw-screen-body {
+  margin: 0;
+  color: rgba(167, 232, 67, 0.75);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+}
+
+.hw-screen-hint {
+  margin-top: auto;
+  padding-top: 8px;
+  color: rgba(167, 232, 67, 0.35);
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hw-screen-words-all .hw-words-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 2px;
+}
+
+.hw-screen-words-all .hw-words-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+
+.hw-screen-words-all .hw-words-scroll::-webkit-scrollbar-track {
+  background: rgba(167, 232, 67, 0.05);
+  border-radius: 2px;
+}
+
+.hw-screen-words-all .hw-words-scroll::-webkit-scrollbar-thumb {
+  background: rgba(167, 232, 67, 0.3);
+  border-radius: 2px;
+}
+
+.hw-word-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(167, 232, 67, 0.05);
+  border: 1px solid rgba(167, 232, 67, 0.12);
+}
+
+.hw-word-num {
+  color: rgba(167, 232, 67, 0.4);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  min-width: 22px;
+}
+
+.hw-word-text {
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.hw-quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hw-quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(167, 232, 67, 0.12);
+  border-radius: 8px;
+  background: rgba(167, 232, 67, 0.03);
+  color: rgba(167, 232, 67, 0.6);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  transition: all 160ms ease;
+}
+
+.hw-quiz-option.active {
+  border-color: rgba(167, 232, 67, 0.4);
+  background: rgba(167, 232, 67, 0.08);
+  color: var(--green);
+  box-shadow: 0 0 10px rgba(167, 232, 67, 0.1);
+}
+
+.hw-quiz-option.active.wrong {
+  border-color: rgba(232, 113, 113, 0.4);
+  background: rgba(232, 113, 113, 0.08);
+  color: #e87171;
+  animation: hw-shake 300ms ease;
+}
+
+.hw-quiz-option-letter {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: rgba(167, 232, 67, 0.1);
+  font-size: 8px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.hw-quiz-option.active .hw-quiz-option-letter {
+  background: rgba(167, 232, 67, 0.2);
+}
+
+.hw-quiz-wrong {
+  color: #e87171;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-align: center;
+  animation: hw-shake 300ms ease;
+}
+
+@keyframes hw-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.hw-quiz-progress {
+  color: rgba(167, 232, 67, 0.3);
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hw-screen-success {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.hw-screen-success svg {
+  color: var(--green);
+}
+
+.hw-recover-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(167, 232, 67, 0.15);
+  border-radius: 8px;
+  background: rgba(167, 232, 67, 0.04);
+}
+
+.hw-recover-info span {
+  color: rgba(167, 232, 67, 0.6);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.hw-wallet-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.hw-brand-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+
+.hw-brand-text {
+  color: rgba(167, 232, 67, 0.4);
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hw-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hw-btn {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: linear-gradient(145deg, #333639, #222527);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-light .hw-btn {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: linear-gradient(145deg, #c0bcb4, #aeaaa2);
+  color: #1b1d1d;
+}
+
+.hw-btn:hover {
+  border-color: rgba(167, 232, 67, 0.4);
+  transform: translateY(-1px);
+}
+
+.hw-btn:active {
+  transform: translateY(0);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.hw-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.hw-btn-power {
+  width: 52px;
+  height: 52px;
+  color: rgba(167, 232, 67, 0.5);
+  border-color: rgba(167, 232, 67, 0.15);
+}
+
+.hw-btn-power.on {
+  color: var(--green);
+  border-color: rgba(167, 232, 67, 0.4);
+  box-shadow: 0 0 12px rgba(167, 232, 67, 0.15);
+}
+
+.hw-controls-dpad {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.hw-btn-nav {
+  width: 44px;
+  height: 44px;
+}
+
+.hw-btn-enter {
+  color: var(--green);
+  border-color: rgba(167, 232, 67, 0.25);
+}
+
+.hw-btn-cancel {
+  color: rgba(232, 113, 113, 0.6);
+  border-color: rgba(232, 113, 113, 0.15);
+}
+
+.hw-controls-label {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  color: var(--faint);
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hw-controls-label span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hw-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease;
+}
+
+.hw-reset-btn:hover {
+  color: var(--text);
+  border-color: rgba(241, 189, 105, 0.4);
+}
+
+/* ── Scenario briefing with wallet ── */
+
+.scenario-wallet-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 40px;
+  padding: 36px 36px 40px;
+  align-items: start;
+}
+
+.scenario-wallet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scenario-wallet-info h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text);
+}
+
+.scenario-wallet-info .scenario-lede {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.scenario-wallet-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.scenario-wallet-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.theme-light .scenario-wallet-tip {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.scenario-wallet-tip svg {
+  flex-shrink: 0;
+  color: var(--gold-light);
+  margin-top: 1px;
+}
+
+.scenario-wallet-tip span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.scenario-wallet-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-strong);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+  transition: color 180ms ease, border-color 180ms ease;
+}
+
+.scenario-wallet-status.active {
+  color: var(--green);
+  border-color: rgba(167, 232, 67, 0.3);
+}
+
+.scenario-wallet-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.scenario-wallet-status.active .scenario-wallet-status-dot {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+@media (max-width: 900px) {
+  .scenario-wallet-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 28px 24px 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  .scenario-wallet-info h1 {
+    font-size: 22px;
+  }
+
+  .hw-wallet-bezel {
+    width: 250px;
+    height: 300px;
+  }
+
+  .hw-wallet-device {
+    padding: 20px 16px 18px;
+  }
+}
