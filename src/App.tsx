@@ -14,6 +14,9 @@ import JohnIntro from '@/components/JohnIntro';
 import BenIntro from '@/components/BenIntro';
 import Roadmap from '@/components/Roadmap';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
+import WithdrawScenario from '@/components/WithdrawScenario';
+import SendScenario from '@/components/SendScenario';
+import ReceiveScenario from '@/components/ReceiveScenario';
 import AuthScreen from '@/components/AuthScreen';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -59,7 +62,7 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'john-intro' | 'ben-intro' | 'roadmap' | 'scenario-1' | 'auth';
+type Screen = 'home' | 'john-intro' | 'ben-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'auth';
 
 function App() {
   const { user, isReady, signOut } = useAuth();
@@ -71,6 +74,7 @@ function App() {
   const [progressError, setProgressError] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'register' | 'login'>('register');
   const [authReturnScreen, setAuthReturnScreen] = useState<Screen>('roadmap');
+  const [activeScenario, setActiveScenario] = useState(1);
 
   const loadLocalProgress = useCallback(() => {
     setCompletedScenarios(getLocalProgress());
@@ -146,16 +150,19 @@ function App() {
     [user],
   );
 
-  const handleScenario1Complete = useCallback(() => {
-    completeScenario(1);
-    if (!user) {
-      setAuthMode('register');
-      setAuthReturnScreen('roadmap');
-      setScreen('auth');
-    } else {
-      setScreen('roadmap');
-    }
-  }, [completeScenario, user]);
+  const handleScenarioComplete = useCallback(
+    (scenarioNumber: number) => {
+      completeScenario(scenarioNumber);
+      if (scenarioNumber === 1 && !user) {
+        setAuthMode('register');
+        setAuthReturnScreen('roadmap');
+        setScreen('auth');
+      } else {
+        setScreen('roadmap');
+      }
+    },
+    [completeScenario, user],
+  );
 
   const handleAuthSuccess = useCallback(() => {
     setScreen(authReturnScreen);
@@ -285,7 +292,10 @@ function App() {
           errorMessage={progressError}
           isLoggedIn={!!user}
           onBack={() => setScreen('ben-intro')}
-          onSelectScenario={() => setScreen('scenario-1')}
+          onSelectScenario={(n) => {
+            setActiveScenario(n);
+            setScreen(`scenario-${n}` as Screen);
+          }}
         />
       )}
 
@@ -294,7 +304,31 @@ function App() {
           completed={completedScenarios >= 1}
           isLoggedIn={!!user}
           onBack={() => setScreen('roadmap')}
-          onComplete={handleScenario1Complete}
+          onComplete={() => handleScenarioComplete(1)}
+        />
+      )}
+
+      {screen === 'scenario-2' && (
+        <WithdrawScenario
+          completed={completedScenarios >= 2}
+          onBack={() => setScreen('roadmap')}
+          onComplete={() => handleScenarioComplete(2)}
+        />
+      )}
+
+      {screen === 'scenario-3' && (
+        <SendScenario
+          completed={completedScenarios >= 3}
+          onBack={() => setScreen('roadmap')}
+          onComplete={() => handleScenarioComplete(3)}
+        />
+      )}
+
+      {screen === 'scenario-4' && (
+        <ReceiveScenario
+          completed={completedScenarios >= 4}
+          onBack={() => setScreen('roadmap')}
+          onComplete={() => handleScenarioComplete(4)}
         />
       )}
 

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  CornerDownLeft,
   Power,
   RotateCcw,
   X,
@@ -229,7 +229,7 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
                 {menuItems.map((item, i) => (
                   <div key={item.label} className={i === menuIndex ? 'hw-menu-item active' : 'hw-menu-item'}>
                     <span>{item.label}</span>
-                    {i === menuIndex && <CornerDownLeft size={11} strokeWidth={2.5} />}
+                    {i === menuIndex && <Check size={12} strokeWidth={2.8} />}
                   </div>
                 ))}
               </div>
@@ -246,15 +246,25 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
             {phase === 'create-words' && (
               <div className="hw-screen-text hw-screen-words-all">
                 <span className="hw-screen-title">Your recovery phrase</span>
-                <div className="hw-words-scroll">
-                  {mnemonic.map((word, i) => (
-                    <div key={i} className="hw-word-row">
-                      <span className="hw-word-num">{i + 1}.</span>
-                      <span className="hw-word-text">{word}</span>
-                    </div>
-                  ))}
+                <div className={`hw-words-grid ${mnemonic.length > 12 ? 'hw-words-grid-24' : ''}`}>
+                  <div className="hw-words-column">
+                    {mnemonic.slice(0, Math.ceil(mnemonic.length / 2)).map((word, i) => (
+                      <div key={i} className="hw-word-row">
+                        <span className="hw-word-num">{i + 1}.</span>
+                        <span className="hw-word-text">{word}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="hw-words-column">
+                    {mnemonic.slice(Math.ceil(mnemonic.length / 2)).map((word, i) => (
+                      <div key={i + Math.ceil(mnemonic.length / 2)} className="hw-word-row">
+                        <span className="hw-word-num">{i + Math.ceil(mnemonic.length / 2) + 1}.</span>
+                        <span className="hw-word-text">{word}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <span className="hw-screen-hint">Press Enter when done writing</span>
+                <span className="hw-screen-hint">Check and double-check · Press ✓ when done</span>
               </div>
             )}
             {phase === 'create-quiz' && (
@@ -279,7 +289,7 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
                   ))}
                 </div>
                 {quizWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
-                <span className="hw-screen-hint">Up/Down to select · Enter to confirm</span>
+                <span className="hw-screen-hint">Up/Down to select · Press ✓ to confirm</span>
                 <span className="hw-quiz-progress">
                   Check {quizIndex + 1} of {quizPositions.length}
                 </span>
@@ -326,11 +336,13 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
             <button className="hw-btn hw-btn-nav" type="button" onClick={handleDown} disabled={!isOn || isBooting} aria-label="Down">
               <ChevronDown size={18} strokeWidth={2.4} />
             </button>
+          </div>
+          <div className="hw-controls-actions">
             <button className="hw-btn hw-btn-nav hw-btn-cancel" type="button" onClick={handleCancel} disabled={!isOn || isBooting || phase === 'menu'} aria-label="Cancel">
               <X size={16} strokeWidth={2.4} />
             </button>
-            <button className="hw-btn hw-btn-nav hw-btn-enter" type="button" onClick={handleEnter} disabled={!isOn || isBooting} aria-label="Enter">
-              <CornerDownLeft size={16} strokeWidth={2.4} />
+            <button className="hw-btn hw-btn-nav hw-btn-enter" type="button" onClick={handleEnter} disabled={!isOn || isBooting} aria-label="Confirm">
+              <Check size={18} strokeWidth={2.6} />
             </button>
           </div>
         </div>
@@ -339,7 +351,7 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
         <span><Power size={11} /> Power</span>
         <span><ChevronUp size={11} /> / <ChevronDown size={11} /> Navigate</span>
         <span><X size={11} /> Cancel</span>
-        <span><CornerDownLeft size={11} /> Enter</span>
+        <span><Check size={11} /> Confirm</span>
       </div>
       {phase !== 'off' && phase !== 'booting' && phase !== 'menu' && (
         <button
