@@ -30,20 +30,20 @@ export default function RecoverScenario({ completed, onBack, onComplete }: Recov
             <span className="roadmap-label">Your third mission</span>
             <h1>Recover your hardware wallet</h1>
             <p className="scenario-lede">
-              If your hardware wallet is lost or damaged, your 12-word recovery phrase restores full access to your bitcoin. In this mission, you'll practice entering your recovery phrase using the keypad — just like you would on a real device.
+              If your hardware wallet is lost or damaged, your 12-word recovery phrase restores full access to your bitcoin. In this mission, you'll practice restoring your wallet by selecting each word of your recovery phrase from multiple choices — just like you would on a real device.
             </p>
             <div className="scenario-wallet-tips">
               <div className="scenario-wallet-tip">
                 <KeyRound size={16} />
-                <span>Power on the device and choose "Recover wallet." You'll enter the same 12-word phrase you wrote down in Mission 1.</span>
+                <span>Power on the device and choose "Recover wallet." You'll select the same 12-word phrase you wrote down in Mission 1.</span>
               </div>
               <div className="scenario-wallet-tip">
                 <BookOpen size={16} />
-                <span>Type the first few letters of each word with the QWERTY keypad. Matching BIP39 words appear — use Up/Down to browse and the → key to select.</span>
+                <span>For each word position, four choices appear. Use Up/Down to browse the options, then press the → or ✓ key to confirm your selection.</span>
               </div>
               <div className="scenario-wallet-tip">
                 <ShieldAlert size={16} />
-                <span>Use the ← key to delete characters if you make a mistake. Enter all 12 words in the correct order to restore your wallet.</span>
+                <span>Use the ← key to go back to the previous word if you make a mistake. Select all 12 words in the correct order to restore your wallet.</span>
               </div>
             </div>
             <div className={walletActive ? 'scenario-wallet-status active' : 'scenario-wallet-status'}>
