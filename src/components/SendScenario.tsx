@@ -43,12 +43,12 @@ export default function SendScenario({ completed, onBack, onComplete }: SendScen
 
       <section className="scenario-card">
         <div className="scenario-card-topline">
-          <span>Mission 03 · Send BTC to Alice</span>
+          <span>Mission 04 · Send BTC to Alice</span>
           <span><CircleDollarSign size={14} /> Simulation only</span>
         </div>
         <div className="scenario-wallet-layout">
           <div className="scenario-wallet-info">
-            <span className="roadmap-label">Your third mission</span>
+            <span className="roadmap-label">Your fourth mission</span>
             <h1>Send BTC to Alice</h1>
             <p className="scenario-lede">
               Sending bitcoin is irreversible — so it pays to be careful. Practice checking an address, confirming the details, and signing a payment on your hardware wallet.

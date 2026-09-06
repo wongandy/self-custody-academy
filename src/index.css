@@ -2382,6 +2382,153 @@ a {
   border-color: rgba(241, 189, 105, 0.4);
 }
 
+/* ── QWERTY Keypad (Coldcard Q style) ── */
+
+.hw-keypad {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 6px;
+}
+
+.hw-keypad-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.hw-keypad-numbers {
+  gap: 3px;
+}
+
+.hw-key {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: linear-gradient(145deg, #333639, #222527);
+  color: rgba(167, 232, 67, 0.65);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-light .hw-key {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: linear-gradient(145deg, #c0bcb4, #aeaaa2);
+  color: #1b1d1d;
+}
+
+.hw-key:hover:not(:disabled) {
+  border-color: rgba(167, 232, 67, 0.4);
+  color: var(--green);
+  transform: translateY(-1px);
+}
+
+.hw-key:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(145deg, #222527, #333639);
+  color: var(--green);
+  border-color: rgba(167, 232, 67, 0.5);
+}
+
+.theme-light .hw-key:active:not(:disabled) {
+  background: linear-gradient(145deg, #aeaaa2, #c0bcb4);
+}
+
+.hw-key:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.hw-key-wide {
+  width: 36px;
+  font-size: 12px;
+}
+
+.hw-key-space {
+  width: 80px;
+  font-size: 12px;
+}
+
+.hw-keypad-bottom {
+  margin-top: 2px;
+}
+
+/* ── Recovery input screen ── */
+
+.hw-screen-recover {
+  gap: 6px;
+}
+
+.hw-recover-input-display {
+  padding: 8px 10px;
+  border: 1px solid rgba(167, 232, 67, 0.25);
+  border-radius: 8px;
+  background: rgba(167, 232, 67, 0.05);
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.hw-recover-input-text {
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  word-break: break-word;
+}
+
+.hw-recover-placeholder {
+  color: rgba(167, 232, 67, 0.25);
+  font-size: 10px;
+}
+
+.hw-recover-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hw-recover-suggestions .hw-quiz-option {
+  padding: 5px 8px;
+  font-size: 10px;
+  gap: 6px;
+}
+
+.hw-recover-suggestions .hw-quiz-option-letter {
+  width: 14px;
+  height: 14px;
+  font-size: 7px;
+}
+
+@media (max-width: 600px) {
+  .hw-key {
+    width: 22px;
+    height: 22px;
+    font-size: 9px;
+  }
+
+  .hw-key-wide {
+    width: 30px;
+  }
+
+  .hw-key-space {
+    width: 64px;
+  }
+
+  .hw-keypad-row {
+    gap: 3px;
+  }
+}
+
 /* ── Scenario briefing with wallet ── */
 
 .scenario-wallet-layout {

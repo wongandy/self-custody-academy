@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowLeft,
+  ArrowRight,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -9,6 +11,8 @@ import {
   X,
 } from 'lucide-react';
 import { BIP39_WORDLIST, generateMnemonic } from '@/lib/bip39';
+import { setSessionMnemonic } from '@/lib/walletSession';
+import WalletKeypad from '@/components/WalletKeypad';
 
 type WalletPhase =
   | 'off'
@@ -18,11 +22,15 @@ type WalletPhase =
   | 'create-words'
   | 'create-quiz'
   | 'create-done'
-  | 'recover-soon';
+  | 'recover-intro'
+  | 'recover-input'
+  | 'recover-done';
 
 type HardwareWalletProps = {
   onComplete: () => void;
   onPowerChange?: (isOn: boolean) => void;
+  mode?: 'setup' | 'recover';
+  expectedMnemonic?: string[];
 };
 
 const BOOT_STEPS = [
@@ -46,7 +54,13 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWalletProps) {
+function getSuggestions(input: string): string[] {
+  if (input.length === 0) return [];
+  const lower = input.toLowerCase();
+  return BIP39_WORDLIST.filter((w) => w.startsWith(lower)).slice(0, 5);
+}
+
+export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>('off');
   const [bootStep, setBootStep] = useState(0);
   const [menuIndex, setMenuIndex] = useState(0);
@@ -59,12 +73,19 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
   const [quizPassed, setQuizPassed] = useState(false);
   const bootTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [recoverWords, setRecoverWords] = useState<string[]>([]);
+  const [recoverIndex, setRecoverIndex] = useState(0);
+  const [recoverInput, setRecoverInput] = useState('');
+  const [recoverSuggestions, setRecoverSuggestions] = useState<string[]>([]);
+  const [recoverSelectedSuggestion, setRecoverSelectedSuggestion] = useState(0);
+  const [recoverError, setRecoverError] = useState(false);
+
   const menuItems = useMemo(
     () => [
-      { label: 'Create wallet', phase: 'create-intro' as WalletPhase },
-      { label: 'Recover wallet', phase: 'recover-soon' as WalletPhase },
+      { label: mode === 'recover' ? 'Recover wallet' : 'Create wallet', phase: (mode === 'recover' ? 'recover-intro' : 'create-intro') as WalletPhase },
+      ...(mode === 'setup' ? [{ label: 'Recover wallet', phase: 'recover-soon' as WalletPhase }] : []),
     ],
-    [],
+    [mode],
   );
 
   const startBoot = useCallback(() => {
@@ -95,6 +116,12 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
     setQuizSelected(0);
     setQuizWrong(false);
     setQuizPassed(false);
+    setRecoverWords([]);
+    setRecoverIndex(0);
+    setRecoverInput('');
+    setRecoverSuggestions([]);
+    setRecoverSelectedSuggestion(0);
+    setRecoverError(false);
   }, []);
 
   const handlePower = useCallback(() => {
@@ -116,8 +143,11 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s === 0 ? quizOptions.length - 1 : s - 1));
       setQuizWrong(false);
+    } else if (phase === 'recover-input' && recoverSuggestions.length > 0) {
+      setRecoverSelectedSuggestion((s) => (s === 0 ? recoverSuggestions.length - 1 : s - 1));
+      setRecoverError(false);
     }
-  }, [phase, menuItems.length, quizOptions.length]);
+  }, [phase, menuItems.length, quizOptions.length, recoverSuggestions.length]);
 
   const handleDown = useCallback(() => {
     if (phase === 'menu') {
@@ -125,8 +155,45 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s + 1) % quizOptions.length);
       setQuizWrong(false);
+    } else if (phase === 'recover-input' && recoverSuggestions.length > 0) {
+      setRecoverSelectedSuggestion((s) => (s + 1) % recoverSuggestions.length);
+      setRecoverError(false);
     }
-  }, [phase, menuItems.length, quizOptions.length]);
+  }, [phase, menuItems.length, quizOptions.length, recoverSuggestions.length]);
+
+  const handleLeft = useCallback(() => {
+    if (phase === 'recover-input') {
+      setRecoverInput((prev) => prev.slice(0, -1));
+      setRecoverError(false);
+    }
+  }, [phase]);
+
+  const handleRight = useCallback(() => {
+    if (phase === 'recover-input' && recoverSuggestions.length > 0) {
+      const word = recoverSuggestions[recoverSelectedSuggestion];
+      const newWords = [...recoverWords];
+      newWords[recoverIndex] = word;
+      setRecoverWords(newWords);
+
+      if (recoverIndex + 1 >= 12) {
+        const expected = expectedMnemonic ?? [];
+        const allMatch = newWords.every((w, i) => w === expected[i]);
+        if (allMatch) {
+          setPhase('recover-done');
+        } else {
+          setRecoverError(true);
+          setRecoverInput('');
+          setRecoverSuggestions([]);
+        }
+      } else {
+        setRecoverIndex((i) => i + 1);
+        setRecoverInput('');
+        setRecoverSuggestions([]);
+        setRecoverSelectedSuggestion(0);
+        setRecoverError(false);
+      }
+    }
+  }, [phase, recoverSuggestions, recoverSelectedSuggestion, recoverWords, recoverIndex, expectedMnemonic]);
 
   const handleEnter = useCallback(() => {
     if (phase === 'menu') {
@@ -134,6 +201,7 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
       if (target === 'create-intro') {
         const words = generateMnemonic(12);
         setMnemonic(words);
+        setSessionMnemonic(words);
       }
       setPhase(target);
     } else if (phase === 'create-intro') {
@@ -175,9 +243,20 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
       } else {
         setQuizWrong(true);
       }
-    } else if (phase === 'recover-soon') {
-      setPhase('menu');
-      setMenuIndex(0);
+    } else if (phase === 'recover-intro') {
+      setRecoverWords(new Array(12).fill(''));
+      setRecoverIndex(0);
+      setRecoverInput('');
+      setRecoverSuggestions([]);
+      setRecoverSelectedSuggestion(0);
+      setRecoverError(false);
+      setPhase('recover-input');
+    } else if (phase === 'recover-input') {
+      if (recoverSuggestions.length > 0) {
+        handleRight();
+      }
+    } else if (phase === 'recover-done') {
+      onComplete();
     }
   }, [
     phase,
@@ -190,6 +269,11 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
     quizOptions,
     quizSelected,
     onComplete,
+    recoverSuggestions,
+    recoverWords,
+    recoverIndex,
+    expectedMnemonic,
+    handleRight,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -199,9 +283,32 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
     setMenuIndex(0);
   }, [phase, resetWalletState]);
 
+  const handleKeypadKey = useCallback((key: string) => {
+    if (phase !== 'recover-input') return;
+    setRecoverInput((prev) => {
+      const next = prev + key;
+      setRecoverSuggestions(getSuggestions(next));
+      setRecoverSelectedSuggestion(0);
+      setRecoverError(false);
+      return next;
+    });
+  }, [phase]);
+
+  const handleKeypadBackspace = useCallback(() => {
+    if (phase !== 'recover-input') return;
+    setRecoverInput((prev) => {
+      const next = prev.slice(0, -1);
+      setRecoverSuggestions(getSuggestions(next));
+      setRecoverSelectedSuggestion(0);
+      setRecoverError(false);
+      return next;
+    });
+  }, [phase]);
+
   const isOn = phase !== 'off';
   const isBooting = phase === 'booting';
   const currentQuizPosition = quizPositions[quizIndex];
+  const showKeypad = phase === 'recover-input';
 
   return (
     <div className="hw-wallet-stage">
@@ -246,7 +353,7 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
             {phase === 'create-words' && (
               <div className="hw-screen-text hw-screen-words-all">
                 <span className="hw-screen-title">Your recovery phrase</span>
-                <div className={`hw-words-grid ${mnemonic.length > 12 ? 'hw-words-grid-24' : ''}`}>
+                <div className="hw-words-grid">
                   <div className="hw-words-column">
                     {mnemonic.slice(0, Math.ceil(mnemonic.length / 2)).map((word, i) => (
                       <div key={i} className="hw-word-row">
@@ -305,13 +412,52 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
                 <span className="hw-screen-hint">Press Enter to finish</span>
               </div>
             )}
-            {phase === 'recover-soon' && (
+            {phase === 'recover-intro' && (
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Recover wallet</span>
                 <p className="hw-screen-body">
-                  Wallet recovery will be available in a future mission. You'll practice restoring a wallet from your 12-word phrase.
+                  Enter your 12-word recovery phrase using the keypad. Use the arrow keys to navigate suggestions and correct mistakes.
                 </p>
-                <span className="hw-screen-hint">Press Enter or Cancel to return</span>
+                <span className="hw-screen-hint">Press Enter to begin</span>
+              </div>
+            )}
+            {phase === 'recover-input' && (
+              <div className="hw-screen-text hw-screen-recover">
+                <span className="hw-screen-title">Word {recoverIndex + 1} of 12</span>
+                <div className="hw-recover-input-display">
+                  <span className="hw-recover-input-text">{recoverInput || <span className="hw-recover-placeholder">Type letters…</span>}</span>
+                </div>
+                {recoverSuggestions.length > 0 && (
+                  <div className="hw-recover-suggestions">
+                    {recoverSuggestions.map((sug, i) => (
+                      <div
+                        key={sug}
+                        className={
+                          i === recoverSelectedSuggestion
+                            ? recoverError
+                              ? 'hw-quiz-option active wrong'
+                              : 'hw-quiz-option active'
+                            : 'hw-quiz-option'
+                        }
+                      >
+                        <span className="hw-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
+                        <span>{sug}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {recoverError && <span className="hw-quiz-wrong">Phrase does not match — check word {recoverIndex + 1}</span>}
+                <span className="hw-screen-hint">← deletes · → selects · Up/Down to browse</span>
+              </div>
+            )}
+            {phase === 'recover-done' && (
+              <div className="hw-screen-text hw-screen-success">
+                <CheckCircle2 size={28} strokeWidth={1.8} />
+                <span className="hw-screen-title">Wallet recovered!</span>
+                <p className="hw-screen-body">
+                  Your wallet has been restored from your recovery phrase. Your keys are back under your control.
+                </p>
+                <span className="hw-screen-hint">Press Enter to finish</span>
               </div>
             )}
           </div>
@@ -346,10 +492,21 @@ export default function HardwareWallet({ onComplete, onPowerChange }: HardwareWa
             </button>
           </div>
         </div>
+        {showKeypad && (
+          <WalletKeypad
+            onKey={handleKeypadKey}
+            onBackspace={handleKeypadBackspace}
+            onLeft={handleLeft}
+            onRight={handleRight}
+            disabled={!isOn || isBooting}
+          />
+        )}
       </div>
       <div className="hw-controls-label">
         <span><Power size={11} /> Power</span>
         <span><ChevronUp size={11} /> / <ChevronDown size={11} /> Navigate</span>
+        <span><ArrowLeft size={11} /> Delete</span>
+        <span><ArrowRight size={11} /> Select</span>
         <span><X size={11} /> Cancel</span>
         <span><Check size={11} /> Confirm</span>
       </div>

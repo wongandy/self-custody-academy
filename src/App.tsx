@@ -17,12 +17,13 @@ import ScenarioBriefing from '@/components/ScenarioBriefing';
 import WithdrawScenario from '@/components/WithdrawScenario';
 import SendScenario from '@/components/SendScenario';
 import ReceiveScenario from '@/components/ReceiveScenario';
+import RecoverScenario from '@/components/RecoverScenario';
 import AuthScreen from '@/components/AuthScreen';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { clearLocalProgress, getLocalProgress, setLocalProgress } from '@/lib/localProgress';
 
-const TOTAL_SCENARIOS = 4;
+const TOTAL_SCENARIOS = 5;
 
 function CustodyIllustration() {
   return (
@@ -62,7 +63,7 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'john-intro' | 'ben-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'auth';
+type Screen = 'home' | 'john-intro' | 'ben-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'auth';
 
 function App() {
   const { user, isReady, signOut } = useAuth();
@@ -317,7 +318,7 @@ function App() {
       )}
 
       {screen === 'scenario-3' && (
-        <SendScenario
+        <RecoverScenario
           completed={completedScenarios >= 3}
           onBack={() => setScreen('roadmap')}
           onComplete={() => handleScenarioComplete(3)}
@@ -325,10 +326,18 @@ function App() {
       )}
 
       {screen === 'scenario-4' && (
-        <ReceiveScenario
+        <SendScenario
           completed={completedScenarios >= 4}
           onBack={() => setScreen('roadmap')}
           onComplete={() => handleScenarioComplete(4)}
+        />
+      )}
+
+      {screen === 'scenario-5' && (
+        <ReceiveScenario
+          completed={completedScenarios >= 5}
+          onBack={() => setScreen('roadmap')}
+          onComplete={() => handleScenarioComplete(5)}
         />
       )}
 
