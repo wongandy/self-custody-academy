@@ -11,7 +11,7 @@ import {
 import { BIP39_WORDLIST, generateMnemonic } from '@/lib/bip39';
 import { setSessionMnemonic } from '@/lib/walletSession';
 
-type WalletPhase =
+export type WalletPhase =
   | 'off'
   | 'booting'
   | 'menu'
@@ -26,6 +26,7 @@ type WalletPhase =
 type HardwareWalletProps = {
   onComplete: () => void;
   onPowerChange?: (isOn: boolean) => void;
+  onPhaseChange?: (phase: WalletPhase) => void;
   mode?: 'setup' | 'recover';
   expectedMnemonic?: string[];
 };
@@ -51,9 +52,14 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>('off');
   const [bootStep, setBootStep] = useState(0);
+
+  const updatePhase = useCallback((next: WalletPhase) => {
+    setPhase(next);
+    onPhaseChange?.(next);
+  }, [onPhaseChange]);
   const [menuIndex, setMenuIndex] = useState(0);
   const [mnemonic, setMnemonic] = useState<string[]>([]);
   const [quizPositions, setQuizPositions] = useState<number[]>([]);
@@ -78,14 +84,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
   );
 
   const startBoot = useCallback(() => {
-    setPhase('booting');
+    updatePhase('booting');
     setBootStep(0);
-  }, []);
+  }, [updatePhase]);
 
   useEffect(() => {
     if (phase !== 'booting') return;
     if (bootStep >= BOOT_STEPS.length) {
-      setPhase('menu');
+      updatePhase('menu');
       setMenuIndex(0);
       return;
     }
@@ -95,7 +101,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
     return () => {
       if (bootTimer.current) clearTimeout(bootTimer.current);
     };
-  }, [phase, bootStep]);
+  }, [phase, bootStep, updatePhase]);
 
   const resetWalletState = useCallback(() => {
     setMnemonic([]);
@@ -116,13 +122,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
       startBoot();
       onPowerChange?.(true);
     } else {
-      setPhase('off');
+      updatePhase('off');
       setBootStep(0);
       setMenuIndex(0);
       resetWalletState();
       onPowerChange?.(false);
     }
-  }, [phase, startBoot, onPowerChange, resetWalletState]);
+  }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase]);
 
   const handleUp = useCallback(() => {
     if (phase === 'menu') {
@@ -156,9 +162,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
         setMnemonic(words);
         setSessionMnemonic(words);
       }
-      setPhase(target);
+      updatePhase(target);
     } else if (phase === 'create-intro') {
-      setPhase('create-words');
+      updatePhase('create-words');
     } else if (phase === 'create-words') {
       const positions: number[] = [];
       while (positions.length < 3) {
@@ -173,11 +179,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
       const firstCorrect = mnemonic[positions[0]];
       setQuizOptions(buildQuizOptions(firstCorrect));
       setQuizSelected(0);
-      setPhase('create-quiz');
+      updatePhase('create-quiz');
     } else if (phase === 'create-quiz') {
       if (quizPassed) {
         onComplete();
-        setPhase('create-done');
+        updatePhase('create-done');
         return;
       }
       const expectedWord = mnemonic[quizPositions[quizIndex]];
@@ -202,14 +208,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
       const firstCorrect = expectedMnemonic?.[0] ?? '';
       setRecoverOptions(buildQuizOptions(firstCorrect));
       setRecoverSelected(0);
-      setPhase('recover-quiz');
+      updatePhase('recover-quiz');
     } else if (phase === 'recover-quiz') {
       const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
       const answeredWord = recoverOptions[recoverSelected];
       if (answeredWord === expectedWord) {
         setRecoverWrong(false);
         if (recoverIndex + 1 >= 12) {
-          setPhase('recover-done');
+          updatePhase('recover-done');
         } else {
           const nextIndex = recoverIndex + 1;
           setRecoverIndex(nextIndex);
@@ -238,14 +244,15 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
     recoverOptions,
     recoverSelected,
     expectedMnemonic,
+    updatePhase,
   ]);
 
   const handleCancel = useCallback(() => {
     if (phase === 'menu') return;
     resetWalletState();
-    setPhase('menu');
+    updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, resetWalletState]);
+  }, [phase, resetWalletState, updatePhase]);
 
   const isOn = phase !== 'off';
   const isBooting = phase === 'booting';
@@ -432,7 +439,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
           className="hw-reset-btn"
           type="button"
           onClick={() => {
-            setPhase('off');
+            updatePhase('off');
             setBootStep(0);
             onPowerChange?.(false);
           }}
