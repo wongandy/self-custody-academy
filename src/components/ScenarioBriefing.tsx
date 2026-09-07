@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, CircleDollarSign } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 
 type ScenarioBriefingProps = {
@@ -13,7 +13,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: "Let's set up your first hardware wallet. Start by clicking the power button to turn it on.",
   booting: 'Great — the device is booting up. Hang tight for a moment.',
   menu: "You'll see 'Create wallet' highlighted. Press the checkmark button to select it.",
-  'create-intro': 'This screen explains what\'s about to happen. Press the checkmark to continue.',
+  'create-intro': "This screen explains what's about to happen. Press the checkmark to continue.",
   'create-words':
     "Here's your 12-word recovery phrase. In real life you'd write these down on paper — never on a screen. When you're ready, press the checkmark.",
   'create-quiz':
@@ -24,23 +24,52 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'recover-done': '',
 };
 
+function useTypewriter(text: string, speed = 28) {
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    setDisplayed('');
+    setDone(false);
+    indexRef.current = 0;
+
+    if (!text) {
+      setDone(true);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      indexRef.current += 1;
+      if (indexRef.current >= text.length) {
+        setDisplayed(text);
+        setDone(true);
+        clearInterval(timer);
+      } else {
+        setDisplayed(text.slice(0, indexRef.current));
+      }
+    }, speed);
+
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  return { displayed, done };
+}
+
 function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: ScenarioBriefingProps) {
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
 
   const mentorMessage = MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
+  const { displayed, done } = useTypewriter(mentorMessage);
 
   return (
-    <main className="scenario-page">
+    <main className="scenario-page scenario-page-fit">
       <button className="character-back" type="button" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2.4} />
         <span>Back to roadmap</span>
       </button>
 
-      <section className="scenario-card">
-        <div className="scenario-card-topline">
-          <span>Mission 01 · Hardware Wallet Setup</span>
-          <span><CircleDollarSign size={14} /> Simulation only</span>
-        </div>
+      <section className="scenario-card scenario-card-fit">
         <div className="scenario-mentor-layout">
           <div className="mentor-row">
             <div className="mentor-portrait" aria-label="John, your mentor" role="img">
@@ -50,7 +79,10 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
             </div>
             <div className="mentor-bubble" key={walletPhase}>
               <span className="mentor-bubble-name">John</span>
-              <p className="mentor-bubble-text">{mentorMessage}</p>
+              <p className="mentor-bubble-text">
+                {displayed}
+                {!done && <span className="typewriter-cursor" />}
+              </p>
             </div>
           </div>
           <HardwareWallet

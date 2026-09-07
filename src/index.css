@@ -2338,12 +2338,23 @@ a {
 
 /* ── Mentor chat bubble (Mission 1) ── */
 
+.scenario-page-fit {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px 0 24px;
+}
+
+.scenario-card-fit {
+  margin-top: 12px;
+}
+
 .scenario-mentor-layout {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
-  padding: 36px 36px 40px;
+  gap: 20px;
+  padding: 24px 28px 28px;
 }
 
 .mentor-row {
@@ -2352,6 +2363,21 @@ a {
   gap: 14px;
   max-width: 460px;
   width: 100%;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--gold-light);
+  animation: typewriter-blink 0.8s steps(2) infinite;
+}
+
+@keyframes typewriter-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 .mentor-portrait {
@@ -2437,28 +2463,117 @@ a {
 }
 
 @media (max-width: 600px) {
+  .scenario-page-fit {
+    padding: 12px 0 20px;
+  }
+
   .scenario-mentor-layout {
-    padding: 24px 20px 28px;
-    gap: 20px;
+    padding: 20px 16px 22px;
+    gap: 16px;
   }
 
   .mentor-portrait {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
 
   .mentor-portrait-initial {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .mentor-bubble {
-    padding: 12px 14px;
-  border-radius: 14px;
-  border-bottom-left-radius: 4px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border-bottom-left-radius: 4px;
   }
 
   .mentor-bubble-text {
     font-size: 13px;
+  }
+
+  .hw-wallet-device {
+    padding: 20px 16px 18px;
+    gap: 16px;
+  }
+
+  .hw-wallet-bezel {
+    width: 240px;
+    height: 290px;
+  }
+
+  .hw-btn-power {
+    width: 46px;
+    height: 46px;
+  }
+
+  .hw-btn-nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .hw-controls {
+    gap: 10px;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 601px) {
+  .scenario-page-fit {
+    padding: 8px 0 16px;
+  }
+
+  .scenario-card-fit {
+    margin-top: 8px;
+  }
+
+  .scenario-mentor-layout {
+    padding: 18px 24px 20px;
+    gap: 16px;
+  }
+
+  .hw-wallet-device {
+    padding: 22px 22px 20px;
+    gap: 16px;
+  }
+
+  .hw-wallet-bezel {
+    width: 260px;
+    height: 310px;
+  }
+}
+
+@media (max-height: 600px) {
+  .scenario-page-fit {
+    padding: 4px 0 8px;
+    justify-content: flex-start;
+  }
+
+  .scenario-mentor-layout {
+    padding: 14px 20px 16px;
+    gap: 12px;
+  }
+
+  .hw-wallet-device {
+    padding: 18px 20px 16px;
+    gap: 12px;
+  }
+
+  .hw-wallet-bezel {
+    width: 230px;
+    height: 270px;
+  }
+
+  .hw-btn-power {
+    width: 44px;
+    height: 44px;
+  }
+
+  .hw-btn-nav {
+    width: 38px;
+    height: 38px;
+  }
+
+  .hw-controls {
+    gap: 8px;
   }
 }
 
