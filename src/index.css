@@ -2236,29 +2236,23 @@ a {
   line-height: 1.55;
 }
 
-.hw-wallet-brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 8px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.hw-brand-dot {
-  width: 6px;
-  height: 6px;
+.hw-power-led {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
+  background: rgba(167, 232, 67, 0.15);
+  border: 1px solid rgba(167, 232, 67, 0.2);
+  align-self: flex-start;
+  margin-left: 4px;
+  margin-bottom: -4px;
+  z-index: 2;
+  transition: background 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
-.hw-brand-text {
-  color: rgba(167, 232, 67, 0.4);
-  font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.hw-power-led.on {
+  background: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 8px var(--green);
 }
 
 .hw-controls {
@@ -2316,31 +2310,9 @@ a {
 }
 
 .hw-controls-dpad {
-  display: grid;
-  grid-template-columns: auto auto auto;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    ".    up    ."
-    "left down right";
-  gap: 4px;
-  align-items: center;
-  justify-items: center;
-}
-
-.hw-controls-dpad .hw-btn-nav:nth-child(1) {
-  grid-area: up;
-}
-
-.hw-controls-dpad .hw-btn-nav:nth-child(2) {
-  grid-area: down;
-}
-
-.hw-controls-dpad .hw-btn-arrow:nth-child(3) {
-  grid-area: left;
-}
-
-.hw-controls-dpad .hw-btn-arrow:nth-child(4) {
-  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .hw-controls-actions {
@@ -2364,23 +2336,7 @@ a {
   border-color: rgba(232, 113, 113, 0.15);
 }
 
-.hw-controls-label {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  color: var(--faint);
-  font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.hw-controls-label span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
+/* ── Scenario briefing with wallet ── */
 
 .hw-reset-btn {
   display: inline-flex;
@@ -2402,29 +2358,6 @@ a {
 .hw-reset-btn:hover {
   color: var(--text);
   border-color: rgba(241, 189, 105, 0.4);
-}
-
-/* ── Arrow buttons on wallet device ── */
-
-.hw-btn-arrow {
-  background: linear-gradient(145deg, #2a2d30, #1a1d1f);
-  border-color: rgba(255, 255, 255, 0.06);
-  color: rgba(167, 232, 67, 0.5);
-}
-
-.theme-light .hw-btn-arrow {
-  background: linear-gradient(145deg, #c4c0b8, #b0aca4);
-  color: #3a3d3d;
-}
-
-.hw-btn-arrow:hover:not(:disabled) {
-  border-color: rgba(167, 232, 67, 0.35);
-  color: var(--green);
-}
-
-.hw-btn-arrow:disabled {
-  opacity: 0.25;
-  cursor: not-allowed;
 }
 
 /* ── Scenario briefing with wallet ── */

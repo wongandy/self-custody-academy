@@ -39,11 +39,11 @@ export default function RecoverScenario({ completed, onBack, onComplete }: Recov
               </div>
               <div className="scenario-wallet-tip">
                 <BookOpen size={16} />
-                <span>For each word position, four choices appear. Use Up/Down to browse the options, then press the → or ✓ key to confirm your selection.</span>
+                <span>For each word position, four choices appear. Use Up/Down to browse the options, then press the ✓ key to confirm your selection.</span>
               </div>
               <div className="scenario-wallet-tip">
                 <ShieldAlert size={16} />
-                <span>Use the ← key to go back to the previous word if you make a mistake. Select all 12 words in the correct order to restore your wallet.</span>
+                <span>Select all 12 words in the correct order to restore your wallet. If you make a mistake, the device will let you try again.</span>
               </div>
             </div>
             <div className={walletActive ? 'scenario-wallet-status active' : 'scenario-wallet-status'}>

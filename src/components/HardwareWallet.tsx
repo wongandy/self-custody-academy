@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft,
-  ArrowRight,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -150,37 +148,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
     }
   }, [phase, menuItems.length, quizOptions.length, recoverOptions.length]);
 
-  const handleLeft = useCallback(() => {
-    if (phase === 'recover-quiz' && recoverIndex > 0) {
-      setRecoverIndex((i) => i - 1);
-      setRecoverWrong(false);
-      const prevCorrect = expectedMnemonic?.[recoverIndex - 1] ?? '';
-      setRecoverOptions(buildQuizOptions(prevCorrect));
-      setRecoverSelected(0);
-    }
-  }, [phase, recoverIndex, expectedMnemonic]);
-
-  const handleRight = useCallback(() => {
-    if (phase === 'recover-quiz') {
-      const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
-      const answeredWord = recoverOptions[recoverSelected];
-      if (answeredWord === expectedWord) {
-        setRecoverWrong(false);
-        if (recoverIndex + 1 >= 12) {
-          setPhase('recover-done');
-        } else {
-          const nextIndex = recoverIndex + 1;
-          setRecoverIndex(nextIndex);
-          const nextCorrect = expectedMnemonic?.[nextIndex] ?? '';
-          setRecoverOptions(buildQuizOptions(nextCorrect));
-          setRecoverSelected(0);
-        }
-      } else {
-        setRecoverWrong(true);
-      }
-    }
-  }, [phase, recoverIndex, recoverOptions, recoverSelected, expectedMnemonic]);
-
   const handleEnter = useCallback(() => {
     if (phase === 'menu') {
       const target = menuItems[menuIndex].phase;
@@ -237,7 +204,22 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
       setRecoverSelected(0);
       setPhase('recover-quiz');
     } else if (phase === 'recover-quiz') {
-      handleRight();
+      const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
+      const answeredWord = recoverOptions[recoverSelected];
+      if (answeredWord === expectedWord) {
+        setRecoverWrong(false);
+        if (recoverIndex + 1 >= 12) {
+          setPhase('recover-done');
+        } else {
+          const nextIndex = recoverIndex + 1;
+          setRecoverIndex(nextIndex);
+          const nextCorrect = expectedMnemonic?.[nextIndex] ?? '';
+          setRecoverOptions(buildQuizOptions(nextCorrect));
+          setRecoverSelected(0);
+        }
+      } else {
+        setRecoverWrong(true);
+      }
     } else if (phase === 'recover-done') {
       onComplete();
     }
@@ -256,7 +238,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
     recoverOptions,
     recoverSelected,
     expectedMnemonic,
-    handleRight,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -273,13 +254,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
   return (
     <div className="hw-wallet-stage">
       <div className="hw-wallet-device">
+        <div className={isOn ? 'hw-power-led on' : 'hw-power-led'} aria-label={isOn ? 'Power on' : 'Power off'} />
         <div className="hw-wallet-bezel">
           <div className="hw-wallet-screen">
             {!isOn && (
-              <div className="hw-screen-off">
-                <Power size={20} strokeWidth={1.5} />
-                <span>Press power to start</span>
-              </div>
+              <div className="hw-screen-off" />
             )}
             {isBooting && (
               <div className="hw-screen-boot">
@@ -376,9 +355,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Recover wallet</span>
                 <p className="hw-screen-body">
-                  Select each word of your 12-word recovery phrase from the choices below. Use Up/Down to browse, ← to go back, and → or ✓ to confirm.
+                  Select each word of your 12-word recovery phrase from the choices below. Use Up/Down to browse and ✓ to confirm.
                 </p>
-                <span className="hw-screen-hint">Press Enter to begin</span>
+                <span className="hw-screen-hint">Press ✓ to begin</span>
               </div>
             )}
             {phase === 'recover-quiz' && (
@@ -403,7 +382,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
                   ))}
                 </div>
                 {recoverWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
-                <span className="hw-screen-hint">Up/Down to select · ← back · → or ✓ to confirm</span>
+                <span className="hw-screen-hint">Up/Down to select · ✓ to confirm</span>
                 <span className="hw-quiz-progress">
                   Word {recoverIndex + 1} of 12
                 </span>
@@ -420,10 +399,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
               </div>
             )}
           </div>
-          <div className="hw-wallet-brand">
-            <span className="hw-brand-dot" />
-            <span className="hw-brand-text">BITCOIN WALLET</span>
-          </div>
         </div>
         <div className="hw-controls">
           <button
@@ -435,17 +410,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
             <Power size={16} strokeWidth={2.4} />
           </button>
           <div className="hw-controls-dpad">
-            <button className="hw-btn hw-btn-nav hw-btn-arrow" type="button" onClick={handleLeft} disabled={!isOn || isBooting || phase !== 'recover-quiz' || recoverIndex === 0} aria-label="Left arrow">
-              <ArrowLeft size={16} strokeWidth={2.4} />
-            </button>
             <button className="hw-btn hw-btn-nav" type="button" onClick={handleUp} disabled={!isOn || isBooting} aria-label="Up">
               <ChevronUp size={18} strokeWidth={2.4} />
             </button>
             <button className="hw-btn hw-btn-nav" type="button" onClick={handleDown} disabled={!isOn || isBooting} aria-label="Down">
               <ChevronDown size={18} strokeWidth={2.4} />
-            </button>
-            <button className="hw-btn hw-btn-nav hw-btn-arrow" type="button" onClick={handleRight} disabled={!isOn || isBooting || phase !== 'recover-quiz'} aria-label="Right arrow">
-              <ArrowRight size={16} strokeWidth={2.4} />
             </button>
           </div>
           <div className="hw-controls-actions">
@@ -457,14 +426,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, mode = 'setu
             </button>
           </div>
         </div>
-      </div>
-      <div className="hw-controls-label">
-        <span><Power size={11} /> Power</span>
-        <span><ChevronUp size={11} /> / <ChevronDown size={11} /> Navigate</span>
-        <span><ArrowLeft size={11} /> Back</span>
-        <span><ArrowRight size={11} /> Next</span>
-        <span><X size={11} /> Cancel</span>
-        <span><Check size={11} /> Confirm</span>
       </div>
       {phase !== 'off' && phase !== 'booting' && phase !== 'menu' && (
         <button
