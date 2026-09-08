@@ -77,6 +77,10 @@ a {
 }
 
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
   width: min(100% - 64px, 1256px);
   min-height: 92px;
   margin: 0 auto;
