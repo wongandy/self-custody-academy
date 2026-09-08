@@ -232,6 +232,11 @@ function App() {
           </div>
 
           <div className="hero-copy">
+            <div className="eyebrow">
+              <span className="eyebrow-line" />
+              <Sparkles size={14} strokeWidth={2.3} />
+              <span>Self-custody, made simple</span>
+            </div>
             <h1>
               The most fun way to master <em>self-custody</em> and secure your Bitcoin.
             </h1>
