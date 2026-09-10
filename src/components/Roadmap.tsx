@@ -88,6 +88,20 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onBa
       </div>
 
       <section className="roadmap-shell">
+        <aside className="roadmap-learner-panel">
+          <CharacterPlaceholder label="Active learner" initial="B" active />
+          <h1>Ben's journey</h1>
+          <p className="roadmap-learner-role">The Casual Holder</p>
+          <div className="roadmap-panel-rule" />
+          <p className="roadmap-learner-copy">
+            One practical step at a time, Ben is learning how to make bitcoin work safely in the real world.
+          </p>
+          <div className="roadmap-mentor-mini">
+            <CharacterPlaceholder label="Your mentor" initial="J" />
+            <p><strong>John says:</strong> “Small steps build lasting confidence.”</p>
+          </div>
+        </aside>
+
         <div className="roadmap-main">
           <div className="roadmap-progress-card">
             <div className="roadmap-progress-heading">
