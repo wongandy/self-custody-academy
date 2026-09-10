@@ -59,11 +59,6 @@ function JohnIntro({ onBack, onProceed }: Props) {
 
   return (
     <main className="character-section">
-      <button className="character-back" type="button" onClick={onBack}>
-        <ArrowLeft size={16} strokeWidth={2.4} />
-        <span>Back</span>
-      </button>
-
       <div className="character-card">
         <div className="character-portrait" aria-label="John, your academy mentor" role="img">
           <div className="character-portrait-glow" />
