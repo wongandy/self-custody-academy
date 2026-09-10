@@ -73,9 +73,6 @@ function JohnIntro({ onBack, onProceed }: Props) {
           </div>
         </div>
 
-        <h2 className="character-name">John</h2>
-        <p className="character-role">Self-Custody Guide</p>
-
         <div className="character-dialog">
           <div className="character-message" aria-live="polite">
             <p>{displayed}</p>
