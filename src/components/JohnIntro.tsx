@@ -77,7 +77,6 @@ function JohnIntro({ onBack, onProceed }: Props) {
         <p className="character-role">Self-Custody Guide</p>
 
         <div className="character-dialog">
-          <span className="character-dialog-label">John says</span>
           <div className="character-message" aria-live="polite">
             <p>{displayed}</p>
             {!done && <span className="typewriter-cursor" />}
