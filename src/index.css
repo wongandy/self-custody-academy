@@ -826,7 +826,7 @@ a {
   }
 
   .hero-copy h1 {
-    font-size: clamp(38px, 11vw, 30px);
+    font-size: clamp(38px, 11vw, 20px);
   }
 
   .hero-description {
