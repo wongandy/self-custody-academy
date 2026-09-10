@@ -24,7 +24,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'recover-done': '',
 };
 
-function useTypewriter(text: string, speed = 28) {
+function useTypewriter(text: string, speed = 10) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
