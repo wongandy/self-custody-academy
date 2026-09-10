@@ -79,10 +79,13 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
             </div>
             <div className="mentor-bubble" key={walletPhase}>
               <span className="mentor-bubble-name">John</span>
-              <p className="mentor-bubble-text">
-                {displayed}
-                {!done && <span className="typewriter-cursor" />}
-              </p>
+              <div className="mentor-bubble-text-wrap">
+                <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
+                <p className="mentor-bubble-text">
+                  {displayed}
+                  {!done && <span className="typewriter-cursor" />}
+                </p>
+              </div>
             </div>
           </div>
           <HardwareWallet

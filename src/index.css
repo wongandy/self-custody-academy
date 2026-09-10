@@ -2440,7 +2440,21 @@ a {
   margin-bottom: 4px;
 }
 
+.mentor-bubble-text-wrap {
+  position: relative;
+}
+
+.mentor-bubble-text-ghost {
+  margin: 0;
+  visibility: hidden;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .mentor-bubble-text {
+  position: absolute;
+  inset: 0;
   margin: 0;
   color: var(--text);
   font-size: 14px;
@@ -2475,6 +2489,10 @@ a {
     padding: 10px 12px;
     border-radius: 14px;
     border-bottom-left-radius: 4px;
+  }
+
+  .mentor-bubble-text-ghost {
+    font-size: 13px;
   }
 
   .mentor-bubble-text {
