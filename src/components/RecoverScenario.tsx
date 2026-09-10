@@ -50,12 +50,6 @@ export default function RecoverScenario({ completed, onBack, onComplete }: Recov
               <span className="scenario-wallet-status-dot" />
               <span>{completed ? 'Mission completed' : walletActive ? 'Wallet active — follow the screen' : 'Waiting for device power'}</span>
             </div>
-            {expectedMnemonic.length === 0 && (
-              <p className="scenario-gate-note">
-                <ShieldAlert size={13} strokeWidth={2.2} />
-                No practice phrase found from Mission 1. Go back and complete Mission 1 first to generate a recovery phrase.
-              </p>
-            )}
           </div>
           <HardwareWallet
             onComplete={onComplete}
