@@ -12,7 +12,7 @@ const JOHN_MESSAGES = [
   "Together, we'll practice generating seed phrases, verifying addresses, and signing transactions until it feels like second nature. Ready to take your first step?",
 ];
 
-function useTypewriter(text: string, speed = 28) {
+function useTypewriter(text: string, speed = 18) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
