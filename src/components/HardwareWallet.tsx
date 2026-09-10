@@ -293,7 +293,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">
                   You will receive a 12-word recovery phrase. Write it down on paper — never photograph or type it on a computer.
                 </p>
-                <span className="hw-screen-hint">Press Enter to continue</span>
+                {/* <span className="hw-screen-hint">Press Enter to continue</span> */}
               </div>
             )}
             {phase === 'create-words' && (
