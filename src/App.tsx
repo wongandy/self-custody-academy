@@ -122,6 +122,10 @@ function App() {
   }, [user]);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [screen]);
+
+  useEffect(() => {
     if (!isReady) return;
     if (screen === 'roadmap') {
       if (user) {
