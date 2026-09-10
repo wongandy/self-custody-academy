@@ -75,6 +75,18 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onBa
 
   return (
     <main className="roadmap-page">
+      <div className="roadmap-topbar">
+        <button className="character-back" type="button" onClick={onBack}>
+          <ArrowLeft size={16} strokeWidth={2.4} />
+          <span>Back</span>
+        </button>
+        <div className="roadmap-kicker">
+          <Sparkles size={14} strokeWidth={2.3} />
+          <span>Academy roadmap</span>
+        </div>
+        <span className="roadmap-mode">Simulation mode</span>
+      </div>
+
       <section className="roadmap-shell">
         <aside className="roadmap-learner-panel">
           <CharacterPlaceholder label="Active learner" initial="B" active />
