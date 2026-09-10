@@ -58,9 +58,17 @@ function useTypewriter(text: string, speed = 28) {
 
 function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: ScenarioBriefingProps) {
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
+  const [walletVisible, setWalletVisible] = useState(false);
 
   const mentorMessage = MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
   const { displayed, done } = useTypewriter(mentorMessage);
+
+  useEffect(() => {
+    if (done && !walletVisible) {
+      const timer = setTimeout(() => setWalletVisible(true), 350);
+      return () => clearTimeout(timer);
+    }
+  }, [done, walletVisible]);
 
   return (
     <main className="scenario-page scenario-page-fit">
@@ -88,10 +96,12 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
               </div>
             </div>
           </div>
-          <HardwareWallet
-            onComplete={onComplete}
-            onPhaseChange={setWalletPhase}
-          />
+          {walletVisible && (
+            <HardwareWallet
+              onComplete={onComplete}
+              onPhaseChange={setWalletPhase}
+            />
+          )}
         </div>
       </section>
     </main>
