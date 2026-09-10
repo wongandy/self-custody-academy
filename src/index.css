@@ -1880,11 +1880,29 @@ a {
   gap: 20px;
 }
 
+@keyframes hw-wallet-enter {
+  from {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-wallet-device {
+    animation: none;
+  }
+}
+
 .hw-wallet-device {
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding: 28px 24px 24px;
+  animation: hw-wallet-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
   border: 2px solid rgba(255, 255, 255, 0.08);
   border-radius: 28px;
   background: linear-gradient(160deg, #2a2d30, #1a1d1f);
