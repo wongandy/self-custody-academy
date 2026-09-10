@@ -2438,7 +2438,7 @@ a {
   margin-left: 2px;
   vertical-align: text-bottom;
   background: var(--gold-light);
-  animation: typewriter-blink 0.8s steps(2) infinite;
+  animation: typewriter-blink 2s steps(2) infinite;
 }
 
 @keyframes typewriter-blink {
