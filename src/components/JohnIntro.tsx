@@ -9,7 +9,7 @@ type Props = {
 
 const JOHN_MESSAGES = [
   "Hey there! I'm John, and I will teach you how to self-custody your Bitcoin.",
-  "Self-custody can feel intimidating, but you're in a safe sandbox. Everything here is simulated—zero real funds, zero risk.",
+  "Learning to store your own Bitcoin takes practice. Everything here is simulated, so you can explore freely with zero risk.",
   "We'll practice seed phrases, addresses, and transactions until it's second nature. Ready to dive in?",
 ];
 
