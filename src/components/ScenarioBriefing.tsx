@@ -89,16 +89,6 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
             onComplete={onComplete}
             onPhaseChange={setWalletPhase}
           />
-          {!isLoggedIn && !completed && walletPhase === 'off' && (
-            <p className="scenario-gate-note">
-              After this mission, you'll create a free account to save your progress and unlock the rest.
-            </p>
-          )}
-          {completed && (
-            <p className="scenario-gate-note">
-              Mission completed — head back to the roadmap to continue.
-            </p>
-          )}
         </div>
       </section>
     </main>
