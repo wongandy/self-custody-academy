@@ -293,7 +293,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">
                   You will receive a 12-word recovery phrase. Write it down on paper — never photograph or type it on a computer.
                 </p>
-                <span className="hw-screen-hint">Press Enter to continue</span>
               </div>
             )}
             {phase === 'create-words' && (
@@ -317,7 +316,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     ))}
                   </div>
                 </div>
-                <span className="hw-screen-hint">Check and double-check · Press ✓ when done</span>
               </div>
             )}
             {phase === 'create-quiz' && (
@@ -342,7 +340,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                   ))}
                 </div>
                 {quizWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
-                <span className="hw-screen-hint">Up/Down to select · Press ✓ to confirm</span>
                 <span className="hw-quiz-progress">
                   Check {quizIndex + 1} of {quizPositions.length}
                 </span>
@@ -355,7 +352,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">
                   Your recovery phrase controls your keys. Store it safely — offline and secret.
                 </p>
-                <span className="hw-screen-hint">Press Enter to finish</span>
               </div>
             )}
             {phase === 'recover-intro' && (
@@ -364,7 +360,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">
                   Select each word of your 12-word recovery phrase from the choices below. Use Up/Down to browse and ✓ to confirm.
                 </p>
-                <span className="hw-screen-hint">Press ✓ to begin</span>
               </div>
             )}
             {phase === 'recover-quiz' && (
@@ -389,7 +384,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                   ))}
                 </div>
                 {recoverWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
-                <span className="hw-screen-hint">Up/Down to select · ✓ to confirm</span>
                 <span className="hw-quiz-progress">
                   Word {recoverIndex + 1} of 12
                 </span>
@@ -402,7 +396,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">
                   Your wallet has been restored from your recovery phrase. Your keys are back under your control.
                 </p>
-                <span className="hw-screen-hint">Press Enter to finish</span>
               </div>
             )}
           </div>

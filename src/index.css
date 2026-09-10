@@ -1954,8 +1954,8 @@ a {
 .hw-wallet-device {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 28px 24px 24px;
+  gap: 12px;
+  padding: 18px 20px 16px;
   animation: hw-wallet-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
   border: 2px solid rgba(255, 255, 255, 0.08);
   border-radius: 28px;
@@ -1975,8 +1975,8 @@ a {
 
 .hw-wallet-bezel {
   position: relative;
-  width: 280px;
-  height: 340px;
+  width: 260px;
+  height: 300px;
   display: flex;
   flex-direction: column;
   border: 2px solid rgba(255, 255, 255, 0.05);
@@ -1991,7 +1991,7 @@ a {
 
 .hw-wallet-screen {
   flex: 1;
-  padding: 16px 14px;
+  padding: 12px 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2111,7 +2111,7 @@ a {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   animation: hw-fade-in 300ms ease;
 }
 
@@ -2127,16 +2127,6 @@ a {
   font-size: 10px;
   line-height: 1.65;
   letter-spacing: 0.01em;
-}
-
-.hw-screen-hint {
-  margin-top: auto;
-  padding-top: 8px;
-  color: rgba(167, 232, 67, 0.35);
-  font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .hw-screen-words-all {
@@ -2299,14 +2289,14 @@ a {
 }
 
 .hw-power-led {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: rgba(167, 232, 67, 0.15);
   border: 1px solid rgba(167, 232, 67, 0.2);
   align-self: flex-start;
   margin-left: 4px;
-  margin-bottom: -4px;
+  margin-bottom: -3px;
   z-index: 2;
   transition: background 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
@@ -2359,8 +2349,8 @@ a {
 }
 
 .hw-btn-power {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   color: rgba(167, 232, 67, 0.5);
   border-color: rgba(167, 232, 67, 0.15);
 }
@@ -2374,18 +2364,18 @@ a {
 .hw-controls-dpad {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .hw-controls-actions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .hw-btn-nav {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
 }
 
 .hw-btn-enter {
@@ -2573,27 +2563,27 @@ a {
   }
 
   .hw-wallet-device {
-    padding: 20px 16px 18px;
-    gap: 16px;
+    padding: 14px 14px 12px;
+    gap: 10px;
   }
 
   .hw-wallet-bezel {
-    width: 240px;
-    height: 290px;
+    width: 220px;
+    height: 260px;
   }
 
   .hw-btn-power {
-    width: 46px;
-    height: 46px;
+    width: 42px;
+    height: 42px;
   }
 
   .hw-btn-nav {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 
   .hw-controls {
-    gap: 10px;
+    gap: 8px;
   }
 }
 
@@ -2612,13 +2602,13 @@ a {
   }
 
   .hw-wallet-device {
-    padding: 22px 22px 20px;
-    gap: 16px;
+    padding: 16px 18px 14px;
+    gap: 10px;
   }
 
   .hw-wallet-bezel {
-    width: 260px;
-    height: 310px;
+    width: 240px;
+    height: 280px;
   }
 }
 
@@ -2634,27 +2624,27 @@ a {
   }
 
   .hw-wallet-device {
-    padding: 18px 20px 16px;
-    gap: 12px;
+    padding: 14px 16px 12px;
+    gap: 8px;
   }
 
   .hw-wallet-bezel {
-    width: 230px;
-    height: 270px;
+    width: 210px;
+    height: 250px;
   }
 
   .hw-btn-power {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
 
   .hw-btn-nav {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
   }
 
   .hw-controls {
-    gap: 8px;
+    gap: 6px;
   }
 }
 
@@ -2794,12 +2784,12 @@ a {
   }
 
   .hw-wallet-bezel {
-    width: 250px;
-    height: 300px;
+    width: 230px;
+    height: 270px;
   }
 
   .hw-wallet-device {
-    padding: 20px 16px 18px;
+    padding: 14px 14px 12px;
   }
 }
 
