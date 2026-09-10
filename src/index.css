@@ -2465,17 +2465,18 @@ a {
 .mentor-portrait-ring {
   position: absolute;
   inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
   border-radius: 50%;
   border: 1px solid rgba(241, 189, 105, 0.15);
 }
 
-.mentor-portrait-initial {
-  position: relative;
-  z-index: 1;
-  font-family: 'Manrope', sans-serif;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--gold-light);
+.mentor-portrait-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 24%;
 }
 
 .mentor-bubble {

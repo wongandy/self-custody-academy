@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
+import johnPortrait from '@/components/John.png';
 
 type ScenarioBriefingProps = {
   completed: boolean;
@@ -77,8 +78,9 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
           <div className="mentor-row">
             <div className="mentor-portrait" aria-label="John, your mentor" role="img">
               <div className="mentor-portrait-glow" />
-              <div className="mentor-portrait-ring" />
-              <div className="mentor-portrait-initial">J</div>
+              <div className="mentor-portrait-ring">
+                <img className="mentor-portrait-image" src={johnPortrait} alt="John, your mentor" />
+              </div>
             </div>
             <div className="mentor-bubble" key={walletPhase}>
               <span className="mentor-bubble-name">John</span>
