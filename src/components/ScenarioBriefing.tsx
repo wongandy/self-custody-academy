@@ -77,7 +77,7 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
           <div className="mentor-row">
             <div className="mentor-portrait" aria-label="John, your mentor" role="img">
               <div className="mentor-portrait-glow" />
-              <div className="mentor-portrait-ring"><img class="character-portrait-image" src="/src/components/John.png" alt="John, your academy mentor"></div>
+              <div className="mentor-portrait-ring" />
               <div className="mentor-portrait-initial">J</div>
             </div>
             <div className="mentor-bubble" key={walletPhase}>
