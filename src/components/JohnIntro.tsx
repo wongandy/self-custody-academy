@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import johnPortrait from '@/components/John.png';
 
 type Props = {
   onBack: () => void;
@@ -65,8 +66,9 @@ function JohnIntro({ onBack, onProceed }: Props) {
       <div className="character-card">
         <div className="character-portrait" aria-label="John, your academy mentor" role="img">
           <div className="character-portrait-glow" />
-          <div className="character-portrait-ring" />
-          <div className="character-portrait-initial">J</div>
+          <div className="character-portrait-ring">
+            <img className="character-portrait-image" src={johnPortrait} alt="John, your academy mentor" />
+          </div>
           <div className="character-portrait-badge">
             <span className="character-portrait-dot" />
             <span>Your mentor</span>

@@ -641,19 +641,19 @@ a {
 .character-portrait-ring {
   position: absolute;
   inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
   border-radius: 50%;
   border: 2px solid rgba(241, 189, 105, 0.4);
   background: linear-gradient(145deg, #3a3d3e, #252829);
 }
 
-.character-portrait-initial {
-  position: relative;
-  z-index: 1;
-  font-family: 'Manrope', sans-serif;
-  font-size: 52px;
-  font-weight: 800;
-  color: var(--gold-light);
-  letter-spacing: -0.04em;
+.character-portrait-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 24%;
 }
 
 .character-portrait-badge {
@@ -920,10 +920,6 @@ a {
   .character-portrait {
     width: 110px;
     height: 110px;
-  }
-
-  .character-portrait-initial {
-    font-size: 44px;
   }
 
   .character-name {
