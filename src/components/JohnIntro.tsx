@@ -9,8 +9,8 @@ type Props = {
 
 const JOHN_MESSAGES = [
   "Hey there! I'm John, and I'll be your guide through the academy.",
-  "Taking custody of your own Bitcoin can feel intimidating at first, but here's the good news: you're in a safe sandbox. Everything we do here is simulated—no real funds, no stress, and zero risk of making an expensive mistake.",
-  "Together, we'll practice generating seed phrases, verifying addresses, and signing transactions until it feels like second nature. Ready to take your first step?",
+  "Self-custody can feel intimidating, but you're in a safe sandbox. Everything here is simulated—zero real funds, zero risk.",
+  "We'll practice seed phrases, addresses, and transactions until it's second nature. Ready to dive in?",
 ];
 
 function useTypewriter(text: string, speed = 10) {
