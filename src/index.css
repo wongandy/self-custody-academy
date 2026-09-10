@@ -701,29 +701,69 @@ a {
   text-transform: uppercase;
 }
 
-.character-message {
+.character-dialog {
+  position: relative;
+  width: 100%;
   margin-top: 28px;
-  text-align: center;
+  padding: 18px 20px 20px;
+  text-align: left;
+  border: 1px solid rgba(241, 189, 105, 0.24);
+  border-radius: 18px;
+  background: rgba(241, 189, 105, 0.06);
+}
+
+.character-dialog::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid rgba(241, 189, 105, 0.24);
+  border-left: 1px solid rgba(241, 189, 105, 0.24);
+  background: var(--panel-strong);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.character-dialog-label {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--gold-light);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.character-message {
+  min-height: 112px;
+  margin: 0;
+  text-align: left;
 }
 
 .character-message p {
-  margin: 0 0 16px;
-  color: var(--muted);
+  display: inline;
+  margin: 0;
+  color: var(--text);
   font-size: 15px;
   line-height: 1.75;
 }
 
-.character-message p:last-child {
-  margin-bottom: 0;
+.character-actions {
+  width: calc(100% + 88px);
+  margin: 32px -44px -44px;
+  padding: 24px 44px 44px;
+  border-top: 1px solid var(--line);
 }
 
 .character-proceed {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 18px;
   justify-content: center;
   min-width: 178px;
-  margin-top: 36px;
+  margin-top: 0;
   padding: 16px 20px;
   color: #18200f;
   border: none;
@@ -746,6 +786,14 @@ a {
 
 .character-proceed:active {
   transform: translateY(0);
+}
+
+.character-proceed:disabled {
+  color: var(--faint);
+  background: var(--line);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
 }
 
 @media (max-width: 900px) {
@@ -882,12 +930,22 @@ a {
     font-size: 26px;
   }
 
+  .character-dialog {
+    padding: 16px 16px 18px;
+  }
+
+  .character-message {
+    min-height: 150px;
+  }
+
   .character-message p {
     font-size: 14px;
   }
 
-  .character-proceed {
-    width: 100%;
+  .character-actions {
+    width: calc(100% + 48px);
+    margin: 28px -24px -34px;
+    padding: 20px 24px 34px;
   }
 }
 

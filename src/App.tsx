@@ -11,7 +11,6 @@ import {
   Sun,
 } from 'lucide-react';
 import JohnIntro from '@/components/JohnIntro';
-import BenIntro from '@/components/BenIntro';
 import Roadmap from '@/components/Roadmap';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
 import WithdrawScenario from '@/components/WithdrawScenario';
@@ -63,7 +62,7 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'john-intro' | 'ben-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'auth';
+type Screen = 'home' | 'john-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'auth';
 
 function App() {
   const { user, isReady, signOut } = useAuth();
@@ -274,14 +273,7 @@ function App() {
       {screen === 'john-intro' && (
         <JohnIntro
           onBack={() => setScreen('home')}
-          onProceed={() => setScreen('ben-intro')}
-        />
-      )}
-
-      {screen === 'ben-intro' && (
-        <BenIntro
-          onBack={() => setScreen('john-intro')}
-          onBegin={() => setScreen('roadmap')}
+          onProceed={() => setScreen('roadmap')}
         />
       )}
 
@@ -291,7 +283,7 @@ function App() {
           isLoading={progressLoading}
           errorMessage={progressError}
           isLoggedIn={!!user}
-          onBack={() => setScreen('ben-intro')}
+          onBack={() => setScreen('home')}
           onSelectScenario={(n) => {
             setActiveScenario(n);
             setScreen(`scenario-${n}` as Screen);
