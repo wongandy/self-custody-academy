@@ -43,7 +43,7 @@ function AndyIntro({ onBack, onProceed }: Props) {
   const [messageIndex, setMessageIndex] = useState(0);
   const currentMessage = ANDY_MESSAGES[messageIndex];
   const { displayed, done } = useTypewriter(currentMessage);
-  const isFinalMessage = messageIndex === JOHN_MESSAGES.length - 1;
+  const isFinalMessage = messageIndex === ANDY_MESSAGES.length - 1;
 
   const handleContinue = () => {
     if (!done) return;
