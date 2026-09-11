@@ -73,10 +73,10 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
 
   return (
     <main className="scenario-page scenario-page-fit">
-      <button className="character-back" type="button" onClick={onBack}>
+      {/* <button className="character-back" type="button" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2.4} />
         <span>Back to roadmap</span>
-      </button>
+      </button> */}
 
       <div className="scenario-mentor-layout">
         <div className="mentor-row">
