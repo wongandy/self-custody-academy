@@ -65,7 +65,7 @@ function JohnIntro({ onBack, onProceed }: Props) {
             <img className="character-portrait-image" src={johnPortrait} alt="John, your academy mentor" />
           </div>
           <div className="character-portrait-badge">
-            <span className="character-portrait-dot" />
+            {/* <span className="character-portrait-dot" /> */}
             <span>John</span>
           </div>
         </div>
