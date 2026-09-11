@@ -29,10 +29,6 @@ function CustodyIllustration() {
   return (
     <div className="illustration-card" aria-label="Bitcoin self-custody illustration" role="img">
       <img src={heroImage} alt="" className="illustration-image" />
-      <div className="illustration-caption">
-        <span className="caption-dot" />
-        <span>Learning mode · no real BTC involved</span>
-      </div>
     </div>
   );
 }
