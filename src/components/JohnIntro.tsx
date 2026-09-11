@@ -93,4 +93,4 @@ function AndyIntro({ onBack, onProceed }: Props) {
   );
 }
 
-export default JohnIntro;
+export default AndyIntro;
