@@ -225,7 +225,7 @@ function App() {
                 <span className="profile-arrow">↗</span>
               </button>
             </div>
-            <div className="trust-row">
+            {/* <div className="trust-row">
               <div className="trust-item">
                 <ShieldCheck size={17} strokeWidth={2.1} />
                 <span>Practice safely</span>
@@ -235,7 +235,7 @@ function App() {
                 <LockKeyhole size={17} strokeWidth={2.1} />
                 <span>Keep your keys</span>
               </div>
-            </div>
+            </div> */}
           </div>
         </main>
       )}
