@@ -39,7 +39,7 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done };
 }
 
-function JohnIntro({ onBack, onProceed }: Props) {
+function AndyIntro({ onBack, onProceed }: Props) {
   const [messageIndex, setMessageIndex] = useState(0);
   const currentMessage = JOHN_MESSAGES[messageIndex];
   const { displayed, done } = useTypewriter(currentMessage);
