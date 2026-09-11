@@ -2397,7 +2397,7 @@ a {
 .scenario-page-fit {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 92px 0 24px;
 }
 
@@ -2505,6 +2505,7 @@ a {
 
 .mentor-bubble-text-wrap {
   position: relative;
+  min-height: 67px;
 }
 
 .mentor-bubble-text-ghost {
@@ -2560,6 +2561,10 @@ a {
 
   .mentor-bubble-text {
     font-size: 13px;
+  }
+
+  .mentor-bubble-text-wrap {
+    min-height: 62px;
   }
 
   .hw-wallet-device {
