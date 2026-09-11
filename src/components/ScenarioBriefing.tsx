@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
-import johnPortrait from '@/components/John.png';
+import andyPortrait from '@/components/Andy.png';
 
 type ScenarioBriefingProps = {
   completed: boolean;
