@@ -73,34 +73,37 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
 
   return (
     <main className="scenario-page scenario-page-fit">
-      <section className="scenario-card scenario-card-fit">
-        <div className="scenario-mentor-layout">
-          <div className="mentor-row">
-            <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
-              <div className="mentor-portrait-glow" />
-              <div className="mentor-portrait-ring">
-                <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
-              </div>
-            </div>
-            <div className="mentor-bubble" key={walletPhase}>
-              <span className="mentor-bubble-name">Andy</span>
-              <div className="mentor-bubble-text-wrap">
-                <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
-                <p className="mentor-bubble-text">
-                  {displayed}
-                  {!done && <span className="typewriter-cursor" />}
-                </p>
-              </div>
+      <button className="character-back" type="button" onClick={onBack}>
+        <ArrowLeft size={16} strokeWidth={2.4} />
+        <span>Back to roadmap</span>
+      </button>
+
+      <div className="scenario-mentor-layout">
+        <div className="mentor-row">
+          <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
+            <div className="mentor-portrait-glow" />
+            <div className="mentor-portrait-ring">
+              <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
             </div>
           </div>
-          {walletVisible && (
-            <HardwareWallet
-              onComplete={onComplete}
-              onPhaseChange={setWalletPhase}
-            />
-          )}
+          <div className="mentor-bubble" key={walletPhase}>
+            <span className="mentor-bubble-name">Andy</span>
+            <div className="mentor-bubble-text-wrap">
+              <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
+              <p className="mentor-bubble-text">
+                {displayed}
+                {!done && <span className="typewriter-cursor" />}
+              </p>
+            </div>
+          </div>
         </div>
-      </section>
+        {walletVisible && (
+          <HardwareWallet
+            onComplete={onComplete}
+            onPhaseChange={setWalletPhase}
+          />
+        )}
+      </div>
     </main>
   );
 }
