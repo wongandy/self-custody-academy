@@ -1,14 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.png';
 
 type ScenarioBriefingProps = {
-  completed: boolean;
-  isLoggedIn: boolean;
   onBack: () => void;
   onComplete: () => void;
 };
+
+const INTRO_MESSAGES = [
+  'Hi!',
+  "Let's set up your first hardware wallet. Start by clicking the power button to turn it on.",
+];
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: "Let's set up your first hardware wallet. Start by clicking the power button to turn it on.",
@@ -29,6 +32,7 @@ function useTypewriter(text: string, speed = 10) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     setDisplayed('');
@@ -51,32 +55,61 @@ function useTypewriter(text: string, speed = 10) {
       }
     }, speed);
 
+    timerRef.current = timer;
     return () => clearInterval(timer);
   }, [text, speed]);
 
-  return { displayed, done };
+  const skip = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setDisplayed(text);
+    setDone(true);
+  }, [text]);
+
+  return { displayed, done, skip };
 }
 
-function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: ScenarioBriefingProps) {
+function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
+  const [introStep, setIntroStep] = useState(0);
+  const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
   const [walletVisible, setWalletVisible] = useState(false);
 
-  const mentorMessage = MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
-  const { displayed, done } = useTypewriter(mentorMessage);
+  const isInIntro = !introDone;
+  const currentIntroMessage = INTRO_MESSAGES[introStep];
+  const mentorMessage = isInIntro
+    ? currentIntroMessage
+    : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
+  const { displayed, done, skip } = useTypewriter(mentorMessage);
+
+  const canAdvanceIntro = isInIntro && introStep < INTRO_MESSAGES.length - 1;
+
+  const handleBubbleTap = () => {
+    if (!done) {
+      skip();
+      return;
+    }
+    if (canAdvanceIntro) {
+      setIntroStep((s) => s + 1);
+    } else if (isInIntro) {
+      setIntroDone(true);
+    }
+  };
 
   useEffect(() => {
-    if (done && !walletVisible) {
+    if (introDone && !walletVisible) {
       const timer = setTimeout(() => setWalletVisible(true), 350);
       return () => clearTimeout(timer);
     }
-  }, [done, walletVisible]);
+  }, [introDone, walletVisible]);
+
+  const bubbleKey = isInIntro ? `intro-${introStep}` : walletPhase;
 
   return (
     <main className="scenario-page scenario-page-fit">
-      {/* <button className="character-back" type="button" onClick={onBack}>
+      <button className="character-back" type="button" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2.4} />
         <span>Back to roadmap</span>
-      </button> */}
+      </button>
 
       <div className="scenario-mentor-layout">
         <div className="mentor-row">
@@ -86,7 +119,23 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
               <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
             </div>
           </div>
-          <div className="mentor-bubble" key={walletPhase}>
+          <div
+            className={`mentor-bubble ${isInIntro ? 'mentor-bubble-interactive' : ''}`}
+            key={bubbleKey}
+            onClick={isInIntro ? handleBubbleTap : undefined}
+            role={isInIntro ? 'button' : undefined}
+            tabIndex={isInIntro ? 0 : undefined}
+            onKeyDown={
+              isInIntro
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleBubbleTap();
+                    }
+                  }
+                : undefined
+            }
+          >
             <span className="mentor-bubble-name">Andy</span>
             <div className="mentor-bubble-text-wrap">
               <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
@@ -95,13 +144,18 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
                 {!done && <span className="typewriter-cursor" />}
               </p>
             </div>
+            {isInIntro && done && (
+              <div className="mentor-bubble-continue">
+                <span className="mentor-bubble-continue-text">
+                  {canAdvanceIntro ? 'Tap to continue' : 'Tap to begin'}
+                </span>
+                <ChevronDown size={14} strokeWidth={2.5} className="mentor-bubble-continue-icon" />
+              </div>
+            )}
           </div>
         </div>
         {walletVisible && (
-          <HardwareWallet
-            onComplete={onComplete}
-            onPhaseChange={setWalletPhase}
-          />
+          <HardwareWallet onComplete={onComplete} onPhaseChange={setWalletPhase} />
         )}
       </div>
     </main>

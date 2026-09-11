@@ -261,8 +261,6 @@ function App() {
 
       {screen === 'scenario-1' && (
         <ScenarioBriefing
-          completed={completedScenarios >= 1}
-          isLoggedIn={!!user}
           onBack={() => setScreen('roadmap')}
           onComplete={() => handleScenarioComplete(1)}
         />
