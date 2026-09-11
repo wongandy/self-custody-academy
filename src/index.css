@@ -115,8 +115,8 @@ a {
 }
 
 .brand-logo-image {
-  width: 30px;
-  height: 30px;
+  /* width: 30px;
+  height: 30px; */
   display: block;
   border-radius: 50%;
   object-fit: cover;
