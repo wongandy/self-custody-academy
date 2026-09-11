@@ -437,8 +437,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             onPowerChange?.(false);
           }}
         >
-          <RotateCcw size={13} strokeWidth={2.2} />
-          <span>Reset simulation</span>
         </button>
       )}
     </div>
