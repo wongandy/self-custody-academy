@@ -33,7 +33,7 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'john-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'auth';
+type Screen = 'home' | 'andy-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'auth';
 
 function App() {
   const { user, isReady, signOut } = useAuth();
