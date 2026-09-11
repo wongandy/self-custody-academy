@@ -165,9 +165,9 @@ function App() {
           aria-label="Self Custody Academy home"
           onClick={() => setScreen('home')}
         >
-          <span className="brand-mark">
+          {/* <span className="brand-mark">
             <CircleDollarSign size={21} strokeWidth={2.3} />
-          </span>
+          </span> */}
           <span className="brand-name">
             <strong>SELF</strong> <span>CUSTODY</span> <strong>ACADEMY</strong>
           </span>
