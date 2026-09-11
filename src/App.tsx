@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ArrowUpRight,
-  Bitcoin,
   KeyRound,
   LockKeyhole,
   LogOut,
@@ -19,6 +18,7 @@ import ReceiveScenario from '@/components/ReceiveScenario';
 import RecoverScenario from '@/components/RecoverScenario';
 import AuthScreen from '@/components/AuthScreen';
 import heroImage from '@/components/hero.png';
+import bitcoinImage from '@/components/bitcoin.png';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { clearLocalProgress, getLocalProgress, setLocalProgress } from '@/lib/localProgress';
@@ -166,7 +166,7 @@ function App() {
           onClick={() => setScreen('home')}
         >
           <span className="brand-mark">
-            <Bitcoin size={21} strokeWidth={2.3} />
+            <img src={bitcoinImage} alt="Bitcoin" className="brand-logo-image" />
           </span>
           <span className="brand-name">
             <span>SELF-CUSTODY</span> <strong>ACADEMY</strong>
