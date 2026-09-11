@@ -203,7 +203,6 @@ function App() {
         </a>
 
         <div className="header-actions">
-          <span className="header-note">Learn by doing</span>
           {user && (
             <button className="header-account" type="button" onClick={handleSignOut} title="Sign out">
               <span className="header-account-dot" />
