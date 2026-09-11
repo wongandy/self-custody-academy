@@ -18,6 +18,7 @@ import SendScenario from '@/components/SendScenario';
 import ReceiveScenario from '@/components/ReceiveScenario';
 import RecoverScenario from '@/components/RecoverScenario';
 import AuthScreen from '@/components/AuthScreen';
+import heroImage from '@/components/hero.png';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { clearLocalProgress, getLocalProgress, setLocalProgress } from '@/lib/localProgress';
@@ -26,34 +27,8 @@ const TOTAL_SCENARIOS = 5;
 
 function CustodyIllustration() {
   return (
-    <div className="illustration-card" aria-label="Bitcoin self-custody illustration placeholder" role="img">
-      <div className="illustration-glow illustration-glow-top" />
-      <div className="illustration-glow illustration-glow-bottom" />
-      <div className="orbit orbit-one" />
-      <div className="orbit orbit-two" />
-      <div className="floating-token token-left">
-        <CircleDollarSign size={22} strokeWidth={2.2} />
-      </div>
-      <div className="floating-token token-right">
-        <KeyRound size={21} strokeWidth={2.2} />
-      </div>
-      <div className="floating-token token-top">
-        <ShieldCheck size={20} strokeWidth={2.2} />
-      </div>
-      <div className="vault-platform">
-        <div className="vault-top">
-          <div className="vault-ring">
-            <CircleDollarSign size={74} strokeWidth={1.4} />
-          </div>
-          <span className="vault-spark spark-one" />
-          <span className="vault-spark spark-two" />
-          <span className="vault-spark spark-three" />
-        </div>
-        <div className="vault-face">
-          <LockKeyhole size={37} strokeWidth={1.6} />
-          <span>YOUR KEYS</span>
-        </div>
-      </div>
+    <div className="illustration-card" aria-label="Bitcoin self-custody illustration" role="img">
+      <img src={heroImage} alt="" className="illustration-image" />
       <div className="illustration-caption">
         <span className="caption-dot" />
         <span>Learning mode · no real BTC involved</span>
