@@ -107,7 +107,7 @@ a {
   width: 36px;
   height: 36px;
   display: grid;
-  place-items: center;
+  place-items: stretch;
   color: #1b1d1d;
   border-radius: 50%;
   background: var(--gold-light);
