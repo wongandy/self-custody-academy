@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import johnPortrait from '@/components/John.png';
+import andyPortrait from '@/components/John.png';
 
 type Props = {
   onBack: () => void;
