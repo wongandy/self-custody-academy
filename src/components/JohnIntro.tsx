@@ -7,7 +7,7 @@ type Props = {
   onProceed: () => void;
 };
 
-const JOHN_MESSAGES = [
+const ANDY_MESSAGES = [
   "Hey there! I'm John, and I will teach you how to self-custody your Bitcoin.",
   "Learning to store your own Bitcoin takes practice. Everything here is simulated, so you can explore freely with zero risk.",
   "We'll practice the basics until you feel totally in control. Ready to start?",
