@@ -477,15 +477,36 @@ a {
 }
 
 .profile-link {
-  color: var(--muted);
-  border-bottom: 1px solid var(--muted);
-  font-size: 13px;
-  transition: color 180ms ease, border-color 180ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 178px;
+  padding: 15px 20px;
+  color: var(--gold-light);
+  border: 1px solid rgba(241, 189, 105, 0.28);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .profile-link:hover {
   color: var(--text);
-  border-color: var(--text);
+  border-color: rgba(241, 189, 105, 0.62);
+  background: var(--panel-strong);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.profile-link:active {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+  transform: translateY(1px);
 }
 
 .profile-arrow {
