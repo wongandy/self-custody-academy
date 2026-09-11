@@ -762,10 +762,6 @@ a {
 }
 
 .character-proceed {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  z-index: 20;
   display: inline-flex;
   align-items: center;
   gap: 18px;
@@ -782,18 +778,17 @@ a {
   letter-spacing: 0.11em;
   text-transform: uppercase;
   cursor: pointer;
-  transform: translateX(-50%);
   transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .character-proceed:hover {
   background: #baf866;
   box-shadow: 0 14px 34px rgba(167, 232, 67, 0.25);
-  transform: translate(-50%, -2px);
+  transform: translateY(-2px);
 }
 
 .character-proceed:active {
-  transform: translateX(-50%);
+  transform: translateY(0);
 }
 
 .character-proceed:disabled {
