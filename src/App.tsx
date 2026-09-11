@@ -238,7 +238,7 @@ function App() {
         </main>
       )}
 
-      {screen === 'john-intro' && (
+      {screen === 'andy-intro' && (
         <JohnIntro
           onBack={() => setScreen('home')}
           onProceed={() => setScreen('roadmap')}
