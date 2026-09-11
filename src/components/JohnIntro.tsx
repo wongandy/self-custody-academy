@@ -64,10 +64,10 @@ function JohnIntro({ onBack, onProceed }: Props) {
           <div className="character-portrait-ring">
             <img className="character-portrait-image" src={johnPortrait} alt="John, your academy mentor" />
           </div>
-          {/* <div className="character-portrait-badge">
+          <div className="character-portrait-badge">
             <span className="character-portrait-dot" />
-            <span>Your mentor</span>
-          </div> */}
+            <span>John</span>
+          </div>
         </div>
 
         <div className="character-dialog">
