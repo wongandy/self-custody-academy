@@ -59,7 +59,7 @@ function AndyIntro({ onBack, onProceed }: Props) {
   return (
     <main className="character-section">
       <div className="character-card">
-        <div className="character-portrait" aria-label="John, your academy mentor" role="img">
+        <div className="character-portrait" aria-label="Andy, your academy mentor" role="img">
           <div className="character-portrait-glow" />
           <div className="character-portrait-ring">
             <img className="character-portrait-image" src={johnPortrait} alt="John, your academy mentor" />
