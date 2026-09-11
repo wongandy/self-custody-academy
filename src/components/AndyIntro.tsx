@@ -58,14 +58,18 @@ function AndyIntro({ onBack, onProceed }: Props) {
 
   return (
     <main className="character-section">
-      <div className="character-card">
+      <button className="character-back" type="button" onClick={onBack}>
+        <ArrowLeft size={14} strokeWidth={2.5} />
+        <span>Back</span>
+      </button>
+
+      <div className="character-lesson">
         <div className="character-portrait" aria-label="Andy, your academy mentor" role="img">
           <div className="character-portrait-glow" />
           <div className="character-portrait-ring">
             <img className="character-portrait-image" src={andyPortrait} alt="Andy, your academy mentor" />
           </div>
           <div className="character-portrait-badge">
-            {/* <span className="character-portrait-dot" /> */}
             <span>Andy</span>
           </div>
         </div>
@@ -76,18 +80,18 @@ function AndyIntro({ onBack, onProceed }: Props) {
             {!done && <span className="typewriter-cursor" />}
           </div>
         </div>
+      </div>
 
-        <div className="character-actions">
-          <button
-            className="character-proceed"
-            type="button"
-            onClick={handleContinue}
-            disabled={!done}
-          >
-            <span>Continue</span>
-            <ArrowRight size={18} strokeWidth={2.5} />
-          </button>
-        </div>
+      <div className="character-footer">
+        <button
+          className="character-proceed"
+          type="button"
+          onClick={handleContinue}
+          disabled={!done}
+        >
+          <span>Continue</span>
+          <ArrowRight size={18} strokeWidth={2.5} />
+        </button>
       </div>
     </main>
   );
