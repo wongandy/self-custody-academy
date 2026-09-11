@@ -62,7 +62,7 @@ function AndyIntro({ onBack, onProceed }: Props) {
         <div className="character-portrait" aria-label="Andy, your academy mentor" role="img">
           <div className="character-portrait-glow" />
           <div className="character-portrait-ring">
-            <img className="character-portrait-image" src={johnPortrait} alt="John, your academy mentor" />
+            <img className="character-portrait-image" src={andyPortrait} alt="Andy, your academy mentor" />
           </div>
           <div className="character-portrait-badge">
             {/* <span className="character-portrait-dot" /> */}
