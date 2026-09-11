@@ -207,8 +207,6 @@ a {
 }
 
 .illustration-image {
-  position: relative;
-  top: -40px;
   width: 100%;
   height: auto;
   display: block;
