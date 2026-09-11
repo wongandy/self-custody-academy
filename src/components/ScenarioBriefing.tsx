@@ -79,7 +79,7 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
             <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
               <div className="mentor-portrait-glow" />
               <div className="mentor-portrait-ring">
-                <img className="mentor-portrait-image" src={johnPortrait} alt="John, your mentor" />
+                <img className="mentor-portrait-image" src={johnPortrait} alt="Andy, your mentor" />
               </div>
             </div>
             <div className="mentor-bubble" key={walletPhase}>
