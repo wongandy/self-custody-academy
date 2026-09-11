@@ -76,7 +76,7 @@ function ScenarioBriefing({ completed, isLoggedIn, onBack, onComplete }: Scenari
       <section className="scenario-card scenario-card-fit">
         <div className="scenario-mentor-layout">
           <div className="mentor-row">
-            <div className="mentor-portrait" aria-label="John, your mentor" role="img">
+            <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
               <div className="mentor-portrait-glow" />
               <div className="mentor-portrait-ring">
                 <img className="mentor-portrait-image" src={johnPortrait} alt="John, your mentor" />
