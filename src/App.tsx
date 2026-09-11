@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ArrowUpRight,
-  CircleDollarSign,
+  Bitcoin,
   KeyRound,
   LockKeyhole,
   LogOut,
@@ -166,7 +166,7 @@ function App() {
           onClick={() => setScreen('home')}
         >
           <span className="brand-mark">
-            <CircleDollarSign size={21} strokeWidth={2.3} />
+            <Bitcoin size={21} strokeWidth={2.3} />
           </span>
           <span className="brand-name">
             <strong>SELF</strong> <span>CUSTODY</span> <strong>ACADEMY</strong>
