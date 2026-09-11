@@ -98,7 +98,7 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onBa
           </p>
           <div className="roadmap-mentor-mini">
             <CharacterPlaceholder label="Your mentor" initial="J" />
-            <p><strong>John says:</strong> “Small steps build lasting confidence.”</p>
+            <p><strong>Andy says:</strong> “Small steps build lasting confidence.”</p>
           </div>
         </aside>
 
