@@ -9,7 +9,7 @@ import {
   Sparkles,
   Sun,
 } from 'lucide-react';
-import JohnIntro from '@/components/JohnIntro';
+import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
 import WithdrawScenario from '@/components/WithdrawScenario';
