@@ -104,8 +104,8 @@ a {
 }
 
 .brand-mark {
-  width: 36px;
-  height: 36px;
+  /* width: 36px;
+  height: 36px; */
   display: grid;
   /* place-items: stretch; */
   color: #1b1d1d;
