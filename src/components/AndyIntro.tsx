@@ -58,11 +58,6 @@ function AndyIntro({ onBack, onProceed }: Props) {
 
   return (
     <main className="character-section">
-      <button className="character-back" type="button" onClick={onBack}>
-        <ArrowLeft size={14} strokeWidth={2.5} />
-        <span>Back</span>
-      </button>
-
       <div className="character-lesson">
         <div className="character-portrait" aria-label="Andy, your academy mentor" role="img">
           <div className="character-portrait-glow" />
