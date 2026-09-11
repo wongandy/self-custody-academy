@@ -218,11 +218,9 @@ function App() {
                 onClick={() => setScreen('john-intro')}
               >
                 <span>Get started</span>
-                <ArrowUpRight size={18} strokeWidth={2.5} />
               </button>
               <button className="profile-link" type="button" onClick={handleProfileLink}>
                 I already have an account
-                <span className="profile-arrow">↗</span>
               </button>
             </div>
             {/* <div className="trust-row">
