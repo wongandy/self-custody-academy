@@ -66,7 +66,7 @@ function JohnIntro({ onBack, onProceed }: Props) {
           </div>
           <div className="character-portrait-badge">
             {/* <span className="character-portrait-dot" /> */}
-            <span>Alexander</span>
+            <span>John</span>
           </div>
         </div>
 
