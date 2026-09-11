@@ -215,7 +215,7 @@ function App() {
               <button
                 className="primary-button"
                 type="button"
-                onClick={() => setScreen('john-intro')}
+                onClick={() => setScreen('andy-intro')}
               >
                 <span>Get started</span>
               </button>
