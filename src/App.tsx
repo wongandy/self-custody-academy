@@ -239,7 +239,7 @@ function App() {
       )}
 
       {screen === 'andy-intro' && (
-        <JohnIntro
+        <AndyIntro
           onBack={() => setScreen('home')}
           onProceed={() => setScreen('roadmap')}
         />
