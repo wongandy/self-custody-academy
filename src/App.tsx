@@ -169,7 +169,7 @@ function App() {
             <Bitcoin size={21} strokeWidth={2.3} />
           </span>
           <span className="brand-name">
-            <strong>SELF</strong> <span>CUSTODY</span> <strong>ACADEMY</strong>
+            <strong>SELF</strong>-<span>CUSTODY</span> <strong>ACADEMY</strong>
           </span>
         </a>
 
