@@ -427,18 +427,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
           </div>
         </div>
       </div>
-      {phase !== 'off' && phase !== 'booting' && phase !== 'menu' && (
-        <button
-          className="hw-reset-btn"
-          type="button"
-          onClick={() => {
-            updatePhase('off');
-            setBootStep(0);
-            onPowerChange?.(false);
-          }}
-        >
-        </button>
-      )}
     </div>
   );
 }
