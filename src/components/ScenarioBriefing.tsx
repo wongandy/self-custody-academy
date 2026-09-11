@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.png';
 
@@ -22,7 +22,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
     "Here's your 12-word recovery phrase. In real life you'd write these down on paper — never on a screen. When you're ready, press the checkmark.",
   'create-quiz':
     "Time to prove you saved your words. Pick the correct word for the position shown, then press the checkmark to confirm.",
-  'create-done': 'You did it! Your wallet is set up. Press the checkmark to wrap up this mission.',
+  'create-done': 'You did it! Your wallet is set up. Press Continue to wrap up this mission.',
   'recover-intro': '',
   'recover-quiz': '',
   'recover-done': '',
@@ -81,17 +81,28 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
     : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
-  const canAdvanceIntro = isInIntro && introStep < INTRO_MESSAGES.length - 1;
+  const isFinalIntro = introStep >= INTRO_MESSAGES.length - 1;
 
-  const handleBubbleTap = () => {
+  const canContinue =
+    isInIntro
+      ? done
+      : walletPhase === 'create-done';
+
+  const handleContinue = () => {
     if (!done) {
       skip();
       return;
     }
-    if (canAdvanceIntro) {
-      setIntroStep((s) => s + 1);
-    } else if (isInIntro) {
-      setIntroDone(true);
+    if (isInIntro) {
+      if (isFinalIntro) {
+        setIntroDone(true);
+      } else {
+        setIntroStep((s) => s + 1);
+      }
+      return;
+    }
+    if (walletPhase === 'create-done') {
+      onComplete();
     }
   };
 
@@ -119,23 +130,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
               <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
             </div>
           </div>
-          <div
-            className={`mentor-bubble ${isInIntro ? 'mentor-bubble-interactive' : ''}`}
-            key={bubbleKey}
-            onClick={isInIntro ? handleBubbleTap : undefined}
-            role={isInIntro ? 'button' : undefined}
-            tabIndex={isInIntro ? 0 : undefined}
-            onKeyDown={
-              isInIntro
-                ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleBubbleTap();
-                    }
-                  }
-                : undefined
-            }
-          >
+          <div className="mentor-bubble" key={bubbleKey}>
             <span className="mentor-bubble-name">Andy</span>
             <div className="mentor-bubble-text-wrap">
               <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
@@ -144,19 +139,26 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
                 {!done && <span className="typewriter-cursor" />}
               </p>
             </div>
-            {isInIntro && done && (
-              <div className="mentor-bubble-continue">
-                <span className="mentor-bubble-continue-text">
-                  {canAdvanceIntro ? 'Tap to continue' : 'Tap to begin'}
-                </span>
-                <ChevronDown size={14} strokeWidth={2.5} className="mentor-bubble-continue-icon" />
-              </div>
-            )}
           </div>
         </div>
         {walletVisible && (
-          <HardwareWallet onComplete={onComplete} onPhaseChange={setWalletPhase} />
+          <HardwareWallet
+            onComplete={() => {}}
+            onPhaseChange={setWalletPhase}
+          />
         )}
+      </div>
+
+      <div className="character-footer">
+        <button
+          className="character-proceed"
+          type="button"
+          onClick={handleContinue}
+          disabled={!canContinue}
+        >
+          <span>Continue</span>
+          <ArrowRight size={18} strokeWidth={2.5} />
+        </button>
       </div>
     </main>
   );
