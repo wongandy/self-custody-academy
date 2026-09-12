@@ -10,7 +10,7 @@ type ScenarioBriefingProps = {
 
 const INTRO_MESSAGES = [
   "Got a hardware wallet but not quite sure where to start? Don't worry, I’ve got your back. Let's walk through it together.",
-  "Let's set up your hardware wallet. Start by clicking the power button to turn it on.",
+  "Start by clicking the power button to turn it on.",
 ];
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
