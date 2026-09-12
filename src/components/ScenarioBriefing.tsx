@@ -73,6 +73,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
   const [walletVisible, setWalletVisible] = useState(false);
+  const [walletTransitioning, setWalletTransitioning] = useState(false);
 
   const isInIntro = !introDone;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
@@ -83,10 +84,9 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
 
   const isFinalIntro = introStep >= INTRO_MESSAGES.length - 1;
 
-  const canContinue =
-    isInIntro
-      ? done
-      : walletPhase === 'create-done';
+  const canContinue = isInIntro
+    ? done && !walletTransitioning
+    : walletPhase === 'create-done';
 
   const handleContinue = () => {
     if (!done) {
@@ -94,7 +94,14 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
       return;
     }
     if (isInIntro) {
-      if (isFinalIntro) {
+      if (introStep === 0) {
+        setWalletVisible(true);
+        setWalletTransitioning(true);
+        setTimeout(() => {
+          setIntroStep(1);
+          setWalletTransitioning(false);
+        }, 700);
+      } else if (isFinalIntro) {
         setIntroDone(true);
       } else {
         setIntroStep((s) => s + 1);
@@ -105,13 +112,6 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
       onComplete();
     }
   };
-
-  useEffect(() => {
-    if (introDone && !walletVisible) {
-      const timer = setTimeout(() => setWalletVisible(true), 350);
-      return () => clearTimeout(timer);
-    }
-  }, [introDone, walletVisible]);
 
   const bubbleKey = isInIntro ? `intro-${introStep}` : walletPhase;
 
