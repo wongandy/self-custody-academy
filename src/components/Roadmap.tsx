@@ -59,16 +59,6 @@ const scenarios: Scenario[] = [
   },
 ];
 
-function CharacterPlaceholder({ label, initial, active = false }: { label: string; initial: string; active?: boolean }) {
-  return (
-    <div className={active ? 'roadmap-character active' : 'roadmap-character'}>
-      <div className="roadmap-character-glow" />
-      <div className="roadmap-character-face">{initial}</div>
-      <span>{label}</span>
-    </div>
-  );
-}
-
 function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onBack, onSelectScenario }: RoadmapProps) {
   const availableScenario = Math.min(completedScenarios + 1, scenarios.length);
   const progressPercent = Math.round((completedScenarios / scenarios.length) * 100);
@@ -76,20 +66,6 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onBa
   return (
     <main className="roadmap-page">
       <section className="roadmap-shell">
-        <aside className="roadmap-learner-panel">
-          <CharacterPlaceholder label="Active learner" initial="B" active />
-          <h1>Ben's journey</h1>
-          <p className="roadmap-learner-role">The Casual Holder</p>
-          <div className="roadmap-panel-rule" />
-          <p className="roadmap-learner-copy">
-            One practical step at a time, Ben is learning how to make bitcoin work safely in the real world.
-          </p>
-          <div className="roadmap-mentor-mini">
-            <CharacterPlaceholder label="Your mentor" initial="J" />
-            <p><strong>Andy says:</strong> “Small steps build lasting confidence.”</p>
-          </div>
-        </aside>
-
         <div className="roadmap-main">
           <div className="roadmap-progress-card">
             <div className="roadmap-progress-heading">
