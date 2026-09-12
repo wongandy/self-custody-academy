@@ -14,7 +14,7 @@ const INTRO_MESSAGES = [
 ];
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
-  off: "Let's set up your first hardware wallet. Start by clicking the power button to turn it on.",
+  off: "Let's set up your hardware wallet. Start by clicking the power button to turn it on.",
   booting: 'Great — the device is booting up. Hang tight for a moment.',
   menu: "You'll see 'Create wallet' highlighted. Press the checkmark button to select it.",
   'create-intro': "This screen explains what's about to happen. Press the checkmark to continue.",
