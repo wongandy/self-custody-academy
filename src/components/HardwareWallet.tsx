@@ -162,6 +162,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const handleEnter = useCallback(() => {
     if (phase === 'menu') {
       const target = menuItems[menuIndex].phase;
+      if (target === 'recover-soon') {
+        onMenuSelectionChange?.('recover-intro');
+        return;
+      }
       if (target === 'create-intro') {
         const words = generateMnemonic(12);
         setMnemonic(words);
