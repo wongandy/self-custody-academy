@@ -67,7 +67,7 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onBa
     <main className="roadmap-page">
       <section className="roadmap-shell">
         <div className="roadmap-main">
-          <div className="roadmap-progress-card">
+          {/* <div className="roadmap-progress-card">
             <div className="roadmap-progress-heading">
               <div>
                 <span className="roadmap-label">Ben's current progress</span>
@@ -86,7 +86,7 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onBa
               <span><ShieldCheck size={15} /> {completedScenarios} badges earned</span>
               <span><WalletCards size={15} /> 5 missions total</span>
             </div>
-          </div>
+          </div> */}
 
           <div className="roadmap-path-heading">
             <div>
