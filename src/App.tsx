@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   Sun,
+  X,
 } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
@@ -34,6 +35,8 @@ function CustodyIllustration() {
 }
 
 type Screen = 'home' | 'andy-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'auth';
+
+const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5'];
 
 function App() {
   const { user, isReady, signOut } = useAuth();
@@ -156,22 +159,35 @@ function App() {
     setScreen('home');
   }, [signOut]);
 
+  const isInScenario = SCENARIO_SCREENS.includes(screen);
+
   return (
     <div className={isDark ? 'app-shell theme-dark' : 'app-shell theme-light'}>
       <header className="site-header">
-        <a
-          className="brand"
-          href="#top"
-          aria-label="Self Custody Academy home"
-          onClick={() => setScreen('home')}
-        >
-          <span className="brand-mark">
-            <img src={bitcoinImage} alt="Bitcoin" className="brand-logo-image" />
-          </span>
-          <span className="brand-name">
-            <span>SELF-CUSTODY</span> <strong>ACADEMY</strong>
-          </span>
-        </a>
+        {isInScenario ? (
+          <button
+            className="close-button"
+            type="button"
+            onClick={() => setScreen('roadmap')}
+            aria-label="Back to roadmap"
+          >
+            <X size={20} strokeWidth={2.4} />
+          </button>
+        ) : (
+          <a
+            className="brand"
+            href="#top"
+            aria-label="Self Custody Academy home"
+            onClick={() => setScreen('home')}
+          >
+            <span className="brand-mark">
+              <img src={bitcoinImage} alt="Bitcoin" className="brand-logo-image" />
+            </span>
+            <span className="brand-name">
+              <span>SELF-CUSTODY</span> <strong>ACADEMY</strong>
+            </span>
+          </a>
+        )}
 
         <div className="header-actions">
           {user && (
