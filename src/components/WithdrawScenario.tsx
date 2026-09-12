@@ -32,10 +32,10 @@ export default function WithdrawScenario({ completed, onBack, onComplete }: With
 
   return (
     <main className="scenario-page">
-      <button className="character-back" type="button" onClick={onBack}>
+      {/* <button className="character-back" type="button" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2.4} />
         <span>Back to roadmap</span>
-      </button>
+      </button> */}
 
       <section className="scenario-card">
         <div className="scenario-card-topline">
@@ -244,10 +244,10 @@ export default function WithdrawScenario({ completed, onBack, onComplete }: With
                 <p className="tx-sim-success-body">
                   You've successfully withdrawn bitcoin from an exchange to your own wallet. This is a key step in self-custody.
                 </p>
-                <button className="tx-sim-btn primary" type="button" onClick={onBack}>
+                {/* <button className="tx-sim-btn primary" type="button" onClick={onBack}>
                   <span>Back to roadmap</span>
                   <ArrowRight size={16} strokeWidth={2.4} />
-                </button>
+                </button> */}
               </div>
             )}
           </div>
