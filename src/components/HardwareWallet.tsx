@@ -68,7 +68,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [quizOptions, setQuizOptions] = useState<string[]>([]);
   const [quizSelected, setQuizSelected] = useState(0);
   const [quizWrong, setQuizWrong] = useState(false);
-  const [quizPassed, setQuizPassed] = useState(false);
   const bootTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [recoverIndex, setRecoverIndex] = useState(0);
@@ -111,7 +110,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setQuizOptions([]);
     setQuizSelected(0);
     setQuizWrong(false);
-    setQuizPassed(false);
     setRecoverIndex(0);
     setRecoverOptions([]);
     setRecoverSelected(0);
@@ -184,23 +182,18 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setQuizPositions(positions);
       setQuizIndex(0);
       setQuizWrong(false);
-      setQuizPassed(false);
       const firstCorrect = mnemonic[positions[0]];
       setQuizOptions(buildQuizOptions(firstCorrect));
       setQuizSelected(0);
       updatePhase('create-quiz');
     } else if (phase === 'create-quiz') {
-      if (quizPassed) {
-        onComplete();
-        updatePhase('create-done');
-        return;
-      }
       const expectedWord = mnemonic[quizPositions[quizIndex]];
       const answeredWord = quizOptions[quizSelected];
       if (answeredWord === expectedWord) {
         setQuizWrong(false);
         if (quizIndex + 1 >= quizPositions.length) {
-          setQuizPassed(true);
+          onComplete();
+          updatePhase('create-done');
         } else {
           const nextIndex = quizIndex + 1;
           setQuizIndex(nextIndex);
@@ -243,7 +236,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     menuIndex,
     menuItems,
     mnemonic,
-    quizPassed,
     quizPositions,
     quizIndex,
     quizOptions,
