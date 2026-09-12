@@ -88,6 +88,12 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
     ? done && !walletTransitioning
     : walletPhase === 'create-done';
 
+  useEffect(() => {
+    if (walletPhase !== 'off' && !introDone) {
+      setIntroDone(true);
+    }
+  }, [walletPhase, introDone]);
+
   const handleContinue = () => {
     if (!done) {
       skip();
@@ -101,10 +107,6 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
           setIntroStep(1);
           setWalletTransitioning(false);
         }, 700);
-      } else if (isFinalIntro) {
-        setIntroDone(true);
-      } else {
-        setIntroStep((s) => s + 1);
       }
       return;
     }
@@ -149,7 +151,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
           className="character-proceed"
           type="button"
           onClick={handleContinue}
-          disabled={!canContinue || (introStep === 1 && walletPhase === 'off')}
+          disabled={!canContinue}
         >
           <span>Continue</span>
           <ArrowRight size={18} strokeWidth={2.5} />
