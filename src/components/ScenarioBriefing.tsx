@@ -72,7 +72,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
-  const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro'>('create-intro');
+  const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('create-intro');
   const [walletVisible, setWalletVisible] = useState(false);
 
   const isInIntro = !introDone;

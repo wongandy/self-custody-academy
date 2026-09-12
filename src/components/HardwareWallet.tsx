@@ -21,14 +21,16 @@ export type WalletPhase =
   | 'create-done'
   | 'recover-intro'
   | 'recover-quiz'
-  | 'recover-done';
+  | 'recover-done'
+  | 'receive-address'
+  | 'send-blocked';
 
 type HardwareWalletProps = {
   onComplete: () => void;
   onPowerChange?: (isOn: boolean) => void;
   onPhaseChange?: (phase: WalletPhase) => void;
-  onMenuSelectionChange?: (phase: 'create-intro' | 'recover-intro') => void;
-  mode?: 'setup' | 'recover';
+  onMenuSelectionChange?: (phase: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => void;
+  mode?: 'setup' | 'recover' | 'withdraw';
   expectedMnemonic?: string[];
 };
 
@@ -76,10 +78,18 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [recoverWrong, setRecoverWrong] = useState(false);
 
   const menuItems = useMemo(
-    () => [
-      { label: mode === 'recover' ? 'Recover wallet' : 'Create wallet', phase: (mode === 'recover' ? 'recover-intro' : 'create-intro') as WalletPhase },
-      ...(mode === 'setup' ? [{ label: 'Recover wallet', phase: 'recover-soon' as WalletPhase }] : []),
-    ],
+    () => {
+      if (mode === 'withdraw') {
+        return [
+          { label: 'Receive Bitcoin', phase: 'receive-address' as WalletPhase },
+          { label: 'Send Bitcoin', phase: 'send-blocked' as WalletPhase },
+        ];
+      }
+      return [
+        { label: mode === 'recover' ? 'Recover wallet' : 'Create wallet', phase: (mode === 'recover' ? 'recover-intro' : 'create-intro') as WalletPhase },
+        ...(mode === 'setup' ? [{ label: 'Recover wallet', phase: 'recover-soon' as WalletPhase }] : []),
+      ];
+    },
     [mode],
   );
 
@@ -132,8 +142,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const handleUp = useCallback(() => {
     if (phase === 'menu') {
       const nextIndex = menuIndex === 0 ? menuItems.length - 1 : menuIndex - 1;
-      setMenuIndex(nextIndex);
-      onMenuSelectionChange?.(menuItems[nextIndex].label === 'Create wallet' ? 'create-intro' : 'recover-intro');
+      const next = menuItems[nextIndex];
+      onMenuSelectionChange?.(next.phase === 'create-intro' ? 'create-intro' : next.phase === 'recover-intro' ? 'recover-intro' : next.phase === 'receive-address' ? 'receive-address' : 'send-blocked');
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s === 0 ? quizOptions.length - 1 : s - 1));
       setQuizWrong(false);
@@ -146,8 +156,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const handleDown = useCallback(() => {
     if (phase === 'menu') {
       const nextIndex = menuIndex === menuItems.length - 1 ? 0 : menuIndex + 1;
-      setMenuIndex(nextIndex);
-      onMenuSelectionChange?.(menuItems[nextIndex].label === 'Create wallet' ? 'create-intro' : 'recover-intro');
+      const next = menuItems[nextIndex];
+      onMenuSelectionChange?.(next.phase === 'create-intro' ? 'create-intro' : next.phase === 'recover-intro' ? 'recover-intro' : next.phase === 'receive-address' ? 'receive-address' : 'send-blocked');
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s + 1) % quizOptions.length);
       setQuizWrong(false);
@@ -164,12 +174,24 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         onMenuSelectionChange?.('recover-intro');
         return;
       }
+      if (target === 'send-blocked') {
+        onMenuSelectionChange?.('send-blocked');
+        return;
+      }
+      if (target === 'receive-address') {
+        updatePhase('receive-address');
+        onMenuSelectionChange?.('receive-address');
+        return;
+      }
       if (target === 'create-intro') {
         const words = generateMnemonic(12);
         setMnemonic(words);
         setSessionMnemonic(words);
       }
       updatePhase(target);
+    } else if (phase === 'receive-address') {
+      updatePhase('menu');
+      setMenuIndex(0);
     } else if (phase === 'create-intro') {
       updatePhase('create-words');
     } else if (phase === 'create-words') {
@@ -397,6 +419,15 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">
                   Your wallet has been restored from your recovery phrase. Your keys are back under your control.
                 </p>
+              </div>
+            )}
+            {phase === 'receive-address' && (
+              <div className="hw-screen-text">
+                <span className="hw-screen-title">Receive address</span>
+                <div className="hw-receive-addr-box">
+                  <span className="hw-receive-addr">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</span>
+                </div>
+                <p className="hw-screen-body">Use this address to receive Bitcoin. Press the checkmark to go back.</p>
               </div>
             )}
           </div>
