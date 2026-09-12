@@ -23,7 +23,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'create-quiz':
     "Time to prove you saved your words. Pick the correct word for the position shown, then press the checkmark to confirm.",
   'create-done': 'You did it! Your wallet is set up. Press Continue to wrap up this mission.',
-  'recover-intro': '',
+  'recover-intro': "We'll cover wallet recovery later. Select Create Wallet for now.",
   'recover-quiz': '',
   'recover-done': '',
 };
@@ -72,13 +72,16 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
+  const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro'>('create-intro');
   const [walletVisible, setWalletVisible] = useState(false);
 
   const isInIntro = !introDone;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
   const mentorMessage = isInIntro
     ? currentIntroMessage
-    : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
+    : walletPhase === 'menu' && menuSelection === 'recover-intro'
+      ? "We'll cover wallet recovery later. Select Create Wallet for now."
+      : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
   const canContinue = isInIntro
@@ -133,6 +136,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
           <HardwareWallet
             onComplete={() => {}}
             onPhaseChange={setWalletPhase}
+            onMenuSelectionChange={setMenuSelection}
           />
         </div>
       </div>

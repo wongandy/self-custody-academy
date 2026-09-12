@@ -27,6 +27,7 @@ type HardwareWalletProps = {
   onComplete: () => void;
   onPowerChange?: (isOn: boolean) => void;
   onPhaseChange?: (phase: WalletPhase) => void;
+  onMenuSelectionChange?: (phase: 'create-intro' | 'recover-intro') => void;
   mode?: 'setup' | 'recover';
   expectedMnemonic?: string[];
 };
@@ -52,7 +53,7 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>('off');
   const [bootStep, setBootStep] = useState(0);
 
@@ -132,7 +133,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   const handleUp = useCallback(() => {
     if (phase === 'menu') {
-      setMenuIndex((i) => (i === 0 ? menuItems.length - 1 : i - 1));
+      const nextIndex = menuIndex === 0 ? menuItems.length - 1 : menuIndex - 1;
+      setMenuIndex(nextIndex);
+      onMenuSelectionChange?.(menuItems[nextIndex].label === 'Create wallet' ? 'create-intro' : 'recover-intro');
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s === 0 ? quizOptions.length - 1 : s - 1));
       setQuizWrong(false);
@@ -140,11 +143,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setRecoverSelected((s) => (s === 0 ? recoverOptions.length - 1 : s - 1));
       setRecoverWrong(false);
     }
-  }, [phase, menuItems.length, quizOptions.length, recoverOptions.length]);
+  }, [phase, menuIndex, menuItems, onMenuSelectionChange, quizOptions.length, recoverOptions.length]);
 
   const handleDown = useCallback(() => {
     if (phase === 'menu') {
-      setMenuIndex((i) => (i === menuItems.length - 1 ? 0 : i + 1));
+      const nextIndex = menuIndex === menuItems.length - 1 ? 0 : menuIndex + 1;
+      setMenuIndex(nextIndex);
+      onMenuSelectionChange?.(menuItems[nextIndex].label === 'Create wallet' ? 'create-intro' : 'recover-intro');
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s + 1) % quizOptions.length);
       setQuizWrong(false);
@@ -152,7 +157,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setRecoverSelected((s) => (s + 1) % recoverOptions.length);
       setRecoverWrong(false);
     }
-  }, [phase, menuItems.length, quizOptions.length, recoverOptions.length]);
+  }, [phase, menuIndex, menuItems, onMenuSelectionChange, quizOptions.length, recoverOptions.length]);
 
   const handleEnter = useCallback(() => {
     if (phase === 'menu') {
