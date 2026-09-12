@@ -117,11 +117,6 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
 
   return (
     <main className="scenario-page scenario-page-fit">
-      <button className="character-back" type="button" onClick={onBack}>
-        <ArrowLeft size={16} strokeWidth={2.4} />
-        <span>Back to roadmap</span>
-      </button>
-
       <div className="scenario-mentor-layout">
         <div className="mentor-row">
           <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
