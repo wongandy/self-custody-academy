@@ -79,9 +79,11 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   const mentorMessage = isInIntro
     ? currentIntroMessage
     : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
-  const { displayed, done } = useTypewriter(mentorMessage);
+  const { displayed, done, skip } = useTypewriter(mentorMessage);
 
-  const canContinue = !isInIntro && walletPhase === 'create-done';
+  const canContinue = isInIntro
+    ? introStep === 0 && done
+    : walletPhase === 'create-done';
 
   useEffect(() => {
     if (walletPhase !== 'off' && !introDone) {
@@ -89,17 +91,16 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
     }
   }, [walletPhase, introDone]);
 
-  useEffect(() => {
-    if (isInIntro && introStep === 0 && done) {
-      setWalletVisible(true);
-      const timer = setTimeout(() => {
-        setIntroStep(1);
-      }, 700);
-      return () => clearTimeout(timer);
-    }
-  }, [isInIntro, introStep, done]);
-
   const handleContinue = () => {
+    if (!done) {
+      skip();
+      return;
+    }
+    if (isInIntro && introStep === 0) {
+      setWalletVisible(true);
+      setIntroStep(1);
+      return;
+    }
     if (walletPhase === 'create-done') {
       onComplete();
     }
