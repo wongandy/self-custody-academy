@@ -136,12 +136,12 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
             </div>
           </div>
         </div>
-        {walletVisible && (
+        <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
           <HardwareWallet
             onComplete={() => {}}
             onPhaseChange={setWalletPhase}
           />
-        )}
+        </div>
       </div>
 
       <div className="character-footer">

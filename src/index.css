@@ -2651,6 +2651,24 @@ a {
 
 /* ── Scenario briefing with wallet ── */
 
+.hw-wallet-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  transition: opacity 400ms ease;
+}
+
+.hw-wallet-slot.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.hw-wallet-slot.hidden .hw-wallet-device {
+  animation: none;
+}
+
 .hw-reset-btn {
   display: inline-flex;
   align-items: center;
