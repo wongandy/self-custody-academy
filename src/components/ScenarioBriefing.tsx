@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.png';
 
@@ -73,20 +73,15 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
   const [walletVisible, setWalletVisible] = useState(false);
-  const [walletTransitioning, setWalletTransitioning] = useState(false);
 
   const isInIntro = !introDone;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
   const mentorMessage = isInIntro
     ? currentIntroMessage
     : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
-  const { displayed, done, skip } = useTypewriter(mentorMessage);
+  const { displayed, done } = useTypewriter(mentorMessage);
 
-  const isFinalIntro = introStep >= INTRO_MESSAGES.length - 1;
-
-  const canContinue = isInIntro
-    ? done && !walletTransitioning
-    : walletPhase === 'create-done';
+  const canContinue = !isInIntro && walletPhase === 'create-done';
 
   useEffect(() => {
     if (walletPhase !== 'off' && !introDone) {
@@ -94,22 +89,17 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
     }
   }, [walletPhase, introDone]);
 
+  useEffect(() => {
+    if (isInIntro && introStep === 0 && done) {
+      setWalletVisible(true);
+      const timer = setTimeout(() => {
+        setIntroStep(1);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, [isInIntro, introStep, done]);
+
   const handleContinue = () => {
-    if (!done) {
-      skip();
-      return;
-    }
-    if (isInIntro) {
-      if (introStep === 0) {
-        setWalletVisible(true);
-        setWalletTransitioning(true);
-        setTimeout(() => {
-          setIntroStep(1);
-          setWalletTransitioning(false);
-        }, 700);
-      }
-      return;
-    }
     if (walletPhase === 'create-done') {
       onComplete();
     }
