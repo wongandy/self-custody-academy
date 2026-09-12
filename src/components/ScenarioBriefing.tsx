@@ -149,7 +149,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
           className="character-proceed"
           type="button"
           onClick={handleContinue}
-          disabled={!canContinue}
+          disabled={!canContinue || (introStep === 1 && walletPhase === 'off')}
         >
           <span>Continue</span>
           <ArrowRight size={18} strokeWidth={2.5} />
