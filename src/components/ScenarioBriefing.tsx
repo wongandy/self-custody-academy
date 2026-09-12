@@ -9,7 +9,7 @@ type ScenarioBriefingProps = {
 };
 
 const INTRO_MESSAGES = [
-  "Got a hardware wallet but not quite sure where to start? Don't worry, I’ve got your back. Let's walk through it together.",
+  "Let's setup your hardware wallet. Don't worry, we'll walk through it together.",
   "Start by clicking the power button to turn it on.",
 ];
 
