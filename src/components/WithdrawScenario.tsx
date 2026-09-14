@@ -15,7 +15,7 @@ const NETWORK_FEE = 0.00002;
 
 const INTRO_MESSAGES = [
   "It's time to withdraw your Bitcoin from the exchange to your hardware wallet.",
-  "First, let's get a receive address from your wallet. Power on your wallet by clicking the power button.",
+  "First, let's get a receive address from your hardware wallet. Power it on by clicking the power button.",
 ];
 
 const MENTOR_MESSAGES: Record<string, string> = {
