@@ -3380,8 +3380,9 @@ a {
   min-height: 340px;
 }
 
-.withdraw-panel-hidden {
-  display: none;
+.withdraw-panel-hidden,
+.withdraw-phone-wrap.withdraw-panel-hidden {
+  display: none !important;
 }
 
 /* ── Smartphone frame ── */
