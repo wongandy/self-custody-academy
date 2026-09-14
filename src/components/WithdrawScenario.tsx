@@ -15,13 +15,12 @@ const NETWORK_FEE = 0.00002;
 
 const INTRO_MESSAGES = [
   "It's time to withdraw your Bitcoin from the exchange to your hardware wallet.",
-  "First, let's get a receive address from your wallet. Click the switch below to open it.",
+  "First, let's get a receive address from your wallet. Power on your wallet by clicking the power button.",
 ];
 
 const MENTOR_MESSAGES: Record<string, string> = {
   'panel-exchange': 'Paste your receive address into the exchange withdrawal form, then press Withdraw.',
   'panel-wallet': 'Power on your wallet, then select Receive Bitcoin to get your address.',
-  'wallet-off': 'Power on your wallet by clicking the power button.',
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-receive': 'There is your receive address. Copy it, switch back to the exchange, and paste it into the withdrawal form.',
@@ -178,10 +177,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     }
     if (isInIntro && introStep === 0) {
       setIntroStep(1);
-      return;
-    }
-    if (isInIntro && introStep === 1) {
-      setIntroDone(true);
       return;
     }
   };
@@ -404,7 +399,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             className="character-proceed"
             type="button"
             onClick={handleContinue}
-            disabled={!isInIntro}
+            disabled={isInIntro && introStep === 1}
           >
             <span>Continue</span>
             <ArrowRight size={18} strokeWidth={2.5} />
