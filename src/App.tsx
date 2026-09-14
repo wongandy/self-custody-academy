@@ -323,11 +323,13 @@ function App() {
         />
       )}
 
-      <footer className="site-footer">
-        <span>Learning mode: simulation only</span>
-        <span className="footer-separator">•</span>
-        <span>No real BTC involved</span>
-      </footer>
+      {screen === 'home' && (
+        <footer className="site-footer">
+          <span>Learning mode: simulation only</span>
+          <span className="footer-separator">•</span>
+          <span>No real BTC involved</span>
+        </footer>
+      )}
     </div>
   );
 }
