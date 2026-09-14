@@ -299,12 +299,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                             placeholder="Paste wallet receive address"
                             className="withdraw-addr-input"
                           />
-                          {hasRetrievedAddress && (
-                            <button className="withdraw-copy-btn" type="button" onClick={handleCopyAddress}>
-                              {copied ? <Check size={11} /> : <Copy size={11} />}
-                              <span>{copied ? 'Copied!' : 'Copy wallet address'}</span>
-                            </button>
-                          )}
                         </div>
 
                         <div className="withdraw-phone-summary">
