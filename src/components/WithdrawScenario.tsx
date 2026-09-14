@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowRight, Building2, Copy, Check } from 'lucide-react';
+import { ArrowRight, ChevronDown, Copy, Check, Smartphone } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.png';
 
@@ -10,6 +10,8 @@ type WithdrawScenarioProps = {
 };
 
 const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+const AVAILABLE_BALANCE = 0.05;
+const NETWORK_FEE = 0.00002;
 
 const INTRO_MESSAGES = [
   "It's time to withdraw your Bitcoin from the exchange to your hardware wallet.",
@@ -66,6 +68,10 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done, skip };
 }
 
+function formatBtc(value: number): string {
+  return value.toFixed(8).replace(/\.?0+$/, '');
+}
+
 export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) {
   const [activePanel, setActivePanel] = useState<'exchange' | 'wallet'>('wallet');
   const [introStep, setIntroStep] = useState(0);
@@ -73,10 +79,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
   const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('create-intro');
   const [sendAddress, setSendAddress] = useState('');
-  const [amount, setAmount] = useState('0.05');
+  const [amount, setAmount] = useState('');
+  const [amountError, setAmountError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
+  const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
 
   const isInIntro = !introDone;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
@@ -123,9 +131,35 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     setTimeout(() => setCopied(false), 2000);
   }, []);
 
+  const handleAmountChange = useCallback((val: string) => {
+    setAmount(val);
+    const parsed = parseFloat(val);
+    if (val === '' || isNaN(parsed)) {
+      setAmountError('');
+      return;
+    }
+    if (parsed > AVAILABLE_BALANCE) {
+      setAmountError('Insufficient balance. The amount exceeds your available balance.');
+    } else {
+      setAmountError('');
+    }
+  }, []);
+
+  const handleMax = useCallback(() => {
+    const maxAmount = AVAILABLE_BALANCE - NETWORK_FEE;
+    setAmount(maxAmount.toFixed(8));
+    setAmountError('');
+  }, []);
+
+  const numericAmount = parseFloat(amount) || 0;
+  const receivedAmount = numericAmount > 0 ? Math.max(numericAmount - NETWORK_FEE, 0) : 0;
+  const isAmountValid = numericAmount > 0 && numericAmount <= AVAILABLE_BALANCE && amountError === '';
+  const isAddressValid = sendAddress.trim().length > 0;
+
   const canContinue = !isInIntro
     && hasRetrievedAddress
-    && sendAddress.trim().length > 0;
+    && isAmountValid
+    && isAddressValid;
 
   const handleContinue = () => {
     if (!done) {
@@ -180,42 +214,111 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             </button>
           )}
 
-          <div className="withdraw-panel-slot">
-            {activePanel === 'exchange' && (
-              <div className="withdraw-exchange-panel">
-                <div className="tx-sim-header">
-                  <Building2 size={20} strokeWidth={1.6} />
-                  <span>SimExchange — Withdraw Bitcoin</span>
-                </div>
-                <div className="tx-sim-balance">Balance: 0.0500 BTC</div>
-                <div className="tx-sim-field">
-                  <label>Amount (BTC)</label>
-                  <input
-                    type="text"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.05"
-                  />
-                </div>
-                <div className="tx-sim-field">
-                  <label>Send to address</label>
-                  <input
-                    type="text"
-                    value={sendAddress}
-                    onChange={(e) => setSendAddress(e.target.value)}
-                    placeholder="Paste your wallet receive address here"
-                  />
-                </div>
-                {hasRetrievedAddress && (
-                  <button className="tx-copy-btn" type="button" onClick={handleCopyAddress}>
-                    {copied ? <Check size={12} /> : <Copy size={12} />}
-                    <span>{copied ? 'Copied!' : 'Copy wallet address'}</span>
-                  </button>
-                )}
-              </div>
-            )}
+          <div className="withdraw-panels-wrap">
+            {/* ── Smartphone exchange panel ── */}
+            <div className={`withdraw-phone-wrap ${activePanel === 'exchange' ? '' : 'withdraw-panel-hidden'}`}>
+              <div className="withdraw-phone">
+                <div className="withdraw-phone-notch" />
+                <div className="withdraw-phone-screen">
+                  <div className="withdraw-phone-statusbar">
+                    <span>9:41</span>
+                    <span className="withdraw-phone-statusbar-icons">
+                      <span className="withdraw-phone-signal" />
+                      <span className="withdraw-phone-battery" />
+                    </span>
+                  </div>
+                  <div className="withdraw-phone-content">
+                    <div className="withdraw-phone-app-header">
+                      <Smartphone size={16} strokeWidth={1.8} />
+                      <span>SimExchange</span>
+                    </div>
 
-            {activePanel === 'wallet' && (
+                    <div className="withdraw-phone-section">
+                      <label>Asset</label>
+                      <button
+                        className="withdraw-asset-dropdown"
+                        type="button"
+                        onClick={() => setAssetDropdownOpen(!assetDropdownOpen)}
+                      >
+                        <span className="withdraw-asset-icon">
+                          <span className="withdraw-asset-btc">B</span>
+                        </span>
+                        <span className="withdraw-asset-name">Bitcoin</span>
+                        <ChevronDown size={14} strokeWidth={2} className={`withdraw-asset-chevron ${assetDropdownOpen ? 'open' : ''}`} />
+                      </button>
+                      {assetDropdownOpen && (
+                        <div className="withdraw-asset-menu">
+                          <div className="withdraw-asset-option active">
+                            <span className="withdraw-asset-icon">
+                              <span className="withdraw-asset-btc">B</span>
+                            </span>
+                            <span className="withdraw-asset-name">Bitcoin</span>
+                            <Check size={12} strokeWidth={2.5} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="withdraw-phone-section">
+                      <div className="withdraw-phone-label-row">
+                        <label>Withdraw amount</label>
+                        <button className="withdraw-max-btn" type="button" onClick={handleMax}>
+                          MAX
+                        </button>
+                      </div>
+                      <div className="withdraw-amount-input-wrap">
+                        <input
+                          type="text"
+                          value={amount}
+                          onChange={(e) => handleAmountChange(e.target.value)}
+                          placeholder="0.00"
+                          className={amountError ? 'error' : ''}
+                        />
+                        <span className="withdraw-amount-unit">BTC</span>
+                      </div>
+                      {amountError && (
+                        <p className="withdraw-amount-error">{amountError}</p>
+                      )}
+                    </div>
+
+                    <div className="withdraw-phone-section">
+                      <label>Send to address</label>
+                      <input
+                        type="text"
+                        value={sendAddress}
+                        onChange={(e) => setSendAddress(e.target.value)}
+                        placeholder="Paste wallet receive address"
+                        className="withdraw-addr-input"
+                      />
+                      {hasRetrievedAddress && (
+                        <button className="withdraw-copy-btn" type="button" onClick={handleCopyAddress}>
+                          {copied ? <Check size={11} /> : <Copy size={11} />}
+                          <span>{copied ? 'Copied!' : 'Copy wallet address'}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="withdraw-phone-summary">
+                      <div className="withdraw-summary-row">
+                        <span>Available</span>
+                        <strong>{AVAILABLE_BALANCE.toFixed(4)} BTC</strong>
+                      </div>
+                      <div className="withdraw-summary-row">
+                        <span>Network fee</span>
+                        <strong>{NETWORK_FEE.toFixed(5)} BTC</strong>
+                      </div>
+                      <div className="withdraw-summary-row received">
+                        <span>Received</span>
+                        <strong>{receivedAmount > 0 ? receivedAmount.toFixed(8) : '—'} BTC</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Hardware wallet panel ── */}
+            <div className={`withdraw-wallet-wrap ${activePanel === 'wallet' ? '' : 'withdraw-panel-hidden'}`}>
               <div className="hw-wallet-slot">
                 <HardwareWallet
                   mode="withdraw"
@@ -224,7 +327,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                   onMenuSelectionChange={handleMenuSelectionChange}
                 />
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

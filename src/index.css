@@ -3372,40 +3372,426 @@ a {
   transform: translateY(0);
 }
 
-.withdraw-panel-slot {
+.withdraw-panels-wrap {
+  position: relative;
+  width: 100%;
   display: flex;
   justify-content: center;
-  width: 100%;
   min-height: 340px;
 }
 
-/* ── Withdraw exchange placeholder panel ── */
+.withdraw-panel-hidden {
+  display: none;
+}
 
-.withdraw-exchange-panel {
-  width: 360px;
+/* ── Smartphone frame ── */
+
+.withdraw-phone-wrap {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 24px 20px;
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  background: linear-gradient(160deg, #2a2d30, #1a1d1f);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  justify-content: center;
   animation: hw-fade-in 300ms ease;
 }
 
-.theme-light .withdraw-exchange-panel {
-  border-color: rgba(0, 0, 0, 0.12);
-  background: linear-gradient(160deg, #d8d4cc, #c4c0b8);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+.withdraw-phone {
+  position: relative;
+  width: 300px;
+  height: 580px;
+  border: 3px solid #3a3d3f;
+  border-radius: 36px;
+  background: #1a1d1f;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+  overflow: hidden;
 }
 
-.withdraw-exchange-panel .tx-sim-header {
-  padding-bottom: 12px;
+.theme-light .withdraw-phone {
+  border-color: #5a5d5f;
+  background: #c4c0b8;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), inset 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
-.withdraw-exchange-panel .tx-sim-balance {
+.withdraw-phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 22px;
+  background: #1a1d1f;
+  border-radius: 0 0 14px 14px;
+  z-index: 10;
+}
+
+.theme-light .withdraw-phone-notch {
+  background: #5a5d5f;
+}
+
+.withdraw-phone-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #232628, #1a1d1f);
+  border-radius: 33px;
+  overflow: hidden;
+}
+
+.theme-light .withdraw-phone-screen {
+  background: linear-gradient(180deg, #e8e4dc, #d4d0c8);
+}
+
+.withdraw-phone-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 22px 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--faint);
+  flex-shrink: 0;
+}
+
+.withdraw-phone-statusbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.withdraw-phone-signal {
+  width: 12px;
+  height: 8px;
+  border: 1px solid var(--faint);
+  border-radius: 2px;
+  position: relative;
+}
+
+.withdraw-phone-signal::after {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: 1px;
+  right: 1px;
+  height: 3px;
+  background: var(--faint);
+  border-radius: 1px;
+}
+
+.withdraw-phone-battery {
+  width: 18px;
+  height: 9px;
+  border: 1px solid var(--faint);
+  border-radius: 2px;
+  position: relative;
+}
+
+.withdraw-phone-battery::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 1px;
+  bottom: 1px;
+  width: 10px;
+  background: var(--green);
+  border-radius: 1px;
+}
+
+.withdraw-phone-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 18px 18px;
+  overflow-y: auto;
+}
+
+.withdraw-phone-app-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(167, 232, 67, 0.12);
+}
+
+.withdraw-phone-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.withdraw-phone-section label,
+.withdraw-phone-label-row label {
+  color: var(--faint);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.withdraw-phone-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Asset dropdown ── */
+
+.withdraw-asset-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: border-color 180ms ease;
+}
+
+.theme-light .withdraw-asset-dropdown {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.withdraw-asset-dropdown:hover {
+  border-color: rgba(241, 189, 105, 0.3);
+}
+
+.withdraw-asset-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f7931a;
+  flex-shrink: 0;
+}
+
+.withdraw-asset-btc {
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.withdraw-asset-name {
+  flex: 1;
+  text-align: left;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.withdraw-asset-chevron {
+  color: var(--faint);
+  transition: transform 200ms ease;
+}
+
+.withdraw-asset-chevron.open {
+  transform: rotate(180deg);
+}
+
+.withdraw-asset-menu {
+  margin-top: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: hw-fade-in 150ms ease;
+}
+
+.theme-light .withdraw-asset-menu {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.withdraw-asset-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.withdraw-asset-option.active {
+  color: var(--green);
+}
+
+.withdraw-asset-option.active svg {
+  color: var(--green);
+}
+
+/* ── Amount input ── */
+
+.withdraw-amount-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.withdraw-amount-input-wrap input {
+  width: 100%;
+  padding: 12px 48px 12px 12px;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 180ms ease;
+}
+
+.theme-light .withdraw-amount-input-wrap input {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.withdraw-amount-input-wrap input:focus {
+  border-color: rgba(167, 232, 67, 0.5);
+}
+
+.withdraw-amount-input-wrap input.error {
+  border-color: rgba(232, 113, 113, 0.5);
+}
+
+.withdraw-amount-unit {
+  position: absolute;
+  right: 14px;
+  color: var(--faint);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.withdraw-max-btn {
+  padding: 4px 10px;
+  border: 1px solid rgba(241, 189, 105, 0.3);
+  border-radius: 6px;
+  background: rgba(241, 189, 105, 0.08);
+  color: var(--gold-light);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.withdraw-max-btn:hover {
+  border-color: rgba(241, 189, 105, 0.6);
+  background: rgba(241, 189, 105, 0.15);
+}
+
+.withdraw-amount-error {
   margin: 0;
+  padding: 8px 10px;
+  color: #e87171;
+  border: 1px solid rgba(232, 113, 113, 0.2);
+  border-radius: 8px;
+  background: rgba(232, 113, 113, 0.05);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* ── Address input ── */
+
+.withdraw-addr-input {
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--green);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  outline: none;
+  transition: border-color 180ms ease;
+}
+
+.theme-light .withdraw-addr-input {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.withdraw-addr-input:focus {
+  border-color: rgba(167, 232, 67, 0.5);
+}
+
+.withdraw-addr-input::placeholder {
+  color: var(--faint);
+  font-size: 10px;
+}
+
+.withdraw-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.withdraw-copy-btn:hover {
+  color: var(--text);
+  border-color: rgba(241, 189, 105, 0.4);
+}
+
+.withdraw-copy-btn svg {
+  color: var(--green);
+}
+
+/* ── Summary box ── */
+
+.withdraw-phone-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  margin-top: 2px;
+}
+
+.theme-light .withdraw-phone-summary {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.withdraw-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+}
+
+.withdraw-summary-row span {
+  color: var(--faint);
+}
+
+.withdraw-summary-row strong {
+  color: var(--text);
+  text-align: right;
+}
+
+.withdraw-summary-row.received {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.withdraw-summary-row.received strong {
+  color: var(--green);
 }
 
 /* ── Hardware wallet receive address screen ── */
@@ -3427,11 +3813,12 @@ a {
   line-height: 1.5;
 }
 
+/* ── Responsive ── */
+
 @media (max-width: 600px) {
-  .withdraw-exchange-panel {
-    width: 100%;
-    max-width: 340px;
-    padding: 18px 14px;
+  .withdraw-phone {
+    width: 270px;
+    height: 540px;
   }
 
   .withdraw-middle-area {
