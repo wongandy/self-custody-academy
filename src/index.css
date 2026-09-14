@@ -3394,10 +3394,10 @@ a {
 
 .withdraw-phone {
   position: relative;
-  width: 300px;
-  height: 580px;
+  width: 260px;
+  height: 460px;
   border: 3px solid #3a3d3f;
-  border-radius: 36px;
+  border-radius: 32px;
   background: #1a1d1f;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.04);
   overflow: hidden;
@@ -3414,10 +3414,10 @@ a {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 90px;
-  height: 22px;
+  width: 70px;
+  height: 18px;
   background: #1a1d1f;
-  border-radius: 0 0 14px 14px;
+  border-radius: 0 0 12px 12px;
   z-index: 10;
 }
 
@@ -3431,7 +3431,7 @@ a {
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #232628, #1a1d1f);
-  border-radius: 33px;
+  border-radius: 29px;
   overflow: hidden;
 }
 
@@ -3443,9 +3443,9 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 22px 4px;
+  padding: 4px 18px 2px;
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 9px;
   color: var(--faint);
   flex-shrink: 0;
 }
@@ -3498,28 +3498,28 @@ a {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 8px 18px 18px;
+  gap: 10px;
+  padding: 6px 14px 14px;
   overflow-y: auto;
 }
 
 .withdraw-phone-app-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--green);
   font-family: 'DM Mono', monospace;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.03em;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid rgba(167, 232, 67, 0.12);
 }
 
 .withdraw-phone-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .withdraw-phone-section label,
@@ -3542,11 +3542,11 @@ a {
 .withdraw-asset-dropdown {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.25);
   cursor: pointer;
   transition: border-color 180ms ease;
@@ -3563,8 +3563,8 @@ a {
 .withdraw-asset-icon {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #f7931a;
   flex-shrink: 0;
@@ -3573,7 +3573,7 @@ a {
 .withdraw-asset-btc {
   color: #fff;
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -3581,7 +3581,7 @@ a {
   flex: 1;
   text-align: left;
   color: var(--text);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -3634,13 +3634,13 @@ a {
 
 .withdraw-amount-input-wrap input {
   width: 100%;
-  padding: 12px 48px 12px 12px;
+  padding: 10px 40px 10px 10px;
   color: var(--text);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.25);
   font-family: 'DM Mono', monospace;
-  font-size: 15px;
+  font-size: 13px;
   outline: none;
   transition: border-color 180ms ease;
 }
@@ -3701,13 +3701,13 @@ a {
 
 .withdraw-addr-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   color: var(--green);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.25);
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-size: 10px;
   outline: none;
   transition: border-color 180ms ease;
 }
@@ -3756,10 +3756,10 @@ a {
 .withdraw-phone-summary {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
+  gap: 6px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.15);
   margin-top: 2px;
 }
@@ -3773,7 +3773,7 @@ a {
   align-items: center;
   justify-content: space-between;
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .withdraw-summary-row span {
@@ -3786,7 +3786,7 @@ a {
 }
 
 .withdraw-summary-row.received {
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid var(--line);
 }
 
@@ -3817,11 +3817,179 @@ a {
 
 @media (max-width: 600px) {
   .withdraw-phone {
-    width: 270px;
-    height: 540px;
+    width: 240px;
+    height: 420px;
   }
 
   .withdraw-middle-area {
     max-width: 100%;
   }
+}
+
+/* ── Withdraw button ── */
+
+.withdraw-btn {
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 8px;
+  background: var(--gold);
+  color: #1a1d1f;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 180ms ease;
+  margin-top: 2px;
+}
+
+.withdraw-btn:hover:not(:disabled) {
+  background: var(--gold-light);
+  box-shadow: 0 6px 20px rgba(241, 189, 105, 0.25);
+  transform: translateY(-1px);
+}
+
+.withdraw-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.withdraw-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Confirmation screen ── */
+
+.withdraw-confirm-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 160ms ease;
+  flex-shrink: 0;
+}
+
+.withdraw-confirm-back:hover {
+  color: var(--text);
+  border-color: rgba(241, 189, 105, 0.4);
+}
+
+.withdraw-confirm-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.withdraw-confirm-receive {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 12px;
+  background: rgba(167, 232, 67, 0.06);
+  border-bottom: 1px solid var(--line);
+}
+
+.withdraw-confirm-receive-label {
+  color: var(--faint);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.withdraw-confirm-receive-value {
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.withdraw-confirm-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+}
+
+.withdraw-confirm-detail:last-of-type {
+  border-bottom: none;
+}
+
+.withdraw-confirm-detail span {
+  color: var(--faint);
+  flex-shrink: 0;
+}
+
+.withdraw-confirm-detail strong {
+  color: var(--text);
+  text-align: right;
+  word-break: break-all;
+  font-weight: 500;
+}
+
+.withdraw-confirm-addr {
+  color: var(--green) !important;
+  font-size: 9px !important;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.withdraw-confirm-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(232, 180, 80, 0.2);
+  border-radius: 8px;
+  background: rgba(232, 180, 80, 0.05);
+  color: #e8b450;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.withdraw-confirm-warning svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #e8b450;
+}
+
+.withdraw-confirm-btn {
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 8px;
+  background: var(--green);
+  color: #18200f;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 180ms ease;
+  margin-top: 2px;
+}
+
+.withdraw-confirm-btn:hover {
+  background: #baf866;
+  box-shadow: 0 6px 20px rgba(167, 232, 67, 0.25);
+  transform: translateY(-1px);
+}
+
+.withdraw-confirm-btn:active {
+  transform: translateY(0);
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowRight, ChevronDown, Copy, Check, Smartphone } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ChevronDown, Copy, Check, Smartphone, AlertTriangle } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.png';
 
@@ -19,13 +19,14 @@ const INTRO_MESSAGES = [
 ];
 
 const MENTOR_MESSAGES: Record<string, string> = {
-  'panel-exchange': 'Paste your receive address into the exchange withdrawal form, then press Continue.',
+  'panel-exchange': 'Paste your receive address into the exchange withdrawal form, then press Withdraw.',
   'panel-wallet': 'Power on your wallet, then select Receive Bitcoin to get your address.',
   'wallet-off': 'Power on your wallet by clicking the power button.',
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-receive': 'There is your receive address. Copy it, switch back to the exchange, and paste it into the withdrawal form.',
   'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
+  'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
 };
 
 function useTypewriter(text: string, speed = 10) {
@@ -68,10 +69,6 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done, skip };
 }
 
-function formatBtc(value: number): string {
-  return value.toFixed(8).replace(/\.?0+$/, '');
-}
-
 export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) {
   const [activePanel, setActivePanel] = useState<'exchange' | 'wallet'>('wallet');
   const [introStep, setIntroStep] = useState(0);
@@ -85,6 +82,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
+  const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm'>('form');
 
   const isInIntro = !introDone;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
@@ -93,7 +91,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? walletPhase === 'menu'
       ? `wallet-menu-${menuSelection}`
       : `wallet-${walletPhase}`
-    : `panel-${activePanel}`;
+    : exchangeScreen === 'confirm'
+      ? 'exchange-confirm'
+      : `panel-${activePanel}`;
 
   const mentorMessage = isInIntro
     ? currentIntroMessage
@@ -155,11 +155,21 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const receivedAmount = numericAmount > 0 ? Math.max(numericAmount - NETWORK_FEE, 0) : 0;
   const isAmountValid = numericAmount > 0 && numericAmount <= AVAILABLE_BALANCE && amountError === '';
   const isAddressValid = sendAddress.trim().length > 0;
+  const canWithdraw = hasRetrievedAddress && isAmountValid && isAddressValid;
 
-  const canContinue = !isInIntro
-    && hasRetrievedAddress
-    && isAmountValid
-    && isAddressValid;
+  const handleWithdraw = () => {
+    if (canWithdraw) {
+      setExchangeScreen('confirm');
+    }
+  };
+
+  const handleBackToForm = () => {
+    setExchangeScreen('form');
+  };
+
+  const handleConfirm = () => {
+    onComplete();
+  };
 
   const handleContinue = () => {
     if (!done) {
@@ -173,9 +183,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     if (isInIntro && introStep === 1) {
       setIntroDone(true);
       return;
-    }
-    if (canContinue) {
-      onComplete();
     }
   };
 
@@ -228,90 +235,155 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                     </span>
                   </div>
                   <div className="withdraw-phone-content">
-                    <div className="withdraw-phone-app-header">
-                      <Smartphone size={16} strokeWidth={1.8} />
-                      <span>SimExchange</span>
-                    </div>
+                    {exchangeScreen === 'form' && (
+                      <>
+                        <div className="withdraw-phone-app-header">
+                          <Smartphone size={14} strokeWidth={1.8} />
+                          <span>SimExchange</span>
+                        </div>
 
-                    <div className="withdraw-phone-section">
-                      <label>Asset</label>
-                      <button
-                        className="withdraw-asset-dropdown"
-                        type="button"
-                        onClick={() => setAssetDropdownOpen(!assetDropdownOpen)}
-                      >
-                        <span className="withdraw-asset-icon">
-                          <span className="withdraw-asset-btc">B</span>
-                        </span>
-                        <span className="withdraw-asset-name">Bitcoin</span>
-                        <ChevronDown size={14} strokeWidth={2} className={`withdraw-asset-chevron ${assetDropdownOpen ? 'open' : ''}`} />
-                      </button>
-                      {assetDropdownOpen && (
-                        <div className="withdraw-asset-menu">
-                          <div className="withdraw-asset-option active">
+                        <div className="withdraw-phone-section">
+                          <label>Asset</label>
+                          <button
+                            className="withdraw-asset-dropdown"
+                            type="button"
+                            onClick={() => setAssetDropdownOpen(!assetDropdownOpen)}
+                          >
                             <span className="withdraw-asset-icon">
                               <span className="withdraw-asset-btc">B</span>
                             </span>
                             <span className="withdraw-asset-name">Bitcoin</span>
-                            <Check size={12} strokeWidth={2.5} />
+                            <ChevronDown size={14} strokeWidth={2} className={`withdraw-asset-chevron ${assetDropdownOpen ? 'open' : ''}`} />
+                          </button>
+                          {assetDropdownOpen && (
+                            <div className="withdraw-asset-menu">
+                              <div className="withdraw-asset-option active">
+                                <span className="withdraw-asset-icon">
+                                  <span className="withdraw-asset-btc">B</span>
+                                </span>
+                                <span className="withdraw-asset-name">Bitcoin</span>
+                                <Check size={12} strokeWidth={2.5} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="withdraw-phone-section">
+                          <div className="withdraw-phone-label-row">
+                            <label>Withdraw amount</label>
+                            <button className="withdraw-max-btn" type="button" onClick={handleMax}>
+                              MAX
+                            </button>
+                          </div>
+                          <div className="withdraw-amount-input-wrap">
+                            <input
+                              type="text"
+                              value={amount}
+                              onChange={(e) => handleAmountChange(e.target.value)}
+                              placeholder="0.00"
+                              className={amountError ? 'error' : ''}
+                            />
+                            <span className="withdraw-amount-unit">BTC</span>
+                          </div>
+                          {amountError && (
+                            <p className="withdraw-amount-error">{amountError}</p>
+                          )}
+                        </div>
+
+                        <div className="withdraw-phone-section">
+                          <label>Send to address</label>
+                          <input
+                            type="text"
+                            value={sendAddress}
+                            onChange={(e) => setSendAddress(e.target.value)}
+                            placeholder="Paste wallet receive address"
+                            className="withdraw-addr-input"
+                          />
+                          {hasRetrievedAddress && (
+                            <button className="withdraw-copy-btn" type="button" onClick={handleCopyAddress}>
+                              {copied ? <Check size={11} /> : <Copy size={11} />}
+                              <span>{copied ? 'Copied!' : 'Copy wallet address'}</span>
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="withdraw-phone-summary">
+                          <div className="withdraw-summary-row">
+                            <span>Available</span>
+                            <strong>{AVAILABLE_BALANCE.toFixed(4)} BTC</strong>
+                          </div>
+                          <div className="withdraw-summary-row">
+                            <span>Network fee</span>
+                            <strong>{NETWORK_FEE.toFixed(5)} BTC</strong>
+                          </div>
+                          <div className="withdraw-summary-row received">
+                            <span>Received</span>
+                            <strong>{receivedAmount > 0 ? receivedAmount.toFixed(8) : '—'} BTC</strong>
                           </div>
                         </div>
-                      )}
-                    </div>
 
-                    <div className="withdraw-phone-section">
-                      <div className="withdraw-phone-label-row">
-                        <label>Withdraw amount</label>
-                        <button className="withdraw-max-btn" type="button" onClick={handleMax}>
-                          MAX
+                        <button
+                          className="withdraw-btn"
+                          type="button"
+                          onClick={handleWithdraw}
+                          disabled={!canWithdraw}
+                        >
+                          Withdraw
                         </button>
-                      </div>
-                      <div className="withdraw-amount-input-wrap">
-                        <input
-                          type="text"
-                          value={amount}
-                          onChange={(e) => handleAmountChange(e.target.value)}
-                          placeholder="0.00"
-                          className={amountError ? 'error' : ''}
-                        />
-                        <span className="withdraw-amount-unit">BTC</span>
-                      </div>
-                      {amountError && (
-                        <p className="withdraw-amount-error">{amountError}</p>
-                      )}
-                    </div>
+                      </>
+                    )}
 
-                    <div className="withdraw-phone-section">
-                      <label>Send to address</label>
-                      <input
-                        type="text"
-                        value={sendAddress}
-                        onChange={(e) => setSendAddress(e.target.value)}
-                        placeholder="Paste wallet receive address"
-                        className="withdraw-addr-input"
-                      />
-                      {hasRetrievedAddress && (
-                        <button className="withdraw-copy-btn" type="button" onClick={handleCopyAddress}>
-                          {copied ? <Check size={11} /> : <Copy size={11} />}
-                          <span>{copied ? 'Copied!' : 'Copy wallet address'}</span>
+                    {exchangeScreen === 'confirm' && (
+                      <>
+                        <div className="withdraw-phone-app-header">
+                          <button className="withdraw-confirm-back" type="button" onClick={handleBackToForm}>
+                            <ArrowLeft size={14} strokeWidth={2} />
+                          </button>
+                          <span>Confirm order</span>
+                        </div>
+
+                        <div className="withdraw-confirm-info">
+                          <div className="withdraw-confirm-receive">
+                            <span className="withdraw-confirm-receive-label">Receive amount</span>
+                            <span className="withdraw-confirm-receive-value">{receivedAmount.toFixed(8)} BTC</span>
+                          </div>
+
+                          <div className="withdraw-confirm-detail">
+                            <span>Network</span>
+                            <strong>Bitcoin</strong>
+                          </div>
+                          <div className="withdraw-confirm-detail">
+                            <span>Address</span>
+                            <strong className="withdraw-confirm-addr">{sendAddress || RECEIVE_ADDRESS}</strong>
+                          </div>
+                          <div className="withdraw-confirm-detail">
+                            <span>Withdrawal amount</span>
+                            <strong>{numericAmount.toFixed(8)} BTC</strong>
+                          </div>
+                          <div className="withdraw-confirm-detail">
+                            <span>Network fee</span>
+                            <strong>{NETWORK_FEE.toFixed(5)} BTC</strong>
+                          </div>
+                          <div className="withdraw-confirm-detail">
+                            <span>Wallet label</span>
+                            <strong>HW Wallet 1</strong>
+                          </div>
+                        </div>
+
+                        <div className="withdraw-confirm-warning">
+                          <AlertTriangle size={12} strokeWidth={2} />
+                          <span>Please confirm the address and network are correct. Transactions cannot be cancelled once confirmed.</span>
+                        </div>
+
+                        <button
+                          className="withdraw-confirm-btn"
+                          type="button"
+                          onClick={handleConfirm}
+                        >
+                          Confirm
                         </button>
-                      )}
-                    </div>
-
-                    <div className="withdraw-phone-summary">
-                      <div className="withdraw-summary-row">
-                        <span>Available</span>
-                        <strong>{AVAILABLE_BALANCE.toFixed(4)} BTC</strong>
-                      </div>
-                      <div className="withdraw-summary-row">
-                        <span>Network fee</span>
-                        <strong>{NETWORK_FEE.toFixed(5)} BTC</strong>
-                      </div>
-                      <div className="withdraw-summary-row received">
-                        <span>Received</span>
-                        <strong>{receivedAmount > 0 ? receivedAmount.toFixed(8) : '—'} BTC</strong>
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -337,7 +409,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
           className="character-proceed"
           type="button"
           onClick={handleContinue}
-          disabled={!canContinue && !isInIntro}
+          disabled={!isInIntro}
         >
           <span>Continue</span>
           <ArrowRight size={18} strokeWidth={2.5} />
