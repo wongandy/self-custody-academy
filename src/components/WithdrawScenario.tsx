@@ -405,15 +405,17 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       </div>
 
       <div className="character-footer">
-        <button
-          className="character-proceed"
-          type="button"
-          onClick={handleContinue}
-          disabled={!isInIntro}
-        >
-          <span>Continue</span>
-          <ArrowRight size={18} strokeWidth={2.5} />
-        </button>
+        <div className="character-footer-inner">
+          <button
+            className="character-proceed"
+            type="button"
+            onClick={handleContinue}
+            disabled={!isInIntro}
+          >
+            <span>Continue</span>
+            <ArrowRight size={18} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
     </main>
   );
