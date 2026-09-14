@@ -4060,3 +4060,100 @@ a {
 .withdraw-confirm-btn:active {
   transform: translateY(0);
 }
+
+/* ── Success screen ── */
+
+@keyframes withdraw-success-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.withdraw-success-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 4px 0;
+}
+
+.withdraw-success-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(167, 232, 67, 0.12);
+  border: 2px solid var(--green);
+  color: var(--green);
+  animation: withdraw-success-pop 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.withdraw-success-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 4px 0 0;
+}
+
+.withdraw-success-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.withdraw-success-details {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.withdraw-success-details .withdraw-confirm-detail:last-of-type {
+  border-bottom: none;
+}
+
+.withdraw-success-received {
+  color: var(--green) !important;
+}
+
+.withdraw-success-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 10px;
+  color: var(--faint);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.withdraw-success-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: withdraw-success-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes withdraw-success-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(167, 232, 67, 0.4);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 0 5px rgba(167, 232, 67, 0);
+  }
+}

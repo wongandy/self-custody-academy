@@ -26,6 +26,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-receive': 'There is your receive address. Copy it, switch back to the exchange, and paste it into the withdrawal form.',
   'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
+  'exchange-success': 'Your withdrawal has been submitted. Your Bitcoin is on its way to your hardware wallet. Click Continue to finish.',
 };
 
 function useTypewriter(text: string, speed = 10) {
@@ -81,7 +82,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
-  const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm'>('form');
+  const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
   const [walletEntered, setWalletEntered] = useState(false);
 
   const isInIntro = !introDone;
@@ -93,7 +94,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       : `wallet-${walletPhase}`
     : exchangeScreen === 'confirm'
       ? 'exchange-confirm'
-      : `panel-${activePanel}`;
+      : exchangeScreen === 'success'
+        ? 'exchange-success'
+        : `panel-${activePanel}`;
 
   const mentorMessage = isInIntro
     ? currentIntroMessage
@@ -168,7 +171,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   };
 
   const handleConfirm = () => {
-    onComplete();
+    setExchangeScreen('success');
   };
 
   const handleContinue = () => {
@@ -179,6 +182,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     if (isInIntro && introStep === 0) {
       setWalletEntered(true);
       setIntroStep(1);
+      return;
+    }
+    if (exchangeScreen === 'success') {
+      onComplete();
       return;
     }
   };
@@ -375,6 +382,47 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                         </button>
                       </>
                     )}
+
+                    {exchangeScreen === 'success' && (
+                      <>
+                        <div className="withdraw-phone-app-header">
+                          <Smartphone size={14} strokeWidth={1.8} />
+                          <span>SimExchange</span>
+                        </div>
+
+                        <div className="withdraw-success-wrap">
+                          <div className="withdraw-success-icon">
+                            <Check size={32} strokeWidth={3} />
+                          </div>
+                          <p className="withdraw-success-title">Withdrawal Submitted</p>
+                          <p className="withdraw-success-subtitle">Your Bitcoin is on its way</p>
+
+                          <div className="withdraw-success-details">
+                            <div className="withdraw-confirm-detail">
+                              <span>Amount</span>
+                              <strong>{numericAmount.toFixed(8)} BTC</strong>
+                            </div>
+                            <div className="withdraw-confirm-detail">
+                              <span>Network fee</span>
+                              <strong>{NETWORK_FEE.toFixed(5)} BTC</strong>
+                            </div>
+                            <div className="withdraw-confirm-detail">
+                              <span>Received</span>
+                              <strong className="withdraw-success-received">{receivedAmount.toFixed(8)} BTC</strong>
+                            </div>
+                            <div className="withdraw-confirm-detail">
+                              <span>Address</span>
+                              <strong className="withdraw-confirm-addr">{sendAddress || RECEIVE_ADDRESS}</strong>
+                            </div>
+                          </div>
+
+                          <div className="withdraw-success-status">
+                            <span className="withdraw-success-pulse" />
+                            <span>Processing on blockchain</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -403,7 +451,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             className="character-proceed"
             type="button"
             onClick={handleContinue}
-            disabled={isInIntro && introStep === 1}
+            disabled={isInIntro ? introStep === 1 : exchangeScreen !== 'success'}
           >
             <span>Continue</span>
             <ArrowRight size={18} strokeWidth={2.5} />
