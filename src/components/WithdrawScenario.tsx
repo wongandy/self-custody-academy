@@ -82,6 +82,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm'>('form');
+  const [walletEntered, setWalletEntered] = useState(false);
 
   const isInIntro = !introDone;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
@@ -176,6 +177,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       return;
     }
     if (isInIntro && introStep === 0) {
+      setWalletEntered(true);
       setIntroStep(1);
       return;
     }
@@ -379,16 +381,18 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             </div>
 
             {/* ── Hardware wallet panel ── */}
-            <div className={`withdraw-wallet-wrap ${activePanel === 'wallet' ? '' : 'withdraw-panel-hidden'}`}>
-              <div className="hw-wallet-slot">
-                <HardwareWallet
-                  mode="withdraw"
-                  onComplete={() => {}}
-                  onPhaseChange={setWalletPhase}
-                  onMenuSelectionChange={handleMenuSelectionChange}
-                />
+            {walletEntered && (
+              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${activePanel === 'wallet' ? '' : 'withdraw-panel-hidden'}`}>
+                <div className="hw-wallet-slot">
+                  <HardwareWallet
+                    mode="withdraw"
+                    onComplete={() => {}}
+                    onPhaseChange={setWalletPhase}
+                    onMenuSelectionChange={handleMenuSelectionChange}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
