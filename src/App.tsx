@@ -164,12 +164,12 @@ function App() {
   return (
     <div className={isDark ? 'app-shell theme-dark' : 'app-shell theme-light'}>
       <header className="site-header">
-        {isInScenario ? (
+        {isInScenario || screen === 'andy-intro' ? (
           <button
             className="close-button"
             type="button"
-            onClick={() => setScreen('roadmap')}
-            aria-label="Back to roadmap"
+            onClick={() => setScreen(screen === 'andy-intro' ? 'home' : 'roadmap')}
+            aria-label={screen === 'andy-intro' ? 'Back to home' : 'Back to roadmap'}
           >
             <X size={20} strokeWidth={2.4} />
           </button>
