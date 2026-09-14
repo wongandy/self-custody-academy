@@ -858,7 +858,33 @@ a {
   }
 
   .site-header {
-    min-height: 76px;
+    min-height: 56px;
+  }
+
+  .brand-mark {
+    width: 24px;
+    height: 24px;
+  }
+
+  .close-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .header-actions {
+    gap: 10px;
+  }
+
+  .theme-toggle {
+    width: 64px;
+    height: 30px;
+  }
+
+  .toggle-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
   }
 
   .header-note {
@@ -866,7 +892,7 @@ a {
   }
 
   .brand-name {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .hero-section {
