@@ -217,7 +217,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
               type="button"
               onClick={() => setActivePanel(activePanel === 'exchange' ? 'wallet' : 'exchange')}
             >
-              <span>{activePanel === 'exchange' ? 'Switch to Hardware Wallet' : 'Switch to Exchange'}</span>
+              <span>{activePanel === 'exchange' ? 'Switch to Hardware Wallet' : 'Switch to Exchange Wallet'}</span>
             </button>
           )}
 
