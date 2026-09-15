@@ -739,6 +739,16 @@ a {
   background: rgba(241, 189, 105, 0.06);
 }
 
+.character-dialog.is-ready {
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .character-dialog.is-ready:hover {
+    border-color: rgba(241, 189, 105, 0.45);
+  }
+}
+
 .character-dialog::before {
   content: '';
   position: absolute;
@@ -765,6 +775,7 @@ a {
 .character-message {
   min-height: 112px;
   margin: 0;
+  padding-right: 26px;
   text-align: left;
 }
 
@@ -2612,6 +2623,16 @@ a {
   animation: mentor-bubble-in 350ms ease;
 }
 
+.mentor-bubble.is-ready {
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mentor-bubble.is-ready:hover {
+    border-color: rgba(241, 189, 105, 0.45);
+  }
+}
+
 .mentor-bubble::before {
   content: '';
   position: absolute;
@@ -2651,6 +2672,7 @@ a {
 .mentor-bubble-text {
   position: absolute;
   inset: 0;
+  padding-right: 34px;
   margin: 0;
   color: var(--text);
   font-size: 14px;

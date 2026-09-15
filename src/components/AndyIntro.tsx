@@ -69,7 +69,10 @@ function AndyIntro({ onBack, onProceed }: Props) {
           </div>
         </div>
 
-        <div className="character-dialog">
+        <div
+          className={`character-dialog ${done ? 'is-ready' : ''}`}
+          onClick={handleContinue}
+        >
           <div className="character-message" aria-live="polite">
             <p>{displayed}</p>
             {!done && <span className="typewriter-cursor" />}
@@ -77,7 +80,10 @@ function AndyIntro({ onBack, onProceed }: Props) {
           <button
             className={`bubble-next ${done ? 'ready' : ''}`}
             type="button"
-            onClick={handleContinue}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleContinue();
+            }}
             disabled={!done}
             aria-label="Continue"
           >

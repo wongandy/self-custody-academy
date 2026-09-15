@@ -128,7 +128,11 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
               <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
             </div>
           </div>
-          <div className="mentor-bubble" key={bubbleKey}>
+          <div
+            className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
+            key={bubbleKey}
+            onClick={handleContinue}
+          >
             <span className="mentor-bubble-name">Andy</span>
             <div className="mentor-bubble-text-wrap">
               <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
@@ -140,7 +144,10 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
             <button
               className={`bubble-next ${canContinue ? 'ready' : ''}`}
               type="button"
-              onClick={handleContinue}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleContinue();
+              }}
               disabled={!canContinue}
               aria-label="Continue"
             >
