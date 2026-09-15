@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
 import andyPortrait from '@/components/Andy.png';
 
 type Props = {
@@ -74,6 +74,15 @@ function AndyIntro({ onBack, onProceed }: Props) {
             <p>{displayed}</p>
             {!done && <span className="typewriter-cursor" />}
           </div>
+          <button
+            className={`bubble-next ${done ? 'ready' : ''}`}
+            type="button"
+            onClick={handleContinue}
+            disabled={!done}
+            aria-label="Continue"
+          >
+            <ChevronRight size={18} strokeWidth={2.5} />
+          </button>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowRight, ArrowLeft, ChevronDown, Copy, Check, Smartphone, AlertTriangle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ChevronDown, ChevronRight, Copy, Check, Smartphone, AlertTriangle } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.png';
 
@@ -86,6 +86,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [walletEntered, setWalletEntered] = useState(false);
 
   const isInIntro = !introDone;
+  const canContinue = isInIntro ? introStep !== 1 : exchangeScreen === 'success';
   const currentIntroMessage = INTRO_MESSAGES[introStep];
 
   const walletStateKey = activePanel === 'wallet'
@@ -211,6 +212,15 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                 {!done && <span className="typewriter-cursor" />}
               </p>
             </div>
+            <button
+              className={`bubble-next ${canContinue ? 'ready' : ''}`}
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue}
+              aria-label="Continue"
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
 
@@ -451,7 +461,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             className="character-proceed"
             type="button"
             onClick={handleContinue}
-            disabled={isInIntro ? introStep === 1 : exchangeScreen !== 'success'}
+            disabled={!canContinue}
           >
             <span>Continue</span>
             <ArrowRight size={18} strokeWidth={2.5} />

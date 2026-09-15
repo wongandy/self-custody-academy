@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronRight } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.png';
 
@@ -130,6 +130,15 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
                 {!done && <span className="typewriter-cursor" />}
               </p>
             </div>
+            <button
+              className={`bubble-next ${canContinue ? 'ready' : ''}`}
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue}
+              aria-label="Continue"
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
         <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
