@@ -863,7 +863,6 @@ a {
 .bubble-next.ready:hover {
   color: #18200f;
   background: var(--gold-light);
-  animation-play-state: paused;
   transform: scale(1.08);
 }
 
