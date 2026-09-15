@@ -114,6 +114,13 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   return (
     <main className="scenario-page scenario-page-fit">
       <div className="scenario-mentor-layout">
+        <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
+          <HardwareWallet
+            onComplete={() => {}}
+            onPhaseChange={setWalletPhase}
+            onMenuSelectionChange={setMenuSelection}
+          />
+        </div>
         <div className="mentor-row">
           <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
             <div className="mentor-portrait-glow" />
@@ -140,13 +147,6 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
               <ChevronRight size={18} strokeWidth={2.5} />
             </button>
           </div>
-        </div>
-        <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
-          <HardwareWallet
-            onComplete={() => {}}
-            onPhaseChange={setWalletPhase}
-            onMenuSelectionChange={setMenuSelection}
-          />
         </div>
       </div>
 

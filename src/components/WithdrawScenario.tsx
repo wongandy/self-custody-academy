@@ -196,34 +196,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   return (
     <main className="scenario-page scenario-page-fit">
       <div className="scenario-mentor-layout">
-        <div className="mentor-row">
-          <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
-            <div className="mentor-portrait-glow" />
-            <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
-            </div>
-          </div>
-          <div className="mentor-bubble" key={bubbleKey}>
-            <span className="mentor-bubble-name">Andy</span>
-            <div className="mentor-bubble-text-wrap">
-              <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
-              <p className="mentor-bubble-text">
-                {displayed}
-                {!done && <span className="typewriter-cursor" />}
-              </p>
-            </div>
-            <button
-              className={`bubble-next ${canContinue ? 'ready' : ''}`}
-              type="button"
-              onClick={handleContinue}
-              disabled={!canContinue}
-              aria-label="Continue"
-            >
-              <ChevronRight size={18} strokeWidth={2.5} />
-            </button>
-          </div>
-        </div>
-
         <div className="withdraw-middle-area">
           {!isInIntro && (
             <button
@@ -451,6 +423,34 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="mentor-row">
+          <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
+            <div className="mentor-portrait-glow" />
+            <div className="mentor-portrait-ring">
+              <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
+            </div>
+          </div>
+          <div className="mentor-bubble" key={bubbleKey}>
+            <span className="mentor-bubble-name">Andy</span>
+            <div className="mentor-bubble-text-wrap">
+              <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
+              <p className="mentor-bubble-text">
+                {displayed}
+                {!done && <span className="typewriter-cursor" />}
+              </p>
+            </div>
+            <button
+              className={`bubble-next ${canContinue ? 'ready' : ''}`}
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue}
+              aria-label="Continue"
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
       </div>
