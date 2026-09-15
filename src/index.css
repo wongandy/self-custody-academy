@@ -852,32 +852,42 @@ a {
 }
 
 .bubble-next.ready {
-  color: var(--text);
-  border-color: rgba(241, 189, 105, 0.4);
-  background: var(--panel-strong);
+  color: #18200f;
+  border-color: var(--gold-light);
+  background: var(--gold-light);
   cursor: pointer;
   opacity: 1;
-  animation: bubble-next-blink 1.6s ease-in-out infinite;
+  animation:
+    bubble-next-glow 1.8s ease-in-out infinite,
+    bubble-next-bounce 1.8s ease-in-out infinite;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .bubble-next.ready:hover {
-    color: #18200f;
-    background: var(--gold-light);
+    filter: brightness(1.07);
     transform: scale(1.08);
   }
 }
 
 .bubble-next.ready:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
-@keyframes bubble-next-blink {
+@keyframes bubble-next-glow {
   0%, 100% {
-    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(241, 189, 105, 0.4);
   }
   50% {
-    opacity: 0.45;
+    box-shadow: 0 0 14px 4px rgba(241, 189, 105, 0.55);
+  }
+}
+
+@keyframes bubble-next-bounce {
+  0%, 100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 3px;
   }
 }
 
