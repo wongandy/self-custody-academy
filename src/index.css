@@ -2753,7 +2753,7 @@ a {
 }
 
 .scenario-mentor-layout.spotlight .mentor-bubble-name {
-  font-size: 10px;
+  display: none;
 }
 
 .scenario-mentor-layout.spotlight .mentor-bubble-text,
