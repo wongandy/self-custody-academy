@@ -2545,6 +2545,7 @@ a {
 }
 
 .scenario-mentor-layout {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2620,6 +2621,9 @@ a {
   border-radius: 16px;
   background: var(--panel-strong);
   position: relative;
+}
+
+.mentor-bubble-content {
   animation: mentor-bubble-in 350ms ease;
 }
 
@@ -2679,6 +2683,89 @@ a {
   line-height: 1.6;
 }
 
+.mentor-portrait-badge {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  white-space: nowrap;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-strong);
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+/* ── Scenario 1 opening spotlight ── */
+
+.scenario-mentor-layout.spotlight {
+  flex: 1;
+  justify-content: center;
+  gap: 0;
+}
+
+.scenario-mentor-layout.spotlight .hw-wallet-slot {
+  position: absolute;
+}
+
+.scenario-mentor-layout.spotlight .mentor-row {
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  max-width: 560px;
+}
+
+.scenario-mentor-layout.spotlight .mentor-portrait {
+  width: 132px;
+  height: 132px;
+  border-color: rgba(241, 189, 105, 0.4);
+}
+
+.scenario-mentor-layout.spotlight .mentor-portrait-glow {
+  inset: -24px;
+  background: radial-gradient(circle, rgba(241, 189, 105, 0.22), transparent 70%);
+}
+
+.scenario-mentor-layout.spotlight .mentor-portrait-badge {
+  opacity: 1;
+}
+
+.scenario-mentor-layout.spotlight .mentor-bubble {
+  flex: none;
+  width: 100%;
+  max-width: 560px;
+  padding: 24px 28px;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.scenario-mentor-layout.spotlight .mentor-bubble::before {
+  display: none;
+}
+
+.scenario-mentor-layout.spotlight .mentor-bubble-name {
+  font-size: 10px;
+}
+
+.scenario-mentor-layout.spotlight .mentor-bubble-text,
+.scenario-mentor-layout.spotlight .mentor-bubble-text-ghost {
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.scenario-mentor-layout.spotlight .mentor-bubble-text {
+  padding-right: 0;
+}
+
 @keyframes mentor-bubble-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -2719,6 +2806,26 @@ a {
 
   .mentor-bubble-text-wrap {
     min-height: 62px;
+  }
+
+  .scenario-mentor-layout.spotlight .mentor-row {
+    gap: 22px;
+  }
+
+  .scenario-mentor-layout.spotlight .mentor-portrait {
+    width: 96px;
+    height: 96px;
+  }
+
+  .scenario-mentor-layout.spotlight .mentor-bubble {
+    padding: 18px 20px;
+    border-radius: 16px;
+  }
+
+  .scenario-mentor-layout.spotlight .mentor-bubble-text,
+  .scenario-mentor-layout.spotlight .mentor-bubble-text-ghost {
+    font-size: 14px;
+    line-height: 1.6;
   }
 
   .hw-wallet-device {
