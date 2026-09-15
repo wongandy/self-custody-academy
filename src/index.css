@@ -2742,14 +2742,22 @@ a {
 .scenario-mentor-layout.spotlight .mentor-bubble {
   flex: none;
   width: 100%;
-  max-width: 560px;
-  padding: 24px 28px;
-  border-radius: 20px;
-  text-align: center;
+  max-width: 480px;
+  padding: 18px 20px 20px;
+  border: 1px solid rgba(241, 189, 105, 0.24);
+  border-radius: 18px;
+  background: rgba(241, 189, 105, 0.06);
+  text-align: left;
 }
 
 .scenario-mentor-layout.spotlight .mentor-bubble::before {
-  display: none;
+  top: -7px;
+  left: 50%;
+  border-left: 1px solid rgba(241, 189, 105, 0.24);
+  border-bottom: 0;
+  border-top: 1px solid rgba(241, 189, 105, 0.24);
+  background: var(--panel-strong);
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .scenario-mentor-layout.spotlight .mentor-bubble-name {
@@ -2758,12 +2766,12 @@ a {
 
 .scenario-mentor-layout.spotlight .mentor-bubble-text,
 .scenario-mentor-layout.spotlight .mentor-bubble-text-ghost {
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 15px;
+  line-height: 1.75;
 }
 
 .scenario-mentor-layout.spotlight .mentor-bubble-text {
-  padding-right: 0;
+  padding-right: 26px;
 }
 
 @keyframes mentor-bubble-in {
