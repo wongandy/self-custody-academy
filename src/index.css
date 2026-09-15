@@ -860,10 +860,12 @@ a {
   animation: bubble-next-blink 1.6s ease-in-out infinite;
 }
 
-.bubble-next.ready:hover {
-  color: #18200f;
-  background: var(--gold-light);
-  transform: scale(1.08);
+@media (hover: hover) and (pointer: fine) {
+  .bubble-next.ready:hover {
+    color: #18200f;
+    background: var(--gold-light);
+    transform: scale(1.08);
+  }
 }
 
 .bubble-next.ready:active {
