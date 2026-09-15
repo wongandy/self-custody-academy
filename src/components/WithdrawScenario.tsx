@@ -86,6 +86,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [walletEntered, setWalletEntered] = useState(false);
 
   const isInIntro = !introDone;
+  const spotlight = isInIntro && introStep === 0;
   const canContinue = isInIntro ? introStep !== 1 : exchangeScreen === 'success';
   const currentIntroMessage = INTRO_MESSAGES[introStep];
 
@@ -194,9 +195,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const bubbleKey = isInIntro ? `intro-${introStep}` : `${walletStateKey}-${showSendBlockedMsg}`;
 
   return (
-    <main className="scenario-page scenario-page-fit">
-      <div className="scenario-mentor-layout">
-        <div className="withdraw-middle-area">
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
+        <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
           {!isInIntro && (
             <button
               className="withdraw-switch-btn"
