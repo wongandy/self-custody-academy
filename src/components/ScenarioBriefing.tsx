@@ -150,7 +150,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
         </div>
       </div>
 
-      <div className="character-footer">
+      {/* <div className="character-footer">
         <div className="character-footer-inner">
           <button
             className="character-proceed"
@@ -162,7 +162,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
             <ArrowRight size={18} strokeWidth={2.5} />
           </button>
         </div>
-      </div>
+      </div> */}
     </main>
   );
 }

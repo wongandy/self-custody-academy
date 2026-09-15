@@ -86,7 +86,7 @@ function AndyIntro({ onBack, onProceed }: Props) {
         </div>
       </div>
 
-      <div className="character-footer">
+      {/* <div className="character-footer">
         <div className="character-footer-inner">
           <button
             className="character-proceed"
@@ -98,7 +98,7 @@ function AndyIntro({ onBack, onProceed }: Props) {
             <ArrowRight size={18} strokeWidth={2.5} />
           </button>
         </div>
-      </div>
+      </div> */}
     </main>
   );
 }

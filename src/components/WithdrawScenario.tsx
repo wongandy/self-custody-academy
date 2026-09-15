@@ -455,7 +455,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         </div>
       </div>
 
-      <div className="character-footer">
+      {/* <div className="character-footer">
         <div className="character-footer-inner">
           <button
             className="character-proceed"
@@ -467,7 +467,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             <ArrowRight size={18} strokeWidth={2.5} />
           </button>
         </div>
-      </div>
+      </div> */}
     </main>
   );
 }
