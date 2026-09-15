@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowLeft, ChevronDown, ChevronRight, Copy, Check, Smartphone, AlertTriangle } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
@@ -84,6 +84,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
   const [walletEntered, setWalletEntered] = useState(false);
+  const portraitRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   const isInIntro = !introDone;
   const spotlight = isInIntro && introStep === 0;
@@ -122,6 +125,48 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     const t = setTimeout(() => setShowSendBlockedMsg(false), 5000);
     return () => clearTimeout(t);
   }, [showSendBlockedMsg]);
+
+  useLayoutEffect(() => {
+    if (spotlight || !flipRects.current) return;
+    const portrait = portraitRef.current;
+    const bubble = bubbleRef.current;
+    if (!portrait || !bubble) return;
+
+    const pFirst = flipRects.current.portrait;
+    const bFirst = flipRects.current.bubble;
+    const pLast = portrait.getBoundingClientRect();
+    const bLast = bubble.getBoundingClientRect();
+    flipRects.current = null;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const opts: KeyframeAnimationOptions = {
+      duration: 560,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    };
+
+    portrait.style.transformOrigin = 'top left';
+    portrait.animate(
+      [
+        {
+          transform: `translate(${pFirst.left - pLast.left}px, ${pFirst.top - pLast.top}px) scale(${pFirst.width / pLast.width}, ${pFirst.height / pLast.height})`,
+        },
+        { transform: 'translate(0, 0) scale(1, 1)' },
+      ],
+      opts,
+    );
+
+    bubble.style.transformOrigin = 'top left';
+    bubble.animate(
+      [
+        {
+          transform: `translate(${bFirst.left - bLast.left}px, ${bFirst.top - bLast.top}px) scale(${bFirst.width / bLast.width}, ${bFirst.height / bLast.height})`,
+        },
+        { transform: 'translate(0, 0) scale(1, 1)' },
+      ],
+      opts,
+    );
+  }, [spotlight]);
 
   const handleMenuSelectionChange = useCallback((sel: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => {
     setMenuSelection(sel);
@@ -182,6 +227,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       return;
     }
     if (isInIntro && introStep === 0) {
+      if (portraitRef.current && bubbleRef.current) {
+        flipRects.current = {
+          portrait: portraitRef.current.getBoundingClientRect(),
+          bubble: bubbleRef.current.getBoundingClientRect(),
+        };
+      }
       setWalletEntered(true);
       setIntroStep(1);
       return;
@@ -428,24 +479,27 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         </div>
 
         <div className="mentor-row">
-          <div className="mentor-portrait" aria-label="Andy, your mentor" role="img">
+          <div ref={portraitRef} className="mentor-portrait" aria-label="Andy, your mentor" role="img">
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
               <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
             </div>
+            <div className="mentor-portrait-badge">Andy</div>
           </div>
           <div
+            ref={bubbleRef}
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
-            key={bubbleKey}
             onClick={handleContinue}
           >
-            <span className="mentor-bubble-name">Andy</span>
-            <div className="mentor-bubble-text-wrap">
-              <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
-              <p className="mentor-bubble-text">
-                {displayed}
-                {!done && <span className="typewriter-cursor" />}
-              </p>
+            <div className="mentor-bubble-content" key={bubbleKey}>
+              <span className="mentor-bubble-name">Andy</span>
+              <div className="mentor-bubble-text-wrap">
+                <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
+                <p className="mentor-bubble-text">
+                  {displayed}
+                  {!done && <span className="typewriter-cursor" />}
+                </p>
+              </div>
             </div>
             <button
               className={`bubble-next ${canContinue ? 'ready' : ''}`}
