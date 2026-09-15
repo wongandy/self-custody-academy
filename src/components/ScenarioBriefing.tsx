@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
-import andyPortrait from '@/components/Andy.png';
+import andyPortrait from '@/components/Andy.webp';
 
 type ScenarioBriefingProps = {
   onBack: () => void;

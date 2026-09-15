@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowLeft, ChevronDown, ChevronRight, Copy, Check, Smartphone, AlertTriangle } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
-import andyPortrait from '@/components/Andy.png';
+import andyPortrait from '@/components/Andy.webp';
 
 type WithdrawScenarioProps = {
   completed: boolean;
