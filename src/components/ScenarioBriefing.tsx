@@ -164,7 +164,7 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   }, [spotlight]);
 
   return (
-    <main className="scenario-page scenario-page-fit">
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
           <HardwareWallet
