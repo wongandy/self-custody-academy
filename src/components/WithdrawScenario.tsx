@@ -25,7 +25,7 @@ const SWITCH_INTRO_MESSAGES = [
 ];
 
 const MENTOR_MESSAGES: Record<string, string> = {
-  'panel-exchange': 'Fill up Withdraw Amount, paste your receive address in the Send To Address field, then press Withdraw.',
+  'panel-exchange': 'Fill up the Withdraw Amount field, paste your receive address in the Send To Address field, then press Withdraw.',
   'panel-wallet': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
