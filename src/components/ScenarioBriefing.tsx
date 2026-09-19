@@ -123,6 +123,18 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
 
   const bubbleKey = isInIntro ? `intro-${introStep}` : walletPhase;
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      e.preventDefault();
+      handleContinue();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
+
   useLayoutEffect(() => {
     if (spotlight || !flipRects.current) return;
     const portrait = portraitRef.current;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
 
@@ -17,11 +17,17 @@ function useTypewriter(text: string, speed = 10) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     setDisplayed('');
     setDone(false);
     indexRef.current = 0;
+
+    if (!text) {
+      setDone(true);
+      return;
+    }
 
     const timer = setInterval(() => {
       indexRef.current += 1;
@@ -33,20 +39,30 @@ function useTypewriter(text: string, speed = 10) {
       }
     }, speed);
 
+    timerRef.current = timer;
     return () => clearInterval(timer);
   }, [text, speed]);
 
-  return { displayed, done };
+  const skip = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setDisplayed(text);
+    setDone(true);
+  }, [text]);
+
+  return { displayed, done, skip };
 }
 
 function AndyIntro({ onBack, onProceed }: Props) {
   const [messageIndex, setMessageIndex] = useState(0);
   const currentMessage = ANDY_MESSAGES[messageIndex];
-  const { displayed, done } = useTypewriter(currentMessage);
+  const { displayed, done, skip } = useTypewriter(currentMessage);
   const isFinalMessage = messageIndex === ANDY_MESSAGES.length - 1;
 
   const handleContinue = () => {
-    if (!done) return;
+    if (!done) {
+      skip();
+      return;
+    }
 
     if (isFinalMessage) {
       onProceed();
@@ -55,6 +71,18 @@ function AndyIntro({ onBack, onProceed }: Props) {
 
     setMessageIndex((current) => current + 1);
   };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      e.preventDefault();
+      handleContinue();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
 
   return (
     <main className="character-section">
