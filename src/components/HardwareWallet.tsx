@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Copy,
   Power,
   RotateCcw,
   X,
@@ -33,6 +34,8 @@ type HardwareWalletProps = {
   mode?: 'setup' | 'recover' | 'withdraw';
   expectedMnemonic?: string[];
 };
+
+const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
 
 const BOOT_STEPS = [
   'BOOTING...',
@@ -76,6 +79,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [recoverOptions, setRecoverOptions] = useState<string[]>([]);
   const [recoverSelected, setRecoverSelected] = useState(0);
   const [recoverWrong, setRecoverWrong] = useState(false);
+  const [addrCopied, setAddrCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const menuItems = useMemo(
     () => {
@@ -270,6 +275,17 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     updatePhase,
   ]);
 
+  const handleCopyAddress = useCallback(() => {
+    navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
+    setAddrCopied(true);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setAddrCopied(false), 2000);
+  }, []);
+
+  useEffect(() => () => {
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+  }, []);
+
   const handleCancel = useCallback(() => {
     if (phase === 'menu') return;
     resetWalletState();
@@ -425,7 +441,16 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Receive address</span>
                 <div className="hw-receive-addr-box">
-                  <span className="hw-receive-addr">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</span>
+                  <span className="hw-receive-addr">{RECEIVE_ADDRESS}</span>
+                  <button
+                    className={addrCopied ? 'hw-copy-btn copied' : 'hw-copy-btn'}
+                    type="button"
+                    onClick={handleCopyAddress}
+                    aria-label={addrCopied ? 'Address copied' : 'Copy address'}
+                  >
+                    {addrCopied ? <Check size={13} strokeWidth={2.6} /> : <Copy size={13} strokeWidth={2.2} />}
+                    <span>{addrCopied ? 'Copied' : 'Copy'}</span>
+                  </button>
                 </div>
                 <p className="hw-screen-body">Use this address to receive Bitcoin. Press the checkmark to go back.</p>
               </div>

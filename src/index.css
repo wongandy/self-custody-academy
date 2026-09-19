@@ -4116,6 +4116,43 @@ a {
   line-height: 1.5;
 }
 
+.hw-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  padding: 5px 11px;
+  border: 1px solid rgba(167, 232, 67, 0.35);
+  border-radius: 6px;
+  background: rgba(167, 232, 67, 0.1);
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.hw-copy-btn:hover {
+  background: rgba(167, 232, 67, 0.18);
+  border-color: rgba(167, 232, 67, 0.55);
+}
+
+.hw-copy-btn:active {
+  transform: scale(0.96);
+}
+
+.hw-copy-btn.copied {
+  background: rgba(167, 232, 67, 0.22);
+  border-color: var(--green);
+}
+
+.hw-copy-btn svg {
+  flex-shrink: 0;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 600px) {
