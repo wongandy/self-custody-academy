@@ -159,10 +159,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase]);
 
   const handleUp = useCallback(() => {
-    if (phase === 'menu') {
+    if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === 0 ? menuItems.length - 1 : menuIndex - 1;
-      const next = menuItems[nextIndex];
-      onMenuSelectionChange?.(next.phase === 'create-intro' ? 'create-intro' : next.phase === 'recover-intro' ? 'recover-intro' : next.phase === 'receive-address' ? 'receive-address' : 'send-blocked');
+      setMenuIndex(nextIndex);
+      if (phase === 'menu') {
+        const next = menuItems[nextIndex];
+        onMenuSelectionChange?.(next.phase === 'create-intro' ? 'create-intro' : next.phase === 'recover-intro' ? 'recover-intro' : next.phase === 'receive-address' ? 'receive-address' : 'send-blocked');
+      }
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s === 0 ? quizOptions.length - 1 : s - 1));
       setQuizWrong(false);
@@ -173,10 +176,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, [phase, menuIndex, menuItems, onMenuSelectionChange, quizOptions.length, recoverOptions.length]);
 
   const handleDown = useCallback(() => {
-    if (phase === 'menu') {
+    if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === menuItems.length - 1 ? 0 : menuIndex + 1;
-      const next = menuItems[nextIndex];
-      onMenuSelectionChange?.(next.phase === 'create-intro' ? 'create-intro' : next.phase === 'recover-intro' ? 'recover-intro' : next.phase === 'receive-address' ? 'receive-address' : 'send-blocked');
+      setMenuIndex(nextIndex);
+      if (phase === 'menu') {
+        const next = menuItems[nextIndex];
+        onMenuSelectionChange?.(next.phase === 'create-intro' ? 'create-intro' : next.phase === 'recover-intro' ? 'recover-intro' : next.phase === 'receive-address' ? 'receive-address' : 'send-blocked');
+      }
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s + 1) % quizOptions.length);
       setQuizWrong(false);
