@@ -441,16 +441,15 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Receive address</span>
                 <div className="hw-receive-addr-box">
-                  <span className="hw-receive-addr">{RECEIVE_ADDRESS}</span>
                   <button
                     className={addrCopied ? 'hw-copy-btn copied' : 'hw-copy-btn'}
                     type="button"
                     onClick={handleCopyAddress}
                     aria-label={addrCopied ? 'Address copied' : 'Copy address'}
                   >
-                    {addrCopied ? <Check size={13} strokeWidth={2.6} /> : <Copy size={13} strokeWidth={2.2} />}
-                    <span>{addrCopied ? 'Copied' : 'Copy'}</span>
+                    {addrCopied ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.2} />}
                   </button>
+                  <span className="hw-receive-addr">{RECEIVE_ADDRESS}</span>
                 </div>
                 <p className="hw-screen-body">Use this address to receive Bitcoin. Press the checkmark to go back.</p>
               </div>

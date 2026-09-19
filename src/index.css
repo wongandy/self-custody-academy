@@ -4100,37 +4100,38 @@ a {
 /* ── Hardware wallet receive address screen ── */
 
 .hw-receive-addr-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 8px 0;
   padding: 12px 10px;
   border: 1px solid rgba(167, 232, 67, 0.25);
   border-radius: 8px;
   background: rgba(167, 232, 67, 0.06);
-  text-align: center;
 }
 
 .hw-receive-addr {
+  flex: 1;
+  min-width: 0;
   color: var(--green);
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   word-break: break-all;
   line-height: 1.5;
+  text-align: center;
 }
 
 .hw-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 9px;
-  padding: 5px 11px;
-  border: 1px solid rgba(167, 232, 67, 0.35);
-  border-radius: 6px;
-  background: rgba(167, 232, 67, 0.1);
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(167, 232, 67, 0.3);
+  border-radius: 7px;
+  background: rgba(167, 232, 67, 0.08);
   color: var(--green);
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
@@ -4141,16 +4142,12 @@ a {
 }
 
 .hw-copy-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.92);
 }
 
 .hw-copy-btn.copied {
-  background: rgba(167, 232, 67, 0.22);
+  background: rgba(167, 232, 67, 0.25);
   border-color: var(--green);
-}
-
-.hw-copy-btn svg {
-  flex-shrink: 0;
 }
 
 /* ── Responsive ── */
