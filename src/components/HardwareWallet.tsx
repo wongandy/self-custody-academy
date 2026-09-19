@@ -343,7 +343,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             )}
             {isOn && !isBooting && (phase === 'menu' || phase === 'ready-menu') && (
               <div className="hw-screen-menu">
-                <span className="hw-screen-title">{phase === 'ready-menu' ? 'Wallet ready' : 'Select option'}</span>
+                <span className="hw-screen-title">Select option</span>
                 {menuItems.map((item, i) => (
                   <div key={item.label} className={i === menuIndex ? 'hw-menu-item active' : 'hw-menu-item'}>
                     <span>{item.label}</span>
