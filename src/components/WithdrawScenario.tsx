@@ -20,7 +20,7 @@ const INTRO_MESSAGES = [
 
 const SWITCH_INTRO_MESSAGES = [
   "Receive address copied! Now let's switch over to the exchange and paste it there.",
-  "I've added a button at the top of the screen that lets you jump back and forth between your hardware wallet and the exchange.",
+  "I'll add a button at the top of the screen that lets you jump back and forth between your hardware wallet and the exchange.",
   'Press "Switch to Exchange Wallet" to head to the exchange.',
 ];
 
