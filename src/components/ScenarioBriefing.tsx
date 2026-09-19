@@ -25,7 +25,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
     "Here's your 12-word recovery phrase. In real life you'd write these down on paper — never on a screen. When you're ready, press the checkmark.",
   'create-quiz':
     "Time to prove you saved your words. Pick the correct word for the position shown, then press the checkmark to confirm.",
-  'create-done': 'You did it! Your wallet is set up. Press Continue to wrap up this mission.',
+  'create-done': 'You did it! Your wallet is set up.',
   'recover-intro': "We'll cover wallet recovery later. Select Create Wallet for now.",
   'recover-quiz': '',
   'recover-done': '',
