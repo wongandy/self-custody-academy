@@ -137,8 +137,8 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   const handleReadyMenuSelect = useCallback((label: string) => {
     setReadyMenuHint(
       label === 'Receive Bitcoin'
-        ? "Receiving isn't part of this mission — that's next up. Press Continue to end this scenario."
-        : "Sending comes later in your path. Press Continue to end this scenario.",
+        ? "This option will be covered in the next scenarios, you may press Continue to wrap up."
+        : "This option will be covered in the next scenarios, you may press Continue to wrap up.",
     );
   }, []);
 
