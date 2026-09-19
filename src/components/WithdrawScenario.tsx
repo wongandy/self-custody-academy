@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowRight, ArrowLeft, ChevronDown, ChevronRight, Copy, Check, Smartphone, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, Smartphone, AlertTriangle } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 
@@ -25,6 +25,8 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-receive-address': "There's your receive address. Press the copy button next to it to copy the address to your clipboard.",
   'wallet-receive-copied': 'Address copied! A "Switch to Exchange Wallet" button has appeared above. Press it to go back to the exchange, then paste the address into the withdrawal form.',
+  'switch-to-exchange': 'Address copied! Now look at the button above the panels — the one with the two arrows. It switches between your hardware wallet and the exchange. Press "Switch to Exchange Wallet" to head back to the exchange.',
+  'switch-to-wallet': "While you're on the exchange, that same switch button above always takes you back to your hardware wallet. Press it any time to double-check your receive address.",
   'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
   'exchange-success': 'Your withdrawal has been submitted. Your Bitcoin is on its way to your hardware wallet. Click Continue to finish.',
@@ -79,9 +81,11 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [sendAddress, setSendAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [amountError, setAmountError] = useState('');
-  const [copied, setCopied] = useState(false);
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
+  const [switchCoach, setSwitchCoach] = useState<'to-exchange' | 'to-wallet' | null>(null);
+  const [switchPulse, setSwitchPulse] = useState(false);
+  const usedSwitchDirections = useRef<{ toExchange?: boolean; toWallet?: boolean }>({});
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
@@ -92,7 +96,8 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const isInIntro = !introDone;
   const spotlight = isInIntro && introStep === 0;
-  const canContinue = isInIntro ? introStep !== 1 : exchangeScreen === 'success';
+  const awaitingSwitch = switchCoach === 'to-exchange';
+  const canContinue = isInIntro ? introStep !== 1 : awaitingSwitch ? false : exchangeScreen === 'success';
   const currentIntroMessage = INTRO_MESSAGES[introStep];
 
   const walletStateKey = activePanel === 'wallet'
@@ -113,7 +118,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? currentIntroMessage
     : showSendBlockedMsg
       ? MENTOR_MESSAGES['wallet-send-blocked']
-      : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
+      : switchCoach
+        ? MENTOR_MESSAGES[`switch-${switchCoach}`]
+        : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
@@ -127,10 +134,21 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   }, [walletPhase, introDone]);
 
   useEffect(() => {
-    if (!showSendBlockedMsg) return;
-    const t = setTimeout(() => setShowSendBlockedMsg(false), 5000);
+    if (!switchCoach) {
+      setSwitchPulse(false);
+      return;
+    }
+    setSwitchPulse(true);
+    const t = setTimeout(() => setSwitchPulse(false), 5000);
     return () => clearTimeout(t);
-  }, [showSendBlockedMsg]);
+  }, [switchCoach]);
+
+  useEffect(() => {
+    if (isInIntro || activePanel !== 'exchange' || !addressCopied) return;
+    if (exchangeScreen !== 'form' || sendAddress.trim().length === 0) return;
+    if (usedSwitchDirections.current.toWallet) return;
+    setSwitchCoach('to-wallet');
+  }, [activePanel, addressCopied, exchangeScreen, sendAddress, isInIntro]);
 
   useLayoutEffect(() => {
     if (spotlight || !flipRects.current) return;
@@ -183,10 +201,22 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const handleCopyAddress = useCallback(() => {
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
-    setCopied(true);
     setAddressCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (!usedSwitchDirections.current.toExchange) {
+      setSwitchCoach('to-exchange');
+    }
   }, []);
+
+  const handleSwitchPanel = useCallback(() => {
+    if (switchCoach === 'to-exchange') {
+      usedSwitchDirections.current.toExchange = true;
+      setSwitchCoach(null);
+    } else if (switchCoach === 'to-wallet') {
+      usedSwitchDirections.current.toWallet = true;
+      setSwitchCoach(null);
+    }
+    setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
+  }, [switchCoach]);
 
   const handleAmountChange = useCallback((val: string) => {
     setAmount(val);
@@ -250,7 +280,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     }
   };
 
-  const bubbleKey = isInIntro ? `intro-${introStep}` : `${walletStateKey}-${showSendBlockedMsg}`;
+  const bubbleKey = isInIntro ? `intro-${introStep}` : `${walletStateKey}-${showSendBlockedMsg}-${switchCoach}`;
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
@@ -258,10 +288,11 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
           {!isInIntro && (addressCopied || activePanel === 'exchange') && (
             <button
-              className="withdraw-switch-btn withdraw-switch-btn-enter"
+              className={`withdraw-switch-btn withdraw-switch-btn-enter${switchPulse ? ' withdraw-switch-btn-pulse' : ''}`}
               type="button"
-              onClick={() => setActivePanel(activePanel === 'exchange' ? 'wallet' : 'exchange')}
+              onClick={handleSwitchPanel}
             >
+              <ArrowLeftRight size={14} strokeWidth={2.2} />
               <span>{activePanel === 'exchange' ? 'Switch to Hardware Wallet' : 'Switch to Exchange Wallet'}</span>
             </button>
           )}
