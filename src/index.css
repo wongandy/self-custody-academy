@@ -3667,7 +3667,7 @@ a {
     box-shadow: 0 0 0 0 rgba(241, 189, 105, 0);
   }
   50% {
-    box-shadow: 0 0 0 7px rgba(241, 189, 105, 0.28), 0 0 22px 4px rgba(241, 189, 105, 0.35);
+    box-shadow: 0 0 0 5px rgba(241, 189, 105, 0.22), 0 0 18px 3px rgba(241, 189, 105, 0.3);
   }
 }
 
@@ -3676,7 +3676,7 @@ a {
   background: rgba(241, 189, 105, 0.14);
   animation:
     withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both,
-    withdraw-switch-pulse 1.15s ease-in-out 3;
+    withdraw-switch-pulse 2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

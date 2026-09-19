@@ -18,6 +18,12 @@ const INTRO_MESSAGES = [
   "First, let's get a receive address from your hardware wallet. Power it on by clicking the power button.",
 ];
 
+const SWITCH_INTRO_MESSAGES = [
+  "Receive address copied! Now let's switch over to the exchange and paste it there.",
+  "I've added a button at the top of the screen that lets you jump back and forth between your hardware wallet and the exchange.",
+  'Press "Switch to Exchange Wallet" to head to the exchange.',
+];
+
 const MENTOR_MESSAGES: Record<string, string> = {
   'panel-exchange': 'Paste your receive address into the exchange withdrawal form, then press Withdraw.',
   'panel-wallet': 'Power on your wallet, then select Receive Bitcoin to get your address.',
@@ -25,7 +31,6 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-receive-address': "There's your receive address. Press the copy button next to it to copy the address to your clipboard.",
   'wallet-receive-copied': 'Address copied! A "Switch to Exchange Wallet" button has appeared above. Press it to go back to the exchange, then paste the address into the withdrawal form.',
-  'switch-to-exchange': 'Address copied! Now look at the button above the panels — the one with the two arrows. It switches between your hardware wallet and the exchange. Press "Switch to Exchange Wallet" to head back to the exchange.',
   'switch-to-wallet': "While you're on the exchange, that same switch button above always takes you back to your hardware wallet. Press it any time to double-check your receive address.",
   'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
@@ -83,7 +88,8 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [amountError, setAmountError] = useState('');
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
-  const [switchCoach, setSwitchCoach] = useState<'to-exchange' | 'to-wallet' | null>(null);
+  const [switchCoach, setSwitchCoach] = useState<'to-wallet' | null>(null);
+  const [switchIntroStep, setSwitchIntroStep] = useState<number | null>(null);
   const [switchPulse, setSwitchPulse] = useState(false);
   const usedSwitchDirections = useRef<{ toExchange?: boolean; toWallet?: boolean }>({});
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
@@ -96,8 +102,14 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const isInIntro = !introDone;
   const spotlight = isInIntro && introStep === 0;
-  const awaitingSwitch = switchCoach === 'to-exchange';
-  const canContinue = isInIntro ? introStep !== 1 : awaitingSwitch ? false : exchangeScreen === 'success';
+  const canContinue = isInIntro
+    ? introStep !== 1
+    : switchIntroStep !== null
+      ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
+      : exchangeScreen === 'success';
+  const showSwitchButton = !isInIntro && (
+    switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1 : addressCopied || activePanel === 'exchange'
+  );
   const currentIntroMessage = INTRO_MESSAGES[introStep];
 
   const walletStateKey = activePanel === 'wallet'
@@ -118,9 +130,11 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? currentIntroMessage
     : showSendBlockedMsg
       ? MENTOR_MESSAGES['wallet-send-blocked']
-      : switchCoach
-        ? MENTOR_MESSAGES[`switch-${switchCoach}`]
-        : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
+      : switchIntroStep !== null
+        ? SWITCH_INTRO_MESSAGES[switchIntroStep]
+        : switchCoach
+          ? MENTOR_MESSAGES[`switch-${switchCoach}`]
+          : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
@@ -134,14 +148,17 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   }, [walletPhase, introDone]);
 
   useEffect(() => {
-    if (!switchCoach) {
-      setSwitchPulse(false);
+    if (switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1) {
+      setSwitchPulse(true);
       return;
     }
-    setSwitchPulse(true);
-    const t = setTimeout(() => setSwitchPulse(false), 5000);
-    return () => clearTimeout(t);
-  }, [switchCoach]);
+    if (switchCoach === 'to-wallet') {
+      setSwitchPulse(true);
+      const t = setTimeout(() => setSwitchPulse(false), 5000);
+      return () => clearTimeout(t);
+    }
+    setSwitchPulse(false);
+  }, [switchIntroStep, switchCoach]);
 
   useEffect(() => {
     if (isInIntro || activePanel !== 'exchange' || !addressCopied) return;
@@ -203,20 +220,20 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
     setAddressCopied(true);
     if (!usedSwitchDirections.current.toExchange) {
-      setSwitchCoach('to-exchange');
+      setSwitchIntroStep(0);
     }
   }, []);
 
   const handleSwitchPanel = useCallback(() => {
-    if (switchCoach === 'to-exchange') {
+    if (switchIntroStep !== null) {
       usedSwitchDirections.current.toExchange = true;
-      setSwitchCoach(null);
+      setSwitchIntroStep(null);
     } else if (switchCoach === 'to-wallet') {
       usedSwitchDirections.current.toWallet = true;
       setSwitchCoach(null);
     }
     setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
-  }, [switchCoach]);
+  }, [switchIntroStep, switchCoach]);
 
   const handleAmountChange = useCallback((val: string) => {
     setAmount(val);
@@ -274,19 +291,27 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       setIntroStep(1);
       return;
     }
+    if (switchIntroStep !== null) {
+      if (switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1) {
+        setSwitchIntroStep(switchIntroStep + 1);
+      }
+      return;
+    }
     if (exchangeScreen === 'success') {
       onComplete();
       return;
     }
   };
 
-  const bubbleKey = isInIntro ? `intro-${introStep}` : `${walletStateKey}-${showSendBlockedMsg}-${switchCoach}`;
+  const bubbleKey = isInIntro
+    ? `intro-${introStep}`
+    : `${walletStateKey}-${showSendBlockedMsg}-${switchCoach}-${switchIntroStep}`;
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
-          {!isInIntro && (addressCopied || activePanel === 'exchange') && (
+          {showSwitchButton && (
             <button
               className={`withdraw-switch-btn withdraw-switch-btn-enter${switchPulse ? ' withdraw-switch-btn-pulse' : ''}`}
               type="button"
