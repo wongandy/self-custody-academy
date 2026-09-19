@@ -13,6 +13,9 @@ const INTRO_MESSAGES = [
   "Start by clicking the power button to turn it on.",
 ];
 
+const READY_MENU_MESSAGE =
+  "Nice work — that's a live wallet. 'Receive Bitcoin' and 'Send Bitcoin' are now on your device. This mission stops here, so press Continue to wrap up.";
+
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: "Start by clicking the power button to turn it on.",
   booting: 'Great — the device is booting up. Hang tight for a moment.',
@@ -28,6 +31,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'recover-done': '',
   'receive-address': 'This is your receive address — press the copy button to copy it.',
   'send-blocked': 'Sending from this wallet is not part of this mission yet. Let us get your receive address first.',
+  'ready-menu': READY_MENU_MESSAGE,
 };
 
 function useTypewriter(text: string, speed = 10) {
@@ -76,6 +80,8 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
   const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('create-intro');
   const [walletVisible, setWalletVisible] = useState(false);
+  const [readyMenuSeen, setReadyMenuSeen] = useState(false);
+  const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -87,12 +93,14 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
     ? currentIntroMessage
     : walletPhase === 'menu' && menuSelection === 'recover-intro'
       ? "We'll cover wallet recovery later. Select Create Wallet for now."
-      : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
+      : walletPhase === 'ready-menu' && readyMenuHint
+        ? readyMenuHint
+        : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
   const canContinue = isInIntro
     ? introStep === 0 && done
-    : walletPhase === 'create-done';
+    : walletPhase === 'create-done' || walletPhase === 'ready-menu';
 
   useEffect(() => {
     if (walletPhase !== 'off' && !introDone) {
@@ -117,9 +125,22 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
       return;
     }
     if (walletPhase === 'create-done') {
+      setReadyMenuSeen(true);
+      setReadyMenuHint(null);
+      return;
+    }
+    if (walletPhase === 'ready-menu') {
       onComplete();
     }
   };
+
+  const handleReadyMenuSelect = useCallback((label: string) => {
+    setReadyMenuHint(
+      label === 'Receive Bitcoin'
+        ? "Receiving isn't part of this mission — that's next up. Press Continue to end this scenario."
+        : "Sending comes later in your path. Press Continue to end this scenario.",
+    );
+  }, []);
 
   const bubbleKey = isInIntro ? `intro-${introStep}` : walletPhase;
 
@@ -185,6 +206,8 @@ function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
             onComplete={() => {}}
             onPhaseChange={setWalletPhase}
             onMenuSelectionChange={setMenuSelection}
+            onReadyMenuSelect={handleReadyMenuSelect}
+            advanceToReadyMenu={readyMenuSeen}
           />
         </div>
         <div className="mentor-row">

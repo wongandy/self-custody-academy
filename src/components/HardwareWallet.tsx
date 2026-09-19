@@ -24,7 +24,8 @@ export type WalletPhase =
   | 'recover-quiz'
   | 'recover-done'
   | 'receive-address'
-  | 'send-blocked';
+  | 'send-blocked'
+  | 'ready-menu';
 
 type MenuPhase = WalletPhase | 'recover-soon';
 
@@ -34,6 +35,8 @@ type HardwareWalletProps = {
   onPhaseChange?: (phase: WalletPhase) => void;
   onMenuSelectionChange?: (phase: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => void;
   onCopyAddress?: () => void;
+  onReadyMenuSelect?: (label: string) => void;
+  advanceToReadyMenu?: boolean;
   mode?: 'setup' | 'recover' | 'withdraw';
   expectedMnemonic?: string[];
 };
@@ -61,7 +64,7 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, advanceToReadyMenu = false, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>('off');
   const [bootStep, setBootStep] = useState(0);
 
@@ -85,9 +88,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [addrCopied, setAddrCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const isReadyMenu = phase === 'ready-menu';
+
   const menuItems = useMemo<{ label: string; phase: MenuPhase }[]>(
     () => {
-      if (mode === 'withdraw') {
+      if (mode === 'withdraw' || isReadyMenu) {
         return [
           { label: 'Receive Bitcoin', phase: 'receive-address' },
           { label: 'Send Bitcoin', phase: 'send-blocked' },
@@ -98,7 +103,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         ...(mode === 'setup' ? [{ label: 'Recover wallet', phase: 'recover-soon' as MenuPhase }] : []),
       ];
     },
-    [mode],
+    [mode, isReadyMenu],
   );
 
   const startBoot = useCallback(() => {
@@ -120,6 +125,12 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       if (bootTimer.current) clearTimeout(bootTimer.current);
     };
   }, [phase, bootStep, updatePhase]);
+
+  useEffect(() => {
+    if (!advanceToReadyMenu || phase !== 'create-done') return;
+    updatePhase('ready-menu');
+    setMenuIndex(0);
+  }, [advanceToReadyMenu, phase, updatePhase]);
 
   const resetWalletState = useCallback(() => {
     setMnemonic([]);
@@ -176,6 +187,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, [phase, menuIndex, menuItems, onMenuSelectionChange, quizOptions.length, recoverOptions.length]);
 
   const handleEnter = useCallback(() => {
+    if (phase === 'ready-menu') {
+      onReadyMenuSelect?.(menuItems[menuIndex].label);
+      return;
+    }
     if (phase === 'menu') {
       const target: MenuPhase = menuItems[menuIndex].phase;
       if (target === 'recover-soon') {
@@ -276,6 +291,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     recoverSelected,
     expectedMnemonic,
     updatePhase,
+    onReadyMenuSelect,
   ]);
 
   const handleCopyAddress = useCallback(() => {
@@ -319,9 +335,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 </div>
               </div>
             )}
-            {isOn && !isBooting && phase === 'menu' && (
+            {isOn && !isBooting && (phase === 'menu' || phase === 'ready-menu') && (
               <div className="hw-screen-menu">
-                <span className="hw-screen-title">Select option</span>
+                <span className="hw-screen-title">{phase === 'ready-menu' ? 'Wallet ready' : 'Select option'}</span>
                 {menuItems.map((item, i) => (
                   <div key={item.label} className={i === menuIndex ? 'hw-menu-item active' : 'hw-menu-item'}>
                     <span>{item.label}</span>
@@ -478,7 +494,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             </button>
           </div>
           <div className="hw-controls-actions">
-            <button className="hw-btn hw-btn-nav hw-btn-cancel" type="button" onClick={handleCancel} disabled={!isOn || isBooting || phase === 'menu'} aria-label="Cancel">
+            <button className="hw-btn hw-btn-nav hw-btn-cancel" type="button" onClick={handleCancel} disabled={!isOn || isBooting || phase === 'menu' || phase === 'ready-menu'} aria-label="Cancel">
               <X size={16} strokeWidth={2.4} />
             </button>
             <button className="hw-btn hw-btn-nav hw-btn-enter" type="button" onClick={handleEnter} disabled={!isOn || isBooting} aria-label="Confirm">
