@@ -14,7 +14,7 @@ const INTRO_MESSAGES = [
 ];
 
 const READY_MENU_MESSAGE =
-  "Nice work — that's a live wallet. 'Receive Bitcoin' and 'Send Bitcoin' are now on your device. This mission stops here, so press Continue to wrap up.";
+  "These options will be covered in the next scenarios, you may press Continue to wrap up.";
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: "Start by clicking the power button to turn it on.",
