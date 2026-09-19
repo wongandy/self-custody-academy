@@ -3649,16 +3649,32 @@ a {
 @keyframes withdraw-switch-enter {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.withdraw-switch-btn-enter {
+  animation: withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.withdraw-switch-label {
+  display: inline-block;
+  animation: withdraw-switch-label-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes withdraw-switch-label-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.withdraw-switch-btn-enter {
-  animation: withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes withdraw-switch-pulse {
@@ -3675,14 +3691,54 @@ a {
   border-color: var(--gold-light);
   background: rgba(241, 189, 105, 0.14);
   animation:
-    withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards,
     withdraw-switch-pulse 2s ease-in-out infinite;
+}
+
+@keyframes withdraw-panel-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes withdraw-panel-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.withdraw-phone-wrap.withdraw-slide-right,
+.withdraw-wallet-wrap.withdraw-slide-right {
+  animation: withdraw-panel-in-right 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.withdraw-phone-wrap.withdraw-slide-left,
+.withdraw-wallet-wrap.withdraw-slide-left {
+  animation: withdraw-panel-in-left 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .withdraw-switch-btn-pulse {
-    animation: withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
     box-shadow: 0 0 0 4px rgba(241, 189, 105, 0.28);
+  }
+
+  .withdraw-switch-label,
+  .withdraw-phone-wrap.withdraw-slide-right,
+  .withdraw-wallet-wrap.withdraw-slide-right,
+  .withdraw-phone-wrap.withdraw-slide-left,
+  .withdraw-wallet-wrap.withdraw-slide-left {
+    animation: none;
   }
 }
 

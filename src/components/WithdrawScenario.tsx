@@ -91,6 +91,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [switchCoach, setSwitchCoach] = useState<'to-wallet' | null>(null);
   const [switchIntroStep, setSwitchIntroStep] = useState<number | null>(null);
   const [switchPulse, setSwitchPulse] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<'withdraw-slide-left' | 'withdraw-slide-right' | null>(null);
   const usedSwitchDirections = useRef<{ toExchange?: boolean; toWallet?: boolean }>({});
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
@@ -232,8 +233,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       usedSwitchDirections.current.toWallet = true;
       setSwitchCoach(null);
     }
+    setSlideDirection(activePanel === 'wallet' ? 'withdraw-slide-right' : 'withdraw-slide-left');
     setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
-  }, [switchIntroStep, switchCoach]);
+  }, [switchIntroStep, switchCoach, activePanel]);
 
   const handleAmountChange = useCallback((val: string) => {
     setAmount(val);
@@ -318,13 +320,15 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
               onClick={handleSwitchPanel}
             >
               <ArrowLeftRight size={14} strokeWidth={2.2} />
-              <span>{activePanel === 'exchange' ? 'Switch to Hardware Wallet' : 'Switch to Exchange Wallet'}</span>
+              <span key={activePanel} className="withdraw-switch-label">
+                {activePanel === 'exchange' ? 'Switch to Hardware Wallet' : 'Switch to Exchange Wallet'}
+              </span>
             </button>
           )}
 
           <div className="withdraw-panels-wrap">
             {/* ── Smartphone exchange panel ── */}
-            <div className={`withdraw-phone-wrap ${activePanel === 'exchange' ? '' : 'withdraw-panel-hidden'}`}>
+            <div className={`withdraw-phone-wrap ${activePanel === 'exchange' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
               <div className="withdraw-phone">
                 <div className="withdraw-phone-notch" />
                 <div className="withdraw-phone-screen">
@@ -527,7 +531,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
             {/* ── Hardware wallet panel ── */}
             {walletEntered && (
-              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${activePanel === 'wallet' ? '' : 'withdraw-panel-hidden'}`}>
+              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${activePanel === 'wallet' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
                 <div className="hw-wallet-slot">
                   <HardwareWallet
                     mode="withdraw"
