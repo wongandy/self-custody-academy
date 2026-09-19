@@ -23,7 +23,8 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'panel-wallet': 'Power on your wallet, then select Receive Bitcoin to get your address.',
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
-  'wallet-receive': 'There is your receive address. Copy it, switch back to the exchange, and paste it into the withdrawal form.',
+  'wallet-receive-address': "There's your receive address. Press the copy button next to it to copy the address to your clipboard.",
+  'wallet-receive-copied': 'Address copied! A "Switch to Exchange Wallet" button has appeared above. Press it to go back to the exchange, then paste the address into the withdrawal form.',
   'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
   'exchange-success': 'Your withdrawal has been submitted. Your Bitcoin is on its way to your hardware wallet. Click Continue to finish.',
@@ -80,6 +81,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [amountError, setAmountError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
+  const [addressCopied, setAddressCopied] = useState(false);
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
@@ -96,7 +98,11 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const walletStateKey = activePanel === 'wallet'
     ? walletPhase === 'menu'
       ? `wallet-menu-${menuSelection}`
-      : `wallet-${walletPhase}`
+      : walletPhase === 'receive-address'
+        ? addressCopied
+          ? 'wallet-receive-copied'
+          : 'wallet-receive-address'
+        : `wallet-${walletPhase}`
     : exchangeScreen === 'confirm'
       ? 'exchange-confirm'
       : exchangeScreen === 'success'
@@ -178,6 +184,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const handleCopyAddress = useCallback(() => {
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
     setCopied(true);
+    setAddressCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, []);
 
@@ -249,9 +256,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
-          {!isInIntro && (
+          {!isInIntro && (addressCopied || activePanel === 'exchange') && (
             <button
-              className="withdraw-switch-btn"
+              className="withdraw-switch-btn withdraw-switch-btn-enter"
               type="button"
               onClick={() => setActivePanel(activePanel === 'exchange' ? 'wallet' : 'exchange')}
             >
@@ -471,6 +478,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                     onComplete={() => {}}
                     onPhaseChange={setWalletPhase}
                     onMenuSelectionChange={handleMenuSelectionChange}
+                    onCopyAddress={handleCopyAddress}
                   />
                 </div>
               </div>

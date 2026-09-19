@@ -26,11 +26,14 @@ export type WalletPhase =
   | 'receive-address'
   | 'send-blocked';
 
+type MenuPhase = WalletPhase | 'recover-soon';
+
 type HardwareWalletProps = {
   onComplete: () => void;
   onPowerChange?: (isOn: boolean) => void;
   onPhaseChange?: (phase: WalletPhase) => void;
   onMenuSelectionChange?: (phase: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => void;
+  onCopyAddress?: () => void;
   mode?: 'setup' | 'recover' | 'withdraw';
   expectedMnemonic?: string[];
 };
@@ -58,7 +61,7 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>('off');
   const [bootStep, setBootStep] = useState(0);
 
@@ -82,17 +85,17 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [addrCopied, setAddrCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const menuItems = useMemo(
+  const menuItems = useMemo<{ label: string; phase: MenuPhase }[]>(
     () => {
       if (mode === 'withdraw') {
         return [
-          { label: 'Receive Bitcoin', phase: 'receive-address' as WalletPhase },
-          { label: 'Send Bitcoin', phase: 'send-blocked' as WalletPhase },
+          { label: 'Receive Bitcoin', phase: 'receive-address' },
+          { label: 'Send Bitcoin', phase: 'send-blocked' },
         ];
       }
       return [
-        { label: mode === 'recover' ? 'Recover wallet' : 'Create wallet', phase: (mode === 'recover' ? 'recover-intro' : 'create-intro') as WalletPhase },
-        ...(mode === 'setup' ? [{ label: 'Recover wallet', phase: 'recover-soon' as WalletPhase }] : []),
+        { label: mode === 'recover' ? 'Recover wallet' : 'Create wallet', phase: mode === 'recover' ? 'recover-intro' : 'create-intro' },
+        ...(mode === 'setup' ? [{ label: 'Recover wallet', phase: 'recover-soon' as MenuPhase }] : []),
       ];
     },
     [mode],
@@ -174,7 +177,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   const handleEnter = useCallback(() => {
     if (phase === 'menu') {
-      const target = menuItems[menuIndex].phase;
+      const target: MenuPhase = menuItems[menuIndex].phase;
       if (target === 'recover-soon') {
         onMenuSelectionChange?.('recover-intro');
         return;
@@ -278,9 +281,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const handleCopyAddress = useCallback(() => {
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
     setAddrCopied(true);
+    onCopyAddress?.();
     if (copyTimer.current) clearTimeout(copyTimer.current);
     copyTimer.current = setTimeout(() => setAddrCopied(false), 2000);
-  }, []);
+  }, [onCopyAddress]);
 
   useEffect(() => () => {
     if (copyTimer.current) clearTimeout(copyTimer.current);
