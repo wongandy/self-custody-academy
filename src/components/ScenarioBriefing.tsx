@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 
 type ScenarioBriefingProps = {
-  onBack: () => void;
   onComplete: () => void;
 };
 
@@ -74,7 +73,7 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done, skip };
 }
 
-function ScenarioBriefing({ onBack, onComplete }: ScenarioBriefingProps) {
+function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');

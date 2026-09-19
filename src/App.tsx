@@ -1,15 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ArrowUpRight,
-  KeyRound,
-  LockKeyhole,
-  LogOut,
-  Moon,
-  ShieldCheck,
-  Sparkles,
-  Sun,
-  X,
-} from 'lucide-react';
+import { LogOut, Moon, Sun, X } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
@@ -48,7 +38,7 @@ function App() {
   const [progressError, setProgressError] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'register' | 'login'>('register');
   const [authReturnScreen, setAuthReturnScreen] = useState<Screen>('roadmap');
-  const [activeScenario, setActiveScenario] = useState(1);
+  const [, setActiveScenario] = useState(1);
 
   const loadLocalProgress = useCallback(() => {
     setCompletedScenarios(getLocalProgress());
@@ -256,7 +246,6 @@ function App() {
 
       {screen === 'andy-intro' && (
         <AndyIntro
-          onBack={() => setScreen('home')}
           onProceed={() => setScreen('roadmap')}
         />
       )}
@@ -267,7 +256,6 @@ function App() {
           isLoading={progressLoading}
           errorMessage={progressError}
           isLoggedIn={!!user}
-          onBack={() => setScreen('home')}
           onSelectScenario={(n) => {
             setActiveScenario(n);
             setScreen(`scenario-${n}` as Screen);
@@ -277,7 +265,6 @@ function App() {
 
       {screen === 'scenario-1' && (
         <ScenarioBriefing
-          onBack={() => setScreen('roadmap')}
           onComplete={() => handleScenarioComplete(1)}
         />
       )}

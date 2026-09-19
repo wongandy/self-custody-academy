@@ -1,21 +1,10 @@
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CircleDollarSign,
-  KeyRound,
-  LockKeyhole,
-  ShieldCheck,
-  Sparkles,
-  WalletCards,
-} from 'lucide-react';
+import { ArrowRight, Check, KeyRound, LockKeyhole, ShieldCheck, WalletCards } from 'lucide-react';
 
 type RoadmapProps = {
   completedScenarios: number;
   isLoading: boolean;
   errorMessage: string | null;
   isLoggedIn: boolean;
-  onBack: () => void;
   onSelectScenario: (scenarioNumber: number) => void;
 };
 
@@ -59,9 +48,8 @@ const scenarios: Scenario[] = [
   },
 ];
 
-function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onBack, onSelectScenario }: RoadmapProps) {
+function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario }: RoadmapProps) {
   const availableScenario = Math.min(completedScenarios + 1, scenarios.length);
-  const progressPercent = Math.round((completedScenarios / scenarios.length) * 100);
 
   return (
     <main className="roadmap-page">

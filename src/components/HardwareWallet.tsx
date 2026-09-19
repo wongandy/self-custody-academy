@@ -6,7 +6,6 @@ import {
   ChevronUp,
   Copy,
   Power,
-  RotateCcw,
   X,
 } from 'lucide-react';
 import { BIP39_WORDLIST, generateMnemonic } from '@/lib/bip39';
@@ -37,6 +36,7 @@ type HardwareWalletProps = {
   onCopyAddress?: () => void;
   onReadyMenuSelect?: (label: string) => void;
   advanceToReadyMenu?: boolean;
+  startAtMenu?: boolean;
   mode?: 'setup' | 'recover' | 'withdraw';
   expectedMnemonic?: string[];
 };
@@ -64,8 +64,8 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, advanceToReadyMenu = false, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
-  const [phase, setPhase] = useState<WalletPhase>('off');
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, advanceToReadyMenu = false, startAtMenu = false, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
+  const [phase, setPhase] = useState<WalletPhase>(startAtMenu ? 'menu' : 'off');
   const [bootStep, setBootStep] = useState(0);
 
   const updatePhase = useCallback((next: WalletPhase) => {
@@ -110,6 +110,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     updatePhase('booting');
     setBootStep(0);
   }, [updatePhase]);
+
+  useEffect(() => {
+    if (startAtMenu) onPhaseChange?.('menu');
+  }, [startAtMenu, onPhaseChange]);
 
   useEffect(() => {
     if (phase !== 'booting') return;
@@ -298,6 +302,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     expectedMnemonic,
     updatePhase,
     onReadyMenuSelect,
+    onMenuSelectionChange,
   ]);
 
   const handleCopyAddress = useCallback(() => {

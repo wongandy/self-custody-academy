@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
 
 type Props = {
-  onBack: () => void;
   onProceed: () => void;
 };
 
@@ -52,7 +51,7 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done, skip };
 }
 
-function AndyIntro({ onBack, onProceed }: Props) {
+function AndyIntro({ onProceed }: Props) {
   const [messageIndex, setMessageIndex] = useState(0);
   const currentMessage = ANDY_MESSAGES[messageIndex];
   const { displayed, done, skip } = useTypewriter(currentMessage);

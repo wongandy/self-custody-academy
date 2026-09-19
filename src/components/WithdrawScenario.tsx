@@ -15,7 +15,7 @@ const NETWORK_FEE = 0.00002;
 
 const INTRO_MESSAGES = [
   "It's time to withdraw your Bitcoin from the exchange to your hardware wallet.",
-  "First, let's get a receive address from your hardware wallet. Power it on by clicking the power button.",
+  "Your wallet is already set up from earlier, so there's no need to power it on. Select 'Receive Bitcoin' to get a receive address.",
 ];
 
 const SWITCH_INTRO_MESSAGES = [
@@ -26,9 +26,10 @@ const SWITCH_INTRO_MESSAGES = [
 
 const MENTOR_MESSAGES: Record<string, string> = {
   'panel-exchange': 'Paste your receive address into the exchange withdrawal form, then press Withdraw.',
-  'panel-wallet': 'Power on your wallet, then select Receive Bitcoin to get your address.',
+  'panel-wallet': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
+  'wallet-menu-receive-address': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-receive-address': "There's your receive address. Press the copy button next to it to copy the address to your clipboard.",
   'wallet-receive-copied': 'Address copied! A "Switch to Exchange Wallet" button has appeared above. Press it to go back to the exchange, then paste the address into the withdrawal form.',
   'switch-to-wallet': "While you're on the exchange, that same switch button above always takes you back to your hardware wallet. Press it any time to double-check your receive address.",
@@ -81,8 +82,8 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [activePanel, setActivePanel] = useState<'exchange' | 'wallet'>('wallet');
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
-  const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
-  const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('create-intro');
+  const [walletPhase, setWalletPhase] = useState<WalletPhase>('menu');
+  const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('receive-address');
   const [sendAddress, setSendAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [amountError, setAmountError] = useState('');
@@ -143,10 +144,14 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     if (walletPhase === 'receive-address') {
       setHasRetrievedAddress(true);
     }
-    if (walletPhase !== 'off' && !introDone) {
+  }, [walletPhase]);
+
+  useEffect(() => {
+    if (introDone) return;
+    if (walletPhase !== 'menu' || showSendBlockedMsg) {
       setIntroDone(true);
     }
-  }, [walletPhase, introDone]);
+  }, [walletPhase, showSendBlockedMsg, introDone]);
 
   useEffect(() => {
     if (switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1) {
@@ -212,9 +217,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const handleMenuSelectionChange = useCallback((sel: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => {
     setMenuSelection(sel);
-    if (sel === 'send-blocked') {
-      setShowSendBlockedMsg(true);
-    }
+    setShowSendBlockedMsg(sel === 'send-blocked');
   }, []);
 
   const handleCopyAddress = useCallback(() => {
@@ -548,6 +551,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                 <div className="hw-wallet-slot">
                   <HardwareWallet
                     mode="withdraw"
+                    startAtMenu
                     onComplete={() => {}}
                     onPhaseChange={setWalletPhase}
                     onMenuSelectionChange={handleMenuSelectionChange}
