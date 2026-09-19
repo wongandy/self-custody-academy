@@ -309,6 +309,19 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? `intro-${introStep}`
     : `${walletStateKey}-${showSendBlockedMsg}-${switchCoach}-${switchIntroStep}`;
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      if (!canContinue) return;
+      e.preventDefault();
+      handleContinue();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
+
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
