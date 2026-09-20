@@ -88,7 +88,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('menu');
   const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('receive-address');
   const [sendAddress, setSendAddress] = useState('');
-  const [addressTouched, setAddressTouched] = useState(false);
   const [amount, setAmount] = useState('');
   const [amountError, setAmountError] = useState('');
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
@@ -123,7 +122,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const trimmedAddress = sendAddress.trim();
   const matchesReceiveAddress = trimmedAddress.length > 0 && trimmedAddress.toLowerCase() === RECEIVE_ADDRESS.toLowerCase();
   const looksLikeFullAddress = trimmedAddress.length >= RECEIVE_ADDRESS.length;
-  const addressMismatch = trimmedAddress.length > 0 && !matchesReceiveAddress && (looksLikeFullAddress || addressTouched);
+  const addressMismatch = trimmedAddress.length > 0 && !matchesReceiveAddress && looksLikeFullAddress;
 
   const walletStateKey = activePanel === 'wallet'
     ? walletPhase === 'menu'
@@ -145,10 +144,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       ? MENTOR_MESSAGES['wallet-send-blocked']
       : switchIntroStep !== null
         ? SWITCH_INTRO_MESSAGES[switchIntroStep]
-        : exchangeIntroStep !== null && activePanel === 'exchange'
-          ? EXCHANGE_INTRO_MESSAGES[exchangeIntroStep]
-          : addressMismatch && activePanel === 'exchange'
-            ? MENTOR_MESSAGES['exchange-address-mismatch']
+        : addressMismatch && activePanel === 'exchange'
+          ? MENTOR_MESSAGES['exchange-address-mismatch']
+          : exchangeIntroStep !== null && activePanel === 'exchange'
+            ? EXCHANGE_INTRO_MESSAGES[exchangeIntroStep]
             : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
@@ -430,29 +429,15 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           <input
                             type="text"
                             value={sendAddress}
-                            onChange={(e) => {
-                              setSendAddress(e.target.value);
-                              setAddressTouched(false);
-                            }}
-                            onBlur={() => setAddressTouched(true)}
+                            onChange={(e) => setSendAddress(e.target.value)}
                             placeholder="Paste wallet receive address"
                             className={`withdraw-addr-input${addressMismatch ? ' error' : ''}`}
                           />
-                          {matchesReceiveAddress ? (
-                            <p className="withdraw-addr-status ok">
-                              <Check size={11} strokeWidth={2.6} />
-                              <span>Matches your hardware wallet address</span>
-                            </p>
-                          ) : addressMismatch ? (
-                            <p className="withdraw-addr-status bad">
-                              <AlertTriangle size={11} strokeWidth={2} />
-                              <span>This isn't the receive address from your hardware wallet. Go back to your wallet, copy it again, and paste it here.</span>
-                            </p>
-                          ) : trimmedAddress.length === 0 ? (
+                          {trimmedAddress.length === 0 && (
                             <p className="withdraw-addr-status hint">
                               <span>Go to your hardware wallet, copy the receive address, then paste it here.</span>
                             </p>
-                          ) : null}
+                          )}
                         </div>
 
                         <div className="withdraw-phone-summary">

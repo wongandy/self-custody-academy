@@ -4145,14 +4145,6 @@ a {
   margin-top: 2px;
 }
 
-.withdraw-addr-status.ok {
-  color: var(--green);
-}
-
-.withdraw-addr-status.bad {
-  color: #e87171;
-}
-
 .withdraw-addr-status.hint {
   color: var(--faint);
 }
