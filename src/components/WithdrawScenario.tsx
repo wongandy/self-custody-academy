@@ -23,12 +23,13 @@ const SWITCH_INTRO_MESSAGES = [
 ];
 
 const EXCHANGE_INTRO_MESSAGES = [
-  'Need to double-check your receive address? Press the switch button above to hop back to your hardware wallet.',
-  'Fill up the Withdraw Amount field, paste your receive address in the Send To Address field, then press Withdraw.',
+  'To withdraw that 0.05 Bitcoin, you may type that in the Withdraw Amount field or click Max to populate it for you.',
+  'Next, paste your receive address in the Send to Address field. Your Bitcoin will be sent to that address.',
+  "Once you've filled up the Withdraw Amount and Send To Address fields proceed by clicking Withdraw.",
 ];
 
 const MENTOR_MESSAGES: Record<string, string> = {
-  'panel-exchange': 'Fill up the Withdraw Amount field, paste your receive address in the Send To Address field, then press Withdraw.',
+  'panel-exchange': EXCHANGE_INTRO_MESSAGES[EXCHANGE_INTRO_MESSAGES.length - 1],
   'panel-wallet': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
@@ -170,12 +171,8 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       setSwitchPulse(true);
       return;
     }
-    if (exchangeIntroStep === 0 && activePanel === 'exchange') {
-      setSwitchPulse(true);
-      return;
-    }
     setSwitchPulse(false);
-  }, [switchIntroStep, exchangeIntroStep, activePanel]);
+  }, [switchIntroStep]);
 
   useLayoutEffect(() => {
     if (spotlight || !flipRects.current) return;
