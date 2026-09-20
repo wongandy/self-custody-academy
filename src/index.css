@@ -2276,6 +2276,13 @@ a {
   letter-spacing: 0.01em;
 }
 
+.hw-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
 .hw-screen-words-all {
   overflow: hidden;
 }

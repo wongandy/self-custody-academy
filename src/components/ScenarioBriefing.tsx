@@ -15,6 +15,9 @@ const INTRO_MESSAGES = [
 const READY_MENU_MESSAGE =
   "These options will be covered in the next scenarios, Let's wrap this up for now.";
 
+const FACTORY_RESET_MESSAGE =
+  "Resetting the device isn't part of this scenario, so we'll leave it as it is for now. Let's wrap this up instead.";
+
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: "Start by clicking the power button to turn it on.",
   booting: 'Great — the device is booting up. Hang tight for a moment.',
@@ -30,6 +33,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'recover-done': '',
   'receive-address': 'This is your receive address — press the copy button to copy it.',
   'send-blocked': 'Sending from this wallet is not part of this mission yet. Let us get your receive address first.',
+  settings: READY_MENU_MESSAGE,
   'ready-menu': READY_MENU_MESSAGE,
 };
 
@@ -81,6 +85,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [walletVisible, setWalletVisible] = useState(false);
   const [readyMenuSeen, setReadyMenuSeen] = useState(false);
   const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
+  const [resetRefused, setResetRefused] = useState(false);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -90,7 +95,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const currentIntroMessage = INTRO_MESSAGES[introStep];
   const mentorMessage = isInIntro
     ? currentIntroMessage
-    : walletPhase === 'menu' && menuSelection === 'recover-intro'
+    : resetRefused
+      ? FACTORY_RESET_MESSAGE
+      : walletPhase === 'menu' && menuSelection === 'recover-intro'
       ? "We'll cover wallet recovery later. Select Create Wallet for now."
       : walletPhase === 'ready-menu' && readyMenuHint
         ? readyMenuHint
@@ -106,6 +113,12 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       setIntroDone(true);
     }
   }, [walletPhase, introDone]);
+
+  useEffect(() => {
+    if (walletPhase !== 'menu' && walletPhase !== 'ready-menu') {
+      setResetRefused(false);
+    }
+  }, [walletPhase]);
 
   const handleContinue = () => {
     if (!done) {
@@ -133,7 +146,13 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     }
   };
 
+  const handleFactoryResetAttempt = useCallback(() => {
+    setReadyMenuHint(null);
+    setResetRefused(true);
+  }, []);
+
   const handleReadyMenuSelect = useCallback((label: string) => {
+    setResetRefused(false);
     setReadyMenuHint(
       label === 'Receive Bitcoin'
         ? "These options will be covered in the next scenarios, Let's wrap this up for now."
@@ -141,7 +160,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     );
   }, []);
 
-  const bubbleKey = isInIntro ? `intro-${introStep}` : walletPhase;
+  const bubbleKey = isInIntro ? `intro-${introStep}` : `${walletPhase}-${resetRefused}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -206,6 +225,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             onPhaseChange={setWalletPhase}
             onMenuSelectionChange={setMenuSelection}
             onReadyMenuSelect={handleReadyMenuSelect}
+            onFactoryResetAttempt={handleFactoryResetAttempt}
             advanceToReadyMenu={readyMenuSeen}
           />
         </div>

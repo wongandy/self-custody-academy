@@ -24,6 +24,7 @@ export type WalletPhase =
   | 'recover-done'
   | 'receive-address'
   | 'send-blocked'
+  | 'settings'
   | 'ready-menu';
 
 type MenuPhase = WalletPhase | 'recover-soon';
@@ -35,6 +36,7 @@ type HardwareWalletProps = {
   onMenuSelectionChange?: (phase: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => void;
   onCopyAddress?: () => void;
   onReadyMenuSelect?: (label: string) => void;
+  onFactoryResetAttempt?: () => void;
   advanceToReadyMenu?: boolean;
   startAtMenu?: boolean;
   mode?: 'setup' | 'recover' | 'withdraw';
@@ -64,7 +66,7 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, advanceToReadyMenu = false, startAtMenu = false, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, startAtMenu = false, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(startAtMenu ? 'menu' : 'off');
   const [bootStep, setBootStep] = useState(0);
 
@@ -73,6 +75,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     onPhaseChange?.(next);
   }, [onPhaseChange]);
   const [menuIndex, setMenuIndex] = useState(0);
+  const [settingsOrigin, setSettingsOrigin] = useState<'menu' | 'ready-menu'>('menu');
   const [mnemonic, setMnemonic] = useState<string[]>([]);
   const [quizPositions, setQuizPositions] = useState<number[]>([]);
   const [quizIndex, setQuizIndex] = useState(0);
@@ -96,6 +99,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         return [
           { label: 'Receive Bitcoin', phase: 'receive-address' },
           { label: 'Send Bitcoin', phase: 'send-blocked' },
+          { label: 'Settings', phase: 'settings' },
         ];
       }
       return [
@@ -105,6 +109,19 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     },
     [mode, isReadyMenu],
   );
+
+  const notifyMenuSelection = useCallback((next: MenuPhase) => {
+    if (next === 'settings') return;
+    onMenuSelectionChange?.(
+      next === 'create-intro'
+        ? 'create-intro'
+        : next === 'recover-intro'
+          ? 'recover-intro'
+          : next === 'receive-address'
+            ? 'receive-address'
+            : 'send-blocked',
+    );
+  }, [onMenuSelectionChange]);
 
   const startBoot = useCallback(() => {
     updatePhase('booting');
@@ -167,8 +184,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       const nextIndex = menuIndex === 0 ? menuItems.length - 1 : menuIndex - 1;
       setMenuIndex(nextIndex);
       if (phase === 'menu') {
-        const next = menuItems[nextIndex];
-        onMenuSelectionChange?.(next.phase === 'create-intro' ? 'create-intro' : next.phase === 'recover-intro' ? 'recover-intro' : next.phase === 'receive-address' ? 'receive-address' : 'send-blocked');
+        notifyMenuSelection(menuItems[nextIndex].phase);
       }
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s === 0 ? quizOptions.length - 1 : s - 1));
@@ -177,15 +193,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setRecoverSelected((s) => (s === 0 ? recoverOptions.length - 1 : s - 1));
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, onMenuSelectionChange, quizOptions.length, recoverOptions.length]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length]);
 
   const handleDown = useCallback(() => {
     if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === menuItems.length - 1 ? 0 : menuIndex + 1;
       setMenuIndex(nextIndex);
       if (phase === 'menu') {
-        const next = menuItems[nextIndex];
-        onMenuSelectionChange?.(next.phase === 'create-intro' ? 'create-intro' : next.phase === 'recover-intro' ? 'recover-intro' : next.phase === 'receive-address' ? 'receive-address' : 'send-blocked');
+        notifyMenuSelection(menuItems[nextIndex].phase);
       }
     } else if (phase === 'create-quiz') {
       setQuizSelected((s) => (s + 1) % quizOptions.length);
@@ -194,15 +209,30 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setRecoverSelected((s) => (s + 1) % recoverOptions.length);
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, onMenuSelectionChange, quizOptions.length, recoverOptions.length]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length]);
 
   const handleEnter = useCallback(() => {
+    if (phase === 'settings') {
+      onFactoryResetAttempt?.();
+      updatePhase(settingsOrigin);
+      return;
+    }
     if (phase === 'ready-menu') {
+      if (menuItems[menuIndex].phase === 'settings') {
+        setSettingsOrigin('ready-menu');
+        updatePhase('settings');
+        return;
+      }
       onReadyMenuSelect?.(menuItems[menuIndex].label);
       return;
     }
     if (phase === 'menu') {
       const target: MenuPhase = menuItems[menuIndex].phase;
+      if (target === 'settings') {
+        setSettingsOrigin('menu');
+        updatePhase('settings');
+        return;
+      }
       if (target === 'recover-soon') {
         onMenuSelectionChange?.('recover-intro');
         return;
@@ -303,6 +333,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     updatePhase,
     onReadyMenuSelect,
     onMenuSelectionChange,
+    onFactoryResetAttempt,
+    settingsOrigin,
   ]);
 
   const handleCopyAddress = useCallback(() => {
@@ -318,11 +350,15 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, []);
 
   const handleCancel = useCallback(() => {
+    if (phase === 'settings') {
+      updatePhase(settingsOrigin);
+      return;
+    }
     if (phase === 'menu') return;
     resetWalletState();
     updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, resetWalletState, updatePhase]);
+  }, [phase, resetWalletState, updatePhase, settingsOrigin]);
 
   const isOn = phase !== 'off';
   const isBooting = phase === 'booting';
@@ -466,6 +502,18 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">
                   Your wallet has been restored from your recovery phrase. Your keys are back under your control.
                 </p>
+              </div>
+            )}
+            {phase === 'settings' && (
+              <div className="hw-screen-text">
+                <span className="hw-screen-title">Settings</span>
+                <div className="hw-settings-list">
+                  <div className="hw-menu-item active">
+                    <span>Reset to Factory Settings</span>
+                    <Check size={12} strokeWidth={2.8} />
+                  </div>
+                </div>
+                <p className="hw-screen-body">Press the checkmark to select, or X to go back.</p>
               </div>
             )}
             {phase === 'receive-address' && (

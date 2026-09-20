@@ -33,6 +33,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'panel-wallet': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
+  'wallet-settings': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-menu-receive-address': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-receive-address': "There's your receive address. Click the copy button next to it to copy it.",
   'wallet-receive-copied': 'Address copied! Press the switch button above to go back to the exchange.',
@@ -40,6 +41,8 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'exchange-address-mismatch': "That address doesn't match the one your hardware wallet gave you. One wrong character sends your Bitcoin somewhere else — go back to your wallet and copy it again.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
   'exchange-success': "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
+  'factory-reset-blocked':
+    "Resetting your device to factory settings isn't part of this scenario. It would erase your wallet, so we'll leave it untouched. Let's head back and keep going.",
 };
 
 function useTypewriter(text: string, speed = 10) {
@@ -99,6 +102,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [slideDirection, setSlideDirection] = useState<'withdraw-slide-left' | 'withdraw-slide-right' | null>(null);
   const usedSwitchPrompt = useRef(false);
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
+  const [resetBlockedMsg, setResetBlockedMsg] = useState(false);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
   const [walletEntered, setWalletEntered] = useState(false);
@@ -143,7 +147,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? currentIntroMessage
     : showSendBlockedMsg
       ? MENTOR_MESSAGES['wallet-send-blocked']
-      : switchIntroStep !== null
+      : resetBlockedMsg && activePanel === 'wallet'
+        ? MENTOR_MESSAGES['factory-reset-blocked']
+        : switchIntroStep !== null
         ? SWITCH_INTRO_MESSAGES[switchIntroStep]
         : addressMismatch && activePanel === 'exchange'
           ? MENTOR_MESSAGES['exchange-address-mismatch']
@@ -165,6 +171,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       setIntroDone(true);
     }
   }, [walletPhase, showSendBlockedMsg, introDone]);
+
+  useEffect(() => {
+    if (walletPhase !== 'menu') {
+      setResetBlockedMsg(false);
+    }
+  }, [walletPhase]);
 
   useEffect(() => {
     if (switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1) {
@@ -219,6 +231,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const handleMenuSelectionChange = useCallback((sel: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => {
     setMenuSelection(sel);
     setShowSendBlockedMsg(sel === 'send-blocked');
+    setResetBlockedMsg(false);
+  }, []);
+
+  const handleFactoryResetAttempt = useCallback(() => {
+    setShowSendBlockedMsg(false);
+    setResetBlockedMsg(true);
   }, []);
 
   const handleCopyAddress = useCallback(() => {
@@ -320,7 +338,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const bubbleKey = isInIntro
     ? `intro-${introStep}`
-    : `${walletStateKey}-${showSendBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}-${addressMismatch}`;
+    : `${walletStateKey}-${showSendBlockedMsg}-${resetBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}-${addressMismatch}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -571,6 +589,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                     onPhaseChange={setWalletPhase}
                     onMenuSelectionChange={handleMenuSelectionChange}
                     onCopyAddress={handleCopyAddress}
+                    onFactoryResetAttempt={handleFactoryResetAttempt}
                   />
                 </div>
               </div>
