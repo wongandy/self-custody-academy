@@ -30,7 +30,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-menu-receive-address': "Select 'Receive Bitcoin' to get your receive address.",
-  'wallet-receive-address': "There's your receive address. Click the copy button to grab it.",
+  'wallet-receive-address': "There's your receive address. Click the copy button to copy it.",
   'wallet-receive-copied': 'Address copied! A "Switch to Exchange Wallet" button has appeared above. Press it to go back to the exchange, then paste the address into the withdrawal form.',
   'switch-to-wallet': "While you're on the exchange, that same switch button above always takes you back to your hardware wallet. Press it any time to double-check your receive address.",
   'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
