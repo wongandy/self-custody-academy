@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, Smartphone, AlertTriangle } from 'lucide-react';
-import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
+import HardwareWallet, { RECEIVE_ADDRESS, type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 
 type WithdrawScenarioProps = {
@@ -9,7 +9,6 @@ type WithdrawScenarioProps = {
   onComplete: () => void;
 };
 
-const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
 const AVAILABLE_BALANCE = 0.05;
 const NETWORK_FEE = 0.00002;
 
@@ -37,6 +36,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-receive-address': "There's your receive address. Click the copy button next to it to copy it.",
   'wallet-receive-copied': 'Address copied! Press the switch button above to go back to the exchange and paste it there.',
   'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
+  'exchange-address-mismatch': "That address doesn't match the one your hardware wallet gave you. One wrong character sends your Bitcoin somewhere else — go back to your wallet and copy it again.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
   'exchange-success': 'Your withdrawal has been submitted. Your Bitcoin is on its way to your hardware wallet. Click Continue to finish.',
 };
@@ -88,6 +88,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('menu');
   const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('receive-address');
   const [sendAddress, setSendAddress] = useState('');
+  const [addressTouched, setAddressTouched] = useState(false);
   const [amount, setAmount] = useState('');
   const [amountError, setAmountError] = useState('');
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
@@ -119,6 +120,11 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   );
   const currentIntroMessage = INTRO_MESSAGES[introStep];
 
+  const trimmedAddress = sendAddress.trim();
+  const matchesReceiveAddress = trimmedAddress.length > 0 && trimmedAddress.toLowerCase() === RECEIVE_ADDRESS.toLowerCase();
+  const looksLikeFullAddress = trimmedAddress.length >= RECEIVE_ADDRESS.length;
+  const addressMismatch = trimmedAddress.length > 0 && !matchesReceiveAddress && (looksLikeFullAddress || addressTouched);
+
   const walletStateKey = activePanel === 'wallet'
     ? walletPhase === 'menu'
       ? `wallet-menu-${menuSelection}`
@@ -141,7 +147,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         ? SWITCH_INTRO_MESSAGES[switchIntroStep]
         : exchangeIntroStep !== null && activePanel === 'exchange'
           ? EXCHANGE_INTRO_MESSAGES[exchangeIntroStep]
-          : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
+          : addressMismatch && activePanel === 'exchange'
+            ? MENTOR_MESSAGES['exchange-address-mismatch']
+            : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
@@ -262,7 +270,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const numericAmount = parseFloat(amount) || 0;
   const receivedAmount = numericAmount > 0 ? Math.max(numericAmount - NETWORK_FEE, 0) : 0;
   const isAmountValid = numericAmount > 0 && numericAmount <= AVAILABLE_BALANCE && amountError === '';
-  const isAddressValid = sendAddress.trim().length > 0;
+  const isAddressValid = matchesReceiveAddress;
   const canWithdraw = hasRetrievedAddress && isAmountValid && isAddressValid;
 
   const handleWithdraw = () => {
@@ -316,7 +324,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const bubbleKey = isInIntro
     ? `intro-${introStep}`
-    : `${walletStateKey}-${showSendBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}`;
+    : `${walletStateKey}-${showSendBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}-${addressMismatch}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -422,10 +430,29 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           <input
                             type="text"
                             value={sendAddress}
-                            onChange={(e) => setSendAddress(e.target.value)}
+                            onChange={(e) => {
+                              setSendAddress(e.target.value);
+                              setAddressTouched(false);
+                            }}
+                            onBlur={() => setAddressTouched(true)}
                             placeholder="Paste wallet receive address"
-                            className="withdraw-addr-input"
+                            className={`withdraw-addr-input${addressMismatch ? ' error' : ''}`}
                           />
+                          {matchesReceiveAddress ? (
+                            <p className="withdraw-addr-status ok">
+                              <Check size={11} strokeWidth={2.6} />
+                              <span>Matches your hardware wallet address</span>
+                            </p>
+                          ) : addressMismatch ? (
+                            <p className="withdraw-addr-status bad">
+                              <AlertTriangle size={11} strokeWidth={2} />
+                              <span>This isn't the receive address from your hardware wallet. Go back to your wallet, copy it again, and paste it here.</span>
+                            </p>
+                          ) : trimmedAddress.length === 0 ? (
+                            <p className="withdraw-addr-status hint">
+                              <span>Go to your hardware wallet, copy the receive address, then paste it here.</span>
+                            </p>
+                          ) : null}
                         </div>
 
                         <div className="withdraw-phone-summary">

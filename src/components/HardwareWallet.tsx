@@ -41,7 +41,7 @@ type HardwareWalletProps = {
   expectedMnemonic?: string[];
 };
 
-const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+export const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
 
 const BOOT_STEPS = [
   'BOOTING...',
