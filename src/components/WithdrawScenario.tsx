@@ -19,7 +19,7 @@ const INTRO_MESSAGES = [
 
 const SWITCH_INTRO_MESSAGES = [
   "Receive address copied! Now let's switch over to the exchange on your phone and paste it there.",
-  'Press "Switch to Exchange Wallet" at the top to head to the exchange.',
+  'Press "Switch to Exchange Wallet" at the top to head to the exchange on your phone.',
 ];
 
 const EXCHANGE_INTRO_MESSAGES = [
