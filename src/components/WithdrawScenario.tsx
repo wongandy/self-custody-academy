@@ -38,7 +38,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
   'exchange-address-mismatch': "That address doesn't match the one your hardware wallet gave you. One wrong character sends your Bitcoin somewhere else — go back to your wallet and copy it again.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
-  'exchange-success': 'Your withdrawal has been submitted. Your Bitcoin is on its way to your hardware wallet. Click Continue to finish.',
+  'exchange-success': "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
 };
 
 function useTypewriter(text: string, speed = 10) {
