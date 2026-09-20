@@ -13,7 +13,7 @@ const INTRO_MESSAGES = [
 ];
 
 const READY_MENU_MESSAGE =
-  "These options will be covered in the next scenarios, let's wrap this up.";
+  "These options will be covered in the next scenarios, Let's wrap this up.";
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: "Start by clicking the power button to turn it on.",
