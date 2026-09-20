@@ -13,7 +13,7 @@ const AVAILABLE_BALANCE = 0.05;
 const NETWORK_FEE = 0.00002;
 
 const INTRO_MESSAGES = [
-  "It's time to withdraw your Bitcoin from the exchange to your hardware wallet.",
+  "This time I will teach you how to withdraw your Bitcoin from the exchange to your hardware wallet.",
   "Now that you've already set up your hardware wallet, it's time to select 'Receive Bitcoin' to get a receive address.",
 ];
 
