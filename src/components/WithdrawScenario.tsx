@@ -15,7 +15,7 @@ const NETWORK_FEE = 0.00002;
 
 const INTRO_MESSAGES = [
   "It's time to withdraw your Bitcoin from the exchange to your hardware wallet.",
-  "Now that you've already set up your wallet, it's time to select 'Receive Bitcoin' to get a receive address.",
+  "Now that you've already set up your hardware wallet, it's time to select 'Receive Bitcoin' to get a receive address.",
 ];
 
 const SWITCH_INTRO_MESSAGES = [
