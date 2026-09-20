@@ -136,8 +136,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const handleReadyMenuSelect = useCallback((label: string) => {
     setReadyMenuHint(
       label === 'Receive Bitcoin'
-        ? "This option will be covered in the next scenarios, you may press Continue to wrap up."
-        : "This option will be covered in the next scenarios, you may press Continue to wrap up.",
+        ? "These options will be covered in the next scenarios, Let's wrap this up for now."
+        : "These options will be covered in the next scenarios, Let's wrap this up for now.",
     );
   }, []);
 
