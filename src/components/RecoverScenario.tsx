@@ -12,7 +12,7 @@ type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-addres
 
 const INTRO_MESSAGES = [
   "Now let's talk about one of the most overlooked aspect of self-custody — recovering one's wallet.",
-  'Wallet recovery is a straight-forward process and is crucial if your hardware wallet ever gets destroyed, lost or stolen.',
+  'Wallet recovery is a straightforward process and is essential if your hardware wallet ever gets lost, stolen or destroyed.',
   "Let's head back to your hardware wallet and I'll teach you how to do it.",
 ];
 
