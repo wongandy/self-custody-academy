@@ -1,19 +1,38 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronRight, X } from 'lucide-react';
-import HardwareWallet from '@/components/HardwareWallet';
+import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 
 type RecoverScenarioProps = {
   completed: boolean;
   onClose: () => void;
-  onComplete: () => void;
 };
+
+type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked';
 
 const INTRO_MESSAGES = [
   "Now let's talk about one of the most overlooked aspect of self-custody — recovering one's wallet.",
   'Wallet recovery is a straight-forward process and is crucial if your hardware wallet ever gets destroyed, lost or stolen.',
   "Let's head back to your hardware wallet and I'll teach you how to do it.",
 ];
+
+const MENTOR_MESSAGES: Record<string, string> = {
+  'wallet-menu': "Let's head into Settings to reset the device to factory settings.",
+  'wallet-settings':
+    "Wiping the device is on purpose here. A factory reset clears it completely, and the only thing that can rebuild your wallet afterwards is the recovery phrase you wrote down.",
+  'wallet-reset-warn':
+    "Look at that warning. Every key on this device is about to be erased — your Bitcoin becomes reachable only through your 12-word seed phrase. Whoever holds that phrase holds the coins, so keep it written down and offline before you wipe.",
+  'wallet-reset-confirm':
+    'One last check. Confirm the erase only if your written-down phrase is safe — that phrase is your wallet now.',
+  'wallet-reset-cancelled':
+    "Nothing was erased. Your wallet is still on the device. We can head back into Settings whenever you're ready.",
+  'wallet-wiped':
+    "The device is blank now — just like a new one out of the box. Your coins haven't vanished, they live on the blockchain. The only thing that brings this wallet back is your recovery phrase. Let's put that to the test next.",
+  'wallet-receive-blocked':
+    "Receiving isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
+  'wallet-send-blocked':
+    "Sending isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
+};
 
 function useTypewriter(text: string, speed = 10) {
   const [displayed, setDisplayed] = useState('');
@@ -55,9 +74,14 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done, skip };
 }
 
-export default function RecoverScenario({ completed, onClose, onComplete }: RecoverScenarioProps) {
+export default function RecoverScenario({ completed, onClose }: RecoverScenarioProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
+  const [walletPhase, setWalletPhase] = useState<WalletPhase>('menu');
+  const [wiped, setWiped] = useState(false);
+  const [menuSelection, setMenuSelection] = useState<MenuSelection>('idle');
+  const [resetCancelled, setResetCancelled] = useState(false);
+  const prevPhase = useRef<WalletPhase>('menu');
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -66,8 +90,35 @@ export default function RecoverScenario({ completed, onClose, onComplete }: Reco
   const spotlight = !introDone;
   const canContinue = !introDone;
   const finalStep = INTRO_MESSAGES.length - 1;
-  const mentorMessage = INTRO_MESSAGES[introDone ? finalStep : introStep];
+  const walletStateKey = wiped
+    ? 'wallet-wiped'
+    : resetCancelled
+      ? 'wallet-reset-cancelled'
+      : walletPhase === 'menu'
+        ? menuSelection === 'idle'
+          ? 'wallet-menu'
+          : `wallet-menu-${menuSelection}`
+        : walletPhase === 'settings'
+          ? 'wallet-settings'
+          : `wallet-${walletPhase}`;
+
+  const mentorMessage = introDone
+    ? MENTOR_MESSAGES[walletStateKey] ?? MENTOR_MESSAGES['wallet-menu']
+    : INTRO_MESSAGES[introStep];
   const { displayed, done, skip } = useTypewriter(mentorMessage);
+
+  const handleMenuSelectionChange = useCallback((sel: MenuSelection) => {
+    setMenuSelection(sel);
+    setResetCancelled(false);
+  }, []);
+
+  const handlePhaseChange = useCallback((phase: WalletPhase) => {
+    const from = prevPhase.current;
+    prevPhase.current = phase;
+    if (phase === 'reset-done') setWiped(true);
+    if (from === 'reset-confirm' && phase === 'menu') setResetCancelled(true);
+    setWalletPhase(phase);
+  }, []);
 
   useLayoutEffect(() => {
     const align = () => {
@@ -178,9 +229,11 @@ export default function RecoverScenario({ completed, onClose, onComplete }: Reco
             <div className="recover-device-enter">
               <HardwareWallet
                 mode="withdraw"
-                startAtMenu
-                locked
-                onComplete={onComplete}
+                initialPhase="menu"
+                explicitReset
+                onComplete={() => {}}
+                onPhaseChange={handlePhaseChange}
+                onMenuSelectionChange={handleMenuSelectionChange}
               />
             </div>
             {completed && (
@@ -205,7 +258,7 @@ export default function RecoverScenario({ completed, onClose, onComplete }: Reco
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={`intro-${introStep}`}>
+            <div className="mentor-bubble-content" key={introDone ? walletStateKey : `intro-${introStep}`}>
               <span className="mentor-bubble-name">Andy</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{mentorMessage}</p>

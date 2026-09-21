@@ -34,6 +34,9 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'receive-address': 'This is your receive address — press the copy button to copy it.',
   'send-blocked': 'Sending from this wallet is not part of this mission yet. Let us get your receive address first.',
   settings: READY_MENU_MESSAGE,
+  'reset-warn': FACTORY_RESET_MESSAGE,
+  'reset-confirm': FACTORY_RESET_MESSAGE,
+  'reset-done': FACTORY_RESET_MESSAGE,
   'ready-menu': READY_MENU_MESSAGE,
 };
 

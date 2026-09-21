@@ -2425,6 +2425,21 @@ a {
   color: var(--green);
 }
 
+.hw-screen-reset-warn {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.hw-screen-reset-warn svg {
+  color: #e8a94a;
+}
+
+.hw-screen-reset-warn .hw-screen-body {
+  color: rgba(232, 169, 74, 0.85);
+}
+
 .hw-recover-info {
   display: flex;
   flex-direction: column;

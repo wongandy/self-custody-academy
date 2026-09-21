@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertTriangle,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -25,6 +26,9 @@ export type WalletPhase =
   | 'receive-address'
   | 'send-blocked'
   | 'settings'
+  | 'reset-warn'
+  | 'reset-confirm'
+  | 'reset-done'
   | 'ready-menu';
 
 type MenuPhase = WalletPhase | 'recover-soon';
@@ -41,6 +45,8 @@ type HardwareWalletProps = {
   startAtMenu?: boolean;
   locked?: boolean;
   mode?: 'setup' | 'recover' | 'withdraw';
+  initialPhase?: WalletPhase;
+  explicitReset?: boolean;
   expectedMnemonic?: string[];
 };
 
@@ -67,9 +73,10 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, startAtMenu = false, locked = false, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
-  const [phase, setPhase] = useState<WalletPhase>(startAtMenu ? 'menu' : 'off');
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
+  const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
+  const [wiped, setWiped] = useState(false);
 
   const updatePhase = useCallback((next: WalletPhase) => {
     setPhase(next);
@@ -96,6 +103,12 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   const menuItems = useMemo<{ label: string; phase: MenuPhase }[]>(
     () => {
+      if (wiped) {
+        return [
+          { label: 'Create wallet', phase: 'create-intro' },
+          { label: 'Recover wallet', phase: 'recover-soon' as MenuPhase },
+        ];
+      }
       if (mode === 'withdraw' || isReadyMenu) {
         return [
           { label: 'Receive Bitcoin', phase: 'receive-address' },
@@ -108,11 +121,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         ...(mode === 'setup' ? [{ label: 'Recover wallet', phase: 'recover-soon' as MenuPhase }] : []),
       ];
     },
-    [mode, isReadyMenu],
+    [mode, isReadyMenu, wiped],
   );
 
   const notifyMenuSelection = useCallback((next: MenuPhase) => {
-    if (next === 'settings') return;
+    if (next === 'settings' || wiped) return;
     onMenuSelectionChange?.(
       next === 'create-intro'
         ? 'create-intro'
@@ -122,7 +135,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             ? 'receive-address'
             : 'send-blocked',
     );
-  }, [onMenuSelectionChange]);
+  }, [onMenuSelectionChange, wiped]);
 
   const startBoot = useCallback(() => {
     updatePhase('booting');
@@ -217,9 +230,23 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   const handleEnter = useCallback(() => {
     if (locked) return;
+    if (phase === 'reset-warn') {
+      updatePhase('reset-confirm');
+      return;
+    }
+    if (phase === 'reset-confirm') {
+      setWiped(true);
+      updatePhase('reset-done');
+      return;
+    }
+    if (phase === 'reset-done') return;
     if (phase === 'settings') {
       onFactoryResetAttempt?.();
-      updatePhase(settingsOrigin);
+      if (!explicitReset) {
+        updatePhase(settingsOrigin);
+        return;
+      }
+      updatePhase('reset-warn');
       return;
     }
     if (phase === 'ready-menu') {
@@ -233,6 +260,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     }
     if (phase === 'menu') {
       const target: MenuPhase = menuItems[menuIndex].phase;
+      if (wiped) {
+        onMenuSelectionChange?.(target === 'create-intro' ? 'create-intro' : 'recover-intro');
+        return;
+      }
       if (target === 'settings') {
         setSettingsOrigin('menu');
         updatePhase('settings');
@@ -340,6 +371,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     onMenuSelectionChange,
     onFactoryResetAttempt,
     settingsOrigin,
+    explicitReset,
+    wiped,
     locked,
   ]);
 
@@ -356,6 +389,16 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, []);
 
   const handleCancel = useCallback(() => {
+    if (phase === 'reset-warn') {
+      updatePhase('settings');
+      return;
+    }
+    if (phase === 'reset-confirm') {
+      updatePhase('menu');
+      setMenuIndex(0);
+      return;
+    }
+    if (phase === 'reset-done') return;
     if (phase === 'settings') {
       updatePhase(settingsOrigin);
       return;
@@ -365,6 +408,12 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     updatePhase('menu');
     setMenuIndex(0);
   }, [phase, resetWalletState, updatePhase, settingsOrigin]);
+
+  useEffect(() => {
+    if (phase !== 'reset-done') return;
+    const timer = setTimeout(() => startBoot(), 1600);
+    return () => clearTimeout(timer);
+  }, [phase, startBoot]);
 
   const isOn = phase !== 'off';
   const isBooting = phase === 'booting';
@@ -520,6 +569,30 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                   </div>
                 </div>
                 <p className="hw-screen-body">Press the checkmark to select, or X to go back.</p>
+              </div>
+            )}
+            {phase === 'reset-warn' && (
+              <div className="hw-screen-text hw-screen-reset-warn">
+                <span className="hw-screen-title">Factory reset</span>
+                <AlertTriangle size={22} strokeWidth={1.8} />
+                <p className="hw-screen-body">
+                  This erases the device and its private keys. Your 12-word recovery phrase is the only way back. No phrase means no wallet.
+                </p>
+              </div>
+            )}
+            {phase === 'reset-confirm' && (
+              <div className="hw-screen-text hw-screen-reset-warn">
+                <span className="hw-screen-title">Erase this device?</span>
+                <p className="hw-screen-body">
+                  Press the checkmark to erase now, or X to cancel and keep your wallet.
+                </p>
+              </div>
+            )}
+            {phase === 'reset-done' && (
+              <div className="hw-screen-text hw-screen-success">
+                <CheckCircle2 size={28} strokeWidth={1.8} />
+                <span className="hw-screen-title">Reset complete</span>
+                <p className="hw-screen-body">Restarting with a blank device…</p>
               </div>
             )}
             {phase === 'receive-address' && (
