@@ -17,7 +17,7 @@ const INTRO_MESSAGES = [
 ];
 
 const MENTOR_MESSAGES: Record<string, string> = {
-  'wallet-menu': "Let's head into Settings to reset the device to factory settings.",
+  'wallet-menu': "Select Settings to reset the device to factory settings.",
   'wallet-settings':
     "Wiping the device is on purpose here. A factory reset clears it completely, and the only thing that can rebuild your wallet afterwards is the recovery phrase you wrote down.",
   'wallet-reset-warn':
