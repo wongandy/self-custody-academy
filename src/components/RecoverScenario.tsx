@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 import HardwareWallet from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 
 type RecoverScenarioProps = {
   completed: boolean;
-  onBack: () => void;
   onClose: () => void;
   onComplete: () => void;
 };
@@ -56,12 +55,11 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done, skip };
 }
 
-export default function RecoverScenario({ completed, onBack, onClose, onComplete }: RecoverScenarioProps) {
+export default function RecoverScenario({ completed, onClose, onComplete }: RecoverScenarioProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
-  const backRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
@@ -85,7 +83,6 @@ export default function RecoverScenario({ completed, onBack, onClose, onComplete
         el.style.zIndex = '40';
         el.style.transform = 'none';
       };
-      place(backRef.current, rect.left - 14 - (backRef.current?.offsetWidth ?? 0));
       place(closeRef.current, rect.right + 14);
     };
 
@@ -171,11 +168,6 @@ export default function RecoverScenario({ completed, onBack, onClose, onComplete
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
-      <button ref={backRef} className="character-back" type="button" onClick={onBack}>
-        <ArrowLeft size={16} strokeWidth={2.4} />
-        <span>Back to roadmap</span>
-      </button>
-
       <button ref={closeRef} className="recover-close" type="button" onClick={onClose} aria-label="Return to roadmap">
         <X size={18} strokeWidth={2.2} />
       </button>
