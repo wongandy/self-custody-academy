@@ -575,7 +575,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <span className="hw-screen-title">Factory reset</span>
                 <AlertTriangle size={22} strokeWidth={1.8} />
                 <p className="hw-screen-body">
-                  This erases the device and its private keys. Your recovery phrase is the only way back. No phrase means no wallet.
+                  This wipes the device completely. Without your recovery phrase, funds are permanently lost.
                 </p>
               </div>
             )}
