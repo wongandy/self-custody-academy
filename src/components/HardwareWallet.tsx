@@ -39,6 +39,7 @@ type HardwareWalletProps = {
   onFactoryResetAttempt?: () => void;
   advanceToReadyMenu?: boolean;
   startAtMenu?: boolean;
+  locked?: boolean;
   mode?: 'setup' | 'recover' | 'withdraw';
   expectedMnemonic?: string[];
 };
@@ -66,7 +67,7 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, startAtMenu = false, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, startAtMenu = false, locked = false, mode = 'setup', expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(startAtMenu ? 'menu' : 'off');
   const [bootStep, setBootStep] = useState(0);
 
@@ -167,6 +168,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, []);
 
   const handlePower = useCallback(() => {
+    if (locked) return;
     if (phase === 'off') {
       startBoot();
       onPowerChange?.(true);
@@ -177,9 +179,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       resetWalletState();
       onPowerChange?.(false);
     }
-  }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase]);
+  }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase, locked]);
 
   const handleUp = useCallback(() => {
+    if (locked) return;
     if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === 0 ? menuItems.length - 1 : menuIndex - 1;
       setMenuIndex(nextIndex);
@@ -193,9 +196,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setRecoverSelected((s) => (s === 0 ? recoverOptions.length - 1 : s - 1));
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, locked]);
 
   const handleDown = useCallback(() => {
+    if (locked) return;
     if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === menuItems.length - 1 ? 0 : menuIndex + 1;
       setMenuIndex(nextIndex);
@@ -209,9 +213,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setRecoverSelected((s) => (s + 1) % recoverOptions.length);
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, locked]);
 
   const handleEnter = useCallback(() => {
+    if (locked) return;
     if (phase === 'settings') {
       onFactoryResetAttempt?.();
       updatePhase(settingsOrigin);
@@ -335,6 +340,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     onMenuSelectionChange,
     onFactoryResetAttempt,
     settingsOrigin,
+    locked,
   ]);
 
   const handleCopyAddress = useCallback(() => {

@@ -1,64 +1,243 @@
-import { useState } from 'react';
-import { ArrowLeft, CircleDollarSign, KeyRound, BookOpen, ShieldAlert } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ArrowLeft, ChevronRight, X } from 'lucide-react';
 import HardwareWallet from '@/components/HardwareWallet';
-import { getSessionMnemonic } from '@/lib/walletSession';
+import andyPortrait from '@/components/Andy.webp';
 
 type RecoverScenarioProps = {
   completed: boolean;
   onBack: () => void;
+  onClose: () => void;
   onComplete: () => void;
 };
 
-export default function RecoverScenario({ completed, onBack, onComplete }: RecoverScenarioProps) {
-  const [walletActive, setWalletActive] = useState(false);
-  const expectedMnemonic = getSessionMnemonic() ?? [];
+const INTRO_MESSAGES = [
+  "Now let's talk about one of the most overlooked aspect of self-custody — recovering one's wallet.",
+  'Wallet recovery is a straight-forward process and is crucial if your hardware wallet ever gets destroyed, lost or stolen.',
+  "Let's head back to your hardware wallet and I'll teach you how to do it.",
+];
+
+function useTypewriter(text: string, speed = 10) {
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+  const indexRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    setDisplayed('');
+    setDone(false);
+    indexRef.current = 0;
+
+    if (!text) {
+      setDone(true);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      indexRef.current += 1;
+      if (indexRef.current >= text.length) {
+        setDisplayed(text);
+        setDone(true);
+        clearInterval(timer);
+      } else {
+        setDisplayed(text.slice(0, indexRef.current));
+      }
+    }, speed);
+
+    timerRef.current = timer;
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  const skip = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setDisplayed(text);
+    setDone(true);
+  }, [text]);
+
+  return { displayed, done, skip };
+}
+
+export default function RecoverScenario({ completed, onBack, onClose, onComplete }: RecoverScenarioProps) {
+  const [introStep, setIntroStep] = useState(0);
+  const [introDone, setIntroDone] = useState(false);
+  const portraitRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
+
+  const spotlight = !introDone;
+  const canContinue = !introDone;
+  const finalStep = INTRO_MESSAGES.length - 1;
+  const mentorMessage = INTRO_MESSAGES[introDone ? finalStep : introStep];
+  const { displayed, done, skip } = useTypewriter(mentorMessage);
+
+  useLayoutEffect(() => {
+    const align = () => {
+      const actions = document.querySelector<HTMLElement>('.header-actions');
+      if (!actions) return;
+      const rect = actions.getBoundingClientRect();
+      const centerY = rect.top + rect.height / 2;
+      const place = (el: HTMLElement | null, left: number) => {
+        if (!el) return;
+        el.style.position = 'fixed';
+        el.style.left = `${left}px`;
+        el.style.top = `${centerY - el.offsetHeight / 2}px`;
+        el.style.zIndex = '40';
+        el.style.transform = 'none';
+      };
+      place(backRef.current, rect.left - 14 - (backRef.current?.offsetWidth ?? 0));
+      place(closeRef.current, rect.right + 14);
+    };
+
+    align();
+    window.addEventListener('resize', align);
+    return () => window.removeEventListener('resize', align);
+  }, [introDone]);
+
+  useLayoutEffect(() => {
+    if (spotlight || !flipRects.current) return;
+    const portrait = portraitRef.current;
+    const bubble = bubbleRef.current;
+    if (!portrait || !bubble) return;
+
+    const pFirst = flipRects.current.portrait;
+    const bFirst = flipRects.current.bubble;
+    const pLast = portrait.getBoundingClientRect();
+    const bLast = bubble.getBoundingClientRect();
+    flipRects.current = null;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const opts: KeyframeAnimationOptions = {
+      duration: 560,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    };
+
+    portrait.style.transformOrigin = 'top left';
+    portrait.animate(
+      [
+        {
+          transform: `translate(${pFirst.left - pLast.left}px, ${pFirst.top - pLast.top}px) scale(${pFirst.width / pLast.width}, ${pFirst.height / pLast.height})`,
+        },
+        { transform: 'translate(0, 0) scale(1, 1)' },
+      ],
+      opts,
+    );
+
+    bubble.style.transformOrigin = 'top left';
+    bubble.animate(
+      [
+        {
+          transform: `translate(${bFirst.left - bLast.left}px, ${bFirst.top - bLast.top}px) scale(${bFirst.width / bLast.width}, ${bFirst.height / bLast.height})`,
+        },
+        { transform: 'translate(0, 0) scale(1, 1)' },
+      ],
+      opts,
+    );
+  }, [spotlight]);
+
+  const handleContinue = useCallback(() => {
+    if (!done) {
+      skip();
+      return;
+    }
+    if (!introDone) {
+      if (introStep < finalStep) {
+        setIntroStep(introStep + 1);
+        return;
+      }
+      if (portraitRef.current && bubbleRef.current) {
+        flipRects.current = {
+          portrait: portraitRef.current.getBoundingClientRect(),
+          bubble: bubbleRef.current.getBoundingClientRect(),
+        };
+      }
+      setIntroDone(true);
+    }
+  }, [done, skip, introDone, introStep, finalStep]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      if (!canContinue) return;
+      e.preventDefault();
+      handleContinue();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
 
   return (
-    <main className="scenario-page">
-      <button className="character-back" type="button" onClick={onBack}>
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
+      <button ref={backRef} className="character-back" type="button" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2.4} />
         <span>Back to roadmap</span>
       </button>
 
-      <section className="scenario-card">
-        <div className="scenario-card-topline">
-          <span>Mission 03 · Recover Hardware Wallet</span>
-          <span><CircleDollarSign size={14} /> Simulation only</span>
-        </div>
-        <div className="scenario-wallet-layout">
-          <div className="scenario-wallet-info">
-            <span className="roadmap-label">Your third mission</span>
-            <h1>Recover your hardware wallet</h1>
-            <p className="scenario-lede">
-              If your hardware wallet is lost or damaged, your 12-word recovery phrase restores full access to your bitcoin. In this mission, you'll practice restoring your wallet by selecting each word of your recovery phrase from multiple choices — just like you would on a real device.
-            </p>
-            <div className="scenario-wallet-tips">
-              <div className="scenario-wallet-tip">
-                <KeyRound size={16} />
-                <span>Power on the device and choose "Recover wallet." You'll select the same 12-word phrase you wrote down in Mission 1.</span>
-              </div>
-              <div className="scenario-wallet-tip">
-                <BookOpen size={16} />
-                <span>For each word position, four choices appear. Use Up/Down to browse the options, then press the ✓ key to confirm your selection.</span>
-              </div>
-              <div className="scenario-wallet-tip">
-                <ShieldAlert size={16} />
-                <span>Select all 12 words in the correct order to restore your wallet. If you make a mistake, the device will let you try again.</span>
-              </div>
+      <button ref={closeRef} className="recover-close" type="button" onClick={onClose} aria-label="Return to roadmap">
+        <X size={18} strokeWidth={2.2} />
+      </button>
+
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
+        {!spotlight && (
+          <div className="recover-device-area">
+            <div className="recover-device-enter">
+              <HardwareWallet
+                mode="withdraw"
+                startAtMenu
+                locked
+                onComplete={onComplete}
+              />
             </div>
-            <div className={walletActive ? 'scenario-wallet-status active' : 'scenario-wallet-status'}>
-              <span className="scenario-wallet-status-dot" />
-              <span>{completed ? 'Mission completed' : walletActive ? 'Wallet active — follow the screen' : 'Waiting for device power'}</span>
-            </div>
+            {completed && (
+              <div className="recover-status">
+                <span className="recover-status-dot" />
+                <span>Mission 03 completed</span>
+              </div>
+            )}
           </div>
-          <HardwareWallet
-            onComplete={onComplete}
-            onPowerChange={setWalletActive}
-            mode="recover"
-            expectedMnemonic={expectedMnemonic}
-          />
+        )}
+
+        <div className="mentor-row">
+          <div ref={portraitRef} className="mentor-portrait" aria-label="Andy, your mentor" role="img">
+            <div className="mentor-portrait-glow" />
+            <div className="mentor-portrait-ring">
+              <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
+            </div>
+            <div className="mentor-portrait-badge">Andy</div>
+          </div>
+          <div
+            ref={bubbleRef}
+            className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
+            onClick={handleContinue}
+          >
+            <div className="mentor-bubble-content" key={`intro-${introStep}`}>
+              <span className="mentor-bubble-name">Andy</span>
+              <div className="mentor-bubble-text-wrap">
+                <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
+                <p className="mentor-bubble-text">
+                  {displayed}
+                  {!done && <span className="typewriter-cursor" />}
+                </p>
+              </div>
+            </div>
+            <button
+              className={`bubble-next ${canContinue ? 'ready' : ''}`}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleContinue();
+              }}
+              disabled={!canContinue}
+              aria-label="Continue"
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
