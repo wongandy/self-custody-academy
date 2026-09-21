@@ -568,7 +568,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     <Check size={12} strokeWidth={2.8} />
                   </div>
                 </div>
-                <p className="hw-screen-body">Press the checkmark to select, or X to go back.</p>
               </div>
             )}
             {phase === 'reset-warn' && (
