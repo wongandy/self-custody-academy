@@ -27,7 +27,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-reset-cancelled':
     "Nothing was erased. Your wallet is still on the device. We can head back into Settings whenever you're ready.",
   'wallet-wiped':
-    "The device is blank now — just like a new one out of the box. Your coins haven't vanished, they live on the blockchain. The only thing that brings this wallet back is your recovery phrase. Let's put that to the test next.",
+    "The device is blank now — just like a new one out of the box. Let's recover your wallet. Select Recover wallet.",
   'wallet-receive-blocked':
     "Receiving isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
   'wallet-send-blocked':
