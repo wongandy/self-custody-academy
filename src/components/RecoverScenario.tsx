@@ -19,7 +19,7 @@ const INTRO_MESSAGES = [
 const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu': "Select Settings to reset the device to factory settings.",
   'wallet-settings':
-    "Wiping the device is intentional. A factory reset clears everything—only the recovery phrase you wrote down can restore your wallet.",
+    "Wiping the device is intentional. A factory reset clears everything — only the recovery phrase you wrote down can restore your wallet.",
   'wallet-reset-warn':
     "Don't worry. As long as your recovery phrase is backed up offline, your Bitcoin is safe.",
   'wallet-reset-confirm':
