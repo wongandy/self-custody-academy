@@ -26,6 +26,9 @@ const MENTOR_MESSAGES: Record<string, string> = {
     "Last warning. Be completely sure that your recovery phrase has been written down. There's no going back after this.",
   'wallet-reset-cancelled':
     "Nothing was erased. Your wallet is still on the device. We can head back into Settings whenever you're ready.",
+  'wallet-reset-done':
+    'The device is wiping itself clean. Let it finish and restart.',
+  'wallet-booting': "It's coming back up as a fresh, empty device. One moment.",
   'wallet-wiped':
     "The device is blank now — just like a new one out of the box. Let's practice recovering your wallet. Select Recover wallet.",
   'wallet-receive-blocked':
@@ -90,7 +93,8 @@ export default function RecoverScenario({ completed, onClose }: RecoverScenarioP
   const spotlight = !introDone;
   const canContinue = !introDone;
   const finalStep = INTRO_MESSAGES.length - 1;
-  const walletStateKey = wiped
+  const postResetMenu = wiped && walletPhase === 'menu';
+  const walletStateKey = postResetMenu
     ? 'wallet-wiped'
     : resetCancelled
       ? 'wallet-reset-cancelled'
