@@ -21,7 +21,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-settings':
     "Wiping the device is on purpose here. A factory reset clears it completely, and the only thing that can rebuild your wallet afterwards is the recovery phrase you wrote down.",
   'wallet-reset-warn':
-    "A factory reset wipes the hardware completely. As long as your 12-word phrase is backed up offline, your Bitcoin is safe.",
+    "Don't worry. As long as your 12-word seed phrase is backed up offline, your Bitcoin is safe.",
   'wallet-reset-confirm':
     'One last check. Confirm the erase only if your written-down phrase is safe — that phrase is your wallet now.',
   'wallet-reset-cancelled':
