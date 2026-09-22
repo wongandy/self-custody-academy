@@ -93,28 +93,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const bootTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [recoverIndex, setRecoverIndex] = useState(0);
-  const [recoverTyped, setRecoverTyped] = useState('');
-  const [recoverListIndex, setRecoverListIndex] = useState(0);
+  const [recoverOptions, setRecoverOptions] = useState<string[]>([]);
+  const [recoverSelected, setRecoverSelected] = useState(0);
   const [recoverWrong, setRecoverWrong] = useState(false);
   const [addrCopied, setAddrCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const ALPHABET = useMemo(() => 'abcdefghijklmnopqrstuvwxyz'.split(''), []);
-
-  const recoverSuggestions = useMemo(() => {
-    if (!recoverTyped) return [] as string[];
-    const prefix = recoverTyped.toLowerCase();
-    return BIP39_WORDLIST.filter((w) => w.startsWith(prefix));
-  }, [recoverTyped]);
-
-  const recoverCombinedList = useMemo(() => {
-    if (!recoverTyped) return ALPHABET;
-    if (recoverSuggestions.length === 0) return ALPHABET;
-    return [...recoverSuggestions, ...ALPHABET];
-  }, [recoverTyped, recoverSuggestions, ALPHABET]);
-
-  const isRecoverListOnWord = recoverTyped.length > 0 && recoverListIndex < recoverSuggestions.length;
-  const recoverNoMatches = recoverTyped.length > 0 && recoverSuggestions.length === 0;
 
   const isReadyMenu = phase === 'ready-menu';
 
@@ -123,7 +106,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       if (wiped) {
         return [
           { label: 'Create wallet', phase: 'create-intro' },
-          { label: 'Recover wallet', phase: 'recover-intro' },
+          { label: 'Recover wallet', phase: 'recover-soon' as MenuPhase },
         ];
       }
       if (mode === 'withdraw' || isReadyMenu) {
@@ -192,8 +175,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setQuizSelected(0);
     setQuizWrong(false);
     setRecoverIndex(0);
-    setRecoverTyped('');
-    setRecoverListIndex(0);
+    setRecoverOptions([]);
+    setRecoverSelected(0);
     setRecoverWrong(false);
   }, []);
 
@@ -223,10 +206,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setQuizSelected((s) => (s === 0 ? quizOptions.length - 1 : s - 1));
       setQuizWrong(false);
     } else if (phase === 'recover-quiz') {
-      setRecoverListIndex((s) => (s === 0 ? recoverCombinedList.length - 1 : s - 1));
+      setRecoverSelected((s) => (s === 0 ? recoverOptions.length - 1 : s - 1));
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverCombinedList.length, locked]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, locked]);
 
   const handleDown = useCallback(() => {
     if (locked) return;
@@ -240,10 +223,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setQuizSelected((s) => (s + 1) % quizOptions.length);
       setQuizWrong(false);
     } else if (phase === 'recover-quiz') {
-      setRecoverListIndex((s) => (s + 1) % recoverCombinedList.length);
+      setRecoverSelected((s) => (s + 1) % recoverOptions.length);
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverCombinedList.length, locked]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, locked]);
 
   const handleEnter = useCallback(() => {
     if (locked) return;
@@ -279,12 +262,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       const target: MenuPhase = menuItems[menuIndex].phase;
       if (wiped) {
         onMenuSelectionChange?.(target === 'create-intro' ? 'create-intro' : 'recover-intro');
-        if (target === 'create-intro') {
-          const words = generateMnemonic(12);
-          setMnemonic(words);
-          setSessionMnemonic(words);
-        }
-        updatePhase(target);
         return;
       }
       if (target === 'settings') {
@@ -350,32 +327,27 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       }
     } else if (phase === 'recover-intro') {
       setRecoverIndex(0);
-      setRecoverTyped('');
-      setRecoverListIndex(0);
       setRecoverWrong(false);
+      const firstCorrect = expectedMnemonic?.[0] ?? '';
+      setRecoverOptions(buildQuizOptions(firstCorrect));
+      setRecoverSelected(0);
       updatePhase('recover-quiz');
     } else if (phase === 'recover-quiz') {
-      const selected = recoverCombinedList[recoverListIndex];
-      if (!selected) return;
-      const isChoosingLetter = recoverSuggestions.length === 0 || recoverListIndex >= recoverSuggestions.length;
-      if (isChoosingLetter) {
-        setRecoverTyped((prev) => prev + selected);
-        setRecoverListIndex(0);
+      const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
+      const answeredWord = recoverOptions[recoverSelected];
+      if (answeredWord === expectedWord) {
         setRecoverWrong(false);
-      } else {
-        const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
-        if (selected === expectedWord) {
-          setRecoverWrong(false);
-          if (recoverIndex + 1 >= 12) {
-            updatePhase('recover-done');
-          } else {
-            setRecoverIndex((idx) => idx + 1);
-            setRecoverTyped('');
-            setRecoverListIndex(0);
-          }
+        if (recoverIndex + 1 >= 12) {
+          updatePhase('recover-done');
         } else {
-          setRecoverWrong(true);
+          const nextIndex = recoverIndex + 1;
+          setRecoverIndex(nextIndex);
+          const nextCorrect = expectedMnemonic?.[nextIndex] ?? '';
+          setRecoverOptions(buildQuizOptions(nextCorrect));
+          setRecoverSelected(0);
         }
+      } else {
+        setRecoverWrong(true);
       }
     } else if (phase === 'recover-done') {
       onComplete();
@@ -391,9 +363,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     quizSelected,
     onComplete,
     recoverIndex,
-    recoverCombinedList,
-    recoverListIndex,
-    recoverSuggestions,
+    recoverOptions,
+    recoverSelected,
     expectedMnemonic,
     updatePhase,
     onReadyMenuSelect,
@@ -433,25 +404,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       return;
     }
     if (phase === 'menu') return;
-    if (phase === 'recover-quiz') {
-      if (recoverTyped.length > 0) {
-        setRecoverTyped((prev) => prev.slice(0, -1));
-        setRecoverListIndex(0);
-        setRecoverWrong(false);
-        return;
-      }
-      if (recoverIndex > 0) {
-        setRecoverIndex((idx) => idx - 1);
-        setRecoverTyped('');
-        setRecoverListIndex(0);
-        setRecoverWrong(false);
-        return;
-      }
-    }
     resetWalletState();
     updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, recoverTyped, recoverIndex, resetWalletState, updatePhase, settingsOrigin]);
+  }, [phase, resetWalletState, updatePhase, settingsOrigin]);
 
   useEffect(() => {
     if (phase !== 'reset-done') return;
@@ -563,51 +519,34 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Recover wallet</span>
                 <p className="hw-screen-body">
-                  Type each word of your 12-word phrase letter by letter. The device suggests matching words — choose the correct one with ✓ to advance.
+                  Select each word of your 12-word recovery phrase from the choices below. Use Up/Down to browse and ✓ to confirm.
                 </p>
               </div>
             )}
             {phase === 'recover-quiz' && (
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Word {recoverIndex + 1} of 12</span>
-                <div className="hw-recover-typed">
-                  <span className="hw-recover-typed-prefix">{recoverTyped}</span>
-                  <span className="hw-recover-cursor" />
+                <p className="hw-screen-body">Which word is in position {recoverIndex + 1}?</p>
+                <div className="hw-quiz-options">
+                  {recoverOptions.map((opt, i) => (
+                    <div
+                      key={opt}
+                      className={
+                        i === recoverSelected
+                          ? recoverWrong
+                            ? 'hw-quiz-option active wrong'
+                            : 'hw-quiz-option active'
+                          : 'hw-quiz-option'
+                      }
+                    >
+                      <span className="hw-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
+                      <span>{opt}</span>
+                    </div>
+                  ))}
                 </div>
-                {recoverNoMatches && (
-                  <span className="hw-recover-nomatches">No matches</span>
-                )}
-                {!recoverNoMatches && (
-                  <div className="hw-recover-list">
-                    {recoverCombinedList.map((item, i) => {
-                      const isWordSuggestion = i < recoverSuggestions.length;
-                      return (
-                        <div
-                          key={item}
-                          className={
-                            i === recoverListIndex
-                              ? recoverWrong && isWordSuggestion
-                                ? 'hw-quiz-option active wrong'
-                                : 'hw-quiz-option active'
-                              : 'hw-quiz-option'
-                          }
-                        >
-                          {isWordSuggestion ? (
-                            <span className="hw-quiz-option-letter hw-recover-word-icon">
-                              <Check size={8} strokeWidth={2.8} />
-                            </span>
-                          ) : (
-                            <span className="hw-quiz-option-letter">{item.toUpperCase()}</span>
-                          )}
-                          <span>{item}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                {recoverWrong && <span className="hw-quiz-wrong">Wrong word — try again</span>}
+                {recoverWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
                 <span className="hw-quiz-progress">
-                  Word {recoverIndex + 1} of 12{recoverTyped ? '' : ' — start typing'}
+                  Word {recoverIndex + 1} of 12
                 </span>
               </div>
             )}

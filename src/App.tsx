@@ -280,8 +280,7 @@ function App() {
       {screen === 'scenario-3' && (
         <RecoverScenario
           completed={completedScenarios >= 3}
-          onClose={() => setScreen('roadmap')}
-          onComplete={() => handleScenarioComplete(3)}
+          onClose={() => setScreen('home')}
         />
       )}
 
