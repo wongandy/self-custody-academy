@@ -2457,6 +2457,109 @@ a {
   line-height: 1.55;
 }
 
+/* ── Hardware wallet: letter-typing recovery ── */
+
+.hw-screen-type {
+  gap: 4px;
+}
+
+.hw-type-input-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 8px;
+  border: 1px solid rgba(167, 232, 67, 0.25);
+  border-radius: 6px;
+  background: rgba(167, 232, 67, 0.06);
+  min-height: 24px;
+}
+
+.hw-type-input-text {
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+}
+
+.hw-type-input-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 12px;
+  background: var(--green);
+  animation: hw-type-blink 0.7s steps(2) infinite;
+}
+
+@keyframes hw-type-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.hw-type-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.hw-type-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid rgba(167, 232, 67, 0.12);
+  border-radius: 6px;
+  background: rgba(167, 232, 67, 0.03);
+  color: rgba(167, 232, 67, 0.6);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  transition: all 160ms ease;
+}
+
+.hw-type-item.active {
+  border-color: rgba(167, 232, 67, 0.4);
+  background: rgba(167, 232, 67, 0.08);
+  color: var(--green);
+  box-shadow: 0 0 10px rgba(167, 232, 67, 0.1);
+}
+
+.hw-type-item.active.wrong {
+  border-color: rgba(232, 113, 113, 0.4);
+  background: rgba(232, 113, 113, 0.08);
+  color: #e87171;
+  animation: hw-shake 300ms ease;
+}
+
+.hw-type-item.letter {
+  justify-content: center;
+}
+
+.hw-type-letter-key {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(167, 232, 67, 0.1);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hw-type-item.active .hw-type-letter-key {
+  background: rgba(167, 232, 67, 0.2);
+}
+
+.hw-type-no-match {
+  color: rgba(232, 113, 113, 0.7);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-align: center;
+  padding: 8px 4px;
+}
+
 .hw-power-led {
   width: 7px;
   height: 7px;

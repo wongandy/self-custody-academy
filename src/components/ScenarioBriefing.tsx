@@ -30,6 +30,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'create-done': "Nice work! Your wallet is all set up. You can now receive or send Bitcoin.",
   'recover-intro': "We'll cover wallet recovery later. Select Create Wallet for now.",
   'recover-quiz': '',
+  'recover-type': '',
   'recover-done': '',
   'receive-address': 'This is your receive address — press the copy button to copy it.',
   'send-blocked': 'Sending from this wallet is not part of this mission yet. Let us get your receive address first.',

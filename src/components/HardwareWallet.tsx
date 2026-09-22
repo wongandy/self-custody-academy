@@ -22,6 +22,7 @@ export type WalletPhase =
   | 'create-done'
   | 'recover-intro'
   | 'recover-quiz'
+  | 'recover-type'
   | 'recover-done'
   | 'receive-address'
   | 'send-blocked'
@@ -31,7 +32,7 @@ export type WalletPhase =
   | 'reset-done'
   | 'ready-menu';
 
-type MenuPhase = WalletPhase | 'recover-soon';
+type MenuPhase = WalletPhase | 'recover-soon' | 'recover-type';
 
 type HardwareWalletProps = {
   onComplete: () => void;
@@ -73,6 +74,23 @@ function buildQuizOptions(correctWord: string): string[] {
   return shuffled;
 }
 
+function buildTypeList(input: string): string[] {
+  if (!input) {
+    return 'abcdefghijklmnopqrstuvwxyz'.split('');
+  }
+  const prefix = input.toLowerCase();
+  const matchingWords = BIP39_WORDLIST.filter(w => w.startsWith(prefix));
+  const words = matchingWords.slice(0, 5);
+  const letterSet = new Set<string>();
+  for (const word of matchingWords) {
+    if (word.length > prefix.length) {
+      letterSet.add(word[prefix.length]);
+    }
+  }
+  const letters = Array.from(letterSet).sort();
+  return [...words, ...letters];
+}
+
 export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
@@ -96,6 +114,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [recoverOptions, setRecoverOptions] = useState<string[]>([]);
   const [recoverSelected, setRecoverSelected] = useState(0);
   const [recoverWrong, setRecoverWrong] = useState(false);
+  const [typeInput, setTypeInput] = useState('');
+  const [typeList, setTypeList] = useState<string[]>([]);
+  const [typeListIndex, setTypeListIndex] = useState(0);
   const [addrCopied, setAddrCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -106,7 +127,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       if (wiped) {
         return [
           { label: 'Create wallet', phase: 'create-intro' },
-          { label: 'Recover wallet', phase: 'recover-soon' as MenuPhase },
+          { label: 'Recover wallet', phase: 'recover-intro' as MenuPhase },
         ];
       }
       if (mode === 'withdraw' || isReadyMenu) {
@@ -178,6 +199,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setRecoverOptions([]);
     setRecoverSelected(0);
     setRecoverWrong(false);
+    setTypeInput('');
+    setTypeList([]);
+    setTypeListIndex(0);
   }, []);
 
   const handlePower = useCallback(() => {
@@ -208,8 +232,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     } else if (phase === 'recover-quiz') {
       setRecoverSelected((s) => (s === 0 ? recoverOptions.length - 1 : s - 1));
       setRecoverWrong(false);
+    } else if (phase === 'recover-type') {
+      setTypeListIndex((s) => (s === 0 ? typeList.length - 1 : s - 1));
+      setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, locked]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked]);
 
   const handleDown = useCallback(() => {
     if (locked) return;
@@ -225,8 +252,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     } else if (phase === 'recover-quiz') {
       setRecoverSelected((s) => (s + 1) % recoverOptions.length);
       setRecoverWrong(false);
+    } else if (phase === 'recover-type') {
+      setTypeListIndex((s) => (s + 1) % typeList.length);
+      setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, locked]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked]);
 
   const handleEnter = useCallback(() => {
     if (locked) return;
@@ -261,7 +291,16 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     if (phase === 'menu') {
       const target: MenuPhase = menuItems[menuIndex].phase;
       if (wiped) {
-        onMenuSelectionChange?.(target === 'create-intro' ? 'create-intro' : 'recover-intro');
+        if (target === 'recover-intro') {
+          setRecoverIndex(0);
+          setRecoverWrong(false);
+          setTypeInput('');
+          setTypeList(buildTypeList(''));
+          setTypeListIndex(0);
+          updatePhase('recover-intro');
+          return;
+        }
+        onMenuSelectionChange?.('create-intro');
         return;
       }
       if (target === 'settings') {
@@ -328,10 +367,35 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     } else if (phase === 'recover-intro') {
       setRecoverIndex(0);
       setRecoverWrong(false);
-      const firstCorrect = expectedMnemonic?.[0] ?? '';
-      setRecoverOptions(buildQuizOptions(firstCorrect));
-      setRecoverSelected(0);
-      updatePhase('recover-quiz');
+      setTypeInput('');
+      setTypeList(buildTypeList(''));
+      setTypeListIndex(0);
+      updatePhase('recover-type');
+    } else if (phase === 'recover-type') {
+      const selected = typeList[typeListIndex];
+      if (!selected) return;
+      if (selected.length === 1) {
+        const newInput = typeInput + selected;
+        setTypeInput(newInput);
+        setTypeList(buildTypeList(newInput));
+        setTypeListIndex(0);
+      } else {
+        const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
+        if (selected === expectedWord) {
+          setRecoverWrong(false);
+          if (recoverIndex + 1 >= 12) {
+            updatePhase('recover-done');
+          } else {
+            const nextIndex = recoverIndex + 1;
+            setRecoverIndex(nextIndex);
+            setTypeInput('');
+            setTypeList(buildTypeList(''));
+            setTypeListIndex(0);
+          }
+        } else {
+          setRecoverWrong(true);
+        }
+      }
     } else if (phase === 'recover-quiz') {
       const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
       const answeredWord = recoverOptions[recoverSelected];
@@ -366,6 +430,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     recoverOptions,
     recoverSelected,
     expectedMnemonic,
+    typeInput,
+    typeList,
+    typeListIndex,
     updatePhase,
     onReadyMenuSelect,
     onMenuSelectionChange,
@@ -403,11 +470,25 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       updatePhase(settingsOrigin);
       return;
     }
+    if (phase === 'recover-type') {
+      if (typeInput.length > 0) {
+        const newInput = typeInput.slice(0, -1);
+        setTypeInput(newInput);
+        setTypeList(buildTypeList(newInput));
+        setTypeListIndex(0);
+        setRecoverWrong(false);
+      } else {
+        resetWalletState();
+        updatePhase('menu');
+        setMenuIndex(0);
+      }
+      return;
+    }
     if (phase === 'menu') return;
     resetWalletState();
     updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, resetWalletState, updatePhase, settingsOrigin]);
+  }, [phase, typeInput, resetWalletState, updatePhase, settingsOrigin]);
 
   useEffect(() => {
     if (phase !== 'reset-done') return;
@@ -418,6 +499,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const isOn = phase !== 'off';
   const isBooting = phase === 'booting';
   const currentQuizPosition = quizPositions[quizIndex];
+  const typeVisibleStart = Math.max(0, typeListIndex - 3);
+  const typeVisibleEnd = Math.min(typeList.length, typeVisibleStart + 7);
+  const typeVisibleItems = typeList.slice(typeVisibleStart, typeVisibleEnd);
+  const typeEnterDisabled = phase === 'recover-type' && typeList.length === 0;
 
   return (
     <div className="hw-wallet-stage">
@@ -519,8 +604,40 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Recover wallet</span>
                 <p className="hw-screen-body">
-                  Select each word of your 12-word recovery phrase from the choices below. Use Up/Down to browse and ✓ to confirm.
+                  Type each word of your 12-word recovery phrase letter by letter. Use Up/Down to pick a letter or suggested word, ✓ to confirm, and X to backspace.
                 </p>
+              </div>
+            )}
+            {phase === 'recover-type' && (
+              <div className="hw-screen-text hw-screen-type">
+                <span className="hw-screen-title">Word {recoverIndex + 1} of 12</span>
+                <div className="hw-type-input-row">
+                  <span className="hw-type-input-text">{typeInput}</span>
+                  <span className="hw-type-input-cursor" />
+                </div>
+                <div className="hw-type-list">
+                  {typeList.length === 0 && (
+                    <span className="hw-type-no-match">No matches — press X to backspace</span>
+                  )}
+                  {typeVisibleItems.map((item, i) => {
+                    const actualIndex = typeVisibleStart + i;
+                    const isLetter = item.length === 1;
+                    return (
+                      <div
+                        key={item + i}
+                        className={
+                          actualIndex === typeListIndex
+                            ? `hw-type-item active${isLetter ? ' letter' : ''}${recoverWrong ? ' wrong' : ''}`
+                            : `hw-type-item${isLetter ? ' letter' : ''}`
+                        }
+                      >
+                        {isLetter ? <span className="hw-type-letter-key">{item}</span> : <span>{item}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {recoverWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
+                <span className="hw-quiz-progress">Word {recoverIndex + 1} of 12</span>
               </div>
             )}
             {phase === 'recover-quiz' && (
@@ -634,7 +751,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             <button className="hw-btn hw-btn-nav hw-btn-cancel" type="button" onClick={handleCancel} disabled={!isOn || isBooting || phase === 'menu' || phase === 'ready-menu'} aria-label="Cancel">
               <X size={16} strokeWidth={2.4} />
             </button>
-            <button className="hw-btn hw-btn-nav hw-btn-enter" type="button" onClick={handleEnter} disabled={!isOn || isBooting} aria-label="Confirm">
+            <button className="hw-btn hw-btn-nav hw-btn-enter" type="button" onClick={handleEnter} disabled={!isOn || isBooting || typeEnterDisabled} aria-label="Confirm">
               <Check size={18} strokeWidth={2.6} />
             </button>
           </div>

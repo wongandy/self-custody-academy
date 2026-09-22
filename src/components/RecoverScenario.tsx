@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
+import { getSessionMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
 
 type RecoverScenarioProps = {
   completed: boolean;
   onClose: () => void;
+  onComplete: () => void;
+  onBack: () => void;
 };
 
 type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked';
@@ -31,6 +34,12 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-booting': "It's coming back up as a fresh, empty device. One moment.",
   'wallet-wiped':
     "The device is blank now — just like a new one out of the box. Let's practice recovering your wallet. Select Recover wallet.",
+  'wallet-recover-intro':
+    "This is exactly how a real wallet is restored. Type the first letter of word 1, then pick the matching word from the list. Word order matters — it must match what you wrote down in Mission 1.",
+  'wallet-recover-type':
+    "Keep going. Type a letter, confirm the matching word, and repeat for all 12 words. Use X to backspace if you mistype.",
+  'wallet-recover-done':
+    "Your wallet is back. This is the power of self-custody — as long as your recovery phrase is safe, your Bitcoin is never truly lost.",
   'wallet-receive-blocked':
     "Receiving isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
   'wallet-send-blocked':
@@ -77,34 +86,38 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done, skip };
 }
 
-export default function RecoverScenario({ completed, onClose }: RecoverScenarioProps) {
+export default function RecoverScenario({ completed, onClose, onComplete, onBack }: RecoverScenarioProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('menu');
   const [wiped, setWiped] = useState(false);
   const [menuSelection, setMenuSelection] = useState<MenuSelection>('idle');
   const [resetCancelled, setResetCancelled] = useState(false);
+  const [recoveryDone, setRecoveryDone] = useState(false);
   const prevPhase = useRef<WalletPhase>('menu');
+  const expectedMnemonic = getSessionMnemonic();
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   const spotlight = !introDone;
-  const canContinue = !introDone;
+  const canContinue = !introDone || recoveryDone;
   const finalStep = INTRO_MESSAGES.length - 1;
   const postResetMenu = wiped && walletPhase === 'menu';
-  const walletStateKey = postResetMenu
-    ? 'wallet-wiped'
-    : resetCancelled
-      ? 'wallet-reset-cancelled'
-      : walletPhase === 'menu'
-        ? menuSelection === 'idle'
-          ? 'wallet-menu'
-          : `wallet-menu-${menuSelection}`
-        : walletPhase === 'settings'
-          ? 'wallet-settings'
-          : `wallet-${walletPhase}`;
+  const walletStateKey = recoveryDone
+    ? 'wallet-recover-done'
+    : postResetMenu
+      ? 'wallet-wiped'
+      : resetCancelled
+        ? 'wallet-reset-cancelled'
+        : walletPhase === 'menu'
+          ? menuSelection === 'idle'
+            ? 'wallet-menu'
+            : `wallet-menu-${menuSelection}`
+          : walletPhase === 'settings'
+            ? 'wallet-settings'
+            : `wallet-${walletPhase}`;
 
   const mentorMessage = introDone
     ? MENTOR_MESSAGES[walletStateKey] ?? MENTOR_MESSAGES['wallet-menu']
@@ -121,8 +134,12 @@ export default function RecoverScenario({ completed, onClose }: RecoverScenarioP
     prevPhase.current = phase;
     if (phase === 'reset-done') setWiped(true);
     if (from === 'reset-confirm' && phase === 'menu') setResetCancelled(true);
+    if (phase === 'recover-done') {
+      setRecoveryDone(true);
+      onComplete();
+    }
     setWalletPhase(phase);
-  }, []);
+  }, [onComplete]);
 
   useLayoutEffect(() => {
     const align = () => {
@@ -205,8 +222,10 @@ export default function RecoverScenario({ completed, onClose }: RecoverScenarioP
         };
       }
       setIntroDone(true);
+    } else if (recoveryDone) {
+      onBack();
     }
-  }, [done, skip, introDone, introStep, finalStep]);
+  }, [done, skip, introDone, introStep, finalStep, recoveryDone, onBack]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -223,7 +242,7 @@ export default function RecoverScenario({ completed, onClose }: RecoverScenarioP
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
-      <button ref={closeRef} className="recover-close" type="button" onClick={onClose} aria-label="Return to roadmap">
+      <button ref={closeRef} className="recover-close" type="button" onClick={onClose} aria-label="Back to roadmap">
         <X size={18} strokeWidth={2.2} />
       </button>
 
@@ -235,6 +254,7 @@ export default function RecoverScenario({ completed, onClose }: RecoverScenarioP
                 mode="withdraw"
                 initialPhase="menu"
                 explicitReset
+                expectedMnemonic={expectedMnemonic ?? undefined}
                 onComplete={() => {}}
                 onPhaseChange={handlePhaseChange}
                 onMenuSelectionChange={handleMenuSelectionChange}
