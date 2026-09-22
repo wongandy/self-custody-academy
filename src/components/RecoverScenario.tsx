@@ -2,10 +2,12 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { ChevronRight, X } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
+import { getSessionMnemonic } from '@/lib/walletSession';
 
 type RecoverScenarioProps = {
   completed: boolean;
   onClose: () => void;
+  onComplete: () => void;
 };
 
 type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked';
@@ -35,6 +37,13 @@ const MENTOR_MESSAGES: Record<string, string> = {
     "Receiving isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
   'wallet-send-blocked':
     "Sending isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
+  'wallet-recover-intro':
+    "This is exactly how a real hardware wallet works. Type each word letter by letter using the Up/Down buttons to pick letters and suggested words. Press the checkmark to confirm a letter or a matching word.",
+  'wallet-recover-quiz':
+    "The device only suggests real wallet words from the official word list. If your typed letters don't match any real word, you'll see a no-matches message — just press X to backspace. Order matters: the words must match your original phrase exactly.",
+  'wallet-recover-done':
+    "Wallet recovered! Your keys are fully restored from the recovery phrase you wrote down during Mission 1. This is why keeping that phrase safe matters — it gives you access to your Bitcoin, no matter what happens to the device.",
+  'wallet-menu-recover-intro': "Now select Recover wallet to restore your original phrase from Mission 1.",
 };
 
 function useTypewriter(text: string, speed = 10) {
@@ -77,7 +86,7 @@ function useTypewriter(text: string, speed = 10) {
   return { displayed, done, skip };
 }
 
-export default function RecoverScenario({ completed, onClose }: RecoverScenarioProps) {
+export default function RecoverScenario({ completed, onClose, onComplete }: RecoverScenarioProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('menu');
@@ -232,10 +241,11 @@ export default function RecoverScenario({ completed, onClose }: RecoverScenarioP
           <div className="recover-device-area">
             <div className="recover-device-enter">
               <HardwareWallet
-                mode="withdraw"
+                mode="recover"
                 initialPhase="menu"
                 explicitReset
-                onComplete={() => {}}
+                expectedMnemonic={getSessionMnemonic() ?? undefined}
+                onComplete={() => onComplete()}
                 onPhaseChange={handlePhaseChange}
                 onMenuSelectionChange={handleMenuSelectionChange}
               />
