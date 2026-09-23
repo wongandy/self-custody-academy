@@ -62,10 +62,10 @@ function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, title, subtitle }: 
 
   return (
     <main className="auth-page">
-      <button className="character-back" type="button" onClick={onBack}>
+      {/* <button className="character-back" type="button" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2.4} />
         <span>Back</span>
-      </button>
+      </button> */}
 
       <div className="auth-card">
         <div className="auth-icon-row">
