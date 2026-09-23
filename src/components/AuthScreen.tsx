@@ -74,10 +74,10 @@ function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, title, subtitle }: 
           </div>
         </div>
 
-        <div className="auth-kicker">
+        {/* <div className="auth-kicker">
           <Sparkles size={13} strokeWidth={2.3} />
           <span>{isRegister ? 'One quick step' : 'Sign in'}</span>
-        </div>
+        </div> */}
 
         <h1>{title ?? defaultTitle}</h1>
         <p className="auth-subtitle">{subtitle ?? defaultSubtitle}</p>
