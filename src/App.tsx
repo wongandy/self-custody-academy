@@ -308,6 +308,7 @@ function App() {
           onBack={() => setScreen(authReturnScreen)}
           onSuccess={handleAuthSuccess}
           onSwitchMode={setAuthMode}
+          onSkip={() => setScreen('roadmap')}
         />
       )}
 

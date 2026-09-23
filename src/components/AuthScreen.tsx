@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowRight, LockKeyhole, Mail, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
+import { ArrowRight, LockKeyhole, Mail, ShieldCheck, UserRound } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import andyPortrait from '@/components/Andy.webp';
 
 type AuthMode = 'register' | 'login';
 
@@ -9,11 +10,12 @@ type AuthScreenProps = {
   onBack: () => void;
   onSuccess: () => void;
   onSwitchMode: (mode: AuthMode) => void;
+  onSkip?: () => void;
   title?: string;
   subtitle?: string;
 };
 
-function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, title, subtitle }: AuthScreenProps) {
+function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, onSkip, title, subtitle }: AuthScreenProps) {
   const { signUp, signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,22 +64,21 @@ function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, title, subtitle }: 
 
   return (
     <main className="auth-page">
-      {/* <button className="character-back" type="button" onClick={onBack}>
-        <ArrowLeft size={16} strokeWidth={2.4} />
-        <span>Back</span>
-      </button> */}
-
       <div className="auth-card">
         <div className="auth-icon-row">
-          <div className="auth-icon-badge">
-            {isRegister ? <UserRound size={28} strokeWidth={1.8} /> : <LockKeyhole size={28} strokeWidth={1.8} />}
-          </div>
+          {isRegister ? (
+            <div className="auth-portrait" aria-label="Andy, your academy mentor" role="img">
+              <div className="auth-portrait-glow" />
+              <div className="auth-portrait-ring">
+                <img className="auth-portrait-image" src={andyPortrait} alt="Andy, your academy mentor" />
+              </div>
+            </div>
+          ) : (
+            <div className="auth-icon-badge">
+              <LockKeyhole size={28} strokeWidth={1.8} />
+            </div>
+          )}
         </div>
-
-        {/* <div className="auth-kicker">
-          <Sparkles size={13} strokeWidth={2.3} />
-          <span>{isRegister ? 'One quick step' : 'Sign in'}</span>
-        </div> */}
 
         <h1>{title ?? defaultTitle}</h1>
         <p className="auth-subtitle">{subtitle ?? defaultSubtitle}</p>
@@ -127,6 +128,12 @@ function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, title, subtitle }: 
             <span>{isSubmitting ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}</span>
             {!isSubmitting && <ArrowRight size={18} strokeWidth={2.5} />}
           </button>
+
+          {isRegister && onSkip && (
+            <button className="auth-later" type="button" onClick={onSkip} disabled={isSubmitting}>
+              Later
+            </button>
+          )}
         </form>
 
         <div className="auth-switch">
