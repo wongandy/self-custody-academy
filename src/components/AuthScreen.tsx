@@ -23,9 +23,9 @@ function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, title, subtitle }: 
 
   const isRegister = mode === 'register';
 
-  const defaultTitle = isRegister ? 'Create your academy account' : 'Welcome back';
+  const defaultTitle = isRegister ? 'Time to create an account' : 'Welcome back';
   const defaultSubtitle = isRegister
-    ? 'Save your progress and unlock the rest of the academy.'
+    ? 'Create an account to save your progress.'
     : 'Pick up right where you left off.';
 
   const handleSubmit = async (e: FormEvent) => {
