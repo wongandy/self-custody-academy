@@ -181,10 +181,9 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     }
     if (phase === 'recover-done') {
       setRecoveryDone(true);
-      onComplete();
     }
     setWalletPhase(phase);
-  }, [onComplete]);
+  }, []);
 
   useLayoutEffect(() => {
     const align = () => {
@@ -278,10 +277,11 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
       if (recoveryDoneStep === 0) {
         setRecoveryDoneStep(1);
       } else {
+        onComplete();
         onBack();
       }
     }
-  }, [done, skip, introDone, introStep, finalStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, onBack]);
+  }, [done, skip, introDone, introStep, finalStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, onBack, onComplete]);
 
   const [advanceFromIntro, setAdvanceFromIntro] = useState(false);
 
