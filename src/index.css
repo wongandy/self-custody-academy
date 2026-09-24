@@ -911,6 +911,45 @@ a {
   padding-right: 34px;
 }
 
+/* ── Paper reveal button (show recovery phrase) ── */
+
+.paper-reveal-btn {
+  position: absolute;
+  right: 48px;
+  bottom: 10px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 200ms ease, border-color 200ms ease, color 200ms ease, background 200ms ease;
+  z-index: 5;
+}
+
+.paper-reveal-btn:hover {
+  opacity: 1;
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+  background: rgba(241, 189, 105, 0.08);
+}
+
+.paper-reveal-btn.active {
+  opacity: 1;
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+  background: rgba(241, 189, 105, 0.12);
+}
+
+.paper-reveal-btn:active {
+  transform: scale(0.94);
+}
+
 
 @media (max-width: 900px) {
   .hero-section {

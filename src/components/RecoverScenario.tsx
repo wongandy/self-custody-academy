@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronRight, X } from 'lucide-react';
+import { ChevronRight, FileText, X } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
-import { getSessionMnemonic } from '@/lib/walletSession';
+import { loadMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
 
 type RecoverScenarioProps = {
@@ -19,6 +19,16 @@ const INTRO_MESSAGES = [
   "Let's head back to your hardware wallet and I'll teach you how to do it.",
 ];
 
+const RECOVER_INTRO_MESSAGES = [
+  'I hope you have a copy of your recovery phrase because you\'re gonna need it to recover your wallet.',
+  "If you don't have a copy or lost it, I can show you your words one more time.",
+  'In real life, if you lose your recovery phrase, no one can help you — not support, not the wallet maker, no one.',
+  'If ever you need to see your recovery phrase just press the button with a paper symbol.',
+];
+
+const RECOVER_TYPE_MESSAGE =
+  "Keep going. Type a letter, confirm the matching word, and repeat for all 12 words. Use X to backspace if you mistype.";
+
 const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu': "Select Settings to reset the device to factory settings.",
   'wallet-settings':
@@ -34,10 +44,6 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-booting': "It's coming back up as a fresh, empty device. One moment.",
   'wallet-wiped':
     "The device is blank now — just like a new one out of the box. Let's practice recovering your wallet. Select Recover wallet.",
-  'wallet-recover-intro':
-    "This is exactly how a real wallet is restored. Type the first letter of word 1, then pick the matching word from the list. Word order matters — it must match what you wrote down in Mission 1.",
-  'wallet-recover-type':
-    "Keep going. Type a letter, confirm the matching word, and repeat for all 12 words. Use X to backspace if you mistype.",
   'wallet-recover-done':
     "Your wallet is back. This is the power of self-custody — as long as your recovery phrase is safe, your Bitcoin is never truly lost.",
   'wallet-receive-blocked':
@@ -94,15 +100,30 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
   const [menuSelection, setMenuSelection] = useState<MenuSelection>('idle');
   const [resetCancelled, setResetCancelled] = useState(false);
   const [recoveryDone, setRecoveryDone] = useState(false);
+  const [recoverIntroStep, setRecoverIntroStep] = useState(0);
+  const [showingWords, setShowingWords] = useState(false);
+  const [expectedMnemonic, setExpectedMnemonic] = useState<string[] | null>(null);
   const prevPhase = useRef<WalletPhase>('menu');
-  const expectedMnemonic = getSessionMnemonic();
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
+  useEffect(() => {
+    loadMnemonic().then((words) => {
+      if (words) setExpectedMnemonic(words);
+    });
+  }, []);
+
   const spotlight = !introDone;
-  const canContinue = !introDone || recoveryDone;
+  const isInRecoverIntro = introDone && walletPhase === 'recover-intro';
+  const isInRecoverType = introDone && walletPhase === 'recover-type';
+  const recoverIntroFinal = RECOVER_INTRO_MESSAGES.length - 1;
+
+  const canContinue = !introDone
+    || recoveryDone
+    || isInRecoverIntro;
+
   const finalStep = INTRO_MESSAGES.length - 1;
   const postResetMenu = wiped && walletPhase === 'menu';
   const walletStateKey = recoveryDone
@@ -119,9 +140,23 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             ? 'wallet-settings'
             : `wallet-${walletPhase}`;
 
-  const mentorMessage = introDone
-    ? MENTOR_MESSAGES[walletStateKey] ?? MENTOR_MESSAGES['wallet-menu']
+  const recoverIntroMessage = RECOVER_INTRO_MESSAGES[recoverIntroStep] ?? '';
+  const wordsMessage = expectedMnemonic
+    ? `Here are your 12 words: ${expectedMnemonic.map((w, i) => `${i + 1}. ${w}`).join('  ')}`
+    : 'I could not find your simulation phrase. You may need to redo Mission 1 to generate a new wallet.';
+
+  const baseMentorMessage = introDone
+    ? (MENTOR_MESSAGES[walletStateKey] ?? MENTOR_MESSAGES['wallet-menu'])
     : INTRO_MESSAGES[introStep];
+
+  const mentorMessage = showingWords
+    ? wordsMessage
+    : isInRecoverIntro
+      ? recoverIntroMessage
+      : isInRecoverType
+        ? RECOVER_TYPE_MESSAGE
+        : baseMentorMessage;
+
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
   const handleMenuSelectionChange = useCallback((sel: MenuSelection) => {
@@ -134,6 +169,13 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     prevPhase.current = phase;
     if (phase === 'reset-done') setWiped(true);
     if (from === 'reset-confirm' && phase === 'menu') setResetCancelled(true);
+    if (phase === 'recover-intro') {
+      setRecoverIntroStep(0);
+      setShowingWords(false);
+    }
+    if (phase === 'recover-type') {
+      setShowingWords(false);
+    }
     if (phase === 'recover-done') {
       setRecoveryDone(true);
       onComplete();
@@ -222,10 +264,19 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
         };
       }
       setIntroDone(true);
+    } else if (isInRecoverIntro) {
+      if (recoverIntroStep < recoverIntroFinal) {
+        setRecoverIntroStep(recoverIntroStep + 1);
+      } else {
+        // After the last intro message, advance the wallet to recover-type
+        setAdvanceFromIntro(true);
+      }
     } else if (recoveryDone) {
       onBack();
     }
-  }, [done, skip, introDone, introStep, finalStep, recoveryDone, onBack]);
+  }, [done, skip, introDone, introStep, finalStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, onBack]);
+
+  const [advanceFromIntro, setAdvanceFromIntro] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -239,6 +290,14 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
+
+  const handlePaperClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowingWords((prev) => !prev);
+  }, []);
+
+  const showPaperButton = isInRecoverType;
+  const walletLocked = isInRecoverIntro;
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
@@ -254,6 +313,8 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
                 mode="withdraw"
                 initialPhase="menu"
                 explicitReset
+                locked={walletLocked}
+                advanceFromRecoverIntro={advanceFromIntro}
                 expectedMnemonic={expectedMnemonic ?? undefined}
                 onComplete={() => {}}
                 onPhaseChange={handlePhaseChange}
@@ -282,7 +343,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={introDone ? walletStateKey : `intro-${introStep}`}>
+            <div className="mentor-bubble-content" key={showingWords ? 'words' : introDone ? `${walletStateKey}-${recoverIntroStep}` : `intro-${introStep}`}>
               <span className="mentor-bubble-name">Andy</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
@@ -304,6 +365,17 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             >
               <ChevronRight size={18} strokeWidth={2.5} />
             </button>
+            {showPaperButton && (
+              <button
+                className={`paper-reveal-btn ${showingWords ? 'active' : ''}`}
+                type="button"
+                onClick={handlePaperClick}
+                aria-label={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
+                title={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
+              >
+                <FileText size={18} strokeWidth={2.2} />
+              </button>
+            )}
           </div>
         </div>
       </div>

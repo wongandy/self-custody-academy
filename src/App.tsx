@@ -13,6 +13,7 @@ import bitcoinImage from '@/components/bitcoin.webp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { clearLocalProgress, getLocalProgress, setLocalProgress } from '@/lib/localProgress';
+import { clearStoredMnemonic } from '@/lib/walletSession';
 
 const TOTAL_SCENARIOS = 5;
 
@@ -145,6 +146,7 @@ function App() {
   const handleSignOut = useCallback(async () => {
     await signOut();
     clearLocalProgress();
+    clearStoredMnemonic();
     setCompletedScenarios(0);
     setScreen('home');
   }, [signOut]);

@@ -43,6 +43,7 @@ type HardwareWalletProps = {
   onReadyMenuSelect?: (label: string) => void;
   onFactoryResetAttempt?: () => void;
   advanceToReadyMenu?: boolean;
+  advanceFromRecoverIntro?: boolean;
   startAtMenu?: boolean;
   locked?: boolean;
   mode?: 'setup' | 'recover' | 'withdraw';
@@ -91,7 +92,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
   const [wiped, setWiped] = useState(false);
@@ -187,6 +188,16 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     updatePhase('ready-menu');
     setMenuIndex(0);
   }, [advanceToReadyMenu, phase, updatePhase]);
+
+  useEffect(() => {
+    if (!advanceFromRecoverIntro || phase !== 'recover-intro') return;
+    setRecoverIndex(0);
+    setRecoverWrong(false);
+    setTypeInput('');
+    setTypeList(buildTypeList(''));
+    setTypeListIndex(0);
+    updatePhase('recover-type');
+  }, [advanceFromRecoverIntro, phase, updatePhase]);
 
   const resetWalletState = useCallback(() => {
     setMnemonic([]);

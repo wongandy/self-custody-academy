@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
+import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
 
 type ScenarioBriefingProps = {
@@ -121,6 +122,14 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   useEffect(() => {
     if (walletPhase !== 'menu' && walletPhase !== 'ready-menu') {
       setResetRefused(false);
+    }
+  }, [walletPhase]);
+
+  useEffect(() => {
+    if (walletPhase !== 'create-words') return;
+    const words = getSessionMnemonic();
+    if (words && words.length === 12) {
+      persistMnemonic(words);
     }
   }, [walletPhase]);
 
