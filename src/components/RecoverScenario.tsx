@@ -23,7 +23,7 @@ const RECOVER_INTRO_MESSAGES = [
   'I hope you have a copy of your recovery phrase because you\'re gonna need it to recover your wallet.',
   "If you don't have a copy or lost it, I can show you your words one more time.",
   'In real life, if you lose your recovery phrase, no one can help you — not support, not the wallet maker, no one.',
-  'If ever you need to see your recovery phrase just press the button with a paper symbol.',
+  'If ever you need to see your recovery phrase just press the button with a paper symbol below.',
 ];
 
 const RECOVER_TYPE_MESSAGE =
