@@ -328,12 +328,6 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
                 onMenuSelectionChange={handleMenuSelectionChange}
               />
             </div>
-            {completed && (
-              <div className="recover-status">
-                <span className="recover-status-dot" />
-                <span>Mission 03 completed</span>
-              </div>
-            )}
           </div>
         )}
 
