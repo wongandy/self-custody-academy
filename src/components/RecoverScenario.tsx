@@ -46,6 +46,8 @@ const MENTOR_MESSAGES: Record<string, string> = {
     "The device is blank now — just like a new one out of the box. Let's practice recovering your wallet. Select Recover wallet.",
   'wallet-recover-done':
     "Your wallet is back. This is the power of self-custody — as long as your recovery phrase is safe, your Bitcoin is never truly lost.",
+  'wallet-recover-celebrate':
+    "And that's a wrap on recovery! You just did something most Bitcoin owners never practice. Give yourself a pat on the back — you've earned it. Press Continue to head back to the roadmap.",
   'wallet-receive-blocked':
     "Receiving isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
   'wallet-send-blocked':
@@ -100,6 +102,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
   const [menuSelection, setMenuSelection] = useState<MenuSelection>('idle');
   const [resetCancelled, setResetCancelled] = useState(false);
   const [recoveryDone, setRecoveryDone] = useState(false);
+  const [recoveryDoneStep, setRecoveryDoneStep] = useState(0);
   const [recoverIntroStep, setRecoverIntroStep] = useState(0);
   const [showingWords, setShowingWords] = useState(false);
   const [expectedMnemonic, setExpectedMnemonic] = useState<string[] | null>(null);
@@ -127,7 +130,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
   const finalStep = INTRO_MESSAGES.length - 1;
   const postResetMenu = wiped && walletPhase === 'menu';
   const walletStateKey = recoveryDone
-    ? 'wallet-recover-done'
+    ? (recoveryDoneStep === 1 ? 'wallet-recover-celebrate' : 'wallet-recover-done')
     : postResetMenu
       ? 'wallet-wiped'
       : resetCancelled
@@ -272,9 +275,13 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
         setAdvanceFromIntro(true);
       }
     } else if (recoveryDone) {
-      onBack();
+      if (recoveryDoneStep === 0) {
+        setRecoveryDoneStep(1);
+      } else {
+        onBack();
+      }
     }
-  }, [done, skip, introDone, introStep, finalStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, onBack]);
+  }, [done, skip, introDone, introStep, finalStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, onBack]);
 
   const [advanceFromIntro, setAdvanceFromIntro] = useState(false);
 
@@ -296,7 +303,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     setShowingWords((prev) => !prev);
   }, []);
 
-  const showPaperButton = isInRecoverType;
+  const showPaperButton = isInRecoverType || (isInRecoverIntro && recoverIntroStep === recoverIntroFinal);
   const walletLocked = isInRecoverIntro;
 
   return (
@@ -367,7 +374,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             </button>
             {showPaperButton && (
               <button
-                className={`paper-reveal-btn ${showingWords ? 'active' : ''}`}
+                className={`paper-reveal-btn paper-reveal-pop ${showingWords ? 'active' : ''}`}
                 type="button"
                 onClick={handlePaperClick}
                 aria-label={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
