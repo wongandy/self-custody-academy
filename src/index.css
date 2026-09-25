@@ -1453,135 +1453,143 @@ a {
   margin: 0 0 16px;
 }
 
-/* ── Snake-style roadmap path ── */
+/* ── SVG snake track roadmap ── */
 
-.snake-path {
+.snake-track-wrapper {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 8px 0;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  aspect-ratio: 400 / 900;
+  min-height: 560px;
 }
 
-.snake-step {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 16px 0;
-  text-align: left;
-  border: none;
-  background: none;
-  cursor: pointer;
-  transition: opacity 200ms ease;
-}
-
-.snake-step:disabled {
-  cursor: not-allowed;
-}
-
-/* alternating sides */
-.snake-step.left {
-  flex-direction: row;
-  padding-left: 4%;
-}
-
-.snake-step.right {
-  flex-direction: row-reverse;
-  padding-right: 4%;
-  text-align: right;
-}
-
-/* the connector line between steps */
-.snake-step::before {
-  content: '';
+.snake-track {
   position: absolute;
   top: 0;
-  bottom: 0;
-  width: 3px;
-  border-radius: 3px;
-  background: var(--panel-strong);
-  transition: background 300ms ease;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.snake-step.left::before {
-  left: calc(4% + 38px);
+/* path glow (outer) */
+.snake-seg-glow {
+  fill: none;
+  stroke-width: 16px;
+  stroke-linecap: round;
+  opacity: 0.25;
+  filter: blur(4px);
 }
 
-.snake-step.right::before {
-  right: calc(4% + 38px);
+.snake-seg-glow.done {
+  stroke: var(--green);
 }
 
-/* hide line on last step */
-.snake-step:last-child::before {
-  display: none;
+.snake-seg-glow.todo {
+  stroke: var(--line);
 }
 
-/* green line for completed segments */
-.snake-step.complete::before {
-  background: var(--green);
+/* path core (inner) */
+.snake-seg-core {
+  fill: none;
+  stroke-width: 4px;
+  stroke-linecap: round;
+}
+
+.snake-seg-core.done {
+  stroke: var(--green);
+}
+
+.snake-seg-core.todo {
+  stroke: var(--line);
   opacity: 0.5;
 }
 
-/* the marker circle */
-.snake-marker {
+/* mission nodes */
+.snake-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  z-index: 2;
+  transition: opacity 200ms ease;
+}
+
+.snake-node:disabled {
+  cursor: not-allowed;
+}
+
+.snake-node.right {
+  flex-direction: row;
+}
+
+.snake-node.left {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+/* marker circle */
+.snake-node-marker {
   position: relative;
   z-index: 2;
   flex-shrink: 0;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   display: grid;
   place-items: center;
   color: var(--faint);
   border: 2px solid var(--line);
   border-radius: 50%;
-  background: var(--panel-strong);
+  background: var(--bg);
   transition: color 250ms ease, border-color 250ms ease, background-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
 }
 
-.snake-step:hover:not(:disabled) .snake-marker {
+.snake-node:hover:not(:disabled) .snake-node-marker {
   border-color: rgba(241, 189, 105, 0.5);
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
-/* locked state */
-.snake-step.locked .snake-marker {
+.snake-node.locked .snake-node-marker {
   color: var(--faint);
   border-color: var(--line);
   background: var(--panel);
-  opacity: 0.45;
+  opacity: 0.4;
 }
 
-/* available (next) state */
-.snake-step.available .snake-marker {
+.snake-node.available .snake-node-marker {
   color: var(--green);
   border-color: rgba(167, 232, 67, 0.5);
   background: rgba(167, 232, 67, 0.08);
-  box-shadow: 0 0 0 4px rgba(167, 232, 67, 0.08), 0 0 24px rgba(167, 232, 67, 0.15);
+  box-shadow: 0 0 0 4px rgba(167, 232, 67, 0.08), 0 0 24px rgba(167, 232, 67, 0.18);
 }
 
-/* completed state */
-.snake-step.complete .snake-marker {
+.snake-node.complete .snake-node-marker {
   color: #18200f;
   border-color: var(--green);
   background: var(--green);
   box-shadow: 0 0 16px rgba(167, 232, 67, 0.3);
 }
 
-/* the text label next to each marker */
-.snake-label {
+/* labels */
+.snake-node-label {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
-  max-width: 280px;
+  max-width: 180px;
 }
 
-.snake-step.right .snake-label {
+.snake-node.left .snake-node-label {
   align-items: flex-end;
 }
 
-.snake-eyebrow {
+.snake-node-eyebrow {
   color: var(--faint);
   font-family: 'DM Mono', monospace;
   font-size: 9px;
@@ -1589,78 +1597,85 @@ a {
   text-transform: uppercase;
 }
 
-.snake-step.complete .snake-eyebrow {
+.snake-node.complete .snake-node-eyebrow {
   color: var(--green-dark);
 }
 
-.snake-step.available .snake-eyebrow {
+.snake-node.available .snake-node-eyebrow {
   color: var(--green);
 }
 
-.snake-label strong {
-  font-size: 15px;
+.snake-node-label strong {
+  font-size: 14px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
-.snake-step.locked .snake-label strong {
+.snake-node.locked .snake-node-label strong {
   color: var(--faint);
 }
 
-.snake-label small {
+.snake-node-label small {
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: normal;
 }
 
-.snake-step.locked .snake-label small {
+.snake-node.locked .snake-node-label small {
   color: var(--faint);
 }
 
-/* ── Snake roadmap responsive ── */
+/* ── Snake track responsive ── */
 
 @media (max-width: 700px) {
-  .snake-step.left,
-  .snake-step.right {
-    flex-direction: row;
-    padding-left: 20px;
-    padding-right: 0;
-    text-align: left;
+  .snake-track-wrapper {
+    max-width: 360px;
+    min-height: 480px;
   }
 
-  .snake-step.left::before,
-  .snake-step.right::before {
-    left: calc(20px + 38px);
-    right: auto;
+  .snake-node-label {
+    max-width: 140px;
   }
 
-  .snake-step.right .snake-label {
-    align-items: flex-start;
+  .snake-node-label strong {
+    font-size: 13px;
   }
 
-  .snake-label {
-    max-width: none;
+  .snake-node-label small {
+    font-size: 10px;
   }
-}
 
-@media (max-width: 600px) {
-  .snake-marker {
+  .snake-node-marker {
     width: 48px;
     height: 48px;
   }
+}
 
-  .snake-step.left::before,
-  .snake-step.right::before {
-    left: calc(20px + 30px);
+@media (max-width: 480px) {
+  .snake-track-wrapper {
+    max-width: 320px;
+    min-height: 420px;
   }
 
-  .snake-label strong {
-    font-size: 14px;
+  .snake-node-label {
+    max-width: 110px;
   }
 
-  .snake-label small {
-    font-size: 11px;
+  .snake-node-label strong {
+    font-size: 12px;
+    white-space: normal;
+  }
+
+  .snake-node-label small {
+    display: none;
+  }
+
+  .snake-node-marker {
+    width: 44px;
+    height: 44px;
   }
 }
 

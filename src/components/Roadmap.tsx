@@ -48,6 +48,23 @@ const scenarios: Scenario[] = [
   },
 ];
 
+const nodePositions = [
+  { top: 10, left: 50 },
+  { top: 30, left: 75 },
+  { top: 50, left: 25 },
+  { top: 70, left: 75 },
+  { top: 90, left: 50 },
+];
+
+const pathSegments = [
+  'M 200 90 C 200 180, 300 180, 300 270',
+  'M 300 270 C 300 360, 100 360, 100 450',
+  'M 100 450 C 100 540, 300 540, 300 630',
+  'M 300 630 C 300 720, 200 720, 200 810',
+];
+
+const labelSides = ['right', 'left', 'right', 'left', 'right'] as const;
+
 function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario }: RoadmapProps) {
   const availableScenario = Math.min(completedScenarios + 1, scenarios.length);
 
@@ -75,31 +92,42 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
             </div>
           )}
 
-          <div
-            className="snake-path"
-            aria-label="Five-scenario learning path"
-          >
+          <div className="snake-track-wrapper" aria-label="Five-scenario learning path">
+            <svg className="snake-track" viewBox="0 0 400 900" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">
+              {pathSegments.map((d, i) => {
+                const segComplete = i < completedScenarios;
+                return (
+                  <g key={i}>
+                    <path d={d} className={`snake-seg-glow ${segComplete ? 'done' : 'todo'}`} />
+                    <path d={d} className={`snake-seg-core ${segComplete ? 'done' : 'todo'}`} />
+                  </g>
+                );
+              })}
+            </svg>
+
             {scenarios.map((scenario, i) => {
               const isComplete = scenario.number <= completedScenarios;
               const isAvailable = scenario.number === availableScenario;
               const isLocked = !isComplete && !isAvailable;
               const Icon = scenario.icon;
-              const side = i % 2 === 0 ? 'left' : 'right';
+              const pos = nodePositions[i];
+              const side = labelSides[i];
 
               return (
                 <button
-                  className={`snake-step ${side} ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''}`}
+                  className={`snake-node ${side} ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''}`}
                   key={scenario.number}
                   type="button"
                   disabled={isLocked || isLoading}
                   onClick={() => onSelectScenario(scenario.number)}
                   aria-label={`${scenario.title}${isLocked ? ', locked' : ''}`}
+                  style={{ top: `${pos.top}%`, left: `${pos.left}%` }}
                 >
-                  <span className="snake-marker">
-                    {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
+                  <span className="snake-node-marker">
+                    {isComplete ? <Check size={22} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={22} strokeWidth={2.2} />}
                   </span>
-                  <span className="snake-label">
-                    <span className="snake-eyebrow">Mission {scenario.number}</span>
+                  <span className="snake-node-label">
+                    <span className="snake-node-eyebrow">Mission {scenario.number}</span>
                     <strong>{scenario.title}</strong>
                     <small>{scenario.description}</small>
                   </span>
