@@ -1195,14 +1195,6 @@ a {
   width: min(100%, 680px);
   margin: 0 auto;
   padding: 22px 18px 56px;
-  border: 1px solid rgba(139, 165, 169, 0.14);
-  border-radius: 18px;
-  background:
-    linear-gradient(rgba(138, 170, 177, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(138, 170, 177, 0.045) 1px, transparent 1px),
-    linear-gradient(145deg, rgba(37, 53, 60, 0.98), rgba(24, 32, 38, 0.98));
-  background-size: 64px 64px, 64px 64px, auto;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
 }
 
 .roadmap-board-heading {
@@ -1333,11 +1325,6 @@ a {
 }
 
 @media (max-width: 700px) {
-  .roadmap-board {
-    padding: 18px 10px 42px;
-    border-radius: 14px;
-  }
-
   .roadmap-board-heading {
     margin: 0 5px 14px;
   }
