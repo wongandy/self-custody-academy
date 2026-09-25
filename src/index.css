@@ -1453,123 +1453,215 @@ a {
   margin: 0 0 16px;
 }
 
-.roadmap-path {
+/* ── Snake-style roadmap path ── */
+
+.snake-path {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
+  padding: 8px 0;
 }
 
-.roadmap-path-line {
-  position: absolute;
-  left: 27px;
-  top: 24px;
-  bottom: 24px;
-  width: 2px;
-  background: linear-gradient(180deg, var(--gold), var(--green));
-  opacity: 0.2;
-  border-radius: 2px;
-}
-
-.roadmap-node {
+.snake-step {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 18px 22px;
+  gap: 20px;
+  padding: 16px 0;
   text-align: left;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 60%),
-    var(--panel);
+  border: none;
+  background: none;
   cursor: pointer;
-  transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+  transition: opacity 200ms ease;
 }
 
-.roadmap-node:hover:not(:disabled) {
-  border-color: rgba(241, 189, 105, 0.4);
-  transform: translateX(4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
-}
-
-.roadmap-node:disabled {
+.snake-step:disabled {
   cursor: not-allowed;
+}
+
+/* alternating sides */
+.snake-step.left {
+  flex-direction: row;
+  padding-left: 4%;
+}
+
+.snake-step.right {
+  flex-direction: row-reverse;
+  padding-right: 4%;
+  text-align: right;
+}
+
+/* the connector line between steps */
+.snake-step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--panel-strong);
+  transition: background 300ms ease;
+}
+
+.snake-step.left::before {
+  left: calc(4% + 38px);
+}
+
+.snake-step.right::before {
+  right: calc(4% + 38px);
+}
+
+/* hide line on last step */
+.snake-step:last-child::before {
+  display: none;
+}
+
+/* green line for completed segments */
+.snake-step.complete::before {
+  background: var(--green);
   opacity: 0.5;
 }
 
-.roadmap-node.available {
-  border-color: rgba(167, 232, 67, 0.4);
-  background:
-    linear-gradient(135deg, rgba(167, 232, 67, 0.06), transparent 60%),
-    var(--panel);
-  box-shadow: 0 0 0 1px rgba(167, 232, 67, 0.1), 0 12px 32px rgba(0, 0, 0, 0.12);
-}
-
-.roadmap-node.complete {
-  border-color: rgba(167, 232, 67, 0.25);
-  background:
-    linear-gradient(135deg, rgba(167, 232, 67, 0.04), transparent 60%),
-    var(--panel);
-}
-
-.roadmap-node-number {
+/* the marker circle */
+.snake-marker {
+  position: relative;
+  z-index: 2;
   flex-shrink: 0;
-  width: 54px;
-  height: 54px;
+  width: 60px;
+  height: 60px;
   display: grid;
   place-items: center;
-  color: var(--muted);
+  color: var(--faint);
   border: 2px solid var(--line);
   border-radius: 50%;
   background: var(--panel-strong);
-  transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
+  transition: color 250ms ease, border-color 250ms ease, background-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
 }
 
-.roadmap-node.available .roadmap-node-number {
+.snake-step:hover:not(:disabled) .snake-marker {
+  border-color: rgba(241, 189, 105, 0.5);
+  transform: scale(1.06);
+}
+
+/* locked state */
+.snake-step.locked .snake-marker {
+  color: var(--faint);
+  border-color: var(--line);
+  background: var(--panel);
+  opacity: 0.45;
+}
+
+/* available (next) state */
+.snake-step.available .snake-marker {
   color: var(--green);
   border-color: rgba(167, 232, 67, 0.5);
   background: rgba(167, 232, 67, 0.08);
+  box-shadow: 0 0 0 4px rgba(167, 232, 67, 0.08), 0 0 24px rgba(167, 232, 67, 0.15);
 }
 
-.roadmap-node.complete .roadmap-node-number {
+/* completed state */
+.snake-step.complete .snake-marker {
   color: #18200f;
   border-color: var(--green);
   background: var(--green);
+  box-shadow: 0 0 16px rgba(167, 232, 67, 0.3);
 }
 
-.roadmap-node-copy {
+/* the text label next to each marker */
+.snake-label {
   display: flex;
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+  max-width: 280px;
 }
 
-.roadmap-node-eyebrow {
+.snake-step.right .snake-label {
+  align-items: flex-end;
+}
+
+.snake-eyebrow {
   color: var(--faint);
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.roadmap-node-copy strong {
+.snake-step.complete .snake-eyebrow {
+  color: var(--green-dark);
+}
+
+.snake-step.available .snake-eyebrow {
+  color: var(--green);
+}
+
+.snake-label strong {
   font-size: 15px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.02em;
 }
 
-.roadmap-node-copy small {
+.snake-step.locked .snake-label strong {
+  color: var(--faint);
+}
+
+.snake-label small {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
 }
 
-.roadmap-node-arrow {
-  flex-shrink: 0;
-  margin-left: auto;
-  color: var(--green);
+.snake-step.locked .snake-label small {
+  color: var(--faint);
+}
+
+/* ── Snake roadmap responsive ── */
+
+@media (max-width: 700px) {
+  .snake-step.left,
+  .snake-step.right {
+    flex-direction: row;
+    padding-left: 20px;
+    padding-right: 0;
+    text-align: left;
+  }
+
+  .snake-step.left::before,
+  .snake-step.right::before {
+    left: calc(20px + 38px);
+    right: auto;
+  }
+
+  .snake-step.right .snake-label {
+    align-items: flex-start;
+  }
+
+  .snake-label {
+    max-width: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .snake-marker {
+    width: 48px;
+    height: 48px;
+  }
+
+  .snake-step.left::before,
+  .snake-step.right::before {
+    left: calc(20px + 30px);
+  }
+
+  .snake-label strong {
+    font-size: 14px;
+  }
+
+  .snake-label small {
+    font-size: 11px;
+  }
 }
 
 /* ── Scenario briefing page ── */
@@ -1845,20 +1937,6 @@ a {
 
   .roadmap-stats {
     gap: 12px;
-  }
-
-  .roadmap-node {
-    padding: 14px 16px;
-    gap: 14px;
-  }
-
-  .roadmap-node-number {
-    width: 44px;
-    height: 44px;
-  }
-
-  .roadmap-node-arrow {
-    display: none;
   }
 
   .scenario-copy h1 {

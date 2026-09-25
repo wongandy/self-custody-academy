@@ -55,33 +55,14 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
     <main className="roadmap-page">
       <section className="roadmap-shell">
         <div className="roadmap-main">
-          {/* <div className="roadmap-progress-card">
-            <div className="roadmap-progress-heading">
-              <div>
-                <span className="roadmap-label">Ben's current progress</span>
-                <h2>Build your self-custody confidence</h2>
-              </div>
-              <div className="roadmap-progress-count">
-                <strong>{completedScenarios}/5</strong>
-                <span>missions complete</span>
-              </div>
-            </div>
-            <div className="roadmap-progress-track" aria-label={`${progressPercent}% complete`}>
-              <span style={{ width: `${progressPercent}%` }} />
-            </div>
-            <div className="roadmap-stats">
-              <span><CircleDollarSign size={15} /> 0.0000 BTC <em>simulated</em></span>
-              <span><ShieldCheck size={15} /> {completedScenarios} badges earned</span>
-              <span><WalletCards size={15} /> 5 missions total</span>
-            </div>
-          </div> */}
-
           <div className="roadmap-path-heading">
             <div>
               <span className="roadmap-label">Your learning path</span>
               <h2>From curious to confident</h2>
             </div>
-            <span className="roadmap-path-status">{completedScenarios === 5 ? 'Path complete' : 'Next mission highlighted'}</span>
+            <span className="roadmap-path-status">
+              {completedScenarios === 5 ? 'Path complete' : `${completedScenarios} of 5 missions complete`}
+            </span>
           </div>
 
           {errorMessage && <p className="roadmap-error">We couldn't refresh saved progress. Your current view is still available.</p>}
@@ -94,34 +75,34 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
             </div>
           )}
 
-          <div className="roadmap-path" aria-label="Five-scenario learning path">
-            <div className="roadmap-path-line" />
-            {scenarios.map((scenario) => {
+          <div
+            className="snake-path"
+            aria-label="Five-scenario learning path"
+          >
+            {scenarios.map((scenario, i) => {
               const isComplete = scenario.number <= completedScenarios;
               const isAvailable = scenario.number === availableScenario;
               const isLocked = !isComplete && !isAvailable;
               const Icon = scenario.icon;
+              const side = i % 2 === 0 ? 'left' : 'right';
 
               return (
                 <button
-                  className={`roadmap-node ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''}`}
+                  className={`snake-step ${side} ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''}`}
                   key={scenario.number}
                   type="button"
                   disabled={isLocked || isLoading}
                   onClick={() => onSelectScenario(scenario.number)}
                   aria-label={`${scenario.title}${isLocked ? ', locked' : ''}`}
                 >
-                  <span className="roadmap-node-number">
-                    {isComplete ? <Check size={18} strokeWidth={3} /> : isLocked ? <LockKeyhole size={17} /> : <Icon size={19} strokeWidth={2.2} />}
+                  <span className="snake-marker">
+                    {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
                   </span>
-                  <span className="roadmap-node-copy">
-                    <span className="roadmap-node-eyebrow">
-                      Mission {scenario.number} {isComplete ? '· Complete' : isAvailable ? '· Ready' : '· Locked'}
-                    </span>
+                  <span className="snake-label">
+                    <span className="snake-eyebrow">Mission {scenario.number}</span>
                     <strong>{scenario.title}</strong>
                     <small>{scenario.description}</small>
                   </span>
-                  {isAvailable && <ArrowRight className="roadmap-node-arrow" size={18} strokeWidth={2.5} />}
                 </button>
               );
             })}
