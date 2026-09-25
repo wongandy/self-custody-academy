@@ -1,5 +1,4 @@
 import { ArrowDownToLine, Check, KeyRound, LockKeyhole, ShieldCheck, WalletCards } from 'lucide-react';
-import andyPortrait from '@/components/Andy.webp';
 
 type RoadmapProps = {
   completedScenarios: number;
@@ -24,11 +23,11 @@ const scenarios: Scenario[] = [
 ];
 
 const nodePositions = [
-  { top: 10, left: 50 },
-  { top: 31, left: 72 },
-  { top: 51, left: 28 },
-  { top: 71, left: 72 },
-  { top: 91, left: 28 },
+  { top: 8, left: 28 },
+  { top: 28, left: 72 },
+  { top: 50, left: 28 },
+  { top: 72, left: 72 },
+  { top: 92, left: 28 },
 ];
 
 function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario }: RoadmapProps) {
@@ -54,20 +53,10 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
           </div>
         )}
 
-        <div className="roadmap-mentor" aria-label="Andy, active learner">
-          <div className="roadmap-mentor-glow" />
-          <div className="roadmap-mentor-portrait">
-            <img src={andyPortrait} alt="Andy" />
-          </div>
-          <strong>ANDY</strong>
-          <span>ACTIVE LEARNER</span>
-          <small>The Curious Holder</small>
-        </div>
-
         <div className="roadmap-track-board" aria-label="Five-scenario learning path">
-          <svg className="roadmap-route" viewBox="0 0 400 820" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
-            <path className="roadmap-route-glow" d="M200 0V60C200 90 112 90 112 128V176C112 206 288 206 288 244V292C288 322 112 322 112 360V408C112 438 288 438 288 476V524C288 554 112 554 112 592V640C112 670 288 670 288 708V820" />
-            <path className="roadmap-route-line" d="M200 0V60C200 90 112 90 112 128V176C112 206 288 206 288 244V292C288 322 112 322 112 360V408C112 438 288 438 288 476V524C288 554 112 554 112 592V640C112 670 288 670 288 708V820" />
+          <svg className="roadmap-route" viewBox="0 0 400 900" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+            <path className="roadmap-route-glow" d="M112 0V72C112 108 288 108 288 144V252C288 288 112 288 112 324V450C112 486 288 486 288 522V648C288 684 112 684 112 720V828C112 864 288 864 288 900" />
+            <path className="roadmap-route-line" d="M112 0V72C112 108 288 108 288 144V252C288 288 112 288 112 324V450C112 486 288 486 288 522V648C288 684 112 684 112 720V828C112 864 288 864 288 900" />
           </svg>
 
           {scenarios.map((scenario, index) => {
