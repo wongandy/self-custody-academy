@@ -31,10 +31,10 @@ const nodePositions = [
 ];
 
 const pathSegments = [
-  'M112 72C112 108 288 108 288 144',
-  'M288 252C288 288 112 288 112 324',
-  'M112 450C112 486 288 486 288 522',
-  'M288 648C288 684 112 684 112 720',
+  'M112 117C112 162 288 162 288 207',
+  'M288 297C288 351 112 351 112 405',
+  'M112 495C112 549 288 549 288 603',
+  'M288 693C288 738 112 738 112 783',
 ];
 
 function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario }: RoadmapProps) {
