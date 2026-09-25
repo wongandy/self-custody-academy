@@ -23,18 +23,18 @@ const scenarios: Scenario[] = [
 ];
 
 const nodePositions = [
-  { top: 8, left: 28 },
-  { top: 28, left: 72 },
-  { top: 50, left: 28 },
-  { top: 72, left: 72 },
   { top: 92, left: 28 },
+  { top: 72, left: 72 },
+  { top: 50, left: 28 },
+  { top: 28, left: 72 },
+  { top: 8, left: 28 },
 ];
 
 const pathSegments = [
-  'M112 117C112 162 288 162 288 207',
-  'M288 297C288 351 112 351 112 405',
-  'M112 495C112 549 288 549 288 603',
-  'M288 693C288 738 112 738 112 783',
+  'M112 783C112 738 288 738 288 693',
+  'M288 603C288 549 112 549 112 495',
+  'M112 405C112 351 288 351 288 297',
+  'M288 207C288 162 112 162 112 117',
 ];
 
 function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario }: RoadmapProps) {
