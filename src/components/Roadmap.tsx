@@ -30,6 +30,13 @@ const nodePositions = [
   { top: 92, left: 28 },
 ];
 
+const pathSegments = [
+  'M112 72C112 108 288 108 288 144',
+  'M288 252C288 288 112 288 112 324',
+  'M112 450C112 486 288 486 288 522',
+  'M288 648C288 684 112 684 112 720',
+];
+
 function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario }: RoadmapProps) {
   const availableScenario = Math.min(completedScenarios + 1, scenarios.length);
 
@@ -55,8 +62,15 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
 
         <div className="roadmap-track-board" aria-label="Five-scenario learning path">
           <svg className="roadmap-route" viewBox="0 0 400 900" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
-            <path className="roadmap-route-glow" d="M112 0V72C112 108 288 108 288 144V252C288 288 112 288 112 324V450C112 486 288 486 288 522V648C288 684 112 684 112 720V828C112 864 288 864 288 900" />
-            <path className="roadmap-route-line" d="M112 0V72C112 108 288 108 288 144V252C288 288 112 288 112 324V450C112 486 288 486 288 522V648C288 684 112 684 112 720V828C112 864 288 864 288 900" />
+            {pathSegments.map((d, i) => {
+              const segComplete = i < completedScenarios;
+              return (
+                <g key={i}>
+                  <path className={`roadmap-route-glow ${segComplete ? 'done' : 'todo'}`} d={d} />
+                  <path className={`roadmap-route-line ${segComplete ? 'done' : 'todo'}`} d={d} />
+                </g>
+              );
+            })}
           </svg>
 
           {scenarios.map((scenario, index) => {
