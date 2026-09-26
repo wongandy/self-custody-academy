@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ArrowDownToLine, Check, KeyRound, LockKeyhole, ShieldCheck, WalletCards } from 'lucide-react';
 
 type RoadmapProps = {
@@ -6,6 +7,7 @@ type RoadmapProps = {
   errorMessage: string | null;
   isLoggedIn: boolean;
   onSelectScenario: (scenarioNumber: number) => void;
+  animate?: boolean;
 };
 
 type Scenario = {
@@ -37,11 +39,26 @@ const pathSegments = [
   'M288 693C288 738 112 738 112 783',
 ];
 
-function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario }: RoadmapProps) {
+function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario, animate = false }: RoadmapProps) {
   const availableScenario = Math.min(completedScenarios + 1, scenarios.length);
+  const [revealed, setRevealed] = useState(!animate);
+
+  useEffect(() => {
+    if (!animate) {
+      setRevealed(true);
+      return;
+    }
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) {
+      setRevealed(true);
+      return;
+    }
+    const timer = setTimeout(() => setRevealed(true), 1400);
+    return () => clearTimeout(timer);
+  }, [animate]);
 
   return (
-    <main className="roadmap-page">
+    <main className={`roadmap-page ${animate ? 'is-revealing' : ''} ${revealed ? 'is-revealed' : ''}`}>
       <section className="roadmap-board">
         <div className="roadmap-board-heading">
           <span className="roadmap-label">Your learning path</span>
@@ -64,8 +81,9 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
           <svg className="roadmap-route" viewBox="0 0 400 900" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
             {pathSegments.map((d, i) => {
               const segComplete = i < completedScenarios;
+              const segDelay = animate ? i * 280 : 0;
               return (
-                <g key={i}>
+                <g key={i} className={animate ? 'roadmap-seg-reveal' : ''} style={{ animationDelay: `${segDelay}ms` }}>
                   <path className={`roadmap-route-glow ${segComplete ? 'done' : 'todo'}`} d={d} />
                   <path className={`roadmap-route-line ${segComplete ? 'done' : 'todo'}`} d={d} />
                 </g>
@@ -79,16 +97,17 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
             const isLocked = !isComplete && !isAvailable;
             const Icon = scenario.icon;
             const position = nodePositions[index];
+            const nodeDelay = animate ? 200 + index * 280 : 0;
 
             return (
               <button
-                className={`roadmap-mission ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''}`}
+                className={`roadmap-mission ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''} ${animate ? 'roadmap-node-reveal' : ''}`}
                 key={scenario.number}
                 type="button"
                 disabled={isLocked || isLoading}
                 onClick={() => onSelectScenario(scenario.number)}
                 aria-label={`${scenario.title}${isLocked ? ', locked' : ''}`}
-                style={{ top: `${position.top}%`, left: `${position.left}%` }}
+                style={{ top: `${position.top}%`, left: `${position.left}%`, animationDelay: `${nodeDelay}ms` }}
               >
                 <span className="roadmap-mission-marker">
                   {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}

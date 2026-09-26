@@ -10,6 +10,7 @@ const ANDY_MESSAGES = [
   "Hey there! I'm Andy, and I will teach you how to self-custody your Bitcoin.",
   "Learning to store your own Bitcoin takes practice. Everything here is simulated, so you can explore freely with zero risk.",
   "We'll practice the basics until you feel totally in control. Ready to start?",
+  "Your learning path has five missions. Each one unlocks the next, and you can replay any mission you've completed. Let's take a look at your roadmap.",
 ];
 
 function useTypewriter(text: string, speed = 10) {

@@ -40,6 +40,7 @@ function App() {
   const [authMode, setAuthMode] = useState<'register' | 'login'>('register');
   const [authReturnScreen, setAuthReturnScreen] = useState<Screen>('roadmap');
   const [, setActiveScenario] = useState(1);
+  const [roadmapAnimate, setRoadmapAnimate] = useState(false);
 
   const loadLocalProgress = useCallback(() => {
     setCompletedScenarios(getLocalProgress());
@@ -85,6 +86,11 @@ function App() {
     }
   }, [user]);
 
+  const goToRoadmap = useCallback(() => {
+    setRoadmapAnimate(false);
+    setScreen('roadmap');
+  }, []);
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [screen]);
@@ -127,13 +133,14 @@ function App() {
         setAuthReturnScreen('roadmap');
         setScreen('auth');
       } else {
-        setScreen('roadmap');
+        goToRoadmap();
       }
     },
     [completeScenario, user],
   );
 
   const handleAuthSuccess = useCallback(() => {
+    setRoadmapAnimate(false);
     setScreen(authReturnScreen);
   }, [authReturnScreen]);
 
@@ -160,7 +167,13 @@ function App() {
           <button
             className="close-button"
             type="button"
-            onClick={() => setScreen(screen === 'andy-intro' ? 'home' : 'roadmap')}
+            onClick={() => {
+              if (screen === 'andy-intro') {
+                setScreen('home');
+              } else {
+                goToRoadmap();
+              }
+            }}
             aria-label={screen === 'andy-intro' ? 'Back to home' : 'Back to roadmap'}
           >
             <X size={20} strokeWidth={2.4} />
@@ -248,7 +261,10 @@ function App() {
 
       {screen === 'andy-intro' && (
         <AndyIntro
-          onProceed={() => setScreen('roadmap')}
+          onProceed={() => {
+            setRoadmapAnimate(true);
+            setScreen('roadmap');
+          }}
         />
       )}
 
@@ -258,8 +274,10 @@ function App() {
           isLoading={progressLoading}
           errorMessage={progressError}
           isLoggedIn={!!user}
+          animate={roadmapAnimate}
           onSelectScenario={(n) => {
             setActiveScenario(n);
+            setRoadmapAnimate(false);
             setScreen(`scenario-${n}` as Screen);
           }}
         />
@@ -274,7 +292,7 @@ function App() {
       {screen === 'scenario-2' && (
         <WithdrawScenario
           completed={completedScenarios >= 2}
-          onBack={() => setScreen('roadmap')}
+          onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(2)}
         />
       )}
@@ -282,16 +300,16 @@ function App() {
       {screen === 'scenario-3' && (
         <RecoverScenario
           completed={completedScenarios >= 3}
-          onClose={() => setScreen('roadmap')}
+          onClose={goToRoadmap}
           onComplete={() => handleScenarioComplete(3)}
-          onBack={() => setScreen('roadmap')}
+          onBack={goToRoadmap}
         />
       )}
 
       {screen === 'scenario-4' && (
         <SendScenario
           completed={completedScenarios >= 4}
-          onBack={() => setScreen('roadmap')}
+          onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(4)}
         />
       )}
@@ -299,7 +317,7 @@ function App() {
       {screen === 'scenario-5' && (
         <ReceiveScenario
           completed={completedScenarios >= 5}
-          onBack={() => setScreen('roadmap')}
+          onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(5)}
         />
       )}
@@ -310,7 +328,7 @@ function App() {
           onBack={() => setScreen(authReturnScreen)}
           onSuccess={handleAuthSuccess}
           onSwitchMode={setAuthMode}
-          onSkip={() => setScreen('roadmap')}
+          onSkip={goToRoadmap}
         />
       )}
 
