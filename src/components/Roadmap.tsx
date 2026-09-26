@@ -11,16 +11,15 @@ type RoadmapProps = {
 type Scenario = {
   number: number;
   title: string;
-  description: string;
   icon: typeof WalletCards;
 };
 
 const scenarios: Scenario[] = [
-  { number: 1, title: 'Set up hardware wallet', description: 'Initialize your device, generate a 24-word recovery phrase, and secure your first wallet.', icon: WalletCards },
-  { number: 2, title: 'Withdraw BTC from exchange', description: 'Move bitcoin off an exchange to your self-custody hardware wallet.', icon: ArrowDownToLine },
-  { number: 3, title: 'Recover hardware wallet', description: 'Practice restoring wallet access using your saved recovery phrase.', icon: KeyRound },
-  { number: 4, title: 'Send BTC to Alice', description: 'Create and broadcast a transaction to send bitcoin to another address.', icon: ArrowDownToLine },
-  { number: 5, title: 'Receive BTC from Charlie', description: 'Generate a receive address and confirm an incoming payment.', icon: ArrowDownToLine },
+  { number: 1, title: 'Set up hardware wallet', icon: WalletCards },
+  { number: 2, title: 'Withdraw BTC from exchange', icon: ArrowDownToLine },
+  { number: 3, title: 'Recover hardware wallet', icon: KeyRound },
+  { number: 4, title: 'Send BTC to Alice', icon: ArrowDownToLine },
+  { number: 5, title: 'Receive BTC from Charlie', icon: ArrowDownToLine },
 ];
 
 const nodePositions = [
@@ -95,7 +94,6 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
                   {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
                 </span>
                 <span className="roadmap-mission-title">{scenario.title}</span>
-                <span className="roadmap-mission-desc">{scenario.description}</span>
               </button>
             );
           })}
