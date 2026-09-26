@@ -25,24 +25,23 @@ const scenarios: Scenario[] = [
 ];
 
 const nodePositions = [
-  { top: 7, left: 30 },
-  { top: 28, left: 70 },
-  { top: 50, left: 30 },
-  { top: 72, left: 70 },
-  { top: 93, left: 30 },
+  { top: 8, left: 28 },
+  { top: 28, left: 72 },
+  { top: 50, left: 28 },
+  { top: 72, left: 72 },
+  { top: 92, left: 28 },
 ];
 
 const pathSegments = [
-  'M120 100C120 170 280 170 280 240',
-  'M280 320C280 390 120 390 120 460',
-  'M120 540C120 610 280 610 280 680',
-  'M280 760C280 810 120 810 120 860',
+  'M112 117C112 162 288 162 288 207',
+  'M288 297C288 351 112 351 112 405',
+  'M112 495C112 549 288 549 288 603',
+  'M288 693C288 738 112 738 112 783',
 ];
 
 function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario, animate = false }: RoadmapProps) {
   const availableScenario = Math.min(completedScenarios + 1, scenarios.length);
   const [revealed, setRevealed] = useState(!animate);
-  const progressPercent = Math.round((completedScenarios / scenarios.length) * 100);
 
   useEffect(() => {
     if (!animate) {
@@ -66,10 +65,6 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
           <span className="roadmap-path-status">
             {completedScenarios === scenarios.length ? 'Path complete' : `${completedScenarios} of ${scenarios.length} missions complete`}
           </span>
-        </div>
-
-        <div className="roadmap-progress-bar" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
-          <div className="roadmap-progress-fill" style={{ width: `${progressPercent}%` }} />
         </div>
 
         {errorMessage && <p className="roadmap-error">We couldn't refresh saved progress. Your current view is still available.</p>}
@@ -114,11 +109,8 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
                 aria-label={`${scenario.title}${isLocked ? ', locked' : ''}`}
                 style={{ top: `${position.top}%`, left: `${position.left}%`, animationDelay: `${nodeDelay}ms` }}
               >
-                <span className="roadmap-mission-card">
-                  <span className="roadmap-mission-number">{String(scenario.number).padStart(2, '0')}</span>
-                  <span className="roadmap-mission-marker">
-                    {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
-                  </span>
+                <span className="roadmap-mission-marker">
+                  {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
                 </span>
                 <span className="roadmap-mission-title">{scenario.title}</span>
               </button>
