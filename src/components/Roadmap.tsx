@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ArrowDownToLine, Check, KeyRound, LockKeyhole, ShieldCheck, WalletCards } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowDownToLine, Check, KeyRound, LockKeyhole, WalletCards } from 'lucide-react';
 
 type RoadmapProps = {
   completedScenarios: number;
@@ -8,7 +8,11 @@ type RoadmapProps = {
   isLoggedIn: boolean;
   onSelectScenario: (scenarioNumber: number) => void;
   animate?: boolean;
+  justCompletedScenario?: number | null;
+  onCelebrationDone?: () => void;
 };
+
+type CelebrationPhase = 'idle' | 'pre' | 'checkmark' | 'path' | 'pulse' | 'done';
 
 type Scenario = {
   number: number;
@@ -39,9 +43,19 @@ const pathSegments = [
   'M288 693C288 738 112 738 112 783',
 ];
 
-function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSelectScenario, animate = false }: RoadmapProps) {
-  const availableScenario = Math.min(completedScenarios + 1, scenarios.length);
+function Roadmap({
+  completedScenarios,
+  isLoading,
+  errorMessage,
+  isLoggedIn,
+  onSelectScenario,
+  animate = false,
+  justCompletedScenario = null,
+  onCelebrationDone,
+}: RoadmapProps) {
   const [revealed, setRevealed] = useState(!animate);
+  const [celebrationPhase, setCelebrationPhase] = useState<CelebrationPhase>('idle');
+  const doneRef = useRef(true);
 
   useEffect(() => {
     if (!animate) {
@@ -57,6 +71,99 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
     return () => clearTimeout(timer);
   }, [animate]);
 
+  useEffect(() => {
+    if (!justCompletedScenario || justCompletedScenario !== completedScenarios) {
+      setCelebrationPhase('idle');
+      doneRef.current = true;
+      return;
+    }
+
+    doneRef.current = false;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) {
+      setCelebrationPhase('done');
+      doneRef.current = true;
+      onCelebrationDone?.();
+      return;
+    }
+
+    setCelebrationPhase('pre');
+    const isLast = justCompletedScenario >= scenarios.length;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    timers.push(setTimeout(() => setCelebrationPhase('checkmark'), 100));
+
+    if (!isLast) {
+      timers.push(setTimeout(() => setCelebrationPhase('path'), 550));
+      timers.push(setTimeout(() => setCelebrationPhase('pulse'), 1250));
+      timers.push(setTimeout(() => {
+        setCelebrationPhase('done');
+        doneRef.current = true;
+        onCelebrationDone?.();
+      }, 1900));
+    } else {
+      timers.push(setTimeout(() => {
+        setCelebrationPhase('done');
+        doneRef.current = true;
+        onCelebrationDone?.();
+      }, 900));
+    }
+
+    return () => {
+      timers.forEach(clearTimeout);
+      if (!doneRef.current) {
+        onCelebrationDone?.();
+      }
+    };
+  }, [justCompletedScenario, completedScenarios, onCelebrationDone]);
+
+  const celebrating = celebrationPhase !== 'idle' && celebrationPhase !== 'done';
+  const justCompleted = justCompletedScenario ?? 0;
+
+  const displayCompleted = celebrating && celebrationPhase === 'pre'
+    ? completedScenarios - 1
+    : completedScenarios;
+
+  const availableScenario = Math.min(displayCompleted + 1, scenarios.length);
+
+  const getNodeState = (scenarioNumber: number): 'complete' | 'available' | 'locked' => {
+    if (celebrating && scenarioNumber === justCompleted + 1) {
+      if (celebrationPhase === 'pulse') return 'available';
+      return 'locked';
+    }
+    if (scenarioNumber <= displayCompleted) return 'complete';
+    if (scenarioNumber === availableScenario) return 'available';
+    return 'locked';
+  };
+
+  const isSegComplete = (segIndex: number) => {
+    if (celebrating && segIndex === justCompleted - 1) {
+      return celebrationPhase === 'path' || celebrationPhase === 'pulse';
+    }
+    return segIndex < displayCompleted;
+  };
+
+  const segCelebrationClass = (segIndex: number) => {
+    if (celebrating && segIndex === justCompleted - 1 && celebrationPhase === 'path') {
+      return 'celebration-seg-draw';
+    }
+    return '';
+  };
+
+  const nodeCelebrationClass = (scenarioNumber: number) => {
+    if (celebrating && scenarioNumber === justCompleted && celebrationPhase !== 'pre') {
+      return 'celebration-checkmark';
+    }
+    return '';
+  };
+
+  const nextNodeCelebrationClass = (scenarioNumber: number) => {
+    if (celebrating && scenarioNumber === justCompleted + 1 && celebrationPhase === 'pulse') {
+      return 'celebration-next-pulse';
+    }
+    return '';
+  };
+
   return (
     <main className={`roadmap-page ${animate ? 'is-revealing' : ''} ${revealed ? 'is-revealed' : ''}`}>
       <section className="roadmap-board">
@@ -70,38 +177,33 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
         {errorMessage && <p className="roadmap-error">We couldn't refresh saved progress. Your current view is still available.</p>}
         {isLoading && <p className="roadmap-loading">Loading your academy progress…</p>}
 
-        {/* {!isLoggedIn && completedScenarios >= 1 && (
-          <div className="roadmap-guest-banner">
-            <ShieldCheck size={18} strokeWidth={2.2} />
-            <span>Progress saved on this device. Create an account to save across devices and unlock all missions.</span>
-          </div>
-        )} */}
-
         <div className="roadmap-track-board" aria-label="Five-scenario learning path">
           <svg className="roadmap-route" viewBox="0 0 400 900" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
             {pathSegments.map((d, i) => {
-              const segComplete = i < completedScenarios;
+              const segComplete = isSegComplete(i);
               const segDelay = animate ? i * 280 : 0;
+              const celClass = segCelebrationClass(i);
               return (
                 <g key={i} className={animate ? 'roadmap-seg-reveal' : ''} style={{ animationDelay: `${segDelay}ms` }}>
-                  <path className={`roadmap-route-glow ${segComplete ? 'done' : 'todo'}`} d={d} />
-                  <path className={`roadmap-route-line ${segComplete ? 'done' : 'todo'}`} d={d} />
+                  <path className={`roadmap-route-glow ${segComplete ? 'done' : 'todo'} ${celClass}`} d={d} pathLength={1} />
+                  <path className={`roadmap-route-line ${segComplete ? 'done' : 'todo'} ${celClass}`} d={d} pathLength={1} />
                 </g>
               );
             })}
           </svg>
 
           {scenarios.map((scenario, index) => {
-            const isComplete = scenario.number <= completedScenarios;
-            const isAvailable = scenario.number === availableScenario;
-            const isLocked = !isComplete && !isAvailable;
+            const nodeState = getNodeState(scenario.number);
+            const isComplete = nodeState === 'complete';
+            const isAvailable = nodeState === 'available';
+            const isLocked = nodeState === 'locked';
             const Icon = scenario.icon;
             const position = nodePositions[index];
             const nodeDelay = animate ? 200 + index * 280 : 0;
 
             return (
               <button
-                className={`roadmap-mission ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''} ${animate ? 'roadmap-node-reveal' : ''}`}
+                className={`roadmap-mission ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''} ${animate ? 'roadmap-node-reveal' : ''} ${nodeCelebrationClass(scenario.number)} ${nextNodeCelebrationClass(scenario.number)}`}
                 key={scenario.number}
                 type="button"
                 disabled={isLocked || isLoading}

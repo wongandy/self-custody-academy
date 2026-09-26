@@ -41,6 +41,7 @@ function App() {
   const [authReturnScreen, setAuthReturnScreen] = useState<Screen>('roadmap');
   const [, setActiveScenario] = useState(1);
   const [roadmapAnimate, setRoadmapAnimate] = useState(false);
+  const [justCompletedScenario, setJustCompletedScenario] = useState<number | null>(null);
 
   const loadLocalProgress = useCallback(() => {
     setCompletedScenarios(getLocalProgress());
@@ -128,6 +129,7 @@ function App() {
   const handleScenarioComplete = useCallback(
     (scenarioNumber: number) => {
       completeScenario(scenarioNumber);
+      setJustCompletedScenario(scenarioNumber);
       if (scenarioNumber === 1 && !user) {
         setAuthMode('register');
         setAuthReturnScreen('roadmap');
@@ -275,6 +277,8 @@ function App() {
           errorMessage={progressError}
           isLoggedIn={!!user}
           animate={roadmapAnimate}
+          justCompletedScenario={justCompletedScenario}
+          onCelebrationDone={() => setJustCompletedScenario(null)}
           onSelectScenario={(n) => {
             setActiveScenario(n);
             setRoadmapAnimate(false);
