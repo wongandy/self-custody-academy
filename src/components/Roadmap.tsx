@@ -70,12 +70,12 @@ function Roadmap({ completedScenarios, isLoading, errorMessage, isLoggedIn, onSe
         {errorMessage && <p className="roadmap-error">We couldn't refresh saved progress. Your current view is still available.</p>}
         {isLoading && <p className="roadmap-loading">Loading your academy progress…</p>}
 
-        {!isLoggedIn && completedScenarios >= 1 && (
+        {/* {!isLoggedIn && completedScenarios >= 1 && (
           <div className="roadmap-guest-banner">
             <ShieldCheck size={18} strokeWidth={2.2} />
             <span>Progress saved on this device. Create an account to save across devices and unlock all missions.</span>
           </div>
-        )}
+        )} */}
 
         <div className="roadmap-track-board" aria-label="Five-scenario learning path">
           <svg className="roadmap-route" viewBox="0 0 400 900" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
