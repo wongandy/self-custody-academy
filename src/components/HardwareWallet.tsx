@@ -304,7 +304,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       const target: MenuPhase = menuItems[menuIndex].phase;
       if (wiped) {
         if (target === 'recover-intro') {
-          setRecoverIndex(0);
+          // setRecoverIndex(0);
+          setRecoverIndex(11);
           setRecoverWrong(false);
           setTypeInput('');
           setTypeList(buildTypeList(''));
