@@ -378,7 +378,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         setQuizWrong(true);
       }
     } else if (phase === 'recover-intro') {
-      setRecoverIndex(0);
+      // setRecoverIndex(0);
+      setRecoverIndex(11);
       setRecoverWrong(false);
       setTypeInput('');
       setTypeList(buildTypeList(''));
