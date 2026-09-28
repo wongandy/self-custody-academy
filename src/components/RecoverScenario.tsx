@@ -21,7 +21,7 @@ const INTRO_MESSAGES = [
 
 const RECOVER_INTRO_MESSAGES = [
   'On the next screen, you will be asked to input each word of your recovery phrase.',
-  "In case you don't have a copy or lost it and because this is just a simulation I can show you your recovery phrase.",
+  "In case you lost your copy, don't worry — since this is a simulation, you'll have an option to view it on the next screen.",
   'But in real life though, if you lose your recovery phrase, no one can help you so make sure to back them up in paper.',
   'If ever you need to see your recovery phrase just press the button with a paper symbol.',
 ];
