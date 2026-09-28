@@ -22,7 +22,7 @@ const INTRO_MESSAGES = [
 const RECOVER_INTRO_MESSAGES = [
   'I hope you have a copy of your recovery phrase because you\'re gonna need it to recover your wallet.',
   "In case you don't have a copy or lost it, because this is just a simulation I can show you your recovery phrase.",
-  'In real life though, if you lose your recovery phrase, no one can help you so make sure to back them up in paper.',
+  'But in real life though, if you lose your recovery phrase, no one can help you so make sure to back them up in paper.',
   'If ever you need to see your recovery phrase just press the button with a paper symbol.',
 ];
 
