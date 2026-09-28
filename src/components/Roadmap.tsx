@@ -211,6 +211,11 @@ function Roadmap({
                 aria-label={`${scenario.title}${isLocked ? ', locked' : ''}`}
                 style={{ top: `${position.top}%`, left: `${position.left}%`, animationDelay: `${nodeDelay}ms` }}
               >
+                {isAvailable && !celebrating && (
+                  <span className={`roadmap-start-bubble ${index % 2 === 0 ? 'right' : 'left'}`} aria-hidden="true">
+                    START
+                  </span>
+                )}
                 <span className="roadmap-mission-marker">
                   {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
                 </span>

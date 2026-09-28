@@ -1275,8 +1275,72 @@ a {
   cursor: not-allowed;
 }
 
+.roadmap-start-bubble {
+  position: absolute;
+  top: 28px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  min-height: 34px;
+  padding: 8px 12px;
+  color: #365b10;
+  border: 1px solid rgba(167, 232, 67, 0.38);
+  border-radius: 10px;
+  background: var(--text);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(167, 232, 67, 0.08);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  pointer-events: none;
+  animation: roadmap-start-float 2.2s ease-in-out infinite;
+}
+
+.roadmap-start-bubble::before {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  content: '';
+  border: inherit;
+  border-right: 0;
+  border-bottom: 0;
+  background: var(--text);
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.roadmap-start-bubble.right {
+  left: calc(100% + 10px);
+}
+
+.roadmap-start-bubble.right::before {
+  left: -5px;
+}
+
+.roadmap-start-bubble.left {
+  right: calc(100% + 10px);
+}
+
+.roadmap-start-bubble.left::before {
+  right: -5px;
+  transform: translateY(-50%) rotate(135deg);
+}
+
+@keyframes roadmap-start-float {
+  0%, 100% { transform: translateY(-50%); }
+  50% { transform: translateY(calc(-50% - 5px)); }
+}
+
 .roadmap-mission:hover:not(:disabled) {
   transform: translate(-50%, -50%) scale(1.04);
+}
+
+.roadmap-mission:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 7px;
 }
 
 .roadmap-mission-marker {
@@ -1501,6 +1565,13 @@ a {
     max-width: 142px;
     font-size: 11px;
   }
+
+  .roadmap-start-bubble {
+    min-width: 68px;
+    min-height: 30px;
+    padding: 7px 9px;
+    font-size: 9px;
+  }
 }
 
 @media (max-width: 440px) {
@@ -1525,6 +1596,27 @@ a {
   .roadmap-mission-title {
     max-width: 122px;
     font-size: 10px;
+  }
+
+  .roadmap-start-bubble {
+    min-width: 62px;
+    min-height: 28px;
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+
+  .roadmap-start-bubble.right {
+    left: calc(100% + 6px);
+  }
+
+  .roadmap-start-bubble.left {
+    right: calc(100% + 6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roadmap-start-bubble {
+    animation: none;
   }
 }
 
