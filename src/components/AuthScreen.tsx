@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { ArrowRight, LockKeyhole, Mail, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import andyPortrait from '@/components/Andy.webp';
 
@@ -16,12 +16,14 @@ type AuthScreenProps = {
 };
 
 function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, onSkip, title, subtitle }: AuthScreenProps) {
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [view, setView] = useState<'auth' | 'forgot'>('auth');
+  const [resetSent, setResetSent] = useState(false);
 
   const isRegister = mode === 'register';
 
@@ -61,6 +63,89 @@ function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, onSkip, title, subt
 
     onSuccess();
   };
+
+  const handleForgotSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!email.trim()) {
+      setError('Please enter your email.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await resetPassword(email.trim());
+    setIsSubmitting(false);
+
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+
+    setResetSent(true);
+  };
+
+  if (view === 'forgot') {
+    return (
+      <main className="auth-page">
+        <div className="auth-card">
+          <div className="auth-icon-row">
+            <div className="auth-icon-badge">
+              <LockKeyhole size={28} strokeWidth={1.8} />
+            </div>
+          </div>
+
+          <h1>Reset your password</h1>
+          <p className="auth-subtitle">
+            {resetSent
+              ? 'Check your email for a password reset link.'
+              : "Enter your email and we'll send you a link to reset your password."}
+          </p>
+
+          {resetSent ? (
+            <div className="auth-success">
+              <p>We've sent a password reset link to <strong>{email.trim()}</strong>. Click the link in the email to set a new password.</p>
+            </div>
+          ) : (
+            <form className="auth-form" onSubmit={handleForgotSubmit}>
+              <label className="auth-field">
+                <span className="auth-field-label"><Mail size={13} /> Email</span>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </label>
+
+              {error && <p className="auth-error">{error}</p>}
+
+              <button className="character-proceed auth-submit" type="submit" disabled={isSubmitting}>
+                <span>{isSubmitting ? 'Please wait…' : 'Send reset link'}</span>
+                {!isSubmitting && <ArrowRight size={18} strokeWidth={2.5} />}
+              </button>
+            </form>
+          )}
+
+          <div className="auth-switch">
+            <button
+              type="button"
+              className="auth-back-link"
+              onClick={() => {
+                setView('auth');
+                setResetSent(false);
+                setError(null);
+              }}
+            >
+              <ArrowLeft size={14} strokeWidth={2.2} /> Back to sign in
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="auth-page">
@@ -128,6 +213,21 @@ function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, onSkip, title, subt
             <span>{isSubmitting ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}</span>
             {!isSubmitting && <ArrowRight size={18} strokeWidth={2.5} />}
           </button>
+
+          {!isRegister && (
+            <button
+              type="button"
+              className="auth-forgot-link"
+              onClick={() => {
+                setView('forgot');
+                setError(null);
+                setResetSent(false);
+              }}
+              disabled={isSubmitting}
+            >
+              Forgot password?
+            </button>
+          )}
 
           {isRegister && onSkip && (
             <button className="auth-later" type="button" onClick={onSkip} disabled={isSubmitting}>

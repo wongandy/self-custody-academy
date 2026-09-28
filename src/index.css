@@ -2099,6 +2099,62 @@ a {
   color: var(--gold);
 }
 
+.auth-forgot-link {
+  width: 100%;
+  margin-top: 10px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.auth-forgot-link:hover {
+  color: var(--gold);
+}
+
+.auth-forgot-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.auth-back-link:hover {
+  color: var(--gold);
+}
+
+.auth-success {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(72, 187, 120, 0.1);
+  border: 1px solid rgba(72, 187, 120, 0.25);
+  color: #6ee7b7;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.auth-success strong {
+  color: #a7f3d0;
+  font-weight: 600;
+}
+
 /* ── Header account indicator ── */
 
 .header-account {

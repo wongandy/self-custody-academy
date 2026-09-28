@@ -8,6 +8,7 @@ type AuthContextValue = {
   isReady: boolean;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -48,12 +49,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) return { error: error.message };
+    return { error: null };
+  }, []);
+
   const value: AuthContextValue = {
     session,
     user: session?.user ?? null,
     isReady,
     signUp,
     signIn,
+    resetPassword,
     signOut,
   };
 
