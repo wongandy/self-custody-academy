@@ -43,7 +43,7 @@ export default function SendScenario({ completed, onBack, onComplete }: SendScen
 
       <section className="scenario-card">
         <div className="scenario-card-topline">
-          <span>Mission 04 · Send BTC to Alice</span>
+          <span>Mission 04 · Sending BTC</span>
           <span><CircleDollarSign size={14} /> Simulation only</span>
         </div>
         <div className="scenario-wallet-layout">
