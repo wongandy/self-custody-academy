@@ -181,6 +181,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     }
     if (phase === 'recover-done') {
       setRecoveryDone(true);
+      setShowingWords(false);
     }
     setWalletPhase(phase);
   }, []);
