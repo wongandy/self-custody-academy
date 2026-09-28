@@ -1263,11 +1263,10 @@ a {
   align-items: center;
   gap: 6px;
   width: 170px;
-  padding: 8px 14px;
+  padding: 0;
   color: var(--text);
   border: 0;
-  background: var(--bg);
-  border-radius: 16px;
+  background: transparent;
   cursor: pointer;
   transition: transform 180ms ease;
 }
@@ -1313,7 +1312,7 @@ a {
   max-width: 170px;
   padding: 3px 7px;
   color: var(--text);
-  background: transparent;
+  background: rgba(24, 34, 39, 0.5);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.25;
@@ -1490,7 +1489,6 @@ a {
 
   .roadmap-mission {
     width: 142px;
-    padding: 6px 10px;
   }
 
   .roadmap-mission-marker {
@@ -1516,7 +1514,6 @@ a {
 
   .roadmap-mission {
     width: 122px;
-    padding: 5px 8px;
   }
 
   .roadmap-mission-marker {
