@@ -55,7 +55,7 @@ export default function ReceiveScenario({ completed, onBack, onComplete }: Recei
         <div className="scenario-wallet-layout">
           <div className="scenario-wallet-info">
             <span className="roadmap-label">Your fifth mission</span>
-            <h1>Receive BTC from Charlie</h1>
+            <h1>Receiving BTC</h1>
             <p className="scenario-lede">
               Receiving bitcoin is the other half of self-custody. Practice generating a receive address, sharing it, and verifying the incoming payment.
             </p>
