@@ -1313,7 +1313,7 @@ a {
 }
 
 .roadmap-start-bubble.right {
-  left: calc(100% + 3px);
+  left: calc(100% - 50px);
 }
 
 .roadmap-start-bubble.right::before {
@@ -1321,7 +1321,7 @@ a {
 }
 
 .roadmap-start-bubble.left {
-  right: calc(100% + 10px);
+  right: calc(100% - 50px);
 }
 
 .roadmap-start-bubble.left::before {
