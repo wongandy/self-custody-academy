@@ -67,7 +67,7 @@ function Roadmap({
       setRevealed(true);
       return;
     }
-    const timer = setTimeout(() => setRevealed(true), 1400);
+    const timer = setTimeout(() => setRevealed(true), 2800);
     return () => clearTimeout(timer);
   }, [animate]);
 
@@ -181,7 +181,7 @@ function Roadmap({
           <svg className="roadmap-route" viewBox="0 0 400 900" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
             {pathSegments.map((d, i) => {
               const segComplete = isSegComplete(i);
-              const segDelay = animate ? i * 280 : 0;
+              const segDelay = animate ? 500 + i * 500 : 0;
               const celClass = segCelebrationClass(i);
               return (
                 <g key={i} className={animate ? 'roadmap-seg-reveal' : ''} style={{ animationDelay: `${segDelay}ms` }}>
@@ -199,7 +199,7 @@ function Roadmap({
             const isLocked = nodeState === 'locked';
             const Icon = scenario.icon;
             const position = nodePositions[index];
-            const nodeDelay = animate ? 200 + index * 280 : 0;
+            const nodeDelay = animate ? 200 + index * 500 : 0;
 
             return (
               <button
