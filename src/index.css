@@ -1606,11 +1606,11 @@ a {
   }
 
   .roadmap-start-bubble.right {
-    left: calc(100% + 6px);
+    left: calc(100% - 42px);
   }
 
   .roadmap-start-bubble.left {
-    right: calc(100% + 6px);
+    right: calc(100% - 42px);
   }
 }
 
