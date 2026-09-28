@@ -23,7 +23,7 @@ const RECOVER_INTRO_MESSAGES = [
   'On the next screen, you will be asked to input each word of your recovery phrase.',
   "In case you lost your copy, don't worry — since this is just a simulation, you'll have an option to view it on the next screen.",
   'But in real life though, if you lose your recovery phrase, no one can help you so make sure to back them up in paper.',
-  'To view your recovery phrase, just press the button with a paper symbol jsut below my portrait.',
+  'To view your recovery phrase, just press the button with a paper symbol just below my portrait.',
 ];
 
 const RECOVER_TYPE_MESSAGE =
@@ -340,7 +340,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             <div className="mentor-portrait-badge">Andy</div>
             {showPaperButton && (
               <button
-                className={`paper-reveal-btn paper-reveal-pop ${showingWords ? 'active' : ''}`}
+                className={`paper-reveal-btn paper-reveal-pop ${showingWords ? 'active' : 'paper-reveal-pulse'}`}
                 type="button"
                 onClick={handlePaperClick}
                 aria-label={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}

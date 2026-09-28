@@ -924,11 +924,13 @@ a {
   z-index: 5;
 }
 
-.paper-reveal-btn:hover {
-  opacity: 1;
-  border-color: var(--gold-light);
-  color: var(--gold-light);
-  background: rgba(241, 189, 105, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .paper-reveal-btn:hover {
+    opacity: 1;
+    border-color: var(--gold-light);
+    color: var(--gold-light);
+    background: rgba(241, 189, 105, 0.08);
+  }
 }
 
 .paper-reveal-btn.active {
@@ -959,6 +961,31 @@ a {
 
 .paper-reveal-pop {
   animation: paper-pop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes paper-reveal-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(241, 189, 105, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(241, 189, 105, 0.22), 0 0 18px 3px rgba(241, 189, 105, 0.3);
+  }
+}
+
+.paper-reveal-pulse {
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+  opacity: 1;
+  animation:
+    paper-pop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    paper-reveal-glow 2s ease-in-out infinite 600ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-reveal-pulse {
+    animation: paper-pop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    box-shadow: 0 0 0 4px rgba(241, 189, 105, 0.28);
+  }
 }
 
 
@@ -2881,6 +2908,7 @@ a {
 .mentor-bubble-text-wrap {
   position: relative;
   min-height: 67px;
+  overflow: hidden;
 }
 
 .mentor-bubble-text-ghost {
@@ -2889,16 +2917,19 @@ a {
   color: var(--text);
   font-size: 14px;
   line-height: 1.6;
+  padding-right: 48px;
 }
 
 .mentor-bubble-text {
   position: absolute;
   inset: 0;
-  padding-right: 34px;
+  padding-right: 48px;
   margin: 0;
   color: var(--text);
   font-size: 14px;
   line-height: 1.6;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .mentor-portrait-badge {
@@ -3046,7 +3077,7 @@ a {
   }
 
   .mentor-bubble-text-wrap {
-    min-height: 62px;
+    min-height: 80px;
   }
 
   .scenario-mentor-layout.spotlight {
