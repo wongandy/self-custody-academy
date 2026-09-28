@@ -47,7 +47,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-recover-done':
     "Your wallet is back. This is the power of self-custody — as long as your recovery phrase is safe, your Bitcoin is never truly lost.",
   'wallet-recover-celebrate':
-    "And that's a wrap on recovery! You just did something most Bitcoin owners never practice. Give yourself a pat on the back — you've earned it. Press Continue to head back to the roadmap.",
+    "Great job on recovering your wallet! You just did something most Bitcoin owners never practice. Let's wrap this up!",
   'wallet-receive-blocked':
     "Receiving isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
   'wallet-send-blocked':
