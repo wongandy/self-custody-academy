@@ -902,21 +902,13 @@ a {
   }
 }
 
-.mentor-bubble .bubble-next {
-  right: 10px;
-  bottom: 10px;
-}
-
-.mentor-bubble .mentor-bubble-text-wrap {
-  padding-right: 34px;
-}
-
 /* ── Paper reveal button (show recovery phrase) ── */
 
 .paper-reveal-btn {
   position: absolute;
-  right: 48px;
-  bottom: 10px;
+  bottom: -44px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 30px;
   height: 30px;
   display: flex;
@@ -947,21 +939,21 @@ a {
 }
 
 .paper-reveal-btn:active {
-  transform: scale(0.94);
+  transform: translateX(-50%) scale(0.94);
 }
 
 @keyframes paper-pop-in {
   0% {
     opacity: 0;
-    transform: scale(0.5) translateX(8px);
+    transform: translateX(-50%) scale(0.5) translateY(-4px);
   }
   60% {
     opacity: 1;
-    transform: scale(1.12) translateX(0);
+    transform: translateX(-50%) scale(1.12) translateY(0);
   }
   100% {
     opacity: 1;
-    transform: scale(1) translateX(0);
+    transform: translateX(-50%) scale(1) translateY(0);
   }
 }
 
@@ -3027,6 +3019,12 @@ a {
   .mentor-portrait {
     width: 40px;
     height: 40px;
+  }
+
+  .paper-reveal-btn {
+    bottom: -40px;
+    width: 26px;
+    height: 26px;
   }
 
   .mentor-portrait-initial {

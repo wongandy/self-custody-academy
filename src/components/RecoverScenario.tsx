@@ -338,6 +338,17 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
               <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
             </div>
             <div className="mentor-portrait-badge">Andy</div>
+            {showPaperButton && (
+              <button
+                className={`paper-reveal-btn paper-reveal-pop ${showingWords ? 'active' : ''}`}
+                type="button"
+                onClick={handlePaperClick}
+                aria-label={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
+                title={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
+              >
+                <FileText size={18} strokeWidth={2.2} />
+              </button>
+            )}
           </div>
           <div
             ref={bubbleRef}
@@ -366,17 +377,6 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             >
               <ChevronRight size={18} strokeWidth={2.5} />
             </button>
-            {showPaperButton && (
-              <button
-                className={`paper-reveal-btn paper-reveal-pop ${showingWords ? 'active' : ''}`}
-                type="button"
-                onClick={handlePaperClick}
-                aria-label={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
-                title={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
-              >
-                <FileText size={18} strokeWidth={2.2} />
-              </button>
-            )}
           </div>
         </div>
       </div>
