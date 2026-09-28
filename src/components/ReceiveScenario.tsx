@@ -49,7 +49,7 @@ export default function ReceiveScenario({ completed, onBack, onComplete }: Recei
 
       <section className="scenario-card">
         <div className="scenario-card-topline">
-          <span>Mission 05 · Receive BTC from Charlie</span>
+          <span>Mission 05 · Receiving BTC</span>
           <span><CircleDollarSign size={14} /> Simulation only</span>
         </div>
         <div className="scenario-wallet-layout">
