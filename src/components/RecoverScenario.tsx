@@ -27,7 +27,7 @@ const RECOVER_INTRO_MESSAGES = [
 ];
 
 const RECOVER_TYPE_MESSAGE =
-  "You maytype each word directly or use Up/Down to pick a letter or suggested word. Use X to backspace if you mistype.";
+  "You may type each word directly or use Up/Down to pick a letter or suggested word. Use X to backspace if you mistype.";
 
 const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu': "Select Settings to reset the device to factory settings.",
