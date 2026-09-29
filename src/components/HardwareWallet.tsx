@@ -115,6 +115,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [recoverOptions, setRecoverOptions] = useState<string[]>([]);
   const [recoverSelected, setRecoverSelected] = useState(0);
   const [recoverWrong, setRecoverWrong] = useState(false);
+  const [recoverPhraseError, setRecoverPhraseError] = useState(false);
   const [typeInput, setTypeInput] = useState('');
   const [typeList, setTypeList] = useState<string[]>([]);
   const [typeListIndex, setTypeListIndex] = useState(0);
@@ -195,6 +196,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setRecoverIndex(0);
     // setRecoverIndex(11);
     setRecoverWrong(false);
+    setRecoverPhraseError(false);
     setTypeInput('');
     setTypeList(buildTypeList(''));
     setTypeListIndex(0);
@@ -212,13 +214,19 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setRecoverOptions([]);
     setRecoverSelected(0);
     setRecoverWrong(false);
+    setRecoverPhraseError(false);
     setTypeInput('');
     setTypeList([]);
     setTypeListIndex(0);
   }, []);
 
   const advanceRecoverWord = useCallback((word: string) => {
-    const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
+    if (!expectedMnemonic || expectedMnemonic.length < 12) {
+      setRecoverPhraseError(true);
+      return;
+    }
+    setRecoverPhraseError(false);
+    const expectedWord = expectedMnemonic[recoverIndex] ?? '';
     if (word === expectedWord) {
       setRecoverWrong(false);
       if (recoverIndex + 1 >= 12) {
@@ -399,6 +407,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setRecoverIndex(0);
       // setRecoverIndex(11);
       setRecoverWrong(false);
+      setRecoverPhraseError(false);
       setTypeInput('');
       setTypeList(buildTypeList(''));
       setTypeListIndex(0);
@@ -658,7 +667,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
-                        advanceRecoverWord(typeInput);
+                        handleEnter();
                       } else if (e.key === 'ArrowUp') {
                         e.preventDefault();
                         handleUp();
@@ -684,6 +693,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                       <div
                         key={item + i}
                         onMouseDown={(e) => e.preventDefault()}
+                        onMouseEnter={() => setTypeListIndex(actualIndex)}
                         onClick={() => {
                           if (isLetter) {
                             const newInput = typeInput + item;
@@ -708,6 +718,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                   })}
                 </div>
                 <span className="hw-quiz-progress">Word {recoverIndex + 1} of 12</span>
+                {recoverPhraseError && (
+                  <span className="hw-quiz-wrong">Recovery phrase not loaded — reopen this lesson from the roadmap.</span>
+                )}
                 {recoverWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
               </div>
             )}
