@@ -1251,17 +1251,17 @@ a {
   stroke-linejoin: round;
 }
 
-.roadmap-route-glow.done {
+/* .roadmap-route-glow.done {
   stroke: rgba(247, 147, 26, 0.45);
   stroke-width: 44;
   filter: blur(8px);
-}
+} */
 
-.roadmap-route-glow.todo {
+/* .roadmap-route-glow.todo {
   stroke: rgba(117, 139, 144, 0.3);
   stroke-width: 44;
   filter: blur(8px);
-}
+} */
 
 .roadmap-route-line.done {
   stroke: rgba(247, 147, 26, 0.78);
