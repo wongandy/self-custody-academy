@@ -537,7 +537,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                       <>
                         <div className="withdraw-phone-app-header">
                           <Smartphone size={14} strokeWidth={1.8} />
-                          <span>SimExchange</span>
+                          <span>BitExchange</span>
                         </div>
 
                         <div className="withdraw-success-wrap">
