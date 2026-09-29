@@ -25,7 +25,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   menu: "You'll see 'Create wallet' highlighted. Press the checkmark button to select it.",
   'create-intro': "On the next screen your 12-word recovery phrase will be shown. Press the checkmark to continue.",
   'create-words':
-    "Here's your 12-word recovery phrase. In real life you'd write these down on paper — NEVER on a screen. When you're ready, press the checkmark.",
+    "Here's your 12-word recovery phrase. In real life you'd write these down on paper — NEVER on a screen. When you're done, press the checkmark.",
   'create-quiz':
     "Time to prove you saved your words. Pick the correct word for the position shown, then press the checkmark to confirm.",
   'create-done': "Nice work! Your wallet is all set up. You can now receive or send Bitcoin.",
