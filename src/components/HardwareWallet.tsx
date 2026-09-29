@@ -599,10 +599,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     </div>
                   ))}
                 </div>
-                {quizWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
                 <span className="hw-quiz-progress">
                   Check {quizIndex + 1} of {quizPositions.length}
                 </span>
+                {quizWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
               </div>
             )}
             {phase === 'create-done' && (
