@@ -2687,16 +2687,7 @@ a {
   font-weight: 500;
   letter-spacing: 0.03em;
   text-transform: lowercase;
-  caret-color: var(--green);
-}
-
-.hw-type-input-field::placeholder {
-  color: rgba(167, 232, 67, 0.35);
-  text-transform: none;
-}
-
-.hw-type-input-field:focus + .hw-type-input-cursor {
-  display: none;
+  caret-color: transparent;
 }
 
 @media (pointer: coarse) {
@@ -2707,10 +2698,17 @@ a {
 
 .hw-type-input-cursor {
   display: inline-block;
+  flex-shrink: 0;
   width: 2px;
-  height: 12px;
+  height: 13px;
   background: var(--green);
   animation: hw-type-blink 0.7s steps(2) infinite;
+}
+
+@media (pointer: coarse) {
+  .hw-type-input-cursor {
+    height: 16px;
+  }
 }
 
 @keyframes hw-type-blink {

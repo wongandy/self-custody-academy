@@ -655,7 +655,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    placeholder="tap here to type a word"
                     aria-label={`Type word ${recoverIndex + 1} of 12`}
                     onChange={(e) => {
                       const filtered = e.target.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
