@@ -120,7 +120,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [typeList, setTypeList] = useState<string[]>([]);
   const [typeListIndex, setTypeListIndex] = useState(0);
   const [addrCopied, setAddrCopied] = useState(false);
+  const [acceptedWord, setAcceptedWord] = useState<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const acceptTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typeFieldRef = useRef<HTMLInputElement>(null);
 
   const isReadyMenu = phase === 'ready-menu';
@@ -200,6 +202,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setTypeInput('');
     setTypeList(buildTypeList(''));
     setTypeListIndex(0);
+    setAcceptedWord(null);
     updatePhase('recover-type');
   }, [advanceFromRecoverIntro, phase, updatePhase]);
 
@@ -218,6 +221,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setTypeInput('');
     setTypeList([]);
     setTypeListIndex(0);
+    setAcceptedWord(null);
+    if (acceptTimer.current) clearTimeout(acceptTimer.current);
   }, []);
 
   const advanceRecoverWord = useCallback((word: string) => {
@@ -234,8 +239,18 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       } else {
         setRecoverIndex(recoverIndex + 1);
         setTypeInput('');
-        setTypeList(buildTypeList(''));
+        setTypeList([]);
         setTypeListIndex(0);
+        setAcceptedWord(word);
+        if (acceptTimer.current) clearTimeout(acceptTimer.current);
+        acceptTimer.current = setTimeout(() => {
+          setAcceptedWord(null);
+          setTypeList(buildTypeList(''));
+          setTypeListIndex(0);
+          if (!(typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches)) {
+            typeFieldRef.current?.focus();
+          }
+        }, 680);
       }
     } else {
       setRecoverWrong(true);
@@ -481,6 +496,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   useEffect(() => () => {
     if (copyTimer.current) clearTimeout(copyTimer.current);
+    if (acceptTimer.current) clearTimeout(acceptTimer.current);
   }, []);
 
   const handleCancel = useCallback(() => {
@@ -499,6 +515,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       return;
     }
     if (phase === 'recover-type') {
+      if (acceptedWord) return;
       if (typeInput.length > 0) {
         const newInput = typeInput.slice(0, -1);
         setTypeInput(newInput);
@@ -516,7 +533,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     resetWalletState();
     updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, typeInput, resetWalletState, updatePhase, settingsOrigin]);
+  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin]);
 
   useEffect(() => {
     if (phase !== 'reset-done') return;
@@ -645,12 +662,15 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             {phase === 'recover-type' && (
               <div className="hw-screen-text hw-screen-type">
                 <span className="hw-screen-title">Word {recoverIndex + 1} of 12</span>
-                <div className="hw-type-input-row" onClick={() => typeFieldRef.current?.focus()}>
+                <div
+                  className={acceptedWord ? 'hw-type-input-row accepted' : 'hw-type-input-row'}
+                  onClick={() => typeFieldRef.current?.focus()}
+                >
                   <input
                     ref={typeFieldRef}
-                    className="hw-type-input-field"
+                    className={acceptedWord ? 'hw-type-input-field accepted' : 'hw-type-input-field'}
                     type="text"
-                    value={typeInput}
+                    value={acceptedWord ?? typeInput}
                     autoCapitalize="none"
                     autoComplete="off"
                     autoCorrect="off"
@@ -679,10 +699,12 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                       }
                     }}
                   />
-                  <span className="hw-type-input-cursor" />
+                  {acceptedWord
+                    ? <Check size={14} strokeWidth={3} className="hw-type-accepted-check" aria-hidden="true" />
+                    : <span className="hw-type-input-cursor" />}
                 </div>
                 <div className="hw-type-list">
-                  {typeList.length === 0 && (
+                  {typeList.length === 0 && !acceptedWord && (
                     <span className="hw-type-no-match">No matches — press X to backspace</span>
                   )}
                   {typeVisibleItems.map((item, i) => {

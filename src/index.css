@@ -2716,6 +2716,49 @@ a {
   51%, 100% { opacity: 0; }
 }
 
+.hw-type-input-row.accepted {
+  border-color: rgba(167, 232, 67, 0.75);
+  background: rgba(167, 232, 67, 0.16);
+  box-shadow: 0 0 14px rgba(167, 232, 67, 0.28);
+  animation: hw-accept-flash 680ms ease;
+}
+
+@keyframes hw-accept-flash {
+  0% { box-shadow: 0 0 0 0 rgba(167, 232, 67, 0.5); }
+  40% { box-shadow: 0 0 16px 3px rgba(167, 232, 67, 0.36); }
+  100% { box-shadow: 0 0 12px rgba(167, 232, 67, 0.18); }
+}
+
+.hw-type-input-field.accepted {
+  color: var(--green);
+  font-weight: 600;
+  animation: hw-accepted-word-in 220ms ease;
+}
+
+@keyframes hw-accepted-word-in {
+  from { opacity: 0; transform: translateX(-3px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.hw-type-accepted-check {
+  flex-shrink: 0;
+  color: var(--green);
+  animation: hw-accepted-check-in 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes hw-accepted-check-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-type-input-row.accepted,
+  .hw-type-input-field.accepted,
+  .hw-type-accepted-check {
+    animation: none;
+  }
+}
+
 .hw-type-list {
   flex: 1;
   display: flex;
