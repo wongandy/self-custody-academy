@@ -309,6 +309,10 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
+      <button ref={closeRef} className="recover-close" type="button" onClick={onClose} aria-label="Back to roadmap">
+        <X size={18} strokeWidth={2.2} />
+      </button>
+
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         {!spotlight && (
           <div className="recover-device-area">
