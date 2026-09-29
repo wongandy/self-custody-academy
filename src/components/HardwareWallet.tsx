@@ -115,11 +115,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [recoverOptions, setRecoverOptions] = useState<string[]>([]);
   const [recoverSelected, setRecoverSelected] = useState(0);
   const [recoverWrong, setRecoverWrong] = useState(false);
+  const [recoverPhraseError, setRecoverPhraseError] = useState(false);
   const [typeInput, setTypeInput] = useState('');
   const [typeList, setTypeList] = useState<string[]>([]);
   const [typeListIndex, setTypeListIndex] = useState(0);
   const [addrCopied, setAddrCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typeFieldRef = useRef<HTMLInputElement>(null);
 
   const isReadyMenu = phase === 'ready-menu';
 
@@ -191,9 +193,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   useEffect(() => {
     if (!advanceFromRecoverIntro || phase !== 'recover-intro') return;
-    // setRecoverIndex(0);
-    setRecoverIndex(11);
+    setRecoverIndex(0);
+    // setRecoverIndex(11);
     setRecoverWrong(false);
+    setRecoverPhraseError(false);
     setTypeInput('');
     setTypeList(buildTypeList(''));
     setTypeListIndex(0);
@@ -211,10 +214,33 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setRecoverOptions([]);
     setRecoverSelected(0);
     setRecoverWrong(false);
+    setRecoverPhraseError(false);
     setTypeInput('');
     setTypeList([]);
     setTypeListIndex(0);
   }, []);
+
+  const advanceRecoverWord = useCallback((word: string) => {
+    if (!expectedMnemonic || expectedMnemonic.length < 12) {
+      setRecoverPhraseError(true);
+      return;
+    }
+    setRecoverPhraseError(false);
+    const expectedWord = expectedMnemonic[recoverIndex] ?? '';
+    if (word === expectedWord) {
+      setRecoverWrong(false);
+      if (recoverIndex + 1 >= 12) {
+        updatePhase('recover-done');
+      } else {
+        setRecoverIndex(recoverIndex + 1);
+        setTypeInput('');
+        setTypeList(buildTypeList(''));
+        setTypeListIndex(0);
+      }
+    } else {
+      setRecoverWrong(true);
+    }
+  }, [expectedMnemonic, recoverIndex, updatePhase]);
 
   const handlePower = useCallback(() => {
     if (locked) return;
@@ -304,8 +330,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       const target: MenuPhase = menuItems[menuIndex].phase;
       if (wiped) {
         if (target === 'recover-intro') {
-          // setRecoverIndex(0);
-          setRecoverIndex(11);
+          setRecoverIndex(0);
+          // setRecoverIndex(11);
           setRecoverWrong(false);
           setTypeInput('');
           setTypeList(buildTypeList(''));
@@ -378,9 +404,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         setQuizWrong(true);
       }
     } else if (phase === 'recover-intro') {
-      // setRecoverIndex(0);
-      setRecoverIndex(11);
+      setRecoverIndex(0);
+      // setRecoverIndex(11);
       setRecoverWrong(false);
+      setRecoverPhraseError(false);
       setTypeInput('');
       setTypeList(buildTypeList(''));
       setTypeListIndex(0);
@@ -394,21 +421,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         setTypeList(buildTypeList(newInput));
         setTypeListIndex(0);
       } else {
-        const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
-        if (selected === expectedWord) {
-          setRecoverWrong(false);
-          if (recoverIndex + 1 >= 12) {
-            updatePhase('recover-done');
-          } else {
-            const nextIndex = recoverIndex + 1;
-            setRecoverIndex(nextIndex);
-            setTypeInput('');
-            setTypeList(buildTypeList(''));
-            setTypeListIndex(0);
-          }
-        } else {
-          setRecoverWrong(true);
-        }
+        advanceRecoverWord(selected);
       }
     } else if (phase === 'recover-quiz') {
       const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
@@ -447,6 +460,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     typeInput,
     typeList,
     typeListIndex,
+    advanceRecoverWord,
     updatePhase,
     onReadyMenuSelect,
     onMenuSelectionChange,
@@ -509,6 +523,12 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     const timer = setTimeout(() => startBoot(), 1600);
     return () => clearTimeout(timer);
   }, [phase, startBoot]);
+
+  useEffect(() => {
+    if (phase !== 'recover-type') return;
+    if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) return;
+    typeFieldRef.current?.focus();
+  }, [phase]);
 
   const isOn = phase !== 'off';
   const isBooting = phase === 'booting';
@@ -618,15 +638,47 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Recover wallet</span>
                 <p className="hw-screen-body">
-                  Type each word of your 12-word recovery phrase letter by letter. Use Up/Down to pick a letter or suggested word, ✓ to confirm, and X to backspace.
+                  Tap the top row to type each word directly — or use Up/Down to pick a letter or suggested word, ✓ to confirm, and X to backspace.
                 </p>
               </div>
             )}
             {phase === 'recover-type' && (
               <div className="hw-screen-text hw-screen-type">
                 <span className="hw-screen-title">Word {recoverIndex + 1} of 12</span>
-                <div className="hw-type-input-row">
-                  <span className="hw-type-input-text">{typeInput}</span>
+                <div className="hw-type-input-row" onClick={() => typeFieldRef.current?.focus()}>
+                  <input
+                    ref={typeFieldRef}
+                    className="hw-type-input-field"
+                    type="text"
+                    value={typeInput}
+                    autoCapitalize="none"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    aria-label={`Type word ${recoverIndex + 1} of 12`}
+                    onChange={(e) => {
+                      const filtered = e.target.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
+                      setTypeInput(filtered);
+                      setTypeList(buildTypeList(filtered));
+                      setTypeListIndex(0);
+                      setRecoverWrong(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleEnter();
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        handleUp();
+                      } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        handleDown();
+                      } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        typeFieldRef.current?.blur();
+                      }
+                    }}
+                  />
                   <span className="hw-type-input-cursor" />
                 </div>
                 <div className="hw-type-list">
@@ -639,6 +691,20 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     return (
                       <div
                         key={item + i}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onMouseEnter={() => setTypeListIndex(actualIndex)}
+                        onClick={() => {
+                          if (isLetter) {
+                            const newInput = typeInput + item;
+                            setTypeInput(newInput);
+                            setTypeList(buildTypeList(newInput));
+                            setTypeListIndex(0);
+                            setRecoverWrong(false);
+                          } else {
+                            setTypeListIndex(actualIndex);
+                            advanceRecoverWord(item);
+                          }
+                        }}
                         className={
                           actualIndex === typeListIndex
                             ? `hw-type-item active${isLetter ? ' letter' : ''}${recoverWrong ? ' wrong' : ''}`
@@ -651,6 +717,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                   })}
                 </div>
                 <span className="hw-quiz-progress">Word {recoverIndex + 1} of 12</span>
+                {recoverPhraseError && (
+                  <span className="hw-quiz-wrong">Recovery phrase not loaded — reopen this lesson from the roadmap.</span>
+                )}
                 {recoverWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
               </div>
             )}
