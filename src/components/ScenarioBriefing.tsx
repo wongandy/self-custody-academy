@@ -42,7 +42,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'ready-menu': READY_MENU_MESSAGE,
 };
 
-function useTypewriter(text: string, speed = 10) {
+function useTypewriter(text: string, speed = 5) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
