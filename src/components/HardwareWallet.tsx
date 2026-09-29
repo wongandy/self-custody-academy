@@ -192,8 +192,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   useEffect(() => {
     if (!advanceFromRecoverIntro || phase !== 'recover-intro') return;
-    // setRecoverIndex(0);
-    setRecoverIndex(11);
+    setRecoverIndex(0);
+    // setRecoverIndex(11);
     setRecoverWrong(false);
     setTypeInput('');
     setTypeList(buildTypeList(''));
