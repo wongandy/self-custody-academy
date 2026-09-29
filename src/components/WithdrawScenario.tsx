@@ -448,11 +448,11 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                             placeholder="Paste wallet receive address"
                             className={`withdraw-addr-input${addressMismatch ? ' error' : ''}`}
                           />
-                          {/* {trimmedAddress.length === 0 && (
+                          {trimmedAddress.length === 0 && (
                             <p className="withdraw-addr-status hint">
                               <span>Go to your hardware wallet, copy the receive address, then paste it here.</span>
                             </p>
-                          )} */}
+                          )}
                         </div>
 
                         <div className="withdraw-phone-summary">
