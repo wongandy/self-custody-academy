@@ -580,7 +580,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             )}
             {phase === 'create-quiz' && (
               <div className="hw-screen-text">
-                <span className="hw-screen-title">Word {currentQuizPosition + 1}</span>
+                {/* <span className="hw-screen-title">Word {currentQuizPosition + 1}</span> */}
                 <p className="hw-screen-body">Which word is in position {currentQuizPosition + 1}?</p>
                 <div className="hw-quiz-options">
                   {quizOptions.map((opt, i) => (
