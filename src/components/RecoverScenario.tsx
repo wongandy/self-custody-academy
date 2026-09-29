@@ -27,7 +27,7 @@ const RECOVER_INTRO_MESSAGES = [
 ];
 
 const RECOVER_TYPE_MESSAGE =
-  "Type a letter, confirm the matching word, and repeat for all 12 words. Use X to backspace if you mistype.";
+  "Tap the box at the top of the screen and type each word directly, confirming as you go — or use Up/Down on the device to pick a suggested word. Use X to backspace if you mistype.";
 
 const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu': "Select Settings to reset the device to factory settings.",

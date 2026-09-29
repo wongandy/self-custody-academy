@@ -2663,15 +2663,46 @@ a {
   border-radius: 6px;
   background: rgba(167, 232, 67, 0.06);
   min-height: 24px;
+  cursor: text;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
-.hw-type-input-text {
+.hw-type-input-row:focus-within {
+  border-color: rgba(167, 232, 67, 0.55);
+  background: rgba(167, 232, 67, 0.1);
+  box-shadow: 0 0 10px rgba(167, 232, 67, 0.12);
+}
+
+.hw-type-input-field {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
   color: var(--green);
   font-family: 'DM Mono', monospace;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.03em;
   text-transform: lowercase;
+  caret-color: var(--green);
+}
+
+.hw-type-input-field::placeholder {
+  color: rgba(167, 232, 67, 0.35);
+  text-transform: none;
+}
+
+.hw-type-input-field:focus + .hw-type-input-cursor {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .hw-type-input-field {
+    font-size: 16px;
+  }
 }
 
 .hw-type-input-cursor {
@@ -2707,6 +2738,15 @@ a {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   transition: all 160ms ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hw-type-item:hover {
+    border-color: rgba(167, 232, 67, 0.3);
+    color: var(--green);
+  }
 }
 
 .hw-type-item.active {
