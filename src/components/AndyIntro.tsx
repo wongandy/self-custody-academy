@@ -12,7 +12,7 @@ const ANDY_MESSAGES = [
   "Your learning path has five missions. Each one unlocks the next. Let's take a look at your roadmap.",
 ];
 
-function useTypewriter(text: string, speed = 4) {
+function useTypewriter(text: string, speed = 5) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
