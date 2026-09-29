@@ -231,7 +231,8 @@ function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, onSkip, title, subt
 
           {isRegister && onSkip && (
             <button className="auth-later" type="button" onClick={onSkip} disabled={isSubmitting}>
-              Later
+              <span>Continue as guest</span>
+              <ArrowRight size={15} strokeWidth={2.2} />
             </button>
           )}
         </form>
