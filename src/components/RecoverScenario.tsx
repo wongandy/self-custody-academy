@@ -54,7 +54,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
     "Sending isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
 };
 
-function useTypewriter(text: string, speed = 5) {
+function useTypewriter(text: string, speed = 6) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
