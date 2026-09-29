@@ -650,8 +650,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     );
                   })}
                 </div>
-                {recoverWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
                 <span className="hw-quiz-progress">Word {recoverIndex + 1} of 12</span>
+                {recoverWrong && <span className="hw-quiz-wrong">Incorrect — try again</span>}
               </div>
             )}
             {phase === 'recover-quiz' && (
