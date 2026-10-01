@@ -1,13 +1,7 @@
-import { useState } from 'react';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CheckCircle2,
-  CircleDollarSign,
-  Send,
-  User,
-} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
+import andyPortrait from '@/components/Andy.webp';
+import mariaPortrait from '@/components/Maria.png';
 
 type SendScenarioProps = {
   completed: boolean;
@@ -15,278 +9,154 @@ type SendScenarioProps = {
   onComplete: () => void;
 };
 
-type Phase = 'intro' | 'compose' | 'verify-addr' | 'confirm' | 'sending' | 'sent' | 'done';
+const HANDOFF_MESSAGES = [
+  "Now that we've covered the basics of setting up a hardware wallet, I'd like to introduce you to a colleague of mine.",
+  "She'll be the one to teach you all about the sending part — I'll let her take it from here.",
+];
 
-export default function SendScenario({ completed, onBack, onComplete }: SendScenarioProps) {
-  const [phase, setPhase] = useState<Phase>('intro');
-  const [amount, setAmount] = useState('0.01');
-  const [addrVerified, setAddrVerified] = useState(false);
-  const [addrChecking, setAddrChecking] = useState(false);
+const MARIA_MESSAGES = [
+  "Hi, I'm Maria! I work alongside Andy here at the academy, and I specialise in helping people move their Bitcoin safely.",
+  "Now that your hardware wallet is set up and funded, the next step is learning how to send some of it — that's what I'll walk you through.",
+  "Whenever you're ready, we'll practice sending your first bitcoin the safe way.",
+];
 
-  const totalBTC = parseFloat(amount) || 0;
-  const feeBTC = 0.00005;
+type Mentor = 'andy' | 'maria';
 
-  const handleVerifyAddr = () => {
-    setAddrChecking(true);
-    setTimeout(() => {
-      setAddrChecking(false);
-      setAddrVerified(true);
-    }, 1500);
+function useTypewriter(text: string, speed = 6) {
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+  const indexRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    setDisplayed('');
+    setDone(false);
+    indexRef.current = 0;
+
+    if (!text) {
+      setDone(true);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      indexRef.current += 1;
+      if (indexRef.current >= text.length) {
+        setDisplayed(text);
+        setDone(true);
+        clearInterval(timer);
+      } else {
+        setDisplayed(text.slice(0, indexRef.current));
+      }
+    }, speed);
+
+    timerRef.current = timer;
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  const skip = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setDisplayed(text);
+    setDone(true);
+  }, [text]);
+
+  return { displayed, done, skip };
+}
+
+export default function SendScenario({ onBack }: SendScenarioProps) {
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [activeMentor, setActiveMentor] = useState<Mentor>('andy');
+
+  const messages = activeMentor === 'andy' ? HANDOFF_MESSAGES : MARIA_MESSAGES;
+  const currentMessage = messages[messageIndex];
+  const { displayed, done, skip } = useTypewriter(currentMessage);
+
+  const isLastMessage = messageIndex === messages.length - 1;
+  const canContinue = done;
+  const portrait = activeMentor === 'andy' ? andyPortrait : mariaPortrait;
+  const mentorName = activeMentor === 'andy' ? 'Andy' : 'Maria';
+
+  const handleContinue = () => {
+    if (!done) {
+      skip();
+      return;
+    }
+
+    if (isLastMessage) {
+      // Intentionally inert for now: next step of Mission 4 will be wired here.
+      return;
+    }
+
+    if (activeMentor === 'andy' && messageIndex === HANDOFF_MESSAGES.length - 1) {
+      setActiveMentor('maria');
+      setMessageIndex(0);
+      return;
+    }
+
+    setMessageIndex((current) => current + 1);
   };
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      e.preventDefault();
+      handleContinue();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
+
   return (
-    <main className="scenario-page">
+    <main className="scenario-page scenario-page-spotlight">
+      <div className="scenario-mentor-layout spotlight">
+        <div className="mentor-row">
+          <div
+            key={activeMentor}
+            className="mentor-portrait mentor-portrait-enter"
+            aria-label={`${mentorName}, your mentor`}
+            role="img"
+          >
+            <div className="mentor-portrait-glow" />
+            <div className="mentor-portrait-ring">
+              <img className="mentor-portrait-image" src={portrait} alt={`${mentorName}, your mentor`} />
+            </div>
+            <div className="mentor-portrait-badge">{mentorName}</div>
+          </div>
+          <div
+            className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
+            onClick={handleContinue}
+          >
+            <div className="mentor-bubble-content" key={`${activeMentor}-${messageIndex}`}>
+              <span className="mentor-bubble-name">{mentorName}</span>
+              <div className="mentor-bubble-text-wrap">
+                <p className="mentor-bubble-text-ghost">{currentMessage}</p>
+                <p className="mentor-bubble-text">
+                  {displayed}
+                  {!done && <span className="typewriter-cursor" />}
+                </p>
+              </div>
+            </div>
+            <button
+              className={`bubble-next ${canContinue ? 'ready' : ''}`}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleContinue();
+              }}
+              disabled={!canContinue}
+              aria-label="Continue"
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+      </div>
+
       <button className="character-back" type="button" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2.4} />
         <span>Back to roadmap</span>
       </button>
-
-      <section className="scenario-card">
-        <div className="scenario-card-topline">
-          <span>Mission 04 · Sending BTC</span>
-          <span><CircleDollarSign size={14} /> Simulation only</span>
-        </div>
-        <div className="scenario-wallet-layout">
-          <div className="scenario-wallet-info">
-            <span className="roadmap-label">Your fourth mission</span>
-            <h1>Sending BTC</h1>
-            <p className="scenario-lede">
-              Sending bitcoin is irreversible — so it pays to be careful. Practice checking an address, confirming the details, and signing a payment on your hardware wallet.
-            </p>
-            <div className="scenario-wallet-tips">
-              <div className="scenario-wallet-tip">
-                <User size={16} />
-                <span>Alice is a friend who wants to be paid in bitcoin. She shares her address with you.</span>
-              </div>
-              <div className="scenario-wallet-tip">
-                <Check size={16} />
-                <span>Always verify the recipient address character-by-character before sending. One wrong character sends bitcoin to the wrong person.</span>
-              </div>
-              <div className="scenario-wallet-tip">
-                <Send size={16} />
-                <span>You'll confirm the amount, verify the address, and sign the transaction — just like a real wallet would require.</span>
-              </div>
-            </div>
-            {completed && (
-              <div className="scenario-wallet-status active">
-                <span className="scenario-wallet-status-dot" />
-                <span>Mission completed</span>
-              </div>
-            )}
-          </div>
-
-          <div className="tx-sim-panel">
-            {phase === 'intro' && (
-              <div className="tx-sim-screen">
-                <div className="tx-sim-header">
-                  <Send size={22} strokeWidth={1.6} />
-                  <span>Send Bitcoin</span>
-                </div>
-                <p className="tx-sim-balance">Wallet balance: 0.0500 BTC</p>
-                <p className="tx-sim-body">Alice asks you to send 0.01 BTC for dinner. Let's practice doing it safely.</p>
-                <button className="tx-sim-btn primary" type="button" onClick={() => setPhase('compose')}>
-                  <span>Start sending</span>
-                  <ArrowRight size={16} strokeWidth={2.4} />
-                </button>
-              </div>
-            )}
-
-            {phase === 'compose' && (
-              <div className="tx-sim-screen">
-                <div className="tx-sim-header">
-                  <Send size={20} strokeWidth={1.6} />
-                  <span>New transaction</span>
-                </div>
-                <div className="tx-sim-field">
-                  <label>Recipient address</label>
-                  <input
-                    type="text"
-                    readOnly
-                    value="bc1qalice...7xq3 (Alice)"
-                    className="tx-sim-addr"
-                  />
-                </div>
-                <div className="tx-sim-field">
-                  <label>Amount (BTC)</label>
-                  <input
-                    type="text"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.01"
-                  />
-                </div>
-                <div className="tx-sim-summary">
-                  <span>Amount</span>
-                  <strong>{totalBTC.toFixed(5)} BTC</strong>
-                  <span>Network fee</span>
-                  <strong>{feeBTC.toFixed(5)} BTC</strong>
-                  <span>Total</span>
-                  <strong>{(totalBTC + feeBTC).toFixed(5)} BTC</strong>
-                </div>
-                <button className="tx-sim-btn primary" type="button" onClick={() => setPhase('verify-addr')}>
-                  <span>Verify address</span>
-                  <ArrowRight size={16} strokeWidth={2.4} />
-                </button>
-                <button className="tx-sim-btn ghost" type="button" onClick={() => setPhase('intro')}>
-                  Back
-                </button>
-              </div>
-            )}
-
-            {phase === 'verify-addr' && (
-              <div className="tx-sim-screen">
-                <div className="tx-sim-header">
-                  <Check size={20} strokeWidth={2} />
-                  <span>Verify address</span>
-                </div>
-                <p className="tx-sim-body">
-                  Before sending, confirm the first and last few characters of Alice's address match what she gave you.
-                </p>
-                <div className="tx-addr-verify">
-                  <div className="tx-addr-chunk">
-                    <span className="tx-addr-label">First 6</span>
-                    <span className="tx-addr-value">bc1qal</span>
-                    <Check size={14} className="tx-addr-check" />
-                  </div>
-                  <div className="tx-addr-chunk">
-                    <span className="tx-addr-label">Last 4</span>
-                    <span className="tx-addr-value">7xq3</span>
-                    <Check size={14} className="tx-addr-check" />
-                  </div>
-                </div>
-                {addrChecking && (
-                  <div className="tx-sim-pending-row">
-                    <div className="tx-spinner sm" />
-                    <span>Checking address on device...</span>
-                  </div>
-                )}
-                {addrVerified && !addrChecking && (
-                  <div className="tx-addr-verified">
-                    <CheckCircle2 size={16} />
-                    <span>Address verified on hardware wallet</span>
-                  </div>
-                )}
-                {!addrVerified && !addrChecking && (
-                  <button className="tx-sim-btn primary" type="button" onClick={handleVerifyAddr}>
-                    <span>Verify on device</span>
-                    <Check size={16} strokeWidth={2.4} />
-                  </button>
-                )}
-                {addrVerified && (
-                  <button className="tx-sim-btn primary" type="button" onClick={() => setPhase('confirm')}>
-                    <span>Continue</span>
-                    <ArrowRight size={16} strokeWidth={2.4} />
-                  </button>
-                )}
-                <button className="tx-sim-btn ghost" type="button" onClick={() => setPhase('compose')}>
-                  Back
-                </button>
-              </div>
-            )}
-
-            {phase === 'confirm' && (
-              <div className="tx-sim-screen">
-                <div className="tx-sim-header">
-                  <Check size={20} strokeWidth={2} />
-                  <span>Confirm & sign</span>
-                </div>
-                <div className="tx-sim-confirm-box">
-                  <div className="tx-confirm-row">
-                    <span>To</span>
-                    <strong className="tx-confirm-addr">bc1qalice...7xq3</strong>
-                  </div>
-                  <div className="tx-confirm-row">
-                    <span>Amount</span>
-                    <strong>{totalBTC.toFixed(5)} BTC</strong>
-                  </div>
-                  <div className="tx-confirm-row">
-                    <span>Fee</span>
-                    <strong>{feeBTC.toFixed(5)} BTC</strong>
-                  </div>
-                  <div className="tx-confirm-row total">
-                    <span>Total</span>
-                    <strong>{(totalBTC + feeBTC).toFixed(5)} BTC</strong>
-                  </div>
-                </div>
-                <p className="tx-sim-warn">
-                  Press confirm to sign with your hardware wallet. This transaction is irreversible.
-                </p>
-                <button
-                  className="tx-sim-btn primary"
-                  type="button"
-                  onClick={() => {
-                    setPhase('sending');
-                    setTimeout(() => setPhase('sent'), 2200);
-                  }}
-                >
-                  <span>Sign & send</span>
-                  <Check size={16} strokeWidth={2.6} />
-                </button>
-                <button className="tx-sim-btn ghost" type="button" onClick={() => setPhase('verify-addr')}>
-                  Back
-                </button>
-              </div>
-            )}
-
-            {phase === 'sending' && (
-              <div className="tx-sim-screen tx-sim-pending">
-                <div className="tx-spinner" />
-                <span className="tx-sim-pending-text">Signing & broadcasting...</span>
-                <span className="tx-sim-pending-sub">Approve on hardware wallet</span>
-              </div>
-            )}
-
-            {phase === 'sent' && (
-              <div className="tx-sim-screen tx-sim-success-screen">
-                <CheckCircle2 size={36} strokeWidth={1.6} />
-                <span className="tx-sim-success-title">Payment sent!</span>
-                <div className="tx-sim-receipt">
-                  <div className="tx-confirm-row">
-                    <span>Sent to Alice</span>
-                    <strong>{totalBTC.toFixed(5)} BTC</strong>
-                  </div>
-                  <div className="tx-confirm-row">
-                    <span>Fee</span>
-                    <strong>{feeBTC.toFixed(5)} BTC</strong>
-                  </div>
-                  <div className="tx-confirm-row">
-                    <span>Status</span>
-                    <strong className="tx-confirmed">Broadcast</strong>
-                  </div>
-                </div>
-                <p className="tx-sim-success-body">
-                  You verified the address, confirmed the amount, and signed the transaction. That's the safe way to send bitcoin.
-                </p>
-                <button
-                  className="tx-sim-btn primary"
-                  type="button"
-                  onClick={() => {
-                    onComplete();
-                    setPhase('done');
-                  }}
-                >
-                  <span>Complete mission</span>
-                  <Check size={16} strokeWidth={2.6} />
-                </button>
-              </div>
-            )}
-
-            {phase === 'done' && (
-              <div className="tx-sim-screen tx-sim-success-screen">
-                <CheckCircle2 size={36} strokeWidth={1.6} />
-                <span className="tx-sim-success-title">Mission complete!</span>
-                <p className="tx-sim-success-body">
-                  You've successfully sent bitcoin to Alice — verifying the address, confirming details, and signing the transaction.
-                </p>
-                <button className="tx-sim-btn primary" type="button" onClick={onBack}>
-                  <span>Back to roadmap</span>
-                  <ArrowRight size={16} strokeWidth={2.4} />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
     </main>
   );
 }
