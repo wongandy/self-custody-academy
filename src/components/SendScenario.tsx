@@ -15,7 +15,7 @@ const HANDOFF_MESSAGES = [
 ];
 
 const MARIA_MESSAGES = [
-  "Hi, I'm Maria! I work alongside Andy here at the academy, and I specialise in helping people move their Bitcoin safely.",
+  "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
   "Now that your hardware wallet is set up and funded, the next step is learning how to send some of it — that's what I'll walk you through.",
   // "Whenever you're ready, we'll practice sending your first bitcoin the safe way.",
 ];
