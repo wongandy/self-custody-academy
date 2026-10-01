@@ -81,14 +81,14 @@ export default function SendScenario({ onBack }: SendScenarioProps) {
       return;
     }
 
-    if (isLastMessage) {
-      // Intentionally inert for now: next step of Mission 4 will be wired here.
-      return;
-    }
-
     if (activeMentor === 'andy' && messageIndex === HANDOFF_MESSAGES.length - 1) {
       setActiveMentor('maria');
       setMessageIndex(0);
+      return;
+    }
+
+    if (isLastMessage) {
+      // Intentionally inert for now: next step of Mission 4 will be wired here.
       return;
     }
 
