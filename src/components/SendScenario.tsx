@@ -152,11 +152,6 @@ export default function SendScenario({ onBack }: SendScenarioProps) {
           </div>
         </div>
       </div>
-
-      <button className="character-back" type="button" onClick={onBack}>
-        <ArrowLeft size={16} strokeWidth={2.4} />
-        <span>Back to roadmap</span>
-      </button>
     </main>
   );
 }
