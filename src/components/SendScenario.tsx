@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
-import mariaPortrait from '@/components/Maria.png';
+import mariaPortrait from '@/components/Maria.webp';
 
 type SendScenarioProps = {
   completed: boolean;
