@@ -108,7 +108,7 @@ export default function SendScenario({ onBack }: SendScenarioProps) {
   });
 
   return (
-    <main className="scenario-page scenario-page-spotlight">
+    <main className="scenario-page scenario-page-fit scenario-page-spotlight">
       <div className="scenario-mentor-layout spotlight">
         <div className="mentor-row">
           <div
