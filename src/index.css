@@ -1230,9 +1230,10 @@ a {
 
 .roadmap-track-board {
   position: relative;
-  width: min(100%, 560px);
-  height: 960px;
+  width: min(100%, 440px);
+  aspect-ratio: 400 / 960;
   margin: 0 auto;
+  container-type: inline-size;
 }
 
 .roadmap-route {
@@ -1278,10 +1279,7 @@ a {
   transform: translate(-50%, -50%);
   z-index: 2;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  width: 170px;
   padding: 0;
   color: var(--text);
   border: 0;
@@ -1296,7 +1294,8 @@ a {
 
 .roadmap-start-bubble {
   position: absolute;
-  top: 28px;
+  top: -46px;
+  left: 50%;
   z-index: 3;
   display: inline-flex;
   align-items: center;
@@ -1315,42 +1314,28 @@ a {
   letter-spacing: 0.1em;
   line-height: 1;
   pointer-events: none;
+  transform: translateX(-50%);
   animation: roadmap-start-float 2.2s ease-in-out infinite;
 }
 
 .roadmap-start-bubble::before {
   position: absolute;
-  top: 50%;
+  top: 100%;
+  left: 50%;
   width: 9px;
   height: 9px;
   content: '';
+  margin-top: -5px;
   border: inherit;
   border-right: 0;
   border-bottom: 0;
   background: var(--text);
-  transform: translateY(-50%) rotate(-45deg);
-}
-
-.roadmap-start-bubble.right {
-  left: calc(100% - 50px);
-}
-
-.roadmap-start-bubble.right::before {
-  left: -5px;
-}
-
-.roadmap-start-bubble.left {
-  right: calc(100% - 50px);
-}
-
-.roadmap-start-bubble.left::before {
-  right: -5px;
-  transform: translateY(-50%) rotate(135deg);
+  transform: translateX(-50%) rotate(-135deg);
 }
 
 @keyframes roadmap-start-float {
-  0%, 100% { transform: translateY(-50%); }
-  50% { transform: translateY(calc(-50% - 5px)); }
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, -5px); }
 }
 
 .roadmap-mission:hover:not(:disabled) {
@@ -1365,14 +1350,19 @@ a {
 .roadmap-mission-marker {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 10cqw;
+  height: 10cqw;
   color: var(--faint);
   border: 1px solid rgba(117, 139, 144, 0.4);
-  border-radius: 15px;
+  border-radius: 22%;
   background: linear-gradient(145deg, #52666c, #35454b);
   box-shadow: 0 0 0 4px rgba(24, 32, 38, 0.55), inset 0 0 0 1px rgba(16, 25, 28, 0.28), 0 5px 0 rgba(13, 21, 24, 0.18);
   transition: color 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.roadmap-mission-marker svg {
+  width: 38%;
+  height: 38%;
 }
 
 .roadmap-mission.available .roadmap-mission-marker {
@@ -1390,23 +1380,38 @@ a {
 }
 
 .roadmap-mission.locked .roadmap-mission-marker {
-  opacity: 0.72;
+  color: #9fb3b8;
+  border-color: rgba(117, 139, 144, 0.45);
+  background: linear-gradient(145deg, #52666c, #3b4c53);
 }
 
-.roadmap-mission-title {
-  max-width: 170px;
-  padding: 3px 7px;
+.roadmap-mission-title-plate {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  width: max-content;
+  max-width: 25cqw;
+  padding: 4px 8px;
   color: var(--text);
   background: rgba(24, 34, 39, 0.5);
-  font-size: 12px;
+  font-size: clamp(9px, 2.3cqw, 11.5px);
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
   letter-spacing: -0.01em;
-  text-align: center;
   border-radius: 6px;
+  transform: translateY(-50%);
 }
 
-.roadmap-mission.locked .roadmap-mission-title {
+.roadmap-mission-title-plate.side-right {
+  left: calc(100% + 2cqw);
+}
+
+.roadmap-mission-title-plate.side-left {
+  right: calc(100% + 2cqw);
+  text-align: right;
+}
+
+.roadmap-mission.locked .roadmap-mission-title-plate {
   color: var(--muted);
 }
 
@@ -1567,71 +1572,11 @@ a {
   .roadmap-path-status {
     font-size: 8px;
   }
-
-  .roadmap-track-board {
-    height: 760px;
-  }
-
-  .roadmap-mission {
-    width: 142px;
-  }
-
-  .roadmap-mission-marker {
-    width: 50px;
-    height: 50px;
-    border-radius: 13px;
-  }
-
-  .roadmap-mission-title {
-    max-width: 142px;
-    font-size: 11px;
-  }
-
-  .roadmap-start-bubble {
-    min-width: 68px;
-    min-height: 30px;
-    padding: 7px 9px;
-    font-size: 9px;
-  }
 }
 
 @media (max-width: 440px) {
   .roadmap-page {
     width: min(100% - 24px, 1120px);
-  }
-
-  .roadmap-track-board {
-    height: 680px;
-  }
-
-  .roadmap-mission {
-    width: 122px;
-  }
-
-  .roadmap-mission-marker {
-    width: 44px;
-    height: 44px;
-    border-radius: 11px;
-  }
-
-  .roadmap-mission-title {
-    max-width: 122px;
-    font-size: 10px;
-  }
-
-  .roadmap-start-bubble {
-    min-width: 62px;
-    min-height: 28px;
-    padding: 6px 8px;
-    font-size: 8px;
-  }
-
-  .roadmap-start-bubble.right {
-    left: calc(100% - 42px);
-  }
-
-  .roadmap-start-bubble.left {
-    right: calc(100% - 42px);
   }
 }
 

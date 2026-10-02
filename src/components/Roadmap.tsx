@@ -39,11 +39,11 @@ const nodePositions = [
 ];
 
 const pathSegments = [
-  'M112 117C112 158 288 158 288 207',
-  'M288 297C288 338 112 338 112 387',
-  'M112 477C112 518 288 518 288 567',
-  'M288 657C288 698 112 698 112 747',
-  'M112 837C112 878 288 878 288 927',
+  'M112 65C112 127 288 141.8 288 203.8',
+  'M288 237.8C288 299.8 112 314.6 112 376.6',
+  'M112 410.6C112 472.6 288 487.4 288 549.4',
+  'M288 583.4C288 645.4 112 660.2 112 722.2',
+  'M112 756.2C112 818.2 288 833 288 895',
 ];
 
 function Roadmap({
@@ -215,14 +215,14 @@ function Roadmap({
                 style={{ top: `${position.top}%`, left: `${position.left}%`, animationDelay: `${nodeDelay}ms` }}
               >
                 {isAvailable && !celebrating && (
-                  <span className={`roadmap-start-bubble ${index % 2 === 0 ? 'right' : 'left'}`} aria-hidden="true">
+                  <span className="roadmap-start-bubble" aria-hidden="true">
                     START
                   </span>
                 )}
                 <span className="roadmap-mission-marker">
                   {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
                 </span>
-                <span className="roadmap-mission-title">{scenario.title}</span>
+                <span className={`roadmap-mission-title-plate ${index % 2 === 0 ? 'side-right' : 'side-left'}`}>{scenario.title}</span>
               </button>
             );
           })}
