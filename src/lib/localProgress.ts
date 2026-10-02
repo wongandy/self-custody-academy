@@ -5,7 +5,7 @@ export function getLocalProgress(): number {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw === null) return 0;
     const parsed = parseInt(raw, 10);
-    return Number.isNaN(parsed) ? 0 : Math.min(Math.max(parsed, 0), 5);
+    return Number.isNaN(parsed) ? 0 : Math.min(Math.max(parsed, 0), 6);
   } catch {
     return 0;
   }

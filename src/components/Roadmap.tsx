@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDownToLine, Check, KeyRound, LockKeyhole, WalletCards } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, LockKeyhole, Usb, WalletCards } from 'lucide-react';
 
 type RoadmapProps = {
   completedScenarios: number;
@@ -24,23 +24,26 @@ const scenarios: Scenario[] = [
   { number: 1, title: 'Set up hardware wallet', icon: WalletCards },
   { number: 2, title: 'Withdraw BTC from exchange', icon: ArrowDownToLine },
   { number: 3, title: 'Recover hardware wallet', icon: KeyRound },
-  { number: 4, title: 'Sending BTC', icon: ArrowDownToLine },
-  { number: 5, title: 'Receiving BTC', icon: ArrowDownToLine },
+  { number: 4, title: 'Connect wallet', icon: Usb },
+  { number: 5, title: 'Sending BTC', icon: ArrowUpFromLine },
+  { number: 6, title: 'Receiving BTC', icon: ArrowDownToLine },
 ];
 
 const nodePositions = [
-  { top: 8, left: 28 },
-  { top: 28, left: 72 },
-  { top: 50, left: 28 },
-  { top: 72, left: 72 },
-  { top: 92, left: 28 },
+  { top: 5, left: 28 },
+  { top: 23, left: 72 },
+  { top: 41, left: 28 },
+  { top: 59, left: 72 },
+  { top: 77, left: 28 },
+  { top: 95, left: 72 },
 ];
 
 const pathSegments = [
-  'M112 117C112 162 288 162 288 207',
-  'M288 297C288 351 112 351 112 405',
-  'M112 495C112 549 288 549 288 603',
-  'M288 693C288 738 112 738 112 783',
+  'M112 117C112 158 288 158 288 207',
+  'M288 297C288 338 112 338 112 387',
+  'M112 477C112 518 288 518 288 567',
+  'M288 657C288 698 112 698 112 747',
+  'M112 837C112 878 288 878 288 927',
 ];
 
 function Roadmap({
@@ -177,8 +180,8 @@ function Roadmap({
         {errorMessage && <p className="roadmap-error">We couldn't refresh saved progress. Your current view is still available.</p>}
         {isLoading && <p className="roadmap-loading">Loading your academy progress…</p>}
 
-        <div className="roadmap-track-board" aria-label="Five-scenario learning path">
-          <svg className="roadmap-route" viewBox="0 0 400 900" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+        <div className="roadmap-track-board" aria-label="Six-scenario learning path">
+          <svg className="roadmap-route" viewBox="0 0 400 960" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
             {pathSegments.map((d, i) => {
               const segComplete = isSegComplete(i);
               const segDelay = animate ? 500 + i * 500 : 0;

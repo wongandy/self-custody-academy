@@ -1,7 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
-import andyPortrait from '@/components/Andy.webp';
-import mariaPortrait from '@/components/Maria.webp';
+import { ArrowLeft, ArrowUpFromLine, Construction } from 'lucide-react';
 
 type SendScenarioProps = {
   completed: boolean;
@@ -9,149 +6,59 @@ type SendScenarioProps = {
   onComplete: () => void;
 };
 
-const HANDOFF_MESSAGES = [
-  "Now let's practice sending Bitcoin from your wallet. But before we do that I'd like to introduce you to a colleague of mine.",
-  "She'll be the one to teach you all about the sending part — I'll let her take it from here.",
-];
-
-const MARIA_MESSAGES = [
-  "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
-  "Now that your hardware wallet is set up and funded, the next step is learning how to send some of it — that's what I'll walk you through.",
-  // "Whenever you're ready, we'll practice sending your first bitcoin the safe way.",
-];
-
-type Mentor = 'andy' | 'maria';
-
-function useTypewriter(text: string, speed = 6) {
-  const [displayed, setDisplayed] = useState('');
-  const [done, setDone] = useState(false);
-  const indexRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    setDisplayed('');
-    setDone(false);
-    indexRef.current = 0;
-
-    if (!text) {
-      setDone(true);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      indexRef.current += 1;
-      if (indexRef.current >= text.length) {
-        setDisplayed(text);
-        setDone(true);
-        clearInterval(timer);
-      } else {
-        setDisplayed(text.slice(0, indexRef.current));
-      }
-    }, speed);
-
-    timerRef.current = timer;
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  const skip = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setDisplayed(text);
-    setDone(true);
-  }, [text]);
-
-  return { displayed, done, skip };
-}
-
-export default function SendScenario({ onBack }: SendScenarioProps) {
-  const [messageIndex, setMessageIndex] = useState(0);
-  const [activeMentor, setActiveMentor] = useState<Mentor>('andy');
-
-  const messages = activeMentor === 'andy' ? HANDOFF_MESSAGES : MARIA_MESSAGES;
-  const currentMessage = messages[messageIndex];
-  const { displayed, done, skip } = useTypewriter(currentMessage);
-
-  const isLastMessage = messageIndex === messages.length - 1;
-  const canContinue = done;
-  const portrait = activeMentor === 'andy' ? andyPortrait : mariaPortrait;
-  const mentorName = activeMentor === 'andy' ? 'Andy' : 'Maria';
-
-  const handleContinue = () => {
-    if (!done) {
-      skip();
-      return;
-    }
-
-    if (activeMentor === 'andy' && messageIndex === HANDOFF_MESSAGES.length - 1) {
-      setActiveMentor('maria');
-      setMessageIndex(0);
-      return;
-    }
-
-    if (isLastMessage) {
-      // Intentionally inert for now: next step of Mission 4 will be wired here.
-      return;
-    }
-
-    setMessageIndex((current) => current + 1);
-  };
-
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Enter') return;
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      e.preventDefault();
-      handleContinue();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  });
-
+export default function SendScenario({ completed, onBack }: SendScenarioProps) {
   return (
-    <main className="scenario-page scenario-page-fit scenario-page-spotlight">
-      <div className="scenario-mentor-layout spotlight">
-        <div className="mentor-row">
-          <div
-            key={activeMentor}
-            className="mentor-portrait mentor-portrait-enter"
-            aria-label={`${mentorName}, your mentor`}
-            role="img"
-          >
-            <div className="mentor-portrait-glow" />
-            <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={portrait} alt={`${mentorName}, your mentor`} />
-            </div>
-            <div className="mentor-portrait-badge">{mentorName}</div>
-          </div>
-          <div
-            className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
-            onClick={handleContinue}
-          >
-            <div className="mentor-bubble-content" key={`${activeMentor}-${messageIndex}`}>
-              <span className="mentor-bubble-name">{mentorName}</span>
-              <div className="mentor-bubble-text-wrap">
-                <p className="mentor-bubble-text-ghost">{currentMessage}</p>
-                <p className="mentor-bubble-text">
-                  {displayed}
-                  {!done && <span className="typewriter-cursor" />}
-                </p>
+    <main className="scenario-page">
+      <button className="character-back" type="button" onClick={onBack}>
+        <ArrowLeft size={16} strokeWidth={2.4} />
+        <span>Back to roadmap</span>
+      </button>
+
+      <section className="scenario-card">
+        <div className="scenario-card-topline">
+          <span>Mission 05 · Sending BTC</span>
+          <span><ArrowUpFromLine size={14} /> Simulation only</span>
+        </div>
+        <div className="scenario-wallet-layout">
+          <div className="scenario-wallet-info">
+            <span className="roadmap-label">Your fifth mission</span>
+            <h1>Sending BTC</h1>
+            <p className="scenario-lede">
+              Sending bitcoin is where careful habits matter most. This mission will walk you through building, signing, and broadcasting a payment from your connected hardware wallet.
+            </p>
+            <div className="scenario-wallet-tips">
+              <div className="scenario-wallet-tip">
+                <ArrowUpFromLine size={16} />
+                <span>Build the transaction in your wallet app, then review the details on your hardware wallet screen before signing.</span>
+              </div>
+              <div className="scenario-wallet-tip">
+                <Construction size={16} />
+                <span>The full sending walkthrough is being prepared. Check back soon to practice it step by step.</span>
               </div>
             </div>
-            <button
-              className={`bubble-next ${canContinue ? 'ready' : ''}`}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleContinue();
-              }}
-              disabled={!canContinue}
-              aria-label="Continue"
-            >
-              <ChevronRight size={18} strokeWidth={2.5} />
-            </button>
+            {completed && (
+              <div className="scenario-wallet-status active">
+                <span className="scenario-wallet-status-dot" />
+                <span>Mission completed</span>
+              </div>
+            )}
+          </div>
+
+          <div className="tx-sim-panel">
+            <div className="tx-sim-screen tx-sim-success-screen">
+              <Construction size={36} strokeWidth={1.6} />
+              <span className="tx-sim-success-title">Coming soon</span>
+              <p className="tx-sim-success-body">
+                The sending lesson isn't available yet. For now, explore the connecting mission and come back when this one is ready.
+              </p>
+              <button className="tx-sim-btn primary" type="button" onClick={onBack}>
+                <span>Back to roadmap</span>
+                <ArrowUpFromLine size={16} strokeWidth={2.4} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

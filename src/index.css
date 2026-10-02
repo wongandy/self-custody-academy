@@ -52,7 +52,7 @@ a {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
   color: var(--text);
   background:
     radial-gradient(circle at 18% 46%, rgba(217, 148, 60, 0.08), transparent 27rem),
@@ -1231,7 +1231,7 @@ a {
 .roadmap-track-board {
   position: relative;
   width: min(100%, 560px);
-  height: 720px;
+  height: 960px;
   margin: 0 auto;
 }
 
@@ -1569,7 +1569,7 @@ a {
   }
 
   .roadmap-track-board {
-    height: 640px;
+    height: 760px;
   }
 
   .roadmap-mission {
@@ -1601,7 +1601,7 @@ a {
   }
 
   .roadmap-track-board {
-    height: 580px;
+    height: 680px;
   }
 
   .roadmap-mission {

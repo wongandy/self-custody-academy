@@ -4,6 +4,7 @@ import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
 import WithdrawScenario from '@/components/WithdrawScenario';
+import ConnectScenario from '@/components/ConnectScenario';
 import SendScenario from '@/components/SendScenario';
 import ReceiveScenario from '@/components/ReceiveScenario';
 import RecoverScenario from '@/components/RecoverScenario';
@@ -15,7 +16,7 @@ import { useAuth } from '@/lib/auth';
 import { clearLocalProgress, getLocalProgress, setLocalProgress } from '@/lib/localProgress';
 import { clearStoredMnemonic } from '@/lib/walletSession';
 
-const TOTAL_SCENARIOS = 5;
+const TOTAL_SCENARIOS = 6;
 
 function CustodyIllustration() {
   return (
@@ -25,9 +26,9 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'andy-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'auth';
+type Screen = 'home' | 'andy-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth';
 
-const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5'];
+const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6'];
 
 function App() {
   const { user, isReady, signOut } = useAuth();
@@ -311,7 +312,7 @@ function App() {
       )}
 
       {screen === 'scenario-4' && (
-        <SendScenario
+        <ConnectScenario
           completed={completedScenarios >= 4}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(4)}
@@ -319,10 +320,18 @@ function App() {
       )}
 
       {screen === 'scenario-5' && (
-        <ReceiveScenario
+        <SendScenario
           completed={completedScenarios >= 5}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(5)}
+        />
+      )}
+
+      {screen === 'scenario-6' && (
+        <ReceiveScenario
+          completed={completedScenarios >= 6}
+          onBack={goToRoadmap}
+          onComplete={() => handleScenarioComplete(6)}
         />
       )}
 
