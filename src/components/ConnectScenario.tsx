@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ArrowLeftRight, ChevronRight, Download, Send } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
 
@@ -17,8 +17,9 @@ const HANDOFF_MESSAGES = [
 const MARIA_MESSAGES = [
   "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
   "Now that your hardware wallet is set up and funded, the next step is connecting it to a wallet app on your computer — that's what I'll walk you through.",
-  // "Whenever you're ready, we'll connect your hardware wallet to a wallet app together.",
 ];
+
+const WALLET_INTERFACE_MESSAGE = 'This is your wallet interface.';
 
 type Mentor = 'andy' | 'maria';
 
@@ -65,9 +66,10 @@ function useTypewriter(text: string, speed = 6) {
 export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
   const [messageIndex, setMessageIndex] = useState(0);
   const [activeMentor, setActiveMentor] = useState<Mentor>('andy');
+  const [laptopVisible, setLaptopVisible] = useState(false);
 
   const messages = activeMentor === 'andy' ? HANDOFF_MESSAGES : MARIA_MESSAGES;
-  const currentMessage = messages[messageIndex];
+  const currentMessage = laptopVisible && activeMentor === 'maria' ? WALLET_INTERFACE_MESSAGE : messages[messageIndex];
   const { displayed, done, skip } = useTypewriter(currentMessage);
 
   const isLastMessage = messageIndex === messages.length - 1;
@@ -88,7 +90,9 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
     }
 
     if (isLastMessage) {
-      // Intentionally inert for now: the wallet-connection interface lands here next.
+      if (activeMentor === 'maria' && !laptopVisible) {
+        setLaptopVisible(true);
+      }
       return;
     }
 
@@ -151,6 +155,34 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
             </button>
           </div>
         </div>
+        {laptopVisible && (
+          <div className="wallet-laptop laptop-enter">
+            <div className="wallet-window">
+              <div className="wallet-window-titlebar">
+                <span className="tl-dot red" />
+                <span className="tl-dot yellow" />
+                <span className="tl-dot green" />
+              </div>
+              <div className="wallet-window-body">
+                <aside className="wallet-sidebar">
+                  <span className="wallet-nav-item">
+                    <ArrowLeftRight strokeWidth={2.2} />
+                    <span className="wallet-nav-label">Transactions</span>
+                  </span>
+                  <span className="wallet-nav-item">
+                    <Send strokeWidth={2.2} />
+                    <span className="wallet-nav-label">Send</span>
+                  </span>
+                  <span className="wallet-nav-item active">
+                    <Download strokeWidth={2.2} />
+                    <span className="wallet-nav-label">Receive</span>
+                  </span>
+                </aside>
+                <div className="wallet-canvas" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
