@@ -32,6 +32,8 @@ const WALLET_TABS: { id: WalletTab; label: string; Icon: typeof Send }[] = [
 ];
 
 const WALLET_BALANCE = '0.04998';
+const FEE_RATES = [1, 1.5, 1.97, 3, 5, 8, 12, 20, 35, 60, 100];
+const ESTIMATED_TRANSACTION_SIZE = 140;
 
 const TRANSACTIONS = [
   { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
@@ -82,6 +84,10 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
   const [activeMentor, setActiveMentor] = useState<Mentor>('andy');
   const [laptopVisible, setLaptopVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<WalletTab>('receive');
+  const [sendAddress, setSendAddress] = useState('');
+  const [sendLabel, setSendLabel] = useState('');
+  const [sendAmount, setSendAmount] = useState('');
+  const [feeRateIndex, setFeeRateIndex] = useState(2);
 
   const spotlight = !laptopVisible;
 
@@ -94,6 +100,9 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
   const portrait = activeMentor === 'andy' ? andyPortrait : mariaPortrait;
   const mentorName = activeMentor === 'andy' ? 'Andy' : 'Maria';
   const activeTabLabel = WALLET_TABS.find((tab) => tab.id === activeTab)?.label ?? '';
+  const feeRate = FEE_RATES[feeRateIndex];
+  const feeTotal = (feeRate * ESTIMATED_TRANSACTION_SIZE) / 100_000_000;
+  const feePriority = feeRate <= 2 ? 'Low priority' : feeRate <= 8 ? 'Medium priority' : 'High priority';
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -241,6 +250,78 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
                           </tbody>
                         </table>
                       </div>
+                    </div>
+                  ) : activeTab === 'send' ? (
+                    <div key={activeTab} className="wallet-send-form">
+                      <div className="wallet-send-heading">Send</div>
+
+                      <label className="wallet-send-field">
+                        <span>Pay to:</span>
+                        <input
+                          type="text"
+                          value={sendAddress}
+                          onChange={(event) => setSendAddress(event.target.value)}
+                          aria-label="Pay to"
+                        />
+                      </label>
+
+                      <label className="wallet-send-field">
+                        <span>Label:</span>
+                        <input
+                          type="text"
+                          value={sendLabel}
+                          onChange={(event) => setSendLabel(event.target.value)}
+                          placeholder="Required"
+                          aria-label="Label"
+                        />
+                      </label>
+
+                      <label className="wallet-send-field wallet-send-amount-field">
+                        <span>Amount:</span>
+                        <div className="wallet-send-amount-control">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={sendAmount}
+                            onChange={(event) => setSendAmount(event.target.value)}
+                            aria-label="Amount"
+                          />
+                          <span className="wallet-send-unit">BTC</span>
+                        </div>
+                      </label>
+
+                      <div className="wallet-send-fee-section">
+                        <div className="wallet-send-fee-title">Fee</div>
+                        <label className="wallet-send-slider-label" htmlFor="fee-rate">
+                          <span>Range:</span>
+                          <input
+                            id="fee-rate"
+                            type="range"
+                            min="0"
+                            max={FEE_RATES.length - 1}
+                            step="1"
+                            value={feeRateIndex}
+                            onChange={(event) => setFeeRateIndex(Number(event.target.value))}
+                          />
+                        </label>
+                        <div className="wallet-send-slider-scale" aria-hidden="true">
+                          {FEE_RATES.map((rate) => <span key={rate}>{rate}</span>)}
+                        </div>
+
+                        <div className="wallet-send-fee-row">
+                          <span>Rate:</span>
+                          <strong>{feeRate} sats/vB</strong>
+                          <span className="wallet-send-priority">{feePriority}</span>
+                        </div>
+                        <div className="wallet-send-fee-row">
+                          <span>Fee:</span>
+                          <strong>{feeTotal.toFixed(8)} BTC</strong>
+                        </div>
+                      </div>
+
+                      <button className="wallet-create-transaction" type="button">
+                        Create transaction
+                      </button>
                     </div>
                   ) : (
                     <p key={activeTab} className="wallet-canvas-placeholder">{activeTabLabel} content coming soon</p>
