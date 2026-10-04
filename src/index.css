@@ -3260,9 +3260,9 @@ a {
   .wallet-sidebar {
     flex-direction: row;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
@@ -3270,16 +3270,16 @@ a {
   .wallet-nav-item {
     flex: 1;
     flex-direction: column;
-    gap: 5px;
-    padding: 7px 6px;
+    gap: 4px;
+    padding: 6px 4px;
     font-size: 10px;
     text-align: center;
     border-radius: 8px;
   }
 
   .wallet-nav-item svg {
-    width: 17px;
-    height: 17px;
+    width: 15px;
+    height: 15px;
   }
 
   .wallet-canvas {
@@ -5153,6 +5153,8 @@ a {
 /* ── Connect scenario: wallet preview fits the viewport ── */
 
 .scenario-page-wallet {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   height: 100dvh;
   min-height: 0;
@@ -5277,6 +5279,11 @@ a {
   .scenario-page-wallet .scenario-mentor-layout {
     gap: 12px;
   }
+
+  .scenario-page-wallet .wallet-canvas {
+    min-height: 64px;
+    overflow-y: auto;
+  }
 }
 
 @media (max-width: 600px) {
@@ -5302,6 +5309,6 @@ a {
   }
 
   .scenario-page-wallet .wallet-canvas {
-    min-height: 0;
+    min-height: 96px;
   }
 }
