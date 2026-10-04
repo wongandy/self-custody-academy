@@ -25,10 +25,16 @@ type Mentor = 'andy' | 'maria';
 
 type WalletTab = 'transactions' | 'send' | 'receive';
 
-const WALLET_TABS: { id: WalletTab; label: string; content: string; Icon: typeof Send }[] = [
-  { id: 'transactions', label: 'Transactions', content: 'transaction content', Icon: ArrowLeftRight },
-  { id: 'send', label: 'Send', content: 'send content', Icon: Send },
-  { id: 'receive', label: 'Receive', content: 'receive content', Icon: Download },
+const WALLET_TABS: { id: WalletTab; label: string; Icon: typeof Send }[] = [
+  { id: 'transactions', label: 'Transactions', Icon: ArrowLeftRight },
+  { id: 'send', label: 'Send', Icon: Send },
+  { id: 'receive', label: 'Receive', Icon: Download },
+];
+
+const WALLET_BALANCE = '0.04998';
+
+const TRANSACTIONS = [
+  { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
 ];
 
 function useTypewriter(text: string, speed = 6) {
@@ -87,7 +93,7 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
   const canContinue = done;
   const portrait = activeMentor === 'andy' ? andyPortrait : mariaPortrait;
   const mentorName = activeMentor === 'andy' ? 'Andy' : 'Maria';
-  const activeTabContent = WALLET_TABS.find((tab) => tab.id === activeTab)?.content ?? '';
+  const activeTabLabel = WALLET_TABS.find((tab) => tab.id === activeTab)?.label ?? '';
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -203,7 +209,42 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
                   ))}
                 </aside>
                 <div className="wallet-canvas">
-                  <p key={activeTab} className="wallet-canvas-placeholder">{activeTabContent}</p>
+                  {activeTab === 'transactions' ? (
+                    <div key={activeTab} className="wallet-transactions">
+                      <div className="wallet-tx-summary">
+                        <div className="wallet-tx-summary-item">
+                          <span className="wallet-tx-summary-label">Balance</span>
+                          <span className="wallet-tx-summary-value">{WALLET_BALANCE} BTC</span>
+                        </div>
+                        <div className="wallet-tx-summary-item">
+                          <span className="wallet-tx-summary-label">Transactions</span>
+                          <span className="wallet-tx-summary-value">{TRANSACTIONS.length}</span>
+                        </div>
+                      </div>
+                      <div className="wallet-tx-table-wrap">
+                        <table className="wallet-tx-table">
+                          <thead>
+                            <tr>
+                              <th>Date</th>
+                              <th>Value</th>
+                              <th>Balance</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {TRANSACTIONS.map((tx) => (
+                              <tr key={tx.date}>
+                                <td>{tx.date}</td>
+                                <td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td>
+                                <td>{tx.balance}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : (
+                    <p key={activeTab} className="wallet-canvas-placeholder">{activeTabLabel} content coming soon</p>
+                  )}
                 </div>
               </div>
             </div>
