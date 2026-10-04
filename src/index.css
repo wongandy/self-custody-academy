@@ -5173,7 +5173,7 @@ a {
 .scenario-page-wallet .wallet-laptop {
   flex: none;
   width: min(100%, 620px);
-  height: 350px;
+  height: 450px;
   min-height: 0;
   margin-top: 0;
   display: flex;
