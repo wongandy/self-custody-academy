@@ -5396,10 +5396,22 @@ a {
   .scenario-page-wallet .wallet-laptop {
     max-width: 100%;
     flex: none;
+    height: 360px;
+  }
+
+  .scenario-page-wallet .wallet-window {
+    height: 100%;
   }
 
   .scenario-page-wallet .wallet-window-body {
     min-height: 0;
+    overflow: hidden;
+  }
+
+  .scenario-page-wallet .wallet-canvas {
+    min-height: 0;
+    overflow: auto;
+    align-items: flex-start;
   }
 
   .scenario-page-wallet .wallet-sidebar {
@@ -5651,5 +5663,21 @@ a {
   .wallet-create-transaction {
     margin-left: 82px;
     margin-top: 20px;
+  }
+}
+
+@media (min-width: 601px) {
+  .scenario-page-wallet .wallet-laptop {
+    height: 420px;
+  }
+
+  .scenario-page-wallet .wallet-window {
+    height: 100%;
+  }
+
+  .scenario-page-wallet .wallet-canvas {
+    min-height: 0;
+    overflow: auto;
+    align-items: flex-start;
   }
 }
