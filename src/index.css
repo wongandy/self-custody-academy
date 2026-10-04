@@ -5166,13 +5166,14 @@ a {
   flex: 1;
   min-height: 0;
   justify-content: flex-start;
-  gap: 22px;
+  gap: 18px;
   padding: 12px 28px 0;
 }
 
 .scenario-page-wallet .wallet-laptop {
   flex: none;
-  height: 420px;
+  width: min(100%, 620px);
+  height: 350px;
   min-height: 0;
   margin-top: 0;
   display: flex;
@@ -5201,6 +5202,7 @@ a {
 
 .scenario-page-wallet .mentor-row {
   flex-shrink: 0;
+  max-width: 560px;
 }
 
 .scenario-page-wallet .wallet-window-titlebar {
@@ -5373,7 +5375,7 @@ a {
   }
 
   .scenario-page-wallet .wallet-laptop {
-    height: 360px;
+    height: 320px;
   }
 }
 
@@ -5387,7 +5389,7 @@ a {
   }
 
   .scenario-page-wallet .wallet-laptop {
-    height: 280px;
+    height: 270px;
   }
 }
 
@@ -5401,14 +5403,14 @@ a {
   }
 
   .scenario-page-wallet .scenario-mentor-layout {
-    gap: 14px;
+    gap: 12px;
     padding: 8px 16px 0;
   }
 
   .scenario-page-wallet .wallet-laptop {
     max-width: 100%;
     flex: none;
-    height: 360px;
+    height: 300px;
   }
 
   .scenario-page-wallet .wallet-window {
@@ -5428,15 +5430,15 @@ a {
 .wallet-send-form {
   width: 100%;
   max-width: 920px;
-  padding: 28px 34px 30px;
+  padding: 18px 24px 20px;
   color: var(--text);
   animation: wallet-placeholder-in 260ms ease;
 }
 
 .wallet-send-heading {
-  margin-bottom: 26px;
+  margin-bottom: 14px;
   color: var(--text);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -5445,9 +5447,9 @@ a {
   grid-template-columns: 104px minmax(0, 1fr);
   align-items: center;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
   color: var(--text);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .wallet-send-field > span,
@@ -5507,13 +5509,13 @@ a {
 }
 
 .wallet-send-fee-section {
-  margin-top: 48px;
+  margin-top: 20px;
 }
 
 .wallet-send-fee-title {
-  margin-bottom: 24px;
+  margin-bottom: 10px;
   color: var(--text);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -5556,9 +5558,9 @@ a {
   grid-template-columns: 104px auto 1fr;
   align-items: center;
   gap: 16px;
-  margin-top: 22px;
+  margin-top: 10px;
   color: var(--text);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .wallet-send-fee-row strong {
@@ -5575,7 +5577,7 @@ a {
 }
 
 .wallet-create-transaction {
-  margin: 32px 0 0 120px;
+  margin: 18px 0 0 120px;
   padding: 10px 18px;
   border: 1px solid rgba(241, 189, 105, 0.5);
   border-radius: 7px;
@@ -5610,22 +5612,22 @@ a {
 
 @media (max-width: 600px) {
   .wallet-send-form {
-    padding: 18px 16px 22px;
+    padding: 14px 12px 16px;
   }
 
   .wallet-send-heading {
-    margin-bottom: 16px;
-    font-size: 15px;
+    margin-bottom: 10px;
+    font-size: 14px;
   }
 
   .wallet-send-field {
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .wallet-send-field input {
-    height: 38px;
+    height: 32px;
   }
 
   .wallet-send-slider-label {
@@ -5664,7 +5666,8 @@ a {
 
   .wallet-create-transaction {
     margin-left: 82px;
-    margin-top: 20px;
+    margin-top: 14px;
+    padding: 8px 14px;
   }
 }
 

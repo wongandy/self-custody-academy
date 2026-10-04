@@ -85,7 +85,6 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
   const [laptopVisible, setLaptopVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<WalletTab>('receive');
   const [sendAddress, setSendAddress] = useState('');
-  const [sendLabel, setSendLabel] = useState('');
   const [sendAmount, setSendAmount] = useState('');
   const [feeRateIndex, setFeeRateIndex] = useState(2);
 
@@ -262,17 +261,6 @@ export default function ConnectScenario({ onBack }: ConnectScenarioProps) {
                           value={sendAddress}
                           onChange={(event) => setSendAddress(event.target.value)}
                           aria-label="Pay to"
-                        />
-                      </label>
-
-                      <label className="wallet-send-field">
-                        <span>Label:</span>
-                        <input
-                          type="text"
-                          value={sendLabel}
-                          onChange={(event) => setSendLabel(event.target.value)}
-                          placeholder="Required"
-                          aria-label="Label"
                         />
                       </label>
 
