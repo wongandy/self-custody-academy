@@ -5353,10 +5353,17 @@ a {
 
 .wallet-transactions {
   width: 100%;
+  min-height: 232px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   animation: wallet-placeholder-in 260ms ease;
+}
+
+@media (max-width: 600px) {
+  .wallet-transactions {
+    min-height: 180px;
+  }
 }
 
 .wallet-tx-summary {

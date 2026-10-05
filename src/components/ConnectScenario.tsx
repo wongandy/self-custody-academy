@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeftRight, Check, ChevronRight } from 'lucide-react';
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight } from 'lucide-react';
 import HardwareWallet from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
@@ -27,6 +27,8 @@ const MARIA_MESSAGES = [
 ];
 
 const TOUR_MESSAGE = 'Go ahead and click the Transactions tab on the left to open it.';
+
+const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
 
 const CONNECT_DEVICE_MESSAGE = "It's empty for now — because the app isn't connected to your device yet. It's time to plug in your hardware wallet so its transaction shows up here. Go ahead and confirm the connection on the device's own screen.";
 
@@ -111,11 +113,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [transactionsVisited, setTransactionsVisited] = useState(false);
   const [connected, setConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [blocked, setBlocked] = useState(false);
 
   const step = STEPS[stepIndex];
   const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
   const portrait = mentorName === 'Andy' ? andyPortrait : mariaPortrait;
-  const message = stepMessage(step, stepIndex);
+  const message = blocked ? BLOCKED_MESSAGE : stepMessage(step, stepIndex);
   const { displayed, done, skip } = useTypewriter(message);
 
   const laptopVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'tour');
@@ -124,8 +127,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const devicePending = step.kind === 'connect-device' && (!connected || syncing);
 
   const canContinue = done
-    && !(step.kind === 'tour' && !transactionsVisited)
-    && !devicePending;
+    && (blocked || (!(step.kind === 'tour' && !transactionsVisited) && !devicePending));
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -134,6 +136,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const handleContinue = useCallback(() => {
     if (!done) {
       skip();
+      return;
+    }
+    if (blocked) {
+      setBlocked(false);
       return;
     }
     if (step.kind === 'tour' && !transactionsVisited) return;
@@ -149,7 +155,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, step, stepIndex, transactionsVisited, devicePending, onComplete]);
+  }, [done, skip, blocked, step, stepIndex, transactionsVisited, devicePending, onComplete]);
 
   const handleDeviceConfirm = () => {
     setConnected(true);
@@ -231,11 +237,32 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className={`wallet-nav-item active ${navAttention ? 'wallet-nav-attention' : ''}`}
-                      onClick={() => setTransactionsVisited(true)}
+                      onClick={() => {
+                        setBlocked(false);
+                        setTransactionsVisited(true);
+                      }}
                       aria-pressed="true"
                     >
                       <ArrowLeftRight strokeWidth={2.2} />
                       <span className="wallet-nav-label">Transactions</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="wallet-nav-item"
+                      onClick={() => setBlocked(true)}
+                      aria-pressed="false"
+                    >
+                      <ArrowUpRight strokeWidth={2.2} />
+                      <span className="wallet-nav-label">Send</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="wallet-nav-item"
+                      onClick={() => setBlocked(true)}
+                      aria-pressed="false"
+                    >
+                      <ArrowDownLeft strokeWidth={2.2} />
+                      <span className="wallet-nav-label">Receive</span>
                     </button>
                   </aside>
                   <div className="wallet-canvas">
