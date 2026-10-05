@@ -316,6 +316,32 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             </div>
 
             {deviceVisible && (
+              <div
+                className={`connect-cable${syncing ? ' is-syncing' : ''}`}
+                aria-hidden="true"
+              >
+                <svg
+                  className="connect-cable-wire connect-cable-wire-h"
+                  viewBox="0 0 100 40"
+                  preserveAspectRatio="none"
+                >
+                  <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+                  <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+                </svg>
+                <svg
+                  className="connect-cable-wire connect-cable-wire-v"
+                  viewBox="0 0 40 100"
+                  preserveAspectRatio="none"
+                >
+                  <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+                  <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+                </svg>
+                <span className="connect-cable-plug plug-start" />
+                <span className="connect-cable-plug plug-end" />
+              </div>
+            )}
+
+            {deviceVisible && (
               <div className="connect-device-stage">
                 <HardwareWallet
                   initialPhase="connect-confirm"
