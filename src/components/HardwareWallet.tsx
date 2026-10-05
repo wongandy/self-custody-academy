@@ -30,7 +30,9 @@ export type WalletPhase =
   | 'reset-warn'
   | 'reset-confirm'
   | 'reset-done'
-  | 'ready-menu';
+  | 'ready-menu'
+  | 'connect-confirm'
+  | 'connect-done';
 
 type MenuPhase = WalletPhase | 'recover-soon' | 'recover-type';
 
@@ -42,6 +44,7 @@ type HardwareWalletProps = {
   onCopyAddress?: () => void;
   onReadyMenuSelect?: (label: string) => void;
   onFactoryResetAttempt?: () => void;
+  onConnectConfirm?: () => void;
   advanceToReadyMenu?: boolean;
   advanceFromRecoverIntro?: boolean;
   startAtMenu?: boolean;
@@ -92,7 +95,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
   const [wiped, setWiped] = useState(false);
@@ -322,6 +325,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       updatePhase('reset-done');
       return;
     }
+    if (phase === 'connect-confirm') {
+      updatePhase('connect-done');
+      onConnectConfirm?.();
+      return;
+    }
     if (phase === 'reset-done') return;
     if (phase === 'settings') {
       onFactoryResetAttempt?.();
@@ -484,6 +492,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     explicitReset,
     wiped,
     locked,
+    onConnectConfirm,
   ]);
 
   const handleCopyAddress = useCallback(() => {
@@ -500,6 +509,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, []);
 
   const handleCancel = useCallback(() => {
+    if (phase === 'connect-confirm') return;
     if (phase === 'reset-warn') {
       updatePhase('settings');
       return;
@@ -831,6 +841,21 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                   <span className="hw-receive-addr">{RECEIVE_ADDRESS}</span>
                 </div>
                 <p className="hw-screen-body">Use this address to receive Bitcoin. Press the checkmark to go back.</p>
+              </div>
+            )}
+            {phase === 'connect-confirm' && (
+              <div className="hw-screen-text">
+                <span className="hw-screen-title">Connect</span>
+                <p className="hw-screen-body">
+                  A wallet app wants to connect to this device. Confirm only if you plugged it in yourself.
+                </p>
+              </div>
+            )}
+            {phase === 'connect-done' && (
+              <div className="hw-screen-text hw-screen-success">
+                <CheckCircle2 size={28} strokeWidth={1.8} />
+                <span className="hw-screen-title">Connected</span>
+                <p className="hw-screen-body">This device is now linked to the wallet app.</p>
               </div>
             )}
           </div>
