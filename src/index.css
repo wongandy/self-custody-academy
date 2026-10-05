@@ -1592,10 +1592,10 @@ a {
 /* ── Scenario briefing page ── */
 
 .scenario-page {
-  width: min(100% - 64px, 920px);
+  width: 100%;
   flex: 1;
-  margin: 0 auto;
-  padding: 92px 0 64px;
+  margin: 0;
+  padding: 92px 32px 64px;
   animation: character-fade-in 420ms ease;
 }
 
@@ -1795,10 +1795,14 @@ a {
 }
 
 @media (max-width: 600px) {
-  .roadmap-page,
-  .scenario-page {
+  .roadmap-page {
     width: min(100% - 40px, 1120px);
     padding: 76px 0 48px;
+  }
+
+  .scenario-page {
+    width: 100%;
+    padding: 76px 20px 48px;
   }
 
   .scenario-copy h1 {
@@ -5181,6 +5185,7 @@ a {
 
 .scenario-page-connect .wallet-laptop {
   width: min(100%, 600px);
+  min-width: 0;
   min-height: 320px;
   margin-top: 0;
   display: flex;
@@ -5380,6 +5385,14 @@ a {
   align-items: flex-start;
   justify-content: center;
   gap: 0;
+}
+
+.scenario-page-connect .wallet-laptop {
+  flex: 1 1 auto;
+}
+
+.scenario-page-connect .connect-device-stage {
+  flex-shrink: 0;
 }
 
 /* Side-by-side: a horizontal lead with plugs at each end */
