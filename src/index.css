@@ -5171,10 +5171,9 @@ a {
 }
 
 .scenario-page-wallet .wallet-laptop {
-  flex: none;
+  flex: 1 1 auto;
   width: min(100%, 620px);
-  height: 350px;
-  min-height: 0;
+  min-height: 350px;
   margin-top: 0;
   display: flex;
   flex-direction: column;
@@ -5375,7 +5374,7 @@ a {
   }
 
   .scenario-page-wallet .wallet-laptop {
-    height: 320px;
+    min-height: 300px;
   }
 }
 
@@ -5389,7 +5388,7 @@ a {
   }
 
   .scenario-page-wallet .wallet-laptop {
-    height: 270px;
+    min-height: 250px;
   }
 }
 
@@ -5410,7 +5409,8 @@ a {
   .scenario-page-wallet .wallet-laptop {
     max-width: 100%;
     flex: none;
-    height: 300px;
+    height: calc(100dvh - 310px);
+    min-height: 320px;
   }
 
   .scenario-page-wallet .wallet-window {
