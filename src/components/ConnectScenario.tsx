@@ -1,21 +1,17 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeftRight, Check, ChevronRight, Copy, Download, QrCode, Send, Usb } from 'lucide-react';
+import { ArrowLeftRight, Check, ChevronRight } from 'lucide-react';
 import HardwareWallet from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
 
 type ConnectScenarioProps = {
   completed: boolean;
-  onBack: () => void;
   onComplete: () => void;
 };
 
-type WalletTab = 'transactions' | 'send' | 'receive';
-
 type Step =
   | { kind: 'mentor'; mentor: 'andy' | 'maria' }
-  | { kind: 'tour'; tab: WalletTab }
-  | { kind: 'connect-prompt' }
+  | { kind: 'tour' }
   | { kind: 'connect-device' }
   | { kind: 'connected' }
   | { kind: 'recap' };
@@ -27,47 +23,29 @@ const HANDOFF_MESSAGES = [
 
 const MARIA_MESSAGES = [
   "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
-  "Now that your hardware wallet is set up and funded, the next step is connecting it to a wallet app on your computer — that's what I'll walk you through.",
+  "This is your wallet interface. The Transactions tab is your account history — every payment in or out shows up here, with its date and amount.",
 ];
 
-const TOUR_MESSAGES: Record<WalletTab, string> = {
-  transactions: "Let's take a quick look around. First, the Transactions tab — this is your account history. Every payment in or out shows up here with its date and amount. Click it to see for yourself.",
-  send: "Next, the Send tab. This is where you compose payments — who it goes to, how much, and the fee you're willing to pay. We'll practice sending in a later mission. Click over to it.",
-  receive: 'Finally, the Receive tab. It shows an address others can use to pay you — like an email address for bitcoin. Click it to have a look.',
-};
+const TOUR_MESSAGE = 'Go ahead and click the Transactions tab on the left to open it.';
 
-const CONNECT_PROMPT_MESSAGE = "Right now the app looks empty because it isn't paired with your device yet. Click Connect hardware wallet below to plug it in.";
+const CONNECT_DEVICE_MESSAGE = "It's empty for now — because the app isn't connected to your device yet. It's time to plug in your hardware wallet so its transaction shows up here. Go ahead and confirm the connection on the device's own screen.";
 
-const CONNECT_DEVICE_MESSAGE = "There's your device, asking for confirmation. Always approve a connection on the device's own screen — never trust the computer alone. Press the checkmark on the device.";
+const WALLET_CONNECTED_MESSAGE = "There it is — the 0.04998 BTC you loaded onto the device is now showing in your Transactions tab. Your keys never left the device; the app is simply a window onto it.";
 
-const WALLET_CONNECTED_MESSAGE = "You're connected! Notice the balance appeared — 0.04998 BTC, the same bitcoin you loaded onto the device. Your keys never left it; the app is just a window onto it.";
-
-const WALLET_RECAP_MESSAGE = "Remember: the app on your computer holds no keys. It only asks your device to sign. That's why you confirm on the device screen, not the computer — and that's exactly what you just did. Great job!";
+const WALLET_RECAP_MESSAGE = "Remember: the wallet app holds no keys of its own. It only asks your device to sign. That's why you confirm on the device, not the computer — exactly what you just did. Great job!";
 
 const STEPS: Step[] = [
   { kind: 'mentor', mentor: 'andy' },
   { kind: 'mentor', mentor: 'andy' },
   { kind: 'mentor', mentor: 'maria' },
   { kind: 'mentor', mentor: 'maria' },
-  { kind: 'tour', tab: 'transactions' },
-  { kind: 'tour', tab: 'send' },
-  { kind: 'tour', tab: 'receive' },
-  { kind: 'connect-prompt' },
+  { kind: 'tour' },
   { kind: 'connect-device' },
   { kind: 'connected' },
   { kind: 'recap' },
 ];
 
-const WALLET_TABS: { id: WalletTab; label: string; Icon: typeof Send }[] = [
-  { id: 'transactions', label: 'Transactions', Icon: ArrowLeftRight },
-  { id: 'send', label: 'Send', Icon: Send },
-  { id: 'receive', label: 'Receive', Icon: Download },
-];
-
 const WALLET_BALANCE = '0.04998';
-const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
-const FEE_RATES = [1, 1.5, 1.97, 3, 5, 8, 12, 20, 35, 60, 100];
-
 const TRANSACTIONS = [
   { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
 ];
@@ -118,9 +96,7 @@ function stepMessage(step: Step, stepIndex: number): string {
       if (step.mentor === 'andy') return HANDOFF_MESSAGES[stepIndex];
       return MARIA_MESSAGES[stepIndex - HANDOFF_MESSAGES.length];
     case 'tour':
-      return TOUR_MESSAGES[step.tab];
-    case 'connect-prompt':
-      return CONNECT_PROMPT_MESSAGE;
+      return TOUR_MESSAGE;
     case 'connect-device':
       return CONNECT_DEVICE_MESSAGE;
     case 'connected':
@@ -130,15 +106,9 @@ function stepMessage(step: Step, stepIndex: number): string {
   }
 }
 
-export default function ConnectScenario({ onBack, onComplete }: ConnectScenarioProps) {
+export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<WalletTab>('transactions');
-  const [visited, setVisited] = useState<Record<WalletTab, boolean>>({
-    transactions: false,
-    send: false,
-    receive: false,
-  });
-  const [copied, setCopied] = useState(false);
+  const [transactionsVisited, setTransactionsVisited] = useState(false);
   const [connected, setConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
@@ -150,29 +120,23 @@ export default function ConnectScenario({ onBack, onComplete }: ConnectScenarioP
 
   const laptopVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'tour');
   const spotlight = !laptopVisible;
-  const deviceVisible = step.kind === 'connect-device' || step.kind === 'connected';
+  const deviceVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'connect-device');
   const devicePending = step.kind === 'connect-device' && (!connected || syncing);
 
   const canContinue = done
-    && step.kind !== 'connect-prompt'
-    && !(step.kind === 'tour' && !visited[step.tab])
+    && !(step.kind === 'tour' && !transactionsVisited)
     && !devicePending;
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
-  useEffect(() => {
-    if (step.kind === 'tour') setActiveTab(step.tab);
-  }, [step]);
-
   const handleContinue = useCallback(() => {
     if (!done) {
       skip();
       return;
     }
-    if (step.kind === 'tour' && !visited[step.tab]) return;
-    if (step.kind === 'connect-prompt') return;
+    if (step.kind === 'tour' && !transactionsVisited) return;
     if (devicePending) return;
     if (step.kind === 'recap') {
       onComplete();
@@ -185,19 +149,7 @@ export default function ConnectScenario({ onBack, onComplete }: ConnectScenarioP
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, step, stepIndex, visited, devicePending, onComplete]);
-
-  const handleTabClick = (tab: WalletTab) => {
-    setActiveTab(tab);
-    if (step.kind === 'tour' && tab === step.tab) {
-      setVisited((v) => ({ ...v, [tab]: true }));
-    }
-  };
-
-  const handleConnectClick = () => {
-    if (!done || connected) return;
-    setStepIndex((current) => current + 1);
-  };
+  }, [done, skip, step, stepIndex, transactionsVisited, devicePending, onComplete]);
 
   const handleDeviceConfirm = () => {
     setConnected(true);
@@ -260,41 +212,34 @@ export default function ConnectScenario({ onBack, onComplete }: ConnectScenarioP
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleContinue]);
 
-  const handleCopy = () => {
-    navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const navAttention = step.kind === 'tour' && !transactionsVisited;
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-wallet'} ${deviceVisible ? 'scenario-page-connect' : ''}`}>
+    <main className={`scenario-page scenario-page-fit ${spotlight ? '' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         {laptopVisible && (
-          <div className="wallet-laptop laptop-enter">
-            <div className="wallet-window">
-              <div className="wallet-window-titlebar">
-                <span className="tl-dot red" />
-                <span className="tl-dot yellow" />
-                <span className="tl-dot green" />
-              </div>
-              <div className="wallet-window-body">
-                <aside className="wallet-sidebar">
-                  {WALLET_TABS.map(({ id, label, Icon }) => (
+          <div className="connect-duo">
+            <div className="wallet-laptop laptop-enter">
+              <div className="wallet-window">
+                <div className="wallet-window-titlebar">
+                  <span className="tl-dot red" />
+                  <span className="tl-dot yellow" />
+                  <span className="tl-dot green" />
+                </div>
+                <div className="wallet-window-body">
+                  <aside className="wallet-sidebar">
                     <button
-                      key={id}
                       type="button"
-                      className={`wallet-nav-item ${activeTab === id ? 'active' : ''}`}
-                      onClick={() => handleTabClick(id)}
-                      aria-pressed={activeTab === id}
+                      className={`wallet-nav-item active ${navAttention ? 'wallet-nav-attention' : ''}`}
+                      onClick={() => setTransactionsVisited(true)}
+                      aria-pressed="true"
                     >
-                      <Icon strokeWidth={2.2} />
-                      <span className="wallet-nav-label">{label}</span>
+                      <ArrowLeftRight strokeWidth={2.2} />
+                      <span className="wallet-nav-label">Transactions</span>
                     </button>
-                  ))}
-                </aside>
-                <div className="wallet-canvas">
-                  {activeTab === 'transactions' ? (
-                    <div key={activeTab} className="wallet-transactions">
+                  </aside>
+                  <div className="wallet-canvas">
+                    <div className="wallet-transactions">
                       <div className="wallet-tx-summary">
                         <div className="wallet-tx-summary-item">
                           <span className="wallet-tx-summary-label">Balance</span>
@@ -338,97 +283,20 @@ export default function ConnectScenario({ onBack, onComplete }: ConnectScenarioP
                         )}
                       </div>
                     </div>
-                  ) : activeTab === 'send' ? (
-                    <div key={activeTab} className="wallet-send-form">
-                      <div className="wallet-send-heading">Send</div>
-
-                      <label className="wallet-send-field">
-                        <span>Pay to:</span>
-                        <input type="text" aria-label="Pay to" />
-                      </label>
-
-                      <label className="wallet-send-field wallet-send-amount-field">
-                        <span>Amount:</span>
-                        <div className="wallet-send-amount-control">
-                          <input type="text" inputMode="decimal" aria-label="Amount" />
-                          <span className="wallet-send-unit">BTC</span>
-                        </div>
-                      </label>
-
-                      <div className="wallet-send-fee-section">
-                        <div className="wallet-send-fee-title">Fee</div>
-                        <label className="wallet-send-slider-label" htmlFor="fee-rate">
-                          <span>Range:</span>
-                          <input
-                            id="fee-rate"
-                            type="range"
-                            min="0"
-                            max={FEE_RATES.length - 1}
-                            step="1"
-                            defaultValue={2}
-                          />
-                        </label>
-                        <div className="wallet-send-slider-scale" aria-hidden="true">
-                          {FEE_RATES.map((rate) => <span key={rate}>{rate}</span>)}
-                        </div>
-
-                        <div className="wallet-send-fee-row">
-                          <span>Rate:</span>
-                          <strong>1.97 sats/vB</strong>
-                          <span className="wallet-send-priority">Medium priority</span>
-                        </div>
-                        <div className="wallet-send-fee-row">
-                          <span>Fee:</span>
-                          <strong>0.00002758 BTC</strong>
-                        </div>
-                      </div>
-
-                      <button className="wallet-create-transaction" type="button">
-                        Create transaction
-                      </button>
-                    </div>
-                  ) : (
-                    <div key={activeTab} className="wallet-receive">
-                      <div className="wallet-receive-card">
-                        <div className="wallet-receive-qr">
-                          <QrCode size={72} strokeWidth={1.2} />
-                        </div>
-                        <div className="wallet-receive-addr-row">
-                          <span className="wallet-receive-addr">{RECEIVE_ADDRESS}</span>
-                          <button
-                            type="button"
-                            className={copied ? 'wallet-receive-copy copied' : 'wallet-receive-copy'}
-                            onClick={handleCopy}
-                          >
-                            {copied ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.2} />}
-                            <span>{copied ? 'Copied' : 'Copy'}</span>
-                          </button>
-                        </div>
-                        <p className="wallet-receive-note">Share this address to get paid. Each address is one-time use.</p>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
-              {step.kind === 'connect-prompt' && !connected && (
-                <div className="wallet-connect-cta">
-                  <button className="wallet-connect-btn" type="button" onClick={handleConnectClick} disabled={!done}>
-                    <Usb size={14} strokeWidth={2.4} />
-                    <span>{connected ? 'Connected' : 'Connect hardware wallet'}</span>
-                  </button>
-                </div>
-              )}
             </div>
-          </div>
-        )}
 
-        {deviceVisible && (
-          <div className="connect-device-stage">
-            <HardwareWallet
-              initialPhase="connect-confirm"
-              onConnectConfirm={handleDeviceConfirm}
-              onComplete={() => {}}
-            />
+            {deviceVisible && (
+              <div className="connect-device-stage">
+                <HardwareWallet
+                  initialPhase="connect-confirm"
+                  onConnectConfirm={handleDeviceConfirm}
+                  onComplete={() => {}}
+                />
+              </div>
+            )}
           </div>
         )}
 

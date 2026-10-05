@@ -40,6 +40,8 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'reset-confirm': FACTORY_RESET_MESSAGE,
   'reset-done': FACTORY_RESET_MESSAGE,
   'ready-menu': READY_MENU_MESSAGE,
+  'connect-confirm': '',
+  'connect-done': '',
 };
 
 function useTypewriter(text: string, speed = 6) {

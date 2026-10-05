@@ -314,7 +314,6 @@ function App() {
       {screen === 'scenario-4' && (
         <ConnectScenario
           completed={completedScenarios >= 4}
-          onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(4)}
         />
       )}
