@@ -49,6 +49,8 @@ const MARIA_MESSAGES = [
   "We'll be using one you already have installed on your laptop called Cairn. Let's take a look inside it.",
 ];
 
+const WALLET_WAITING_MESSAGE = "Let's wait for it to finish initializing.";
+
 const WALLET_INTRO_MESSAGE =
   'This is the Transactions tab — your account history. Every payment in or out shows up here with its date and amount.';
 
@@ -157,7 +159,14 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const step = STEPS[stepIndex];
   const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
   const portrait = mentorName === 'Andy' ? andyPortrait : mariaPortrait;
-  const message = blocked ? BLOCKED_MESSAGE : stepMessage(step, stepIndex);
+  // Maria asks the learner to wait until Cairn has finished starting up, then
+  // explains the Transactions tab once the app is on screen.
+  const walletBooting = step.kind === 'wallet-intro' && bootPhase !== 'ready';
+  const message = blocked
+    ? BLOCKED_MESSAGE
+    : walletBooting
+      ? WALLET_WAITING_MESSAGE
+      : stepMessage(step, stepIndex);
   const { displayed, done, skip } = useTypewriter(message);
 
   const walletVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'wallet-intro');
@@ -165,14 +174,15 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const showCable = connection === 'plugging' || connection === 'seating' || connection === 'linked';
   const connecting = step.kind === 'device-arrival' && connection !== 'linked';
 
-  // Nothing on the laptop, device or phone responds until the mentor has finished talking.
-  const interactionLocked = !done || connecting;
+  // Nothing on the laptop, device or phone responds until the mentor has finished talking
+  // and Cairn has finished starting up.
+  const interactionLocked = !done || connecting || walletBooting;
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
   const confirmPending = step.kind === 'device-prompt' && (!connected || syncing);
   const devicePending = requestPending || confirmPending;
 
-  const canContinue = done && (blocked || (!devicePending && !connecting));
+  const canContinue = done && !walletBooting && (blocked || (!devicePending && !connecting));
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -228,6 +238,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       skip();
       return;
     }
+    if (walletBooting) return;
     if (blocked) {
       setBlocked(false);
       return;
@@ -244,7 +255,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, blocked, step, stepIndex, devicePending, connecting, onComplete]);
+  }, [done, skip, walletBooting, blocked, step, stepIndex, devicePending, connecting, onComplete]);
 
   const handleRequestConnect = () => {
     if (interactionLocked || connectRequested) return;
@@ -498,7 +509,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={`${mentorName}-${stepIndex}`}>
+            <div className="mentor-bubble-content" key={`${mentorName}-${stepIndex}-${message}`}>
               <span className="mentor-bubble-name">{mentorName}</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
