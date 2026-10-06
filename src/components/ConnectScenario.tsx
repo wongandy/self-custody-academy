@@ -39,13 +39,13 @@ const CONNECTION_DELAYS: Record<ConnectionPhase, number> = {
 };
 
 const HANDOFF_MESSAGES = [
-  "Now let's connect your hardware wallet to a wallet interface. But before we do that I'd like to introduce you to a colleague of mine.",
+  "Now let's connect your hardware wallet to a wallet software. But before we do that I'd like to introduce you to a colleague of mine.",
   "She'll be the one to teach you all about the connecting part — I'll let her take it from here.",
 ];
 
 const MARIA_MESSAGES = [
   "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
-  "A wallet interface is simply an app that lets you view and manage your Bitcoin — your balance, your history, your payments. Yours is already running on your laptop, so let's take a look inside it.",
+  "A wallet software is simply an app that lets you view and manage your Bitcoin — your balance, your history, your payments. Yours is already running on your laptop, so let's take a look inside it.",
 ];
 
 const WALLET_INTRO_MESSAGE =
