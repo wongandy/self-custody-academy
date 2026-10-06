@@ -5276,6 +5276,18 @@ a {
   animation: wallet-nav-pulse 1400ms ease-in-out infinite;
 }
 
+.wallet-connect-btn:disabled {
+  cursor: default;
+  box-shadow: 0 4px 14px rgba(241, 189, 105, 0.16);
+}
+
+.wallet-connect-btn:disabled:hover,
+.wallet-connect-btn:disabled:active {
+  transform: none;
+  filter: none;
+  box-shadow: 0 4px 14px rgba(241, 189, 105, 0.16);
+}
+
 .wallet-sync-overlay {
   position: absolute;
   inset: 0;
@@ -5310,11 +5322,45 @@ a {
   flex-shrink: 0;
   display: flex;
   justify-content: center;
-  animation: hw-wallet-enter 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .connect-device-stage .hw-wallet-device {
   animation: none;
+}
+
+/* Staged arrival: slide in, then glide left to meet the waiting cord */
+
+.connect-device-stage.is-dormant {
+  opacity: 0;
+  transform: translateX(80px);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.connect-device-stage.phase-arriving {
+  animation: device-slide-in 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.connect-device-stage.phase-seating,
+.connect-device-stage.phase-linked {
+  transform: translateX(-24px);
+}
+
+@keyframes device-slide-in {
+  from { opacity: 0; transform: translateX(80px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* The laptop, device and wallet window accept no clicks while a mentor is talking */
+
+.connect-duo.is-locked {
+  pointer-events: none;
+}
+
+.connect-duo.is-locked .wallet-window {
+  filter: saturate(0.92) brightness(0.97);
+  transition: filter 240ms ease;
 }
 
 /* Cable linking the wallet window to the hardware device */
@@ -5351,7 +5397,15 @@ a {
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
-  animation: cable-draw 720ms cubic-bezier(0.22, 1, 0.36, 1) 160ms forwards;
+  transition: stroke-dashoffset 780ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The cord is drawn once the laptop side is plugged in */
+
+.connect-cable.is-plugging .cable-line,
+.connect-cable.is-seating .cable-line,
+.connect-cable.is-linked .cable-line {
+  stroke-dashoffset: 0;
 }
 
 .cable-pulse {
@@ -5373,10 +5427,32 @@ a {
 .connect-cable-plug {
   position: absolute;
   left: 50%;
+  opacity: 0;
   background: linear-gradient(180deg, #d5d8db, #7f858b);
   border: 1px solid rgba(0, 0, 0, 0.4);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-  animation: cable-plug-in-x 360ms cubic-bezier(0.22, 1, 0.36, 1) 620ms both;
+  transition: opacity 260ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The near plug locks into the laptop as the cord starts drawing across */
+
+.connect-cable.is-plugging .plug-start,
+.connect-cable.is-seating .plug-start,
+.connect-cable.is-linked .plug-start {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.connect-cable.is-plugging .plug-start {
+  animation: cable-plug-in-x 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The far plug clicks into the device only once it has seated */
+
+.connect-cable.is-linked .plug-end {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  animation: cable-plug-in-x 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .connect-cable .plug-start {
@@ -5393,10 +5469,6 @@ a {
   height: 16px;
   border-radius: 2px 2px 3px 3px;
   transform: translateX(-50%);
-}
-
-@keyframes cable-draw {
-  to { stroke-dashoffset: 0; }
 }
 
 @keyframes cable-flow {
@@ -5454,7 +5526,6 @@ a {
 
   .connect-cable-plug {
     left: auto;
-    animation: cable-plug-in-y 360ms cubic-bezier(0.22, 1, 0.36, 1) 620ms both;
   }
 
   .connect-cable .plug-start {
@@ -5476,9 +5547,32 @@ a {
     border-radius: 2px 3px 3px 2px;
     transform: translateY(-50%);
   }
+
+  .connect-cable.is-plugging .plug-start,
+  .connect-cable.is-seating .plug-start,
+  .connect-cable.is-linked .plug-start {
+    transform: translateY(-50%) scale(1);
+  }
+
+  .connect-cable.is-plugging .plug-start {
+    animation: cable-plug-in-y 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .connect-cable.is-linked .plug-end {
+    transform: translateY(-50%) scale(1);
+    animation: cable-plug-in-y 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .connect-device-stage,
+  .connect-device-stage.is-dormant,
+  .connect-device-stage.phase-arriving {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
   .cable-line,
   .connect-cable-plug {
     animation: none;
@@ -5554,6 +5648,19 @@ a {
 .wallet-nav-item:focus-visible {
   outline: 2px solid var(--gold-light);
   outline-offset: 2px;
+}
+
+.wallet-nav-item:disabled {
+  cursor: default;
+}
+
+.wallet-nav-item:disabled:hover {
+  color: var(--muted);
+  background: transparent;
+}
+
+.wallet-nav-item.active:disabled:hover {
+  background: rgba(241, 189, 105, 0.12);
 }
 
 /* Wallet canvas */

@@ -11,10 +11,26 @@ type ConnectScenarioProps = {
 
 type Step =
   | { kind: 'mentor'; mentor: 'andy' | 'maria' }
+  | { kind: 'wallet-intro' }
+  | { kind: 'device-arrival' }
   | { kind: 'connect-request' }
   | { kind: 'device-prompt' }
   | { kind: 'connected' }
   | { kind: 'recap' };
+
+type ConnectionPhase = 'idle' | 'arriving' | 'plugging' | 'seating' | 'linked';
+
+const ARRIVE_MS = 760;
+const PLUG_MS = 820;
+const SEAT_MS = 700;
+
+const CONNECTION_DELAYS: Record<ConnectionPhase, number> = {
+  idle: ARRIVE_MS,
+  arriving: PLUG_MS,
+  plugging: SEAT_MS,
+  seating: SEAT_MS,
+  linked: SEAT_MS,
+};
 
 const HANDOFF_MESSAGES = [
   "Now let's get your hardware wallet connected. But before we do that I'd like to introduce you to a colleague of mine.",
@@ -26,9 +42,16 @@ const MARIA_MESSAGES = [
   "A wallet interface is simply an app that lets you view and manage your Bitcoin — your balance, your history, your payments. Yours is already running on your laptop, so let's take a look inside it.",
 ];
 
+const WALLET_INTRO_MESSAGE =
+  'This is the Transactions tab — your account history. Every payment in or out shows up here with its date and amount.';
+
+const DEVICE_ARRIVAL_MESSAGE =
+  "It's empty because the app isn't linked to your device yet. Let's plug your hardware wallet into the laptop and watch the connection come together.";
+
 const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
 
-const CONNECT_DEVICE_MESSAGE = "This is the Transactions tab — your account history. Every payment in or out shows up here with its date and amount. It's empty because the app isn't linked to your device yet, so click the Connect hardware wallet button to send the pairing request.";
+const CONNECT_DEVICE_MESSAGE =
+  'Your hardware wallet is now connected to the laptop. Click the Connect hardware wallet button to send the pairing request.';
 
 const DEVICE_PROMPT_MESSAGE = "The request woke your device up — it's asking you to confirm. Only allow a connection you started yourself. Press the checkmark on the device to approve it.";
 
@@ -41,6 +64,8 @@ const STEPS: Step[] = [
   { kind: 'mentor', mentor: 'andy' },
   { kind: 'mentor', mentor: 'maria' },
   { kind: 'mentor', mentor: 'maria' },
+  { kind: 'wallet-intro' },
+  { kind: 'device-arrival' },
   { kind: 'connect-request' },
   { kind: 'device-prompt' },
   { kind: 'connected' },
@@ -97,6 +122,10 @@ function stepMessage(step: Step, stepIndex: number): string {
     case 'mentor':
       if (step.mentor === 'andy') return HANDOFF_MESSAGES[stepIndex];
       return MARIA_MESSAGES[stepIndex - HANDOFF_MESSAGES.length];
+    case 'wallet-intro':
+      return WALLET_INTRO_MESSAGE;
+    case 'device-arrival':
+      return DEVICE_ARRIVAL_MESSAGE;
     case 'connect-request':
       return CONNECT_DEVICE_MESSAGE;
     case 'device-prompt':
@@ -114,6 +143,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [connected, setConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const [connection, setConnection] = useState<ConnectionPhase>('idle');
 
   const step = STEPS[stepIndex];
   const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
@@ -121,18 +151,40 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const message = blocked ? BLOCKED_MESSAGE : stepMessage(step, stepIndex);
   const { displayed, done, skip } = useTypewriter(message);
 
-  const laptopVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'connect-request');
-  const spotlight = !laptopVisible;
-  const deviceVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'connect-request');
+  const walletVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'wallet-intro');
+  const spotlight = !walletVisible;
+  const showCable = connection === 'plugging' || connection === 'seating' || connection === 'linked';
+  const connecting = step.kind === 'device-arrival' && connection !== 'linked';
+
+  // Nothing on the laptop, device or phone responds until the mentor has finished talking.
+  const interactionLocked = !done || connecting;
+
   const requestPending = step.kind === 'connect-request' && !connectRequested;
   const confirmPending = step.kind === 'device-prompt' && (!connected || syncing);
   const devicePending = requestPending || confirmPending;
 
-  const canContinue = done && (blocked || !devicePending);
+  const canContinue = done && (blocked || (!devicePending && !connecting));
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
+
+  // The device slides in, the cord plugs into the laptop, then the device meets the cord.
+  useEffect(() => {
+    if (step.kind !== 'device-arrival') return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (connection !== 'linked') setConnection('linked');
+      return;
+    }
+
+    const order: ConnectionPhase[] = ['idle', 'arriving', 'plugging', 'seating', 'linked'];
+    const nextIndex = order.indexOf(connection) + 1;
+    if (nextIndex >= order.length) return;
+
+    const timer = setTimeout(() => setConnection(order[nextIndex]), CONNECTION_DELAYS[connection]);
+    return () => clearTimeout(timer);
+  }, [step.kind, connection]);
 
   const handleContinue = useCallback(() => {
     if (!done) {
@@ -143,7 +195,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       setBlocked(false);
       return;
     }
-    if (devicePending) return;
+    if (devicePending || connecting) return;
     if (step.kind === 'recap') {
       onComplete();
       return;
@@ -155,10 +207,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, blocked, step, stepIndex, devicePending, onComplete]);
+  }, [done, skip, blocked, step, stepIndex, devicePending, connecting, onComplete]);
 
   const handleRequestConnect = () => {
-    if (connectRequested) return;
+    if (interactionLocked || connectRequested) return;
     setConnectRequested(true);
     setStepIndex((current) => (STEPS[current].kind === 'connect-request' ? current + 1 : current));
   };
@@ -227,8 +279,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? '' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        {laptopVisible && (
-          <div className="connect-duo">
+        {walletVisible && (
+          <div className={`connect-duo ${interactionLocked ? 'is-locked' : ''}`}>
             <div className="wallet-laptop laptop-enter">
               <div className="wallet-window">
                 <div className="wallet-window-titlebar">
@@ -242,6 +294,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                       type="button"
                       className="wallet-nav-item active"
                       onClick={() => setBlocked(false)}
+                      disabled={interactionLocked}
                       aria-pressed="true"
                     >
                       <ArrowLeftRight strokeWidth={2.2} />
@@ -251,6 +304,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                       type="button"
                       className="wallet-nav-item"
                       onClick={() => setBlocked(true)}
+                      disabled={interactionLocked}
                       aria-pressed="false"
                     >
                       <ArrowUpRight strokeWidth={2.2} />
@@ -260,6 +314,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                       type="button"
                       className="wallet-nav-item"
                       onClick={() => setBlocked(true)}
+                      disabled={interactionLocked}
                       aria-pressed="false"
                     >
                       <ArrowDownLeft strokeWidth={2.2} />
@@ -305,6 +360,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                                       type="button"
                                       className={requestPending ? 'wallet-connect-btn attention' : 'wallet-connect-btn'}
                                       onClick={handleRequestConnect}
+                                      disabled={interactionLocked || step.kind !== 'connect-request'}
                                     >
                                       <Link2 size={14} strokeWidth={2.2} />
                                       <span>Connect hardware wallet</span>
@@ -328,43 +384,40 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               </div>
             </div>
 
-            {deviceVisible && (
-              <div
-                className={`connect-cable${syncing ? ' is-syncing' : ''}`}
-                aria-hidden="true"
+            <div
+              className={`connect-cable ${showCable ? `is-${connection}` : 'is-dormant'}${syncing ? ' is-syncing' : ''}`}
+              aria-hidden="true"
+            >
+              <svg
+                className="connect-cable-wire connect-cable-wire-h"
+                viewBox="0 0 100 40"
+                preserveAspectRatio="none"
               >
-                <svg
-                  className="connect-cable-wire connect-cable-wire-h"
-                  viewBox="0 0 100 40"
-                  preserveAspectRatio="none"
-                >
-                  <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-                  <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-                </svg>
-                <svg
-                  className="connect-cable-wire connect-cable-wire-v"
-                  viewBox="0 0 40 100"
-                  preserveAspectRatio="none"
-                >
-                  <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
-                  <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
-                </svg>
-                <span className="connect-cable-plug plug-start" />
-                <span className="connect-cable-plug plug-end" />
-              </div>
-            )}
+                <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+                <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+              </svg>
+              <svg
+                className="connect-cable-wire connect-cable-wire-v"
+                viewBox="0 0 40 100"
+                preserveAspectRatio="none"
+              >
+                <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+                <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+              </svg>
+              <span className="connect-cable-plug plug-start" />
+              <span className="connect-cable-plug plug-end" />
+            </div>
 
-            {deviceVisible && (
-              <div className="connect-device-stage">
-                <HardwareWallet
-                  mode="withdraw"
-                  initialPhase="ready-menu"
-                  connectRequest={connectRequested}
-                  onConnectConfirm={handleDeviceConfirm}
-                  onComplete={() => {}}
-                />
-              </div>
-            )}
+            <div className={`connect-device-stage ${connection === 'idle' ? 'is-dormant' : `phase-${connection}`}`}>
+              <HardwareWallet
+                mode="withdraw"
+                initialPhase="ready-menu"
+                locked={interactionLocked}
+                connectRequest={connectRequested}
+                onConnectConfirm={handleDeviceConfirm}
+                onComplete={() => {}}
+              />
+            </div>
           </div>
         )}
 
