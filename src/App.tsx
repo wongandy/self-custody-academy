@@ -188,9 +188,9 @@ function App() {
             aria-label="Self Custody Academy home"
             onClick={() => setScreen('home')}
           >
-            <span className="brand-mark">
-              {/* <img src={bitcoinImage} alt="Bitcoin" className="brand-logo-image" /> */}
-            </span>
+            {/* <span className="brand-mark">
+              <img src={bitcoinImage} alt="Bitcoin" className="brand-logo-image" />
+            </span> */}
             <span className="brand-name">
               <span>SELF-CUSTODY</span> <strong>ACADEMY</strong>
             </span>
