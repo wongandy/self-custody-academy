@@ -55,7 +55,7 @@ const WALLET_INTRO_MESSAGE =
   'This is the Transactions tab — your account history. Every payment in or out shows up here with its date and amount.';
 
 const DEVICE_ARRIVAL_MESSAGE =
-  "First we need to plug our hardware wallet into the laptop and connect into the app in order to see the transaction history.";
+  "First we need to plug our hardware wallet into the laptop and connect into the app in order to see the transaction history. Let's do that.";
 
 const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
 
