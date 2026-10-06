@@ -5322,14 +5322,13 @@ a {
   flex-shrink: 0;
   display: flex;
   justify-content: center;
-  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .connect-device-stage .hw-wallet-device {
   animation: none;
 }
 
-/* Staged arrival: slide in, then glide left to meet the waiting cord */
+/* Staged arrival: the device slides in and parks; the cord's far plug travels to it */
 
 .connect-device-stage.is-dormant {
   opacity: 0;
@@ -5340,11 +5339,6 @@ a {
 
 .connect-device-stage.phase-arriving {
   animation: device-slide-in 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.connect-device-stage.phase-seating,
-.connect-device-stage.phase-linked {
-  transform: translateX(-24px);
 }
 
 @keyframes device-slide-in {
@@ -5447,11 +5441,15 @@ a {
   animation: cable-plug-in-x 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* The far plug clicks into the device only once it has seated */
+/* The far plug travels across the cord and seats into the device's left side */
 
+.connect-cable.is-seating .plug-end,
 .connect-cable.is-linked .plug-end {
   opacity: 1;
   transform: translateX(-50%) scale(1);
+}
+
+.connect-cable.is-seating .plug-end {
   animation: cable-plug-in-x 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -5558,10 +5556,22 @@ a {
     animation: cable-plug-in-y 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
+  .connect-cable.is-seating .plug-end,
   .connect-cable.is-linked .plug-end {
-    transform: translateY(-50%) scale(1);
-    animation: cable-plug-in-y 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    opacity: 1;
+    transform: translateY(-50%);
   }
+
+  .connect-cable.is-seating .plug-end {
+    animation: cable-plug-seat 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+/* The far plug glides along the wire from the laptop side into the device's port */
+
+@keyframes cable-plug-seat {
+  from { opacity: 0; transform: translate(-56px, -50%); }
+  to { opacity: 1; transform: translate(0, -50%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
