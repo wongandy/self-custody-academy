@@ -5438,7 +5438,7 @@ a {
 }
 
 .connect-cable.is-plugging .plug-start {
-  animation: cable-plug-in-x 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: cable-plug-in-x 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* The far plug rides the tip of the wire as it draws toward the device, then settles into the port */
@@ -5489,14 +5489,18 @@ a {
   to { stroke-dashoffset: 0; }
 }
 
+/* The near plug presses into the laptop's port, then snaps back to rest */
+
 @keyframes cable-plug-in-x {
-  from { opacity: 0; transform: translateX(-50%) scale(0.6); }
-  to { opacity: 1; transform: translateX(-50%) scale(1); }
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+  62% { opacity: 1; transform: translate(-50%, -2px) scale(1.08); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
 }
 
 @keyframes cable-plug-in-y {
-  from { opacity: 0; transform: translateY(-50%) scale(0.6); }
-  to { opacity: 1; transform: translateY(-50%) scale(1); }
+  0% { opacity: 0; transform: translate(0, -50%) scale(0.6); }
+  62% { opacity: 1; transform: translate(-2px, -50%) scale(1.08); }
+  100% { opacity: 1; transform: translate(0, -50%) scale(1); }
 }
 
 /* Wallet window and device side by side once the device appears */
@@ -5568,7 +5572,7 @@ a {
   }
 
   .connect-cable.is-plugging .plug-start {
-    animation: cable-plug-in-y 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: cable-plug-in-y 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .connect-cable.is-plugging .plug-end,
