@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight, Link2 } from 'lucide-react';
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight, Layers, Link2 } from 'lucide-react';
 import HardwareWallet from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
@@ -20,9 +20,15 @@ type Step =
 
 type ConnectionPhase = 'idle' | 'arriving' | 'plugging' | 'seating' | 'linked';
 
+type BootPhase = 'brand' | 'loading' | 'leaving' | 'ready';
+
 const ARRIVE_MS = 760;
 const PLUG_MS = 820;
 const SEAT_MS = 700;
+
+const BOOT_BRAND_MS = 640;
+const BOOT_LOAD_MS = 620;
+const BOOT_FADE_MS = 300;
 
 const CONNECTION_DELAYS: Record<ConnectionPhase, number> = {
   idle: ARRIVE_MS,
@@ -73,6 +79,7 @@ const STEPS: Step[] = [
 ];
 
 const WALLET_BALANCE = '0.04998';
+const WALLET_APP_NAME = 'Cairn';
 const TRANSACTIONS = [
   { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
 ];
@@ -144,6 +151,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [syncing, setSyncing] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
+  const [bootPhase, setBootPhase] = useState<BootPhase>('brand');
 
   const step = STEPS[stepIndex];
   const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
@@ -185,6 +193,26 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     const timer = setTimeout(() => setConnection(order[nextIndex]), CONNECTION_DELAYS[connection]);
     return () => clearTimeout(timer);
   }, [step.kind, connection]);
+
+  // The app boots: brand mark, a short load, then the tabs and history fade in.
+  useEffect(() => {
+    if (bootPhase === 'ready') return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setBootPhase('ready');
+      return;
+    }
+
+    const delay = bootPhase === 'brand' ? BOOT_BRAND_MS : bootPhase === 'loading' ? BOOT_LOAD_MS : BOOT_FADE_MS;
+    const timer = setTimeout(() => {
+      setBootPhase((current) => {
+        if (current === 'brand') return 'loading';
+        if (current === 'loading') return 'leaving';
+        return 'ready';
+      });
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [bootPhase]);
 
   const handleContinue = useCallback(() => {
     if (!done) {
@@ -289,7 +317,27 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                   <span className="tl-dot green" />
                 </div>
                 <div className="wallet-window-body">
-                  <aside className="wallet-sidebar">
+                  {bootPhase !== 'ready' && (
+                    <div
+                      className={`wallet-splash${bootPhase === 'leaving' ? ' is-leaving' : ''}`}
+                      aria-live="polite"
+                      aria-label={`${WALLET_APP_NAME} is starting up`}
+                    >
+                      <div className="wallet-splash-brand">
+                        <span className="wallet-splash-mark">
+                          <Layers strokeWidth={2} />
+                        </span>
+                        <span className="wallet-splash-name">{WALLET_APP_NAME}</span>
+                      </div>
+                      <div className={`wallet-splash-loader${bootPhase === 'loading' ? ' is-loading' : ''}`}>
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    </div>
+                  )}
+                  <div className={`wallet-app${bootPhase === 'leaving' ? ' is-entering' : ''}`} aria-hidden={bootPhase !== 'ready'}>
+                    <aside className="wallet-sidebar">
                     <button
                       type="button"
                       className="wallet-nav-item active"
@@ -379,6 +427,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                         )}
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
