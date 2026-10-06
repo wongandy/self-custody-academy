@@ -154,6 +154,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [syncing, setSyncing] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
+  const [arrivalStarted, setArrivalStarted] = useState(false);
   const [bootPhase, setBootPhase] = useState<BootPhase>('pending');
 
   const step = STEPS[stepIndex];
@@ -172,7 +173,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const walletVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'wallet-intro');
   const spotlight = !walletVisible;
   const showCable = connection === 'plugging' || connection === 'seating' || connection === 'linked';
-  const connecting = step.kind === 'device-arrival' && connection !== 'linked';
+  const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
 
   // Nothing on the laptop, device or phone responds until the mentor has finished talking
   // and Cairn has finished starting up.
@@ -189,8 +190,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
+  // The device stays off screen until the learner continues from Maria's explanation.
   useEffect(() => {
-    if (step.kind !== 'device-arrival') return;
+    if (step.kind !== 'device-arrival' || !arrivalStarted) return;
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       if (connection !== 'linked') setConnection('linked');
@@ -203,6 +205,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
     const timer = setTimeout(() => setConnection(order[nextIndex]), CONNECTION_DELAYS[connection]);
     return () => clearTimeout(timer);
+  }, [step.kind, connection, arrivalStarted]);
+
+  // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
+  useEffect(() => {
+    if (step.kind !== 'device-arrival' || connection !== 'linked') return;
+    setStepIndex((current) => (STEPS[current].kind === 'device-arrival' ? current + 1 : current));
   }, [step.kind, connection]);
 
   // The app boots once the wallet window is on screen: brand mark, a short load,
@@ -243,6 +251,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       setBlocked(false);
       return;
     }
+    if (step.kind === 'device-arrival' && !arrivalStarted) {
+      setArrivalStarted(true);
+      return;
+    }
     if (devicePending || connecting) return;
     if (step.kind === 'recap') {
       onComplete();
@@ -255,7 +267,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, walletBooting, blocked, step, stepIndex, devicePending, connecting, onComplete]);
+  }, [done, skip, walletBooting, blocked, step, stepIndex, arrivalStarted, devicePending, connecting, onComplete]);
 
   const handleRequestConnect = () => {
     if (interactionLocked || connectRequested) return;
@@ -454,7 +466,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             </div>
 
             <div
-              className={`connect-cable ${showCable ? `is-${connection}` : 'is-dormant'}${syncing ? ' is-syncing' : ''}`}
+              className={`connect-cable ${arrivalStarted && showCable ? `is-${connection}` : 'is-dormant'}${syncing ? ' is-syncing' : ''}`}
               aria-hidden="true"
             >
               <svg
@@ -477,7 +489,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               <span className="connect-cable-plug plug-end" />
             </div>
 
-            <div className={`connect-device-stage ${connection === 'idle' ? 'is-dormant' : `phase-${connection}`}`}>
+            <div
+              className={`connect-device-stage ${!arrivalStarted || connection === 'idle' ? 'is-dormant' : `phase-${connection}`}`}
+            >
               <HardwareWallet
                 mode="withdraw"
                 initialPhase="ready-menu"
