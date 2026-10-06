@@ -39,7 +39,7 @@ const CONNECTION_DELAYS: Record<ConnectionPhase, number> = {
 };
 
 const HANDOFF_MESSAGES = [
-  "Now let's get your hardware wallet connected. But before we do that I'd like to introduce you to a colleague of mine.",
+  "Now let's connect your hardware wallet to a wallet interface. But before we do that I'd like to introduce you to a colleague of mine.",
   "She'll be the one to teach you all about the connecting part — I'll let her take it from here.",
 ];
 
