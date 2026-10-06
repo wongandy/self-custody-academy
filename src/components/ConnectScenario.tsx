@@ -26,9 +26,9 @@ const ARRIVE_MS = 760;
 const PLUG_MS = 820;
 const SEAT_MS = 700;
 
-const BOOT_BRAND_MS = 640;
-const BOOT_LOAD_MS = 620;
-const BOOT_FADE_MS = 300;
+const BOOT_BRAND_MS = 1200;
+const BOOT_LOAD_MS = 1300;
+const BOOT_FADE_MS = 460;
 
 const CONNECTION_DELAYS: Record<ConnectionPhase, number> = {
   idle: ARRIVE_MS,
