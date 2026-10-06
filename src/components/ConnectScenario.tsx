@@ -20,7 +20,7 @@ type Step =
 
 type ConnectionPhase = 'idle' | 'arriving' | 'plugging' | 'seating' | 'linked';
 
-type BootPhase = 'brand' | 'loading' | 'leaving' | 'ready';
+type BootPhase = 'pending' | 'brand' | 'loading' | 'leaving' | 'ready';
 
 const ARRIVE_MS = 760;
 const PLUG_MS = 820;
@@ -151,7 +151,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [syncing, setSyncing] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
-  const [bootPhase, setBootPhase] = useState<BootPhase>('brand');
+  const [bootPhase, setBootPhase] = useState<BootPhase>('pending');
 
   const step = STEPS[stepIndex];
   const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
@@ -194,14 +194,22 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => clearTimeout(timer);
   }, [step.kind, connection]);
 
-  // The app boots: brand mark, a short load, then the tabs and history fade in.
+  // The app boots once the wallet window is on screen: brand mark, a short load,
+  // then the tabs and history fade in. Leaving the mission unmounts this component,
+  // so the sequence replays on every visit.
   useEffect(() => {
-    if (bootPhase === 'ready') return;
+    if (!walletVisible) return;
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setBootPhase('ready');
+    if (bootPhase === 'pending') {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setBootPhase('ready');
+        return;
+      }
+      setBootPhase('brand');
       return;
     }
+
+    if (bootPhase === 'ready') return;
 
     const delay = bootPhase === 'brand' ? BOOT_BRAND_MS : bootPhase === 'loading' ? BOOT_LOAD_MS : BOOT_FADE_MS;
     const timer = setTimeout(() => {
@@ -212,7 +220,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       });
     }, delay);
     return () => clearTimeout(timer);
-  }, [bootPhase]);
+  }, [walletVisible, bootPhase]);
 
   const handleContinue = useCallback(() => {
     if (!done) {
