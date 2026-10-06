@@ -192,7 +192,7 @@ function App() {
               <img src={bitcoinImage} alt="Bitcoin" className="brand-logo-image" />
             </span> */}
             <span className="brand-name">
-              <span>SELF-CUSTODY</span> <strong>ACADEMY</strong>
+              <span>SELF CUSTODY</span> <strong>ACADEMY</strong>
             </span>
           </a>
         )}
