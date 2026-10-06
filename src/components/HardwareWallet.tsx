@@ -45,6 +45,7 @@ type HardwareWalletProps = {
   onReadyMenuSelect?: (label: string) => void;
   onFactoryResetAttempt?: () => void;
   onConnectConfirm?: () => void;
+  connectRequest?: boolean;
   advanceToReadyMenu?: boolean;
   advanceFromRecoverIntro?: boolean;
   startAtMenu?: boolean;
@@ -95,7 +96,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, connectRequest = false, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
   const [wiped, setWiped] = useState(false);
@@ -195,6 +196,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     updatePhase('ready-menu');
     setMenuIndex(0);
   }, [advanceToReadyMenu, phase, updatePhase]);
+
+  // The wallet app requests the pairing; the device reacts after a short beat, as if waking to an incoming call.
+  useEffect(() => {
+    if (!connectRequest || (phase !== 'ready-menu' && phase !== 'menu')) return;
+    const timer = setTimeout(() => updatePhase('connect-confirm'), 450);
+    return () => clearTimeout(timer);
+  }, [connectRequest, phase, updatePhase]);
 
   useEffect(() => {
     if (!advanceFromRecoverIntro || phase !== 'recover-intro') return;

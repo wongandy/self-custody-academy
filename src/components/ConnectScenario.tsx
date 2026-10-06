@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight } from 'lucide-react';
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight, Link2 } from 'lucide-react';
 import HardwareWallet from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
@@ -12,7 +12,8 @@ type ConnectScenarioProps = {
 type Step =
   | { kind: 'mentor'; mentor: 'andy' | 'maria' }
   | { kind: 'tour' }
-  | { kind: 'connect-device' }
+  | { kind: 'connect-request' }
+  | { kind: 'device-prompt' }
   | { kind: 'connected' }
   | { kind: 'recap' };
 
@@ -30,7 +31,9 @@ const TOUR_MESSAGE = 'Go ahead and click the Transactions tab on the left to ope
 
 const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
 
-const CONNECT_DEVICE_MESSAGE = "It's empty for now — because the app isn't connected to your device yet. It's time to plug in your hardware wallet so its transaction shows up here. Go ahead and confirm the connection on the device's own screen.";
+const CONNECT_DEVICE_MESSAGE = "Your history lives on the device, so the app can't show anything until you link them. Click the Connect hardware wallet button in the app to send the pairing request.";
+
+const DEVICE_PROMPT_MESSAGE = "The request woke your device up — it's asking you to confirm. Only allow a connection you started yourself. Press the checkmark on the device to approve it.";
 
 const WALLET_CONNECTED_MESSAGE = "There it is — the 0.04998 BTC you loaded onto the device is now showing in your Transactions tab. Your keys never left the device; the app is simply a window onto it.";
 
@@ -42,7 +45,8 @@ const STEPS: Step[] = [
   { kind: 'mentor', mentor: 'maria' },
   { kind: 'mentor', mentor: 'maria' },
   { kind: 'tour' },
-  { kind: 'connect-device' },
+  { kind: 'connect-request' },
+  { kind: 'device-prompt' },
   { kind: 'connected' },
   { kind: 'recap' },
 ];
@@ -99,8 +103,10 @@ function stepMessage(step: Step, stepIndex: number): string {
       return MARIA_MESSAGES[stepIndex - HANDOFF_MESSAGES.length];
     case 'tour':
       return TOUR_MESSAGE;
-    case 'connect-device':
+    case 'connect-request':
       return CONNECT_DEVICE_MESSAGE;
+    case 'device-prompt':
+      return DEVICE_PROMPT_MESSAGE;
     case 'connected':
       return WALLET_CONNECTED_MESSAGE;
     case 'recap':
@@ -111,6 +117,7 @@ function stepMessage(step: Step, stepIndex: number): string {
 export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [transactionsVisited, setTransactionsVisited] = useState(false);
+  const [connectRequested, setConnectRequested] = useState(false);
   const [connected, setConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [blocked, setBlocked] = useState(false);
@@ -123,8 +130,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   const laptopVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'tour');
   const spotlight = !laptopVisible;
-  const deviceVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'connect-device');
-  const devicePending = step.kind === 'connect-device' && (!connected || syncing);
+  const deviceVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'connect-request');
+  const requestPending = step.kind === 'connect-request' && !connectRequested;
+  const confirmPending = step.kind === 'device-prompt' && (!connected || syncing);
+  const devicePending = requestPending || confirmPending;
 
   const canContinue = done
     && (blocked || (!(step.kind === 'tour' && !transactionsVisited) && !devicePending));
@@ -156,6 +165,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
   }, [done, skip, blocked, step, stepIndex, transactionsVisited, devicePending, onComplete]);
+
+  const handleRequestConnect = () => {
+    if (connectRequested) return;
+    setConnectRequested(true);
+    setStepIndex((current) => (STEPS[current].kind === 'connect-request' ? current + 1 : current));
+  };
 
   const handleDeviceConfirm = () => {
     setConnected(true);
@@ -297,7 +312,19 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={3} className="wallet-tx-empty">Connect your hardware wallet to see your history</td>
+                                <td colSpan={3} className="wallet-tx-empty-cell">
+                                  <div className="wallet-tx-empty">
+                                    <span>Connect your hardware wallet to see your history</span>
+                                    <button
+                                      type="button"
+                                      className={requestPending ? 'wallet-connect-btn attention' : 'wallet-connect-btn'}
+                                      onClick={handleRequestConnect}
+                                    >
+                                      <Link2 size={14} strokeWidth={2.2} />
+                                      <span>Connect hardware wallet</span>
+                                    </button>
+                                  </div>
+                                </td>
                               </tr>
                             )}
                           </tbody>
@@ -344,7 +371,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             {deviceVisible && (
               <div className="connect-device-stage">
                 <HardwareWallet
-                  initialPhase="connect-confirm"
+                  mode="withdraw"
+                  initialPhase="ready-menu"
+                  connectRequest={connectRequested}
                   onConnectConfirm={handleDeviceConfirm}
                   onComplete={() => {}}
                 />
