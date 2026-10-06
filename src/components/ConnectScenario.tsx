@@ -11,7 +11,6 @@ type ConnectScenarioProps = {
 
 type Step =
   | { kind: 'mentor'; mentor: 'andy' | 'maria' }
-  | { kind: 'tour' }
   | { kind: 'connect-request' }
   | { kind: 'device-prompt' }
   | { kind: 'connected' }
@@ -24,14 +23,12 @@ const HANDOFF_MESSAGES = [
 
 const MARIA_MESSAGES = [
   "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
-  "This is your wallet interface. The Transactions tab is your account history — every payment in or out shows up here, with its date and amount.",
+  "A wallet interface is simply an app that lets you view and manage your Bitcoin — your balance, your history, your payments. Yours is already running on your laptop, so let's take a look inside it.",
 ];
-
-const TOUR_MESSAGE = 'Go ahead and click the Transactions tab on the left to open it.';
 
 const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
 
-const CONNECT_DEVICE_MESSAGE = "Your history lives on the device, so the app can't show anything until you link them. Click the Connect hardware wallet button in the app to send the pairing request.";
+const CONNECT_DEVICE_MESSAGE = "This is the Transactions tab — your account history. Every payment in or out shows up here with its date and amount. It's empty because the app isn't linked to your device yet, so click the Connect hardware wallet button to send the pairing request.";
 
 const DEVICE_PROMPT_MESSAGE = "The request woke your device up — it's asking you to confirm. Only allow a connection you started yourself. Press the checkmark on the device to approve it.";
 
@@ -44,7 +41,6 @@ const STEPS: Step[] = [
   { kind: 'mentor', mentor: 'andy' },
   { kind: 'mentor', mentor: 'maria' },
   { kind: 'mentor', mentor: 'maria' },
-  { kind: 'tour' },
   { kind: 'connect-request' },
   { kind: 'device-prompt' },
   { kind: 'connected' },
@@ -101,8 +97,6 @@ function stepMessage(step: Step, stepIndex: number): string {
     case 'mentor':
       if (step.mentor === 'andy') return HANDOFF_MESSAGES[stepIndex];
       return MARIA_MESSAGES[stepIndex - HANDOFF_MESSAGES.length];
-    case 'tour':
-      return TOUR_MESSAGE;
     case 'connect-request':
       return CONNECT_DEVICE_MESSAGE;
     case 'device-prompt':
@@ -116,7 +110,6 @@ function stepMessage(step: Step, stepIndex: number): string {
 
 export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [transactionsVisited, setTransactionsVisited] = useState(false);
   const [connectRequested, setConnectRequested] = useState(false);
   const [connected, setConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -128,15 +121,14 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const message = blocked ? BLOCKED_MESSAGE : stepMessage(step, stepIndex);
   const { displayed, done, skip } = useTypewriter(message);
 
-  const laptopVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'tour');
+  const laptopVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'connect-request');
   const spotlight = !laptopVisible;
   const deviceVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'connect-request');
   const requestPending = step.kind === 'connect-request' && !connectRequested;
   const confirmPending = step.kind === 'device-prompt' && (!connected || syncing);
   const devicePending = requestPending || confirmPending;
 
-  const canContinue = done
-    && (blocked || (!(step.kind === 'tour' && !transactionsVisited) && !devicePending));
+  const canContinue = done && (blocked || !devicePending);
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -151,7 +143,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       setBlocked(false);
       return;
     }
-    if (step.kind === 'tour' && !transactionsVisited) return;
     if (devicePending) return;
     if (step.kind === 'recap') {
       onComplete();
@@ -164,7 +155,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, blocked, step, stepIndex, transactionsVisited, devicePending, onComplete]);
+  }, [done, skip, blocked, step, stepIndex, devicePending, onComplete]);
 
   const handleRequestConnect = () => {
     if (connectRequested) return;
@@ -233,8 +224,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleContinue]);
 
-  const navAttention = step.kind === 'tour' && !transactionsVisited;
-
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? '' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
@@ -251,11 +240,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                   <aside className="wallet-sidebar">
                     <button
                       type="button"
-                      className={`wallet-nav-item active ${navAttention ? 'wallet-nav-attention' : ''}`}
-                      onClick={() => {
-                        setBlocked(false);
-                        setTransactionsVisited(true);
-                      }}
+                      className="wallet-nav-item active"
+                      onClick={() => setBlocked(false)}
                       aria-pressed="true"
                     >
                       <ArrowLeftRight strokeWidth={2.2} />
