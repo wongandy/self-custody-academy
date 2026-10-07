@@ -1064,7 +1064,7 @@ a {
   .hero-section {
     min-height: auto;
     gap: 38px;
-    padding: 76px 0 56px;
+    padding: 76px 20px 56px;
   }
 
   .illustration-card {
