@@ -863,7 +863,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text hw-screen-success">
                 <CheckCircle2 size={28} strokeWidth={1.8} />
                 <span className="hw-screen-title">Connected</span>
-                <p className="hw-screen-body">This device is now linked to the wallet app.</p>
+                <p className="hw-screen-body">This device is now linked to the wallet software.</p>
               </div>
             )}
           </div>
