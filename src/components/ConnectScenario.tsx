@@ -64,7 +64,7 @@ const CONNECT_DEVICE_MESSAGE =
 
 const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware wallet by pressing the checkmark button.";
 
-const WALLET_CONNECTED_MESSAGE = "There it is — the 0.04998 BTC you loaded onto the device is now showing in your Transactions tab. Your keys never left the device; the app is simply a window onto it.";
+const WALLET_CONNECTED_MESSAGE = "Nicely done! You have successfully paired your hardware wallet with the Cairn wallet software.";
 
 const WALLET_RECAP_MESSAGE = "Remember: the wallet app holds no keys of its own. It only asks your device to sign. That's why you confirm on the device, not the computer — exactly what you just did. Great job!";
 
