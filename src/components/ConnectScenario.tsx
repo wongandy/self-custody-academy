@@ -73,6 +73,7 @@ const STEPS: Step[] = [
   { kind: 'mentor', mentor: 'andy' },
   { kind: 'mentor', mentor: 'maria' },
   { kind: 'mentor', mentor: 'maria' },
+  { kind: 'mentor', mentor: 'maria' },
   { kind: 'wallet-intro' },
   { kind: 'device-arrival' },
   { kind: 'connect-request' },
@@ -80,6 +81,8 @@ const STEPS: Step[] = [
   { kind: 'connected' },
   { kind: 'recap' },
 ];
+
+const WALLET_INTRO_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-intro');
 
 const WALLET_BALANCE = '0.04998';
 const WALLET_APP_NAME = 'Cairn';
@@ -170,7 +173,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       : stepMessage(step, stepIndex);
   const { displayed, done, skip } = useTypewriter(message);
 
-  const walletVisible = stepIndex >= STEPS.findIndex((s) => s.kind === 'wallet-intro');
+  const walletVisible = stepIndex >= WALLET_INTRO_INDEX;
   const spotlight = !walletVisible;
   const showCable = connection === 'plugging' || connection === 'seating' || connection === 'linked';
   const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
@@ -260,7 +263,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       onComplete();
       return;
     }
-    if (step.kind === 'mentor' && stepIndex === 3 && portraitRef.current && bubbleRef.current) {
+    if (step.kind === 'mentor' && stepIndex === WALLET_INTRO_INDEX - 1 && portraitRef.current && bubbleRef.current) {
       flipRects.current = {
         portrait: portraitRef.current.getBoundingClientRect(),
         bubble: bubbleRef.current.getBoundingClientRect(),
