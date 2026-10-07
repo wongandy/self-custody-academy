@@ -60,7 +60,7 @@ const DEVICE_ARRIVAL_MESSAGE =
 const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
 
 const CONNECT_DEVICE_MESSAGE =
-  'Your hardware wallet is now connected to the laptop. Click the Connect hardware wallet button to send the pairing request.';
+  'Your hardware wallet is now connected to the laptop. Click the Connect hardware wallet button on the app to send the pairing request.';
 
 const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware wallet by pressing the checkmark button.";
 
