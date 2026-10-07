@@ -15,8 +15,7 @@ type Step =
   | { kind: 'device-arrival' }
   | { kind: 'connect-request' }
   | { kind: 'device-prompt' }
-  | { kind: 'connected' }
-  | { kind: 'recap' };
+  | { kind: 'connected' };
 
 type ConnectionPhase = 'idle' | 'arriving' | 'plugging' | 'seating' | 'linked';
 
@@ -66,8 +65,6 @@ const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware 
 
 const WALLET_CONNECTED_MESSAGE = "Good job! You have successfully paired your hardware wallet with the Cairn wallet software.";
 
-const WALLET_RECAP_MESSAGE = "Remember: the wallet app holds no keys of its own. It only asks your device to sign. That's why you confirm on the device, not the computer — exactly what you just did. Great job!";
-
 const STEPS: Step[] = [
   { kind: 'mentor', mentor: 'andy' },
   { kind: 'mentor', mentor: 'andy' },
@@ -79,7 +76,6 @@ const STEPS: Step[] = [
   { kind: 'connect-request' },
   { kind: 'device-prompt' },
   { kind: 'connected' },
-  { kind: 'recap' },
 ];
 
 const WALLET_INTRO_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-intro');
@@ -145,8 +141,6 @@ function stepMessage(step: Step, stepIndex: number): string {
       return DEVICE_PROMPT_MESSAGE;
     case 'connected':
       return WALLET_CONNECTED_MESSAGE;
-    case 'recap':
-      return WALLET_RECAP_MESSAGE;
   }
 }
 
@@ -267,7 +261,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       return;
     }
     if (devicePending || connecting) return;
-    if (step.kind === 'recap') {
+    if (step.kind === 'connected') {
       onComplete();
       return;
     }
@@ -557,9 +551,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 handleContinue();
               }}
               disabled={!canContinue}
-              aria-label={step.kind === 'recap' ? 'Complete mission' : 'Continue'}
+              aria-label={step.kind === 'connected' ? 'Complete mission' : 'Continue'}
             >
-              {step.kind === 'recap' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
+              {step.kind === 'connected' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
             </button>
           </div>
         </div>
