@@ -442,12 +442,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   const cableClass = [
     'connect-cable',
-    mobileCableHalf ? 'is-half' : showCable ? `is-${connection}` : 'is-dormant',
+    showCable ? `is-${connection}` : 'is-dormant',
     syncing ? 'is-syncing' : '',
   ].filter(Boolean).join(' ');
 
   const cableEl = (
-    <div className={cableClass} aria-hidden="true">
+    <div className={`${cableClass}${isMobile && step.kind === 'device-arrival' && arrivalStarted ? ' cable-under-wallet' : ''}${isMobile && mobilePanel === 'device' ? ' cable-device-panel' : ''}`} aria-hidden="true">
       <svg
         className="connect-cable-wire connect-cable-wire-h"
         viewBox="0 0 100 40"
@@ -474,19 +474,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         {walletVisible && (
           <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${mobileCableHalf ? ' mobile-half-cable' : ''}`}>
-            {showMobileSwitch && (
-              <button
-                type="button"
-                className={`withdraw-switch-btn withdraw-switch-btn-enter${mobileCableHalf ? ' withdraw-switch-btn-pulse' : ''}`}
-                onClick={handleMobileSwitch}
-              >
-                <ArrowLeftRight size={14} strokeWidth={2.2} />
-                <span key={mobilePanel} className="withdraw-switch-label">
-                  {mobilePanel === 'device' ? 'Switch to wallet software' : 'Switch to hardware wallet'}
-                </span>
-              </button>
-            )}
-
             <div className={`wallet-laptop laptop-enter${isMobile && mobilePanel === 'device' ? ' mobile-hidden' : ''}`}>
               <div ref={laptopRef} className="wallet-window">
                 <div className="wallet-window-titlebar">
@@ -609,9 +596,22 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                   </div>
                 </div>
               </div>
+
+              {mobileCableHalf && cableEl}
             </div>
 
-            {mobileCableHalf && cableEl}
+            {showMobileSwitch && (
+              <button
+                type="button"
+                className={`withdraw-switch-btn withdraw-switch-btn-enter${mobileCableHalf ? ' withdraw-switch-btn-pulse' : ''}`}
+                onClick={handleMobileSwitch}
+              >
+                <ArrowLeftRight size={14} strokeWidth={2.2} />
+                <span key={mobilePanel} className="withdraw-switch-label">
+                  {mobilePanel === 'device' ? 'Switch to wallet software' : 'Switch to hardware wallet'}
+                </span>
+              </button>
+            )}
 
             {!isMobile && cableEl}
 

@@ -5984,18 +5984,19 @@ a {
     min-height: 100vh;
     min-height: 100dvh;
     overflow: visible;
-    padding: 68px 0 24px;
+    padding: 60px 0 24px;
   }
 
   .scenario-page-connect .scenario-mentor-layout {
     gap: 12px;
-    padding: 8px 16px 0;
+    padding: 4px 16px 0;
   }
 
   .scenario-page-connect .wallet-laptop {
     max-width: 100%;
     flex: none;
-    height: calc(100dvh - 310px);
+    margin-top: 0;
+    height: calc(100dvh - 280px);
     min-height: 320px;
   }
 
@@ -6016,7 +6017,7 @@ a {
      the panels, and the hardware wallet is a separate panel reached by switching. */
 
   .scenario-page-connect .connect-duo.is-wide {
-    gap: 12px;
+    gap: 8px;
   }
 
   .scenario-page-connect .connect-duo.is-wide .withdraw-switch-btn {
@@ -6039,135 +6040,139 @@ a {
     width: 100%;
   }
 
-  /* Half-drawn cord on the phone: attaches to the wallet window's right edge and
-     runs off screen, cut off, until the learner switches to the hardware wallet */
+  /* Phone flow: the cord drops from the wallet window's bottom center, bends
+     right and runs off screen, cut off, until the learner switches panels */
 
   .connect-duo.mobile-half-cable {
     position: relative;
   }
 
-  .connect-duo.mobile-half-cable .connect-cable {
+  .connect-duo.mobile-half-cable .wallet-laptop {
+    position: relative;
+  }
+
+  /* The cord leaves the wallet window's right edge and runs off screen, cut off,
+     until the learner switches to the hardware wallet panel */
+  .connect-duo.mobile-half-cable .connect-cable.cable-under-wallet {
     position: absolute;
-    top: 50%;
-    right: -32px;
+    top: 46%;
+    left: 100%;
     z-index: 4;
-    width: 44px;
+    width: 46px;
     height: 36px;
     margin: 0;
     transform: translateY(-50%);
   }
 
-  .connect-duo.mobile-half-cable .connect-cable-wire-h {
+  .connect-duo.mobile-half-cable .connect-cable.cable-under-wallet .connect-cable-wire-h {
     display: block;
   }
 
-  .connect-duo.mobile-half-cable .connect-cable-wire-v {
+  .connect-duo.mobile-half-cable .connect-cable.cable-under-wallet .connect-cable-wire-v {
     display: none;
   }
 
-  .connect-duo.mobile-half-cable .connect-cable .plug-start {
+  .connect-duo.mobile-half-cable .connect-cable.cable-under-wallet .plug-start {
     top: 50%;
     left: -5px;
     width: 16px;
     height: 11px;
     border-radius: 3px 2px 2px 3px;
     transform: translateY(-50%);
-  }
-
-  .connect-duo.mobile-half-cable .connect-cable .plug-start {
     opacity: 1;
     animation: none;
   }
 
-  .connect-duo.mobile-half-cable .connect-cable .plug-end {
+  .connect-duo.mobile-half-cable .connect-cable.cable-under-wallet .plug-end {
     display: none;
   }
 
-  .connect-duo.mobile-half-cable .connect-cable .cable-line {
-    stroke-dashoffset: 0;
-  }
-
-  /* The cord is cut off by the panel edge: only its left half is inside the duo */
-  .scenario-page-connect .connect-duo {
-    overflow: visible;
-  }
-
-  .connect-duo.mobile-half-cable .connect-cable {
-    clip-path: inset(-8px 0 -8px 0);
-  }
-
-  /* Cord drawn fully once the device panel is linked on the phone */
-  .scenario-page-connect .connect-cable {
-    width: 44px;
-    height: 36px;
-  }
-
-  .scenario-page-connect .connect-cable.is-linked .cable-line {
+  .connect-duo.mobile-half-cable .connect-cable.cable-under-wallet .cable-line {
     stroke-dashoffset: 0;
   }
 
   /* Cord on the device panel: runs from the panel's left edge (cut off, coming
-     from the wallet software's side) and plugs into the device's left side */
+     from the wallet software's side) and plugs into the device's left side.
+     The device is 268px wide and centred, so half the panel minus 120px lands
+     the far plug 14px inside the device's left edge on any phone width. */
   .scenario-page-connect .connect-device-stage {
     position: relative;
   }
 
   .connect-device-row {
-    position: relative;
     display: flex;
+    align-items: center;
     justify-content: center;
   }
 
-  .connect-device-row .connect-cable {
-    position: static;
-    flex-shrink: 0;
-    align-self: center;
-    margin-right: -14px;
+  .connect-device-row .connect-cable.cable-device-panel {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
     z-index: 4;
-    width: 44px;
-    height: 36px;
+    width: calc(50% - 118px);
+    height: 40px;
+    margin: 0;
   }
 
-  .connect-device-row .connect-cable-wire-h {
+  .connect-device-row .connect-cable.cable-device-panel .connect-cable-wire-h {
     display: block;
   }
 
-  .connect-device-row .connect-cable-wire-v {
+  .connect-device-row .connect-cable.cable-device-panel .connect-cable-wire-v {
     display: none;
   }
 
-  .connect-device-row .connect-cable .plug-start {
+  .connect-device-row .connect-cable.cable-device-panel .plug-start {
     top: 50%;
-    left: -5px;
+    left: 0;
     width: 16px;
     height: 11px;
     border-radius: 3px 2px 2px 3px;
-    transform: translateY(-50%);
+    transform: translate(-50%, -50%);
     opacity: 1;
     animation: none;
   }
 
-  .connect-device-row .connect-cable .plug-end {
+  .connect-device-row .connect-cable.cable-device-panel .plug-end {
     top: 50%;
     left: auto;
     right: -5px;
     width: 16px;
     height: 11px;
     border-radius: 2px 3px 3px 2px;
+    opacity: 0;
     transform: translateY(-50%);
   }
 
-  .connect-device-row .connect-cable.is-linked .plug-end {
+  .connect-device-row .connect-cable.cable-device-panel.is-plugging .plug-end {
+    animation: cable-plug-ride-x 780ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .connect-device-row .connect-cable.cable-device-panel.is-plugging .plug-end,
+  .connect-device-row .connect-cable.cable-device-panel.is-seating .plug-end,
+  .connect-device-row .connect-cable.cable-device-panel.is-linked .plug-end {
     opacity: 1;
     transform: translateY(-50%);
   }
 
-  .connect-device-row .connect-cable.is-linked .cable-line {
+  .connect-device-row .connect-cable.cable-device-panel.is-seating .plug-end {
+    animation: cable-plug-settle-x 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .connect-device-row .connect-cable.cable-device-panel .cable-line {
     stroke-dashoffset: 0;
   }
 
   .scenario-page-connect .connect-device-stage.phase-arriving {
     animation: device-slide-in 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* The device-panel cord renders inside whichever panel the story is on;
+     hide it while the device is still off screen */
+  .connect-device-row .connect-cable.cable-device-panel.is-dormant {
+    display: none;
   }
 }
 
