@@ -45,7 +45,7 @@ const HANDOFF_MESSAGES = [
 
 const MARIA_MESSAGES = [
   "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
-  "A wallet software is simply an app that lets you view and manage your Bitcoin — your balance, your history, your payments.",
+  "A wallet software is simply an app installed on your laptop that lets you view and manage your Bitcoin — your balance, your history, your payments.",
   "We'll be using one you already have installed on your laptop called Cairn. Let's take a look inside it.",
 ];
 
