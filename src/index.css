@@ -5314,6 +5314,9 @@ a {
   flex-direction: column;
 }
 
+/* Until Maria finishes the plug-in line the laptop is simply centered —
+   the wide side-by-side layout only engages via .connect-duo.is-wide */
+
 .scenario-page-connect .wallet-window {
   height: 100%;
   min-height: 0;
@@ -5625,21 +5628,21 @@ a {
   100% { opacity: 1; transform: translate(0, -50%) scale(1); }
 }
 
-/* Wallet window and device side by side once the device appears */
+/* Wallet window and device side by side once the device appears (opt-in via .is-wide) */
 
 .scenario-page-connect .scenario-mentor-layout {
   gap: 16px;
   padding: 8px 28px 0;
 }
 
-.scenario-page-connect .connect-duo {
+.scenario-page-connect .connect-duo.is-wide {
   flex-direction: row;
   align-items: flex-start;
   justify-content: center;
   gap: 0;
 }
 
-.scenario-page-connect .wallet-laptop {
+.scenario-page-connect .connect-duo.is-wide .wallet-laptop {
   flex: 1 1 auto;
 }
 
@@ -5754,12 +5757,12 @@ a {
 }
 
 @media (max-width: 1180px) {
-  .scenario-page-connect .connect-duo {
+  .scenario-page-connect .connect-duo.is-wide {
     flex-direction: column;
     gap: 0;
   }
 
-  .scenario-page-connect .wallet-laptop {
+  .scenario-page-connect .connect-duo.is-wide .wallet-laptop {
     flex: 0 1 auto;
     max-width: 640px;
   }
