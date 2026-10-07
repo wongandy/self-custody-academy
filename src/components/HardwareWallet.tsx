@@ -855,7 +855,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Connect</span>
                 <p className="hw-screen-body">
-                  A wallet app wants to connect to this device. Confirm only if you plugged it in yourself.
+                  A wallet software wants to connect to this device. Confirm only if you plugged it in yourself.
                 </p>
               </div>
             )}
