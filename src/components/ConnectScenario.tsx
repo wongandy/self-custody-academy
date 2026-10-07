@@ -153,7 +153,17 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
   const [arrivalStarted, setArrivalStarted] = useState(false);
   const [bootPhase, setBootPhase] = useState<BootPhase>('pending');
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
+  const [mobilePanel, setMobilePanel] = useState<'software' | 'device'>('software');
+  const [mobileDeviceEntered, setMobileDeviceEntered] = useState(false);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 600px)');
+    const onChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
 
   const SLIDE_SETTLE_MS = 620;
 
@@ -172,7 +182,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   const walletVisible = stepIndex >= WALLET_INTRO_INDEX;
   const spotlight = !walletVisible;
-  const showCable = connection === 'plugging' || connection === 'seating' || connection === 'linked';
+  const mobileCableHalf = isMobile && walletVisible && step.kind === 'device-arrival' && arrivalStarted && !mobileDeviceEntered;
+  const showCable = mobileCableHalf || connection === 'plugging' || connection === 'seating' || connection === 'linked';
+  const showMobileSwitch = isMobile && walletVisible && arrivalStarted;
   const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
   const sliding = step.kind === 'device-arrival' && !arrivalStarted;
 
@@ -192,22 +204,30 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
-  // The device stays off screen until the learner continues from Maria's explanation.
+  // The device stays off screen until the learner continues from Maria's explanation;
+  // on phones it stays off screen until they tap "Switch to hardware wallet".
   useEffect(() => {
     if (step.kind !== 'device-arrival' || !arrivalStarted) return;
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       if (connection !== 'linked') setConnection('linked');
+      if (isMobile) {
+        setMobileDeviceEntered(true);
+        setMobilePanel('device');
+      }
       return;
     }
+
+    // On phones the sequence waits until the learner switches to the hardware wallet
+    if (isMobile && connection === 'idle') return;
 
     const order: ConnectionPhase[] = ['idle', 'arriving', 'plugging', 'seating', 'linked'];
     const nextIndex = order.indexOf(connection) + 1;
     if (nextIndex >= order.length) return;
 
-    const timer = setTimeout(() => setConnection(order[nextIndex]), CONNECTION_DELAYS[connection]);
+      const timer = setTimeout(() => setConnection(order[nextIndex]), CONNECTION_DELAYS[connection]);
     return () => clearTimeout(timer);
-  }, [step.kind, connection, arrivalStarted]);
+  }, [step.kind, connection, arrivalStarted, isMobile]);
 
   // While Maria introduces the app the wallet window is held at screen center
   // by a position offset; the layout beneath is already the final side-by-side
@@ -255,10 +275,26 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   }, [step.kind, done, arrivalStarted]);
 
   // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
+  // On phones the linked cord stays visible for a beat before the view returns to the app.
   useEffect(() => {
     if (step.kind !== 'device-arrival' || connection !== 'linked') return;
-    setStepIndex((current) => (STEPS[current].kind === 'device-arrival' ? current + 1 : current));
-  }, [step.kind, connection]);
+    const timer = setTimeout(() => {
+      setStepIndex((current) => (STEPS[current].kind === 'device-arrival' ? current + 1 : current));
+    }, isMobile ? 1400 : 0);
+    return () => clearTimeout(timer);
+  }, [step.kind, connection, isMobile]);
+
+  // On phones the visible panel follows the story: the app for the pairing
+  // request, the sync and the result; the device while the pairing is confirmed on it.
+  useEffect(() => {
+    if (!isMobile || !mobileDeviceEntered) return;
+    if (syncing) {
+      setMobilePanel('software');
+      return;
+    }
+    if (step.kind === 'connect-request' || step.kind === 'connected') setMobilePanel('software');
+    else if (step.kind === 'device-prompt') setMobilePanel('device');
+  }, [isMobile, mobileDeviceEntered, step.kind, syncing]);
 
   // The device has confirmed the pairing and the sync animation has run its course:
   // the balance and history are on screen, so Maria moves to her connected line on her own.
@@ -328,6 +364,16 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     setStepIndex((current) => (STEPS[current].kind === 'connect-request' ? current + 1 : current));
   };
 
+  const handleMobileSwitch = () => {
+    if (!mobileDeviceEntered) {
+      setMobileDeviceEntered(true);
+      setMobilePanel('device');
+      setConnection((current) => (current === 'idle' ? 'arriving' : current));
+      return;
+    }
+    setMobilePanel((current) => (current === 'device' ? 'software' : 'device'));
+  };
+
   const handleDeviceConfirm = () => {
     setConnected(true);
     setSyncing(true);
@@ -394,12 +440,54 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleContinue]);
 
+  const cableClass = [
+    'connect-cable',
+    mobileCableHalf ? 'is-half' : showCable ? `is-${connection}` : 'is-dormant',
+    syncing ? 'is-syncing' : '',
+  ].filter(Boolean).join(' ');
+
+  const cableEl = (
+    <div className={cableClass} aria-hidden="true">
+      <svg
+        className="connect-cable-wire connect-cable-wire-h"
+        viewBox="0 0 100 40"
+        preserveAspectRatio="none"
+      >
+        <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+        <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+      </svg>
+      <svg
+        className="connect-cable-wire connect-cable-wire-v"
+        viewBox="0 0 40 100"
+        preserveAspectRatio="none"
+      >
+        <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+        <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+      </svg>
+      <span className="connect-cable-plug plug-start" />
+      <span className="connect-cable-plug plug-end" />
+    </div>
+  );
+
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? '' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         {walletVisible && (
-          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}`}>
-            <div className="wallet-laptop laptop-enter">
+          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${mobileCableHalf ? ' mobile-half-cable' : ''}`}>
+            {showMobileSwitch && (
+              <button
+                type="button"
+                className={`withdraw-switch-btn withdraw-switch-btn-enter${mobileCableHalf ? ' withdraw-switch-btn-pulse' : ''}`}
+                onClick={handleMobileSwitch}
+              >
+                <ArrowLeftRight size={14} strokeWidth={2.2} />
+                <span key={mobilePanel} className="withdraw-switch-label">
+                  {mobilePanel === 'device' ? 'Switch to wallet software' : 'Switch to hardware wallet'}
+                </span>
+              </button>
+            )}
+
+            <div className={`wallet-laptop laptop-enter${isMobile && mobilePanel === 'device' ? ' mobile-hidden' : ''}`}>
               <div ref={laptopRef} className="wallet-window">
                 <div className="wallet-window-titlebar">
                   <span className="tl-dot red" />
@@ -523,42 +611,27 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               </div>
             </div>
 
-            <div
-              className={`connect-cable ${showCable ? `is-${connection}` : 'is-dormant'}${syncing ? ' is-syncing' : ''}`}
-              aria-hidden="true"
-            >
-              <svg
-                className="connect-cable-wire connect-cable-wire-h"
-                viewBox="0 0 100 40"
-                preserveAspectRatio="none"
-              >
-                <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-                <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-              </svg>
-              <svg
-                className="connect-cable-wire connect-cable-wire-v"
-                viewBox="0 0 40 100"
-                preserveAspectRatio="none"
-              >
-                <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
-                <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
-              </svg>
-              <span className="connect-cable-plug plug-start" />
-              <span className="connect-cable-plug plug-end" />
-            </div>
+            {mobileCableHalf && cableEl}
 
-            <div
-              className={`connect-device-stage ${connection === 'idle' ? 'is-dormant' : `phase-${connection}`}`}
-            >
-              <HardwareWallet
-                mode="withdraw"
-                initialPhase="ready-menu"
-                locked={interactionLocked}
-                connectRequest={connectRequested}
-                onConnectConfirm={handleDeviceConfirm}
-                onComplete={() => {}}
-              />
-            </div>
+            {!isMobile && cableEl}
+
+            {(isMobile ? mobileDeviceEntered : true) && (
+              <div
+                className={`connect-device-stage ${!isMobile && connection === 'idle' ? 'is-dormant' : `phase-${connection}`}${isMobile && mobilePanel !== 'device' ? ' mobile-hidden' : ''}`}
+              >
+                <div className="connect-device-row">
+                  {isMobile && cableEl}
+                  <HardwareWallet
+                    mode="withdraw"
+                    initialPhase="ready-menu"
+                    locked={interactionLocked}
+                    connectRequest={connectRequested}
+                    onConnectConfirm={handleDeviceConfirm}
+                    onComplete={() => {}}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 

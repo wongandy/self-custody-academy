@@ -6011,5 +6011,163 @@ a {
   .scenario-page-connect .wallet-sidebar {
     flex-shrink: 0;
   }
+
+  /* Phone flow: the wallet window keeps its height, the switch button sits above
+     the panels, and the hardware wallet is a separate panel reached by switching. */
+
+  .scenario-page-connect .connect-duo.is-wide {
+    gap: 12px;
+  }
+
+  .scenario-page-connect .connect-duo.is-wide .withdraw-switch-btn {
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  /* The switch button lives inside the locked duo but must stay tappable:
+     the mission lock only covers the panels below it */
+  .connect-duo.is-locked .withdraw-switch-btn {
+    pointer-events: auto;
+  }
+
+  .scenario-page-connect .wallet-laptop.mobile-hidden,
+  .scenario-page-connect .connect-device-stage.mobile-hidden {
+    display: none;
+  }
+
+  .scenario-page-connect .connect-device-stage {
+    width: 100%;
+  }
+
+  /* Half-drawn cord on the phone: attaches to the wallet window's right edge and
+     runs off screen, cut off, until the learner switches to the hardware wallet */
+
+  .connect-duo.mobile-half-cable {
+    position: relative;
+  }
+
+  .connect-duo.mobile-half-cable .connect-cable {
+    position: absolute;
+    top: 50%;
+    right: -32px;
+    z-index: 4;
+    width: 44px;
+    height: 36px;
+    margin: 0;
+    transform: translateY(-50%);
+  }
+
+  .connect-duo.mobile-half-cable .connect-cable-wire-h {
+    display: block;
+  }
+
+  .connect-duo.mobile-half-cable .connect-cable-wire-v {
+    display: none;
+  }
+
+  .connect-duo.mobile-half-cable .connect-cable .plug-start {
+    top: 50%;
+    left: -5px;
+    width: 16px;
+    height: 11px;
+    border-radius: 3px 2px 2px 3px;
+    transform: translateY(-50%);
+  }
+
+  .connect-duo.mobile-half-cable .connect-cable .plug-start {
+    opacity: 1;
+    animation: none;
+  }
+
+  .connect-duo.mobile-half-cable .connect-cable .plug-end {
+    display: none;
+  }
+
+  .connect-duo.mobile-half-cable .connect-cable .cable-line {
+    stroke-dashoffset: 0;
+  }
+
+  /* The cord is cut off by the panel edge: only its left half is inside the duo */
+  .scenario-page-connect .connect-duo {
+    overflow: visible;
+  }
+
+  .connect-duo.mobile-half-cable .connect-cable {
+    clip-path: inset(-8px 0 -8px 0);
+  }
+
+  /* Cord drawn fully once the device panel is linked on the phone */
+  .scenario-page-connect .connect-cable {
+    width: 44px;
+    height: 36px;
+  }
+
+  .scenario-page-connect .connect-cable.is-linked .cable-line {
+    stroke-dashoffset: 0;
+  }
+
+  /* Cord on the device panel: runs from the panel's left edge (cut off, coming
+     from the wallet software's side) and plugs into the device's left side */
+  .scenario-page-connect .connect-device-stage {
+    position: relative;
+  }
+
+  .connect-device-row {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  .connect-device-row .connect-cable {
+    position: static;
+    flex-shrink: 0;
+    align-self: center;
+    margin-right: -14px;
+    z-index: 4;
+    width: 44px;
+    height: 36px;
+  }
+
+  .connect-device-row .connect-cable-wire-h {
+    display: block;
+  }
+
+  .connect-device-row .connect-cable-wire-v {
+    display: none;
+  }
+
+  .connect-device-row .connect-cable .plug-start {
+    top: 50%;
+    left: -5px;
+    width: 16px;
+    height: 11px;
+    border-radius: 3px 2px 2px 3px;
+    transform: translateY(-50%);
+    opacity: 1;
+    animation: none;
+  }
+
+  .connect-device-row .connect-cable .plug-end {
+    top: 50%;
+    left: auto;
+    right: -5px;
+    width: 16px;
+    height: 11px;
+    border-radius: 2px 3px 3px 2px;
+    transform: translateY(-50%);
+  }
+
+  .connect-device-row .connect-cable.is-linked .plug-end {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+
+  .connect-device-row .connect-cable.is-linked .cable-line {
+    stroke-dashoffset: 0;
+  }
+
+  .scenario-page-connect .connect-device-stage.phase-arriving {
+    animation: device-slide-in 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 }
 
