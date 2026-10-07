@@ -454,40 +454,40 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   const cableEl = (
     <div className={`${cableClass}${mobileCableVariant}`} aria-hidden="true">
-      <svg
-        className="connect-cable-wire connect-cable-wire-h"
-        viewBox="0 0 100 40"
-        preserveAspectRatio="none"
-      >
-        <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-        <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-      </svg>
-      <svg
-        className="connect-cable-wire connect-cable-wire-v"
-        viewBox="0 0 40 100"
-        preserveAspectRatio="none"
-      >
-        <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
-        <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
-      </svg>
-      <svg
-        className="connect-cable-wire connect-cable-wire-under"
-        viewBox="0 0 240 48"
-        preserveAspectRatio="none"
-      >
-        <path className="cable-line" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
-        <path className="cable-pulse" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
-      </svg>
-      <svg
-        className="connect-cable-wire connect-cable-wire-device"
-        viewBox="0 0 200 48"
-        preserveAspectRatio="none"
-      >
-        <path className="cable-line" d="M0 26 C 40 28, 100 30, 148 30 C 176 30, 200 22, 200 11" pathLength={100} />
-        <path className="cable-pulse" d="M0 26 C 40 28, 100 30, 148 30 C 176 30, 200 22, 200 11" pathLength={100} />
-      </svg>
-      <span className="connect-cable-plug plug-start" />
       <span className="plug-end-track">
+        <svg
+          className="connect-cable-wire connect-cable-wire-h"
+          viewBox="0 0 100 40"
+          preserveAspectRatio="none"
+        >
+          <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+          <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+        </svg>
+        <svg
+          className="connect-cable-wire connect-cable-wire-v"
+          viewBox="0 0 40 100"
+          preserveAspectRatio="none"
+        >
+          <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+          <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+        </svg>
+        <svg
+          className="connect-cable-wire connect-cable-wire-under"
+          viewBox="0 0 240 48"
+          preserveAspectRatio="none"
+        >
+          <path className="cable-line" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
+          <path className="cable-pulse" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
+        </svg>
+        <svg
+          className="connect-cable-wire connect-cable-wire-device"
+          viewBox="0 0 200 48"
+          preserveAspectRatio="none"
+        >
+          <path className="cable-line" d="M0 26 C 47 26, 93 26, 140 26 C 172 26, 200 20, 200 11" pathLength={100} />
+          <path className="cable-pulse" d="M0 26 C 47 26, 93 26, 140 26 C 172 26, 200 20, 200 11" pathLength={100} />
+        </svg>
+        <span className="connect-cable-plug plug-start" />
         <span className="connect-cable-plug plug-end" />
       </span>
     </div>

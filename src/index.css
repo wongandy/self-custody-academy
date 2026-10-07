@@ -5497,6 +5497,11 @@ a {
   pointer-events: none;
 }
 
+.plug-end-track {
+  position: absolute;
+  inset: 0;
+}
+
 .connect-cable-wire {
   position: absolute;
   inset: 0;
@@ -6138,22 +6143,27 @@ a {
     transform: translate(-50%, 0);
   }
 
-  /* The stub is attached to the wire: a track carries it along the very same
-     path the wire draws, so the two travel as one piece instead of the wire
-     arriving first and the stub following after it. */
+  /* The cord slides in fully formed, so its line must be drawn from the first
+     frame of the slide rather than easing in on the base draw transition. */
+
+  .connect-device-row .connect-cable.cable-device-panel .cable-line {
+    transition: none;
+  }
+
+  /* The plug is attached to the wire: the track holds the wire and the stub as one
+     piece, so they enter from the screen edge and travel to the port together. There
+     is no separate motion for the stub to fall behind. */
 
   .connect-device-row .connect-cable.cable-device-panel .plug-end-track {
-    position: absolute;
-    inset: 0;
+    animation: none;
+    transform: none;
   }
 
   .connect-device-row .connect-cable.cable-device-panel.is-plugging .plug-end-track {
-    animation: cable-plug-ride-path 780ms linear both;
+    animation: cable-cord-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .connect-device-row .connect-cable.cable-device-panel.is-plugging .cable-line {
-    animation: cable-draw-mobile 780ms linear both;
-  }
+  /* The stub must not run the base vertical ride: it travels with the track now */
 
   .connect-device-row .connect-cable.cable-device-panel.is-plugging .plug-end {
     animation: none;
@@ -6170,11 +6180,11 @@ a {
     animation: cable-plug-settle-up 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  /* The wire stays undrawn until the plug-in beat: the base is-seating/is-linked
-     rules finish the draw, so it can never appear already laid out */
+  /* Parked far enough left that the stub sits fully past the screen edge until
+     the plug-in beat, so nothing peeks in before the cord starts moving */
 
-  .connect-device-row .connect-cable.cable-device-panel.is-arriving .cable-line {
-    stroke-dashoffset: 100;
+  .connect-device-row .connect-cable.cable-device-panel.is-arriving .plug-end-track {
+    transform: translateX(-115%);
   }
 
   /* The device-panel cord renders inside whichever panel the story is on;
@@ -6184,39 +6194,9 @@ a {
   }
 }
 
-@keyframes cable-draw-mobile {
-  from { stroke-dashoffset: 100; }
-  to { stroke-dashoffset: 0; }
-}
-
-/* Sampled from the wire's own path, but taken at the wire's eased progress rather
-   than at even time steps. The wire draws on an ease-out curve (most of its length
-   in the first fifth, then a slow finish), so sampling evenly here would leave the
-   stub trailing the tip early on. Matching the eased progress keeps the stub's
-   bottom edge on the wire's leading tip throughout. */
-
-@keyframes cable-plug-ride-path {
-  0%   { transform: translate(-100%, 15px); }
-  5%   { transform: translate(-77.77%, 16.89px); }
-  10%  { transform: translate(-58.52%, 18.08px); }
-  15%  { transform: translate(-42.7%, 18.73px); }
-  20%  { transform: translate(-30.28%, 18.98px); }
-  25%  { transform: translate(-20.88%, 18.64px); }
-  30%  { transform: translate(-13.97%, 16.89px); }
-  35%  { transform: translate(-9.03%, 14.47px); }
-  40%  { transform: translate(-5.57%, 11.87px); }
-  45%  { transform: translate(-3.23%, 9.31px); }
-  50%  { transform: translate(-1.73%, 6.96px); }
-  55%  { transform: translate(-0.84%, 4.92px); }
-  60%  { transform: translate(-0.37%, 3.27px); }
-  65%  { transform: translate(-0.14%, 2.05px); }
-  70%  { transform: translate(-0.05%, 1.2px); }
-  75%  { transform: translate(-0.01%, 0.64px); }
-  80%  { transform: translate(0%, 0.31px); }
-  85%  { transform: translate(0%, 0.12px); }
-  90%  { transform: translate(0%, 0.03px); }
-  95%  { transform: translate(0%, 0px); }
-  100% { transform: translate(0%, 0px); }
+@keyframes cable-cord-enter {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes cable-plug-settle-up {
