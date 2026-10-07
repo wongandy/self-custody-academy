@@ -6189,21 +6189,33 @@ a {
   to { stroke-dashoffset: 0; }
 }
 
-/* Sampled from the wire's own path at each tenth of the draw: the stub's bottom
-   edge sits on the wire's leading tip for the whole journey, so the plug rides
-   in with the line rather than popping up on its own. */
+/* Sampled from the wire's own path, but taken at the wire's eased progress rather
+   than at even time steps. The wire draws on an ease-out curve (most of its length
+   in the first fifth, then a slow finish), so sampling evenly here would leave the
+   stub trailing the tip early on. Matching the eased progress keeps the stub's
+   bottom edge on the wire's leading tip throughout. */
 
 @keyframes cable-plug-ride-path {
   0%   { transform: translate(-100%, 15px); }
-  10%  { transform: translate(-89.7%, 15.95px); }
-  20%  { transform: translate(-79.3%, 16.77px); }
-  30%  { transform: translate(-69%, 17.47px); }
-  40%  { transform: translate(-58.7%, 18.06px); }
-  50%  { transform: translate(-48.3%, 18.53px); }
-  60%  { transform: translate(-38%, 18.84px); }
-  70%  { transform: translate(-27.6%, 18.99px); }
-  80%  { transform: translate(-17.3%, 17.89px); }
-  90%  { transform: translate(-7.2%, 13.2px); }
+  5%   { transform: translate(-77.77%, 16.89px); }
+  10%  { transform: translate(-58.52%, 18.08px); }
+  15%  { transform: translate(-42.7%, 18.73px); }
+  20%  { transform: translate(-30.28%, 18.98px); }
+  25%  { transform: translate(-20.88%, 18.64px); }
+  30%  { transform: translate(-13.97%, 16.89px); }
+  35%  { transform: translate(-9.03%, 14.47px); }
+  40%  { transform: translate(-5.57%, 11.87px); }
+  45%  { transform: translate(-3.23%, 9.31px); }
+  50%  { transform: translate(-1.73%, 6.96px); }
+  55%  { transform: translate(-0.84%, 4.92px); }
+  60%  { transform: translate(-0.37%, 3.27px); }
+  65%  { transform: translate(-0.14%, 2.05px); }
+  70%  { transform: translate(-0.05%, 1.2px); }
+  75%  { transform: translate(-0.01%, 0.64px); }
+  80%  { transform: translate(0%, 0.31px); }
+  85%  { transform: translate(0%, 0.12px); }
+  90%  { transform: translate(0%, 0.03px); }
+  95%  { transform: translate(0%, 0px); }
   100% { transform: translate(0%, 0px); }
 }
 
