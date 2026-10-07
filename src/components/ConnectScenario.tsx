@@ -63,7 +63,6 @@ const CONNECT_DEVICE_MESSAGE =
   'Your hardware wallet is now connected to the laptop. Click the Connect hardware wallet button to send the pairing request.';
 
 const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware wallet by pressing the checkmark button.";
-  "The request woke your device up — it's asking you to confirm. Only allow a connection you started yourself. Press the checkmark on the device to approve it.";
 
 const WALLET_CONNECTED_MESSAGE = "There it is — the 0.04998 BTC you loaded onto the device is now showing in your Transactions tab. Your keys never left the device; the app is simply a window onto it.";
 
