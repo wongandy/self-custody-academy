@@ -159,6 +159,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
   const [arrivalStarted, setArrivalStarted] = useState(false);
   const [bootPhase, setBootPhase] = useState<BootPhase>('pending');
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const step = STEPS[stepIndex];
   const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
@@ -215,6 +216,13 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     if (step.kind !== 'device-arrival' || connection !== 'linked') return;
     setStepIndex((current) => (STEPS[current].kind === 'device-arrival' ? current + 1 : current));
   }, [step.kind, connection]);
+
+  // The device has confirmed the pairing and the sync animation has run its course:
+  // the balance and history are on screen, so Maria moves to her connected line on her own.
+  useEffect(() => {
+    if (step.kind !== 'device-prompt' || !connected || syncing) return;
+    setStepIndex((current) => (STEPS[current].kind === 'device-prompt' ? current + 1 : current));
+  }, [step.kind, connected, syncing]);
 
   // The app boots once the wallet window is on screen: brand mark, a short load,
   // then the tabs and history fade in. Leaving the mission unmounts this component,
@@ -281,8 +289,13 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const handleDeviceConfirm = () => {
     setConnected(true);
     setSyncing(true);
-    setTimeout(() => setSyncing(false), 1800);
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => setSyncing(false), 1800);
   };
+
+  useEffect(() => () => {
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+  }, []);
 
   // Maria glides from the large spotlight portrait down to the compact row beneath the wallet window.
   useLayoutEffect(() => {
