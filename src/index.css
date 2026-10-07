@@ -6135,11 +6135,28 @@ a {
     height: 16px;
     border-radius: 3px 3px 2px 2px;
     opacity: 0;
-    transform: translate(-50%, 10px) scale(0.7);
+    transform: translate(-50%, 0);
+  }
+
+  /* The stub is attached to the wire: a track carries it along the very same
+     path the wire draws, so the two travel as one piece instead of the wire
+     arriving first and the stub following after it. */
+
+  .connect-device-row .connect-cable.cable-device-panel .plug-end-track {
+    position: absolute;
+    inset: 0;
+  }
+
+  .connect-device-row .connect-cable.cable-device-panel.is-plugging .plug-end-track {
+    animation: cable-plug-ride-path 780ms linear both;
+  }
+
+  .connect-device-row .connect-cable.cable-device-panel.is-plugging .cable-line {
+    animation: cable-draw-mobile 780ms linear both;
   }
 
   .connect-device-row .connect-cable.cable-device-panel.is-plugging .plug-end {
-    animation: cable-plug-ride-up 780ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: none;
   }
 
   .connect-device-row .connect-cable.cable-device-panel.is-plugging .plug-end,
@@ -6153,8 +6170,11 @@ a {
     animation: cable-plug-settle-up 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .connect-device-row .connect-cable.cable-device-panel .cable-line {
-    stroke-dashoffset: 0;
+  /* The wire stays undrawn until the plug-in beat: the base is-seating/is-linked
+     rules finish the draw, so it can never appear already laid out */
+
+  .connect-device-row .connect-cable.cable-device-panel.is-arriving .cable-line {
+    stroke-dashoffset: 100;
   }
 
   /* The device-panel cord renders inside whichever panel the story is on;
@@ -6164,9 +6184,27 @@ a {
   }
 }
 
-@keyframes cable-plug-ride-up {
-  from { opacity: 1; transform: translate(-50%, 34px) scale(0.9); }
-  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+@keyframes cable-draw-mobile {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Sampled from the wire's own path at each tenth of the draw: the stub's bottom
+   edge sits on the wire's leading tip for the whole journey, so the plug rides
+   in with the line rather than popping up on its own. */
+
+@keyframes cable-plug-ride-path {
+  0%   { transform: translate(-100%, 15px); }
+  10%  { transform: translate(-89.7%, 15.95px); }
+  20%  { transform: translate(-79.3%, 16.77px); }
+  30%  { transform: translate(-69%, 17.47px); }
+  40%  { transform: translate(-58.7%, 18.06px); }
+  50%  { transform: translate(-48.3%, 18.53px); }
+  60%  { transform: translate(-38%, 18.84px); }
+  70%  { transform: translate(-27.6%, 18.99px); }
+  80%  { transform: translate(-17.3%, 17.89px); }
+  90%  { transform: translate(-7.2%, 13.2px); }
+  100% { transform: translate(0%, 0px); }
 }
 
 @keyframes cable-plug-settle-up {

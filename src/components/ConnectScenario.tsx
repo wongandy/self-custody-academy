@@ -483,11 +483,13 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
         viewBox="0 0 200 48"
         preserveAspectRatio="none"
       >
-        <path className="cable-line" d="M0 22 C 40 24, 100 24, 138 18 C 172 12, 200 6, 200 0" pathLength={100} />
-        <path className="cable-pulse" d="M0 22 C 40 24, 100 24, 138 18 C 172 12, 200 6, 200 0" pathLength={100} />
+        <path className="cable-line" d="M0 26 C 40 28, 100 30, 148 30 C 176 30, 200 22, 200 11" pathLength={100} />
+        <path className="cable-pulse" d="M0 26 C 40 28, 100 30, 148 30 C 176 30, 200 22, 200 11" pathLength={100} />
       </svg>
       <span className="connect-cable-plug plug-start" />
-      <span className="connect-cable-plug plug-end" />
+      <span className="plug-end-track">
+        <span className="connect-cable-plug plug-end" />
+      </span>
     </div>
   );
 
