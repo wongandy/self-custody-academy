@@ -152,7 +152,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [blocked, setBlocked] = useState(false);
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
   const [arrivalStarted, setArrivalStarted] = useState(false);
-  const [arrivalDone, setArrivalDone] = useState(false);
   const [bootPhase, setBootPhase] = useState<BootPhase>('pending');
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -176,9 +175,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const showCable = connection === 'plugging' || connection === 'seating' || connection === 'linked';
   const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
   const sliding = step.kind === 'device-arrival' && !arrivalStarted;
-  // The laptop sits centered until Maria finishes the plug-in line, then shifts
-  // into the wide side-by-side layout that leaves room for the device.
-  const sideBySide = arrivalDone;
 
   // Nothing on the laptop, device or phone responds until the mentor has finished talking
   // and Cairn has finished starting up.
@@ -194,7 +190,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
-  const prevLayoutRef = useRef<DOMRect | null>(null);
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
   // The device stays off screen until the learner continues from Maria's explanation.
@@ -214,39 +209,50 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => clearTimeout(timer);
   }, [step.kind, connection, arrivalStarted]);
 
-  // When Maria finishes talking, capture the centered laptop position, switch to
-  // the wide layout, then start the device and cord sequence right after the glide.
+  // While Maria introduces the app the wallet window is held at screen center
+  // by a position offset; the layout beneath is already the final side-by-side
+  // one, so the window's size never changes. When Maria finishes the plug-in
+  // line the offset animates to zero: a pure position slide, no resize or reflow.
+  // The offset lives on the window (not the animated laptop wrapper) so the
+  // entrance animation's fill mode can never override it.
+  useLayoutEffect(() => {
+    const windowEl = laptopRef.current;
+    if (!windowEl || !walletVisible || arrivalStarted) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const apply = () => {
+      windowEl.style.transform = 'none';
+      const rect = windowEl.getBoundingClientRect();
+      const dx = window.innerWidth / 2 - (rect.left + rect.width / 2);
+      windowEl.style.transform = `translateX(${dx}px)`;
+    };
+    apply();
+    window.addEventListener('resize', apply);
+    return () => window.removeEventListener('resize', apply);
+  }, [walletVisible, arrivalStarted]);
+
+  // Maria finishes the plug-in line: slide the window from center to its final
+  // spot, then start the device and cord sequence once the slide has settled.
   useEffect(() => {
     if (step.kind !== 'device-arrival' || !done || arrivalStarted) return;
-    prevLayoutRef.current = laptopRef.current?.getBoundingClientRect() ?? null;
-    setArrivalDone(true);
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setArrivalStarted(true);
-      return;
+
+    const windowEl = laptopRef.current;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (windowEl && !reduce) {
+      const from = windowEl.style.transform || 'translateX(0)';
+      windowEl.style.transform = '';
+      windowEl.animate(
+        [
+          { transform: from, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { transform: 'translateX(0)', easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        ],
+        { duration: SLIDE_SETTLE_MS, fill: 'forwards' },
+      );
     }
-    const timer = setTimeout(() => setArrivalStarted(true), SLIDE_SETTLE_MS);
+
+    const timer = setTimeout(() => setArrivalStarted(true), reduce ? 0 : SLIDE_SETTLE_MS);
     return () => clearTimeout(timer);
   }, [step.kind, done, arrivalStarted]);
-
-  // Maria finishes the plug-in line: glide the laptop into the wide layout.
-  // The measured FLIP animation lands the window on its exact final position at
-  // any desktop width; reduced-motion users get the final layout immediately.
-  useLayoutEffect(() => {
-    if (!arrivalDone) return;
-    const laptopEl = laptopRef.current;
-    if (!laptopEl) return;
-    const first = prevLayoutRef.current;
-    prevLayoutRef.current = null;
-    if (!first || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const last = laptopEl.getBoundingClientRect();
-    laptopEl.animate(
-      [
-        { transform: `translate(${first.left - last.left}px, ${first.top - last.top}px)` },
-        { transform: 'translate(0, 0)' },
-      ],
-      { duration: SLIDE_SETTLE_MS, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
-    );
-  }, [arrivalDone]);
 
   // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
   useEffect(() => {
@@ -392,9 +398,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     <main className={`scenario-page scenario-page-fit ${spotlight ? '' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         {walletVisible && (
-          <div className={`connect-duo ${sideBySide ? 'is-wide' : ''} ${interactionLocked ? 'is-locked' : ''}`}>
-            <div ref={laptopRef} className="wallet-laptop laptop-enter">
-              <div className="wallet-window">
+          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}`}>
+            <div className="wallet-laptop laptop-enter">
+              <div ref={laptopRef} className="wallet-window">
                 <div className="wallet-window-titlebar">
                   <span className="tl-dot red" />
                   <span className="tl-dot yellow" />
@@ -517,12 +523,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               </div>
             </div>
 
-            {arrivalStarted && (
-              <>
-                <div
-                  className={`connect-cable ${showCable ? `is-${connection}` : 'is-dormant'}${syncing ? ' is-syncing' : ''}`}
-                  aria-hidden="true"
-                >
+            <div
+              className={`connect-cable ${showCable ? `is-${connection}` : 'is-dormant'}${syncing ? ' is-syncing' : ''}`}
+              aria-hidden="true"
+            >
               <svg
                 className="connect-cable-wire connect-cable-wire-h"
                 viewBox="0 0 100 40"
@@ -541,22 +545,20 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               </svg>
               <span className="connect-cable-plug plug-start" />
               <span className="connect-cable-plug plug-end" />
-                </div>
+            </div>
 
-                <div
-                  className={`connect-device-stage ${connection === 'idle' ? 'is-dormant' : `phase-${connection}`}`}
-                >
-                  <HardwareWallet
-                    mode="withdraw"
-                    initialPhase="ready-menu"
-                    locked={interactionLocked}
-                    connectRequest={connectRequested}
-                    onConnectConfirm={handleDeviceConfirm}
-                    onComplete={() => {}}
-                  />
-                </div>
-              </>
-            )}
+            <div
+              className={`connect-device-stage ${connection === 'idle' ? 'is-dormant' : `phase-${connection}`}`}
+            >
+              <HardwareWallet
+                mode="withdraw"
+                initialPhase="ready-menu"
+                locked={interactionLocked}
+                connectRequest={connectRequested}
+                onConnectConfirm={handleDeviceConfirm}
+                onComplete={() => {}}
+              />
+            </div>
           </div>
         )}
 

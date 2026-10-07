@@ -5312,10 +5312,12 @@ a {
   margin-top: 0;
   display: flex;
   flex-direction: column;
+  will-change: transform;
 }
 
-/* Until Maria finishes the plug-in line the laptop is simply centered —
-   the wide side-by-side layout only engages via .connect-duo.is-wide */
+/* The side-by-side layout is permanent: the window keeps one size for the whole
+   mission. Centering before the slide is done with a transform offset, never
+   with a layout change, so nothing resizes or snaps. */
 
 .scenario-page-connect .wallet-window {
   height: 100%;
@@ -5628,7 +5630,7 @@ a {
   100% { opacity: 1; transform: translate(0, -50%) scale(1); }
 }
 
-/* Wallet window and device side by side once the device appears (opt-in via .is-wide) */
+/* Wallet window and device side by side for the whole mission */
 
 .scenario-page-connect .scenario-mentor-layout {
   gap: 16px;
@@ -5767,7 +5769,6 @@ a {
     max-width: 640px;
   }
 }
-
 @media (max-width: 600px) {
   .scenario-page-connect .scenario-mentor-layout {
     padding: 6px 16px 0;
