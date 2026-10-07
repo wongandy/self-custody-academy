@@ -446,8 +446,14 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     syncing ? 'is-syncing' : '',
   ].filter(Boolean).join(' ');
 
+  const mobileCableVariant = !isMobile
+    ? ''
+    : mobilePanel === 'device'
+      ? ' cable-device-panel'
+      : ' cable-under-wallet';
+
   const cableEl = (
-    <div className={`${cableClass}${isMobile && step.kind === 'device-arrival' && arrivalStarted ? ' cable-under-wallet' : ''}${isMobile && mobilePanel === 'device' ? ' cable-device-panel' : ''}`} aria-hidden="true">
+    <div className={`${cableClass}${mobileCableVariant}`} aria-hidden="true">
       <svg
         className="connect-cable-wire connect-cable-wire-h"
         viewBox="0 0 100 40"
@@ -464,6 +470,22 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
         <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
         <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
       </svg>
+      <svg
+        className="connect-cable-wire connect-cable-wire-under"
+        viewBox="0 0 240 48"
+        preserveAspectRatio="none"
+      >
+        <path className="cable-line" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
+        <path className="cable-pulse" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
+      </svg>
+      <svg
+        className="connect-cable-wire connect-cable-wire-device"
+        viewBox="0 0 200 48"
+        preserveAspectRatio="none"
+      >
+        <path className="cable-line" d="M0 22 C 40 24, 100 24, 138 18 C 172 12, 200 6, 200 0" pathLength={100} />
+        <path className="cable-pulse" d="M0 22 C 40 24, 100 24, 138 18 C 172 12, 200 6, 200 0" pathLength={100} />
+      </svg>
       <span className="connect-cable-plug plug-start" />
       <span className="connect-cable-plug plug-end" />
     </div>
@@ -474,6 +496,19 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         {walletVisible && (
           <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${mobileCableHalf ? ' mobile-half-cable' : ''}`}>
+            {showMobileSwitch && (
+              <button
+                type="button"
+                className={`withdraw-switch-btn withdraw-switch-btn-enter${mobileCableHalf ? ' withdraw-switch-btn-pulse' : ''}`}
+                onClick={handleMobileSwitch}
+              >
+                <ArrowLeftRight size={14} strokeWidth={2.2} />
+                <span key={mobilePanel} className="withdraw-switch-label">
+                  {mobilePanel === 'device' ? 'Switch to wallet software' : 'Switch to hardware wallet'}
+                </span>
+              </button>
+            )}
+
             <div className={`wallet-laptop laptop-enter${isMobile && mobilePanel === 'device' ? ' mobile-hidden' : ''}`}>
               <div ref={laptopRef} className="wallet-window">
                 <div className="wallet-window-titlebar">
@@ -597,21 +632,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 </div>
               </div>
 
-              {mobileCableHalf && cableEl}
+              {isMobile && (mobileCableHalf || showCable) && cableEl}
             </div>
-
-            {showMobileSwitch && (
-              <button
-                type="button"
-                className={`withdraw-switch-btn withdraw-switch-btn-enter${mobileCableHalf ? ' withdraw-switch-btn-pulse' : ''}`}
-                onClick={handleMobileSwitch}
-              >
-                <ArrowLeftRight size={14} strokeWidth={2.2} />
-                <span key={mobilePanel} className="withdraw-switch-label">
-                  {mobilePanel === 'device' ? 'Switch to wallet software' : 'Switch to hardware wallet'}
-                </span>
-              </button>
-            )}
 
             {!isMobile && cableEl}
 
@@ -620,7 +642,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 className={`connect-device-stage ${!isMobile && connection === 'idle' ? 'is-dormant' : `phase-${connection}`}${isMobile && mobilePanel !== 'device' ? ' mobile-hidden' : ''}`}
               >
                 <div className="connect-device-row">
-                  {isMobile && cableEl}
+                  {isMobile && mobilePanel === 'device' && cableEl}
                   <HardwareWallet
                     mode="withdraw"
                     initialPhase="ready-menu"
