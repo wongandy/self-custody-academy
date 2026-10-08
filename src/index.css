@@ -223,7 +223,7 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
   align-items: center;
-  gap: clamp(54px, 8vw, 130px);
+  gap: clamp(48px, 5.5vw, 84px);
   padding: 92px 32px 74px;
 }
 
