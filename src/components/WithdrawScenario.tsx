@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, Smartphone, AlertTriangle } from 'lucide-react';
-import HardwareWallet, { RECEIVE_ADDRESS, type WalletPhase } from '@/components/HardwareWallet';
+import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 
 type WithdrawScenarioProps = {
@@ -44,6 +44,9 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'factory-reset-blocked':
     "Resetting your device to factory settings isn't part of this scenario. It would erase your wallet, so we'll leave it untouched. Let's head back and keep going.",
 };
+
+const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
+const NUDGE_DURATION_MS = 1250;
 
 function useTypewriter(text: string, speed = 6) {
   const [displayed, setDisplayed] = useState('');
@@ -103,6 +106,8 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const usedSwitchPrompt = useRef(false);
   const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
   const [resetBlockedMsg, setResetBlockedMsg] = useState(false);
+  const [nudgeActive, setNudgeActive] = useState(false);
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
   const [walletEntered, setWalletEntered] = useState(false);
@@ -112,13 +117,20 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const isInIntro = !introDone;
   const spotlight = isInIntro && introStep === 0;
-  const canContinue = isInIntro
-    ? introStep !== 1
+  const canContinue = nudgeActive
+    ? false
+    : isInIntro
+      ? introStep !== 1
     : switchIntroStep !== null
       ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
       : exchangeIntroStep !== null
         ? exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1
         : exchangeScreen === 'success';
+  const expectedAction: ExpectedAction =
+    walletPhase === 'menu'
+      ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
+      : { type: 'none' };
+
   const showSwitchButton = !isInIntro && (
     switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1 : addressCopied || activePanel === 'exchange'
   );
@@ -143,8 +155,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         ? 'exchange-success'
         : `panel-${activePanel}`;
 
-  const mentorMessage = isInIntro
-    ? currentIntroMessage
+  const mentorMessage = nudgeActive
+    ? NUDGE_MESSAGE
+    : isInIntro
+      ? currentIntroMessage
     : showSendBlockedMsg
       ? MENTOR_MESSAGES['wallet-send-blocked']
       : resetBlockedMsg && activePanel === 'wallet'
@@ -238,6 +252,32 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     setShowSendBlockedMsg(false);
     setResetBlockedMsg(true);
   }, []);
+
+  const handleUnexpectedAction = useCallback(() => {
+    setNudgeActive(true);
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+  }, []);
+
+  useEffect(() => {
+    if (!nudgeActive) return;
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+    return () => {
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    };
+  }, [nudgeActive]);
+
+  useEffect(() => () => {
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+  }, []);
+
+  useEffect(() => {
+    if (nudgeActive) {
+      setNudgeActive(false);
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    }
+  }, [walletPhase]);
 
   const handleCopyAddress = useCallback(() => {
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
@@ -336,9 +376,11 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     }
   };
 
-  const bubbleKey = isInIntro
-    ? `intro-${introStep}`
-    : `${walletStateKey}-${showSendBlockedMsg}-${resetBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}-${addressMismatch}`;
+  const bubbleKey = nudgeActive
+    ? 'nudge'
+    : isInIntro
+      ? `intro-${introStep}`
+      : `${walletStateKey}-${showSendBlockedMsg}-${resetBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}-${addressMismatch}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -585,12 +627,14 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                   <HardwareWallet
                     mode="withdraw"
                     startAtMenu
-                    locked={canContinue}
+                    locked={!isInIntro && !switchIntroStep && exchangeIntroStep === null && exchangeScreen === 'success'}
                     onComplete={() => {}}
                     onPhaseChange={setWalletPhase}
                     onMenuSelectionChange={handleMenuSelectionChange}
                     onCopyAddress={handleCopyAddress}
                     onFactoryResetAttempt={handleFactoryResetAttempt}
+                    onUnexpectedAction={handleUnexpectedAction}
+                    expectedAction={expectedAction}
                   />
                 </div>
               </div>
