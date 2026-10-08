@@ -184,7 +184,7 @@ function App() {
         ) : (
           <a
             className="brand"
-            href="#top"
+            href=""
             aria-label="Self Custody Academy home"
             onClick={() => setScreen('home')}
           >
