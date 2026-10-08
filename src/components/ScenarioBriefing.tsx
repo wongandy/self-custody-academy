@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
+import HardwareWallet, { type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
+
+const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
+const NUDGE_DURATION_MS = 4000;
 
 type ScenarioBriefingProps = {
   onComplete: () => void;
@@ -93,6 +96,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [readyMenuSeen, setReadyMenuSeen] = useState(false);
   const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
   const [resetRefused, setResetRefused] = useState(false);
+  const [nudgeActive, setNudgeActive] = useState(false);
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -100,7 +105,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const isInIntro = !introDone;
   const spotlight = isInIntro && introStep === 0;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
-  const mentorMessage = isInIntro
+  const baseMentorMessage = isInIntro
     ? currentIntroMessage
     : resetRefused
       ? FACTORY_RESET_MESSAGE
@@ -109,11 +114,14 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       : walletPhase === 'ready-menu' && readyMenuHint
         ? readyMenuHint
         : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
+  const mentorMessage = nudgeActive ? NUDGE_MESSAGE : baseMentorMessage;
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
-  const canContinue = isInIntro
-    ? introStep === 0 && done
-    : walletPhase === 'create-done' || walletPhase === 'ready-menu';
+  const canContinue = nudgeActive
+    ? false
+    : isInIntro
+      ? introStep === 0 && done
+      : walletPhase === 'create-done' || walletPhase === 'ready-menu';
 
   useEffect(() => {
     if (walletPhase !== 'off' && !introDone) {
@@ -166,6 +174,39 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     setResetRefused(true);
   }, []);
 
+  const handleUnexpectedAction = useCallback(() => {
+    setNudgeActive(true);
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+  }, []);
+
+  useEffect(() => {
+    if (!nudgeActive) return;
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+    return () => {
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    };
+  }, [nudgeActive]);
+
+  useEffect(() => () => {
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+  }, []);
+
+  useEffect(() => {
+    if (nudgeActive) {
+      setNudgeActive(false);
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    }
+  }, [walletPhase]);
+
+  const expectedAction: ExpectedAction =
+    walletPhase === 'off'
+      ? { type: 'power-on' }
+      : walletPhase === 'menu'
+        ? { type: 'confirm-menu-item', label: 'Create wallet' }
+        : { type: 'none' };
+
   const handleReadyMenuSelect = useCallback((label: string) => {
     setResetRefused(false);
     setReadyMenuHint(
@@ -175,7 +216,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     );
   }, []);
 
-  const bubbleKey = isInIntro ? `intro-${introStep}` : `${walletPhase}-${resetRefused}`;
+  const bubbleKey = nudgeActive ? 'nudge' : isInIntro ? `intro-${introStep}` : `${walletPhase}-${resetRefused}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -241,7 +282,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             onMenuSelectionChange={setMenuSelection}
             onReadyMenuSelect={handleReadyMenuSelect}
             onFactoryResetAttempt={handleFactoryResetAttempt}
+            onUnexpectedAction={handleUnexpectedAction}
             advanceToReadyMenu={readyMenuSeen}
+            expectedAction={expectedAction}
           />
         </div>
         <div className="mentor-row">
