@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { LogOut, Moon, Sun, X } from 'lucide-react';
+import { LogOut, X } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
@@ -33,7 +33,6 @@ const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 's
 function App() {
   const { user, isReady, signOut } = useAuth();
 
-  const [isDark, setIsDark] = useState(true);
   const [screen, setScreen] = useState<Screen>('home');
   const [completedScenarios, setCompletedScenarios] = useState(0);
   const [progressLoading, setProgressLoading] = useState(false);
@@ -164,7 +163,7 @@ function App() {
   const isInScenario = SCENARIO_SCREENS.includes(screen);
 
   return (
-    <div className={isDark ? 'app-shell theme-dark' : 'app-shell theme-light'}>
+    <div className="app-shell theme-dark">
       <header className="site-header">
         {isInScenario || screen === 'andy-intro' ? (
           <button
@@ -205,20 +204,6 @@ function App() {
               <LogOut size={14} strokeWidth={2.2} />
             </button>
           )}
-          <button
-            className="theme-toggle"
-            type="button"
-            onClick={() => setIsDark((current) => !current)}
-            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            aria-pressed={!isDark}
-          >
-            <span className={!isDark ? 'toggle-icon active' : 'toggle-icon'}>
-              <Sun size={16} strokeWidth={2.2} />
-            </span>
-            <span className={isDark ? 'toggle-icon active' : 'toggle-icon'}>
-              <Moon size={16} strokeWidth={2.2} />
-            </span>
-          </button>
         </div>
       </header>
 

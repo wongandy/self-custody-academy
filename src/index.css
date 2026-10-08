@@ -181,40 +181,6 @@ a {
   font-size: 10px;
 }
 
-.theme-toggle {
-  width: 72px;
-  height: 34px;
-  padding: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  color: var(--muted);
-  background: var(--panel);
-  cursor: pointer;
-  transition: border-color 180ms ease, background-color 280ms ease;
-}
-
-.theme-toggle:hover {
-  border-color: rgba(241, 189, 105, 0.5);
-}
-
-.toggle-icon {
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
-}
-
-.toggle-icon.active {
-  color: var(--text);
-  background: var(--panel-strong);
-  transform: translateY(-1px);
-}
-
 .hero-section {
   width: 100%;
   flex: 1;
@@ -1040,17 +1006,6 @@ a {
 
   .header-actions {
     gap: 10px;
-  }
-
-  .theme-toggle {
-    width: 64px;
-    height: 30px;
-  }
-
-  .toggle-icon {
-    width: 22px;
-    height: 22px;
-    border-radius: 7px;
   }
 
   .header-note {
