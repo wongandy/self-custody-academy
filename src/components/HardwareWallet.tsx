@@ -39,6 +39,7 @@ type MenuPhase = WalletPhase | 'recover-soon' | 'recover-type';
 export type ExpectedAction =
   | { type: 'power-on' }
   | { type: 'confirm-menu-item'; label: string }
+  | { type: 'confirm' }
   | { type: 'none' };
 
 type HardwareWalletProps = {
@@ -282,7 +283,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onPowerChange?.(true);
       return;
     }
-    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item') {
+    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item' || expectedAction.type === 'confirm') {
       onUnexpectedAction?.();
       return;
     }
@@ -547,6 +548,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         onUnexpectedAction?.();
         return;
       }
+    }
+    if (expectedAction.type === 'confirm' && (phase === 'create-intro' || phase === 'create-words' || phase === 'create-quiz')) {
+      onUnexpectedAction?.();
+      return;
     }
     if (phase === 'connect-confirm') return;
     if (phase === 'reset-warn') {

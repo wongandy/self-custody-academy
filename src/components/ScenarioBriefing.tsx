@@ -5,7 +5,7 @@ import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
 
 const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
-const NUDGE_DURATION_MS = 4000;
+const NUDGE_DURATION_MS = 2000;
 
 type ScenarioBriefingProps = {
   onComplete: () => void;
@@ -205,7 +205,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       ? { type: 'power-on' }
       : walletPhase === 'menu'
         ? { type: 'confirm-menu-item', label: 'Create wallet' }
-        : { type: 'none' };
+      : walletPhase === 'create-intro' || walletPhase === 'create-words' || walletPhase === 'create-quiz'
+          ? { type: 'confirm' }
+          : { type: 'none' };
 
   const handleReadyMenuSelect = useCallback((label: string) => {
     setResetRefused(false);
