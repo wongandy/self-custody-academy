@@ -543,6 +543,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, []);
 
   const handleCancel = useCallback(() => {
+    if (locked) return;
     if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item') {
       if (phase === 'menu' || phase === 'ready-menu') {
         onUnexpectedAction?.();
@@ -583,11 +584,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       }
       return;
     }
-    if (phase === 'menu') return;
+    if (phase === 'menu' || phase === 'ready-menu') return;
     resetWalletState();
     updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin, expectedAction, onUnexpectedAction]);
+  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin, expectedAction, onUnexpectedAction, locked]);
 
   useEffect(() => {
     if (phase !== 'reset-done') return;
@@ -922,7 +923,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             </button>
           </div>
           <div className="hw-controls-actions">
-            <button className="hw-btn hw-btn-nav hw-btn-cancel" type="button" onClick={handleCancel} disabled={!isOn || isBooting || phase === 'menu' || phase === 'ready-menu'} aria-label="Cancel">
+            <button className="hw-btn hw-btn-nav hw-btn-cancel" type="button" onClick={handleCancel} disabled={!isOn || isBooting} aria-label="Cancel">
               <X size={16} strokeWidth={2.4} />
             </button>
             <button className="hw-btn hw-btn-nav hw-btn-enter" type="button" onClick={handleEnter} disabled={!isOn || isBooting || typeEnterDisabled} aria-label="Confirm">
