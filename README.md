@@ -12,7 +12,7 @@
 * **Guided Character-Led Learning:** Step-by-step interactive walk-throughs led by character guides.
 * **Self-Custody Workflows:** Practice withdrawing from exchanges, address verification, etc in a risk-free sandbox environment.
 * **Dark-Mode Minimalist Aesthetic:** Clean, distraction-free UI tailored for desktop and mobile devices.
-<img width="716" height="815" alt="image" src="https://github.com/user-attachments/assets/b2c52aab-fbbf-4be6-ac68-c70885b2d506" />
+<img width="557" height="622" alt="image" src="https://github.com/user-attachments/assets/8e3f2daf-84b7-4066-88c4-cb6aa0ebd727" />
 
 ---
 ## Who this is for
