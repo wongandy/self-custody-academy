@@ -5,7 +5,7 @@ import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
 
 const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
-const NUDGE_DURATION_MS = 2000;
+const NUDGE_DURATION_MS = 1250;
 
 type ScenarioBriefingProps = {
   onComplete: () => void;
@@ -287,6 +287,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             onUnexpectedAction={handleUnexpectedAction}
             advanceToReadyMenu={readyMenuSeen}
             expectedAction={expectedAction}
+            locked={canContinue}
           />
         </div>
         <div className="mentor-row">
