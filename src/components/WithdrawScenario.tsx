@@ -289,6 +289,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   }, []);
 
   const handleSwitchPanel = useCallback(() => {
+    if (exchangeLocked) return;
     if (switchIntroStep !== null) {
       setSwitchIntroStep(null);
     }
@@ -299,7 +300,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     });
     setSlideDirection(activePanel === 'wallet' ? 'withdraw-slide-right' : 'withdraw-slide-left');
     setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
-  }, [switchIntroStep, activePanel]);
+  }, [exchangeLocked, switchIntroStep, activePanel]);
 
   const handleAmountChange = useCallback((val: string) => {
     if (exchangeLocked) return;
@@ -407,6 +408,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
               className={`withdraw-switch-btn withdraw-switch-btn-enter${switchPulse ? ' withdraw-switch-btn-pulse' : ''}`}
               type="button"
               onClick={handleSwitchPanel}
+              disabled={exchangeLocked}
             >
               <ArrowLeftRight size={14} strokeWidth={2.2} />
               <span key={activePanel} className="withdraw-switch-label">
