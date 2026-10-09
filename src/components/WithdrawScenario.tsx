@@ -627,7 +627,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                   <HardwareWallet
                     mode="withdraw"
                     startAtMenu
-                    locked={!isInIntro && !switchIntroStep && exchangeIntroStep === null && exchangeScreen === 'success'}
+                    locked={canContinue}
                     onComplete={() => {}}
                     onPhaseChange={setWalletPhase}
                     onMenuSelectionChange={handleMenuSelectionChange}
