@@ -12,10 +12,38 @@
 * **Guided Character-Led Learning:** Step-by-step interactive walk-throughs led by character guides.
 * **Self-Custody Workflows:** Practice withdrawing from exchanges, address verification, etc in a risk-free sandbox environment.
 * **Dark-Mode Minimalist Aesthetic:** Clean, distraction-free UI tailored for desktop and mobile devices.
-<img width="557" height="622" alt="image" src="https://github.com/user-attachments/assets/8e3f2daf-84b7-4066-88c4-cb6aa0ebd727" />
+<img width="580" height="708" alt="image" src="https://github.com/user-attachments/assets/5abf1fc9-2207-457f-9dda-d2243a2bedd3" />
+
 
 ---
 ## Who this is for
 
 * **Bitcoin Beginners:** Anyone looking to move their Bitcoin off exchanges into self-custody without the fear of losing real funds while learning.
 * **Educators & Workshop Leads:** Instructors seeking interactive, visual simulator tools to demonstrate withdrawing from exchanges, sending and receiving Bitcoin, etc.
+---
+## Tech Stack
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Lucide React
+- Bolt Database
+- PostgreSQL
+---
+## Requirements
+
+Before installing the project, make sure you have:
+
+- Node.js 18 or newer
+- npm
+- A Bolt Database project for authentication and saved progress
+
+---
+## Quick start (local)
+```bash
+git clone https://github.com/wongandy/self-custody-academy.git
+cd self-custody-academy
+npm install
+npm run dev
+```
