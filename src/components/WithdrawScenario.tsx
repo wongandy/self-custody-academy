@@ -104,7 +104,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [switchPulse, setSwitchPulse] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'withdraw-slide-left' | 'withdraw-slide-right' | null>(null);
   const usedSwitchPrompt = useRef(false);
-  const [showSendBlockedMsg, setShowSendBlockedMsg] = useState(false);
   const [resetBlockedMsg, setResetBlockedMsg] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,7 +125,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       : exchangeIntroStep !== null
         ? exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1
         : exchangeScreen === 'success';
-  const expectedAction: ExpectedAction = { type: 'none' };
+  const expectedAction: ExpectedAction =
+    activePanel === 'wallet' && walletPhase === 'receive-address' && !addressCopied
+      ? { type: 'external' }
+      : { type: 'none' };
 
   const showSwitchButton = !isInIntro && (
     switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1 : addressCopied || activePanel === 'exchange'
@@ -156,9 +158,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? NUDGE_MESSAGE
     : isInIntro
       ? currentIntroMessage
-    : showSendBlockedMsg
-      ? MENTOR_MESSAGES['wallet-send-blocked']
-      : resetBlockedMsg && activePanel === 'wallet'
+    : resetBlockedMsg && activePanel === 'wallet'
         ? MENTOR_MESSAGES['factory-reset-blocked']
         : switchIntroStep !== null
         ? SWITCH_INTRO_MESSAGES[switchIntroStep]
@@ -178,10 +178,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   useEffect(() => {
     if (introDone) return;
-    if (walletPhase !== 'menu' || showSendBlockedMsg) {
+    if (walletPhase !== 'menu') {
       setIntroDone(true);
     }
-  }, [walletPhase, showSendBlockedMsg, introDone]);
+  }, [walletPhase, introDone]);
 
   useEffect(() => {
     if (walletPhase !== 'menu') {
@@ -241,12 +241,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const handleMenuSelectionChange = useCallback((sel: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => {
     setMenuSelection(sel);
-    setShowSendBlockedMsg(false);
     setResetBlockedMsg(false);
   }, []);
 
   const handleFactoryResetAttempt = useCallback(() => {
-    setShowSendBlockedMsg(false);
     setResetBlockedMsg(true);
   }, []);
 
@@ -377,7 +375,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? 'nudge'
     : isInIntro
       ? `intro-${introStep}`
-      : `${walletStateKey}-${showSendBlockedMsg}-${resetBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}-${addressMismatch}`;
+      : `${walletStateKey}-${resetBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}-${addressMismatch}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

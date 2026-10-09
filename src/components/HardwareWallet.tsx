@@ -40,6 +40,7 @@ export type ExpectedAction =
   | { type: 'power-on' }
   | { type: 'confirm-menu-item'; label: string }
   | { type: 'confirm' }
+  | { type: 'external' }
   | { type: 'none' };
 
 type HardwareWalletProps = {
@@ -283,7 +284,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onPowerChange?.(true);
       return;
     }
-    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item' || expectedAction.type === 'confirm') {
+    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item' || expectedAction.type === 'confirm' || expectedAction.type === 'external') {
       onUnexpectedAction?.();
       return;
     }
@@ -344,6 +345,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const handleEnter = useCallback(() => {
     if (locked) return;
     if (expectedAction.type === 'confirm-menu-item' && (phase === 'menu' || phase === 'ready-menu') && !isExpectedMenuItem()) {
+      onUnexpectedAction?.();
+      return;
+    }
+    if (expectedAction.type === 'external') {
       onUnexpectedAction?.();
       return;
     }
@@ -551,6 +556,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       }
     }
     if (expectedAction.type === 'confirm' && (phase === 'create-intro' || phase === 'create-words' || phase === 'create-quiz')) {
+      onUnexpectedAction?.();
+      return;
+    }
+    if (expectedAction.type === 'external') {
       onUnexpectedAction?.();
       return;
     }
