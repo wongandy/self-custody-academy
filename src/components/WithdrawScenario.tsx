@@ -32,12 +32,12 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'panel-exchange': EXCHANGE_INTRO_MESSAGES[EXCHANGE_INTRO_MESSAGES.length - 1],
   'panel-wallet': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
-  'wallet-menu': "Select 'Receive Bitcoin' to get your receive address.",
-  'wallet-settings': "Select 'Receive Bitcoin' to get your receive address.",
+  'wallet-menu': "Choose any option on the device. When you're ready, select 'Receive Bitcoin' to get your receive address.",
+  'wallet-settings': "You can explore the device settings. Return to the menu when you're ready to continue.",
   'wallet-menu-receive-address': "Select 'Receive Bitcoin' to get your receive address.",
+  'wallet-menu-send-blocked': "You can explore the wallet options here. Select 'Receive Bitcoin' whenever you're ready to continue.",
   'wallet-receive-address': "There's your receive address. Click the copy button next to it to copy it.",
   'wallet-receive-copied': 'Address copied! Press the switch button above to go back to the exchange.',
-  'wallet-send-blocked': "Sending directly from the wallet isn't part of this mission. To withdraw from an exchange, you need to give the exchange your receive address first — let's do that instead.",
   'exchange-address-mismatch': "That address doesn't match the one your hardware wallet gave you. One wrong character sends your Bitcoin somewhere else — go back to your wallet and copy it again.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
   'exchange-success': "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
@@ -126,10 +126,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       : exchangeIntroStep !== null
         ? exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1
         : exchangeScreen === 'success';
-  const expectedAction: ExpectedAction =
-    walletPhase === 'menu'
-      ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
-      : { type: 'none' };
+  const expectedAction: ExpectedAction = { type: 'none' };
 
   const showSwitchButton = !isInIntro && (
     switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1 : addressCopied || activePanel === 'exchange'
@@ -244,7 +241,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const handleMenuSelectionChange = useCallback((sel: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => {
     setMenuSelection(sel);
-    setShowSendBlockedMsg(sel === 'send-blocked');
+    setShowSendBlockedMsg(false);
     setResetBlockedMsg(false);
   }, []);
 
