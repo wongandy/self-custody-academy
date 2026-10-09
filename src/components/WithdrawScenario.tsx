@@ -294,11 +294,13 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     if (switchIntroStep !== null) {
       setSwitchIntroStep(null);
     }
-    setExchangeIntroStep((step) => {
-      if (step === null) return 0;
-      if (step >= EXCHANGE_INTRO_MESSAGES.length - 1) return null;
-      return step;
-    });
+    if (activePanel === 'wallet') {
+      setExchangeIntroStep((step) => {
+        if (step === null) return 0;
+        if (step >= EXCHANGE_INTRO_MESSAGES.length - 1) return null;
+        return step;
+      });
+    }
     setSlideDirection(activePanel === 'wallet' ? 'withdraw-slide-right' : 'withdraw-slide-left');
     setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
   }, [switchLocked, switchIntroStep, activePanel]);
