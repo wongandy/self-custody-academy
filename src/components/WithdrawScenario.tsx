@@ -126,6 +126,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         ? exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1
         : exchangeScreen === 'success';
   const exchangeLocked = activePanel === 'exchange' && exchangeScreen === 'form' && exchangeIntroStep !== null && canContinue;
+  const switchLocked = activePanel === 'exchange' && canContinue;
   const expectedAction: ExpectedAction =
     activePanel === 'wallet' && walletPhase === 'menu' && !hasRetrievedAddress
       ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
@@ -289,7 +290,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   }, []);
 
   const handleSwitchPanel = useCallback(() => {
-    if (exchangeLocked) return;
+    if (switchLocked) return;
     if (switchIntroStep !== null) {
       setSwitchIntroStep(null);
     }
@@ -300,7 +301,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     });
     setSlideDirection(activePanel === 'wallet' ? 'withdraw-slide-right' : 'withdraw-slide-left');
     setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
-  }, [exchangeLocked, switchIntroStep, activePanel]);
+  }, [switchLocked, switchIntroStep, activePanel]);
 
   const handleAmountChange = useCallback((val: string) => {
     if (exchangeLocked) return;
@@ -408,7 +409,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
               className={`withdraw-switch-btn withdraw-switch-btn-enter${switchPulse ? ' withdraw-switch-btn-pulse' : ''}`}
               type="button"
               onClick={handleSwitchPanel}
-              disabled={exchangeLocked}
+              disabled={switchLocked}
             >
               <ArrowLeftRight size={14} strokeWidth={2.2} />
               <span key={activePanel} className="withdraw-switch-label">
