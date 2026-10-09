@@ -125,12 +125,15 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       : exchangeIntroStep !== null
         ? exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1
         : exchangeScreen === 'success';
+  const exchangeLocked = activePanel === 'exchange' && exchangeScreen === 'form' && exchangeIntroStep !== null && canContinue;
   const expectedAction: ExpectedAction =
     activePanel === 'wallet' && walletPhase === 'menu' && !hasRetrievedAddress
       ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
-      : activePanel === 'wallet' && walletPhase === 'receive-address' && addressCopied
-        ? { type: 'external' }
-        : { type: 'none' };
+      : activePanel === 'wallet' && walletPhase === 'receive-address' && !addressCopied
+        ? { type: 'copy-address' }
+        : activePanel === 'wallet' && walletPhase === 'receive-address' && addressCopied
+          ? { type: 'external' }
+          : { type: 'none' };
 
   const showSwitchButton = !isInIntro && (
     switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1 : addressCopied || activePanel === 'exchange'
@@ -299,6 +302,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   }, [switchIntroStep, activePanel]);
 
   const handleAmountChange = useCallback((val: string) => {
+    if (exchangeLocked) return;
     setAmount(val);
     const parsed = parseFloat(val);
     if (val === '' || isNaN(parsed)) {
@@ -310,13 +314,14 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     } else {
       setAmountError('');
     }
-  }, []);
+  }, [exchangeLocked]);
 
   const handleMax = useCallback(() => {
+    if (exchangeLocked) return;
     const maxAmount = AVAILABLE_BALANCE - NETWORK_FEE;
     setAmount(maxAmount.toFixed(8));
     setAmountError('');
-  }, []);
+  }, [exchangeLocked]);
 
   const numericAmount = parseFloat(amount) || 0;
   const receivedAmount = numericAmount > 0 ? Math.max(numericAmount - NETWORK_FEE, 0) : 0;
@@ -325,6 +330,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const canWithdraw = hasRetrievedAddress && isAmountValid && isAddressValid;
 
   const handleWithdraw = () => {
+    if (exchangeLocked) return;
     if (canWithdraw) {
       setExchangeIntroStep(null);
       setExchangeScreen('confirm');
@@ -435,7 +441,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           <button
                             className="withdraw-asset-dropdown"
                             type="button"
-                            onClick={() => setAssetDropdownOpen(!assetDropdownOpen)}
+                            onClick={() => {
+                              if (!exchangeLocked) setAssetDropdownOpen(!assetDropdownOpen);
+                            }}
+                            disabled={exchangeLocked}
                           >
                             <span className="withdraw-asset-icon">
                               <span className="withdraw-asset-btc">B</span>
@@ -459,7 +468,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                         <div className="withdraw-phone-section">
                           <div className="withdraw-phone-label-row">
                             <label>Withdraw amount</label>
-                            <button className="withdraw-max-btn" type="button" onClick={handleMax}>
+                            <button className="withdraw-max-btn" type="button" onClick={handleMax} disabled={exchangeLocked}>
                               MAX
                             </button>
                           </div>
@@ -468,6 +477,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                               type="text"
                               value={amount}
                               onChange={(e) => handleAmountChange(e.target.value)}
+                              disabled={exchangeLocked}
                               placeholder="0.00"
                               className={amountError ? 'error' : ''}
                             />
@@ -483,7 +493,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           <input
                             type="text"
                             value={sendAddress}
-                            onChange={(e) => setSendAddress(e.target.value)}
+                            onChange={(e) => {
+                              if (!exchangeLocked) setSendAddress(e.target.value);
+                            }}
+                            disabled={exchangeLocked}
                             placeholder="Paste wallet receive address"
                             className={`withdraw-addr-input${addressMismatch ? ' error' : ''}`}
                           />
@@ -513,7 +526,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           className="withdraw-btn"
                           type="button"
                           onClick={handleWithdraw}
-                          disabled={!canWithdraw}
+                          disabled={!canWithdraw || exchangeLocked}
                         >
                           Withdraw
                         </button>

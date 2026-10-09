@@ -41,6 +41,7 @@ export type ExpectedAction =
   | { type: 'confirm-menu-item'; label: string }
   | { type: 'confirm' }
   | { type: 'external' }
+  | { type: 'copy-address' }
   | { type: 'none' };
 
 type HardwareWalletProps = {
@@ -284,7 +285,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onPowerChange?.(true);
       return;
     }
-    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item' || expectedAction.type === 'confirm' || expectedAction.type === 'external') {
+    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item' || expectedAction.type === 'confirm' || expectedAction.type === 'external' || expectedAction.type === 'copy-address') {
       onUnexpectedAction?.();
       return;
     }
@@ -297,6 +298,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   const handleUp = useCallback(() => {
     if (locked) return;
+    if (expectedAction.type === 'copy-address' && phase === 'receive-address') {
+      onUnexpectedAction?.();
+      return;
+    }
     if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === 0 ? menuItems.length - 1 : menuIndex - 1;
       setMenuIndex(nextIndex);
@@ -313,10 +318,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setTypeListIndex((s) => (s === 0 ? typeList.length - 1 : s - 1));
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked, expectedAction, onUnexpectedAction]);
 
   const handleDown = useCallback(() => {
     if (locked) return;
+    if (expectedAction.type === 'copy-address' && phase === 'receive-address') {
+      onUnexpectedAction?.();
+      return;
+    }
     if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === menuItems.length - 1 ? 0 : menuIndex + 1;
       setMenuIndex(nextIndex);
@@ -333,7 +342,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setTypeListIndex((s) => (s + 1) % typeList.length);
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked, expectedAction, onUnexpectedAction]);
 
   const isExpectedMenuItem = useCallback((): boolean => {
     if (expectedAction.type !== 'confirm-menu-item') return true;
@@ -348,7 +357,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onUnexpectedAction?.();
       return;
     }
-    if (expectedAction.type === 'external') {
+    if (expectedAction.type === 'external' || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
       onUnexpectedAction?.();
       return;
     }
@@ -535,12 +544,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   ]);
 
   const handleCopyAddress = useCallback(() => {
+    if (locked) return;
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
     setAddrCopied(true);
     onCopyAddress?.();
     if (copyTimer.current) clearTimeout(copyTimer.current);
     copyTimer.current = setTimeout(() => setAddrCopied(false), 2000);
-  }, [onCopyAddress]);
+  }, [onCopyAddress, locked]);
 
   useEffect(() => () => {
     if (copyTimer.current) clearTimeout(copyTimer.current);
@@ -559,7 +569,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onUnexpectedAction?.();
       return;
     }
-    if (expectedAction.type === 'external') {
+    if (expectedAction.type === 'external' || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
       onUnexpectedAction?.();
       return;
     }
