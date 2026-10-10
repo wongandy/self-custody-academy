@@ -24,7 +24,7 @@ const SWITCH_INTRO_MESSAGES = [
 
 const EXCHANGE_INTRO_MESSAGES = [
   // 'To withdraw that 0.05 Bitcoin, you may type that amount in the Withdraw Amount field or click Max to populate it for you.',
-  'In SEND TO ADDRESS field, paste the receive address you just copied',
+  'In SEND TO ADDRESS field, paste the receive address you copied earlier.',
   'Next, paste your receive address in the Send to Address field. Your Bitcoin will be sent to that address.',
   "Once you've filled up the Withdraw Amount and Send To Address fields proceed by clicking Withdraw.",
 ];
