@@ -2991,6 +2991,19 @@ a {
   overflow-wrap: anywhere;
 }
 
+.mentor-copy-button-indicator {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: 0 5px;
+  vertical-align: -6px;
+  border: 1px solid rgba(167, 232, 67, 0.3);
+  border-radius: 7px;
+  background: rgba(167, 232, 67, 0.08);
+  color: var(--green);
+}
+
 .mentor-portrait-badge {
   position: absolute;
   bottom: -10px;
