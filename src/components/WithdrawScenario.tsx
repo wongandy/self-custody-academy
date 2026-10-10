@@ -2,7 +2,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, Smartphone, AlertTriangle } from 'lucide-react';
 import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
-import copyButtonImage from '@/components/8b3a59be-c063-46ca-a67d-2b71d2ec4ab0 copy.png';
 
 type WithdrawScenarioProps = {
   completed: boolean;
@@ -176,22 +175,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
-  const copyButtonInstruction = "There's your receive address. Click the copy button next to it to copy it.";
-  const renderMentorText = (text: string) => {
-    if (mentorMessage !== copyButtonInstruction || !text.includes('copy button')) {
-      return text;
-    }
-
-    const marker = 'copy button';
-    const markerEnd = text.indexOf(marker) + marker.length;
-    return (
-      <>
-        {text.slice(0, markerEnd)}
-        <img className="mentor-copy-button-image" src={copyButtonImage} alt="Copy button highlighted in red" />
-        {text.slice(markerEnd)}
-      </>
-    );
-  };
 
   useEffect(() => {
     if (walletPhase === 'receive-address') {
@@ -690,9 +673,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             <div className="mentor-bubble-content" key={bubbleKey}>
               <span className="mentor-bubble-name">Andy</span>
               <div className="mentor-bubble-text-wrap">
-                <p className="mentor-bubble-text-ghost">{renderMentorText(mentorMessage)}</p>
+                <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
                 <p className="mentor-bubble-text">
-                  {renderMentorText(displayed)}
+                  {displayed}
                   {!done && <span className="typewriter-cursor" />}
                 </p>
               </div>
