@@ -2991,6 +2991,16 @@ a {
   overflow-wrap: anywhere;
 }
 
+.mentor-copy-button-image {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  margin: 0 4px;
+  border-radius: 7px;
+  vertical-align: middle;
+  object-fit: contain;
+}
+
 .mentor-portrait-badge {
   position: absolute;
   bottom: -10px;
