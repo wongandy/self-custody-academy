@@ -489,6 +489,25 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                         </div>
 
                         <div className="withdraw-phone-section">
+                          <label>Send to address</label>
+                          <input
+                            type="text"
+                            value={sendAddress}
+                            onChange={(e) => {
+                              if (!exchangeLocked) setSendAddress(e.target.value);
+                            }}
+                            disabled={exchangeLocked}
+                            placeholder="Paste wallet receive address"
+                            className={`withdraw-addr-input${addressMismatch ? ' error' : ''}`}
+                          />
+                          {/* {trimmedAddress.length === 0 && (
+                            <p className="withdraw-addr-status hint">
+                              <span>Go to your hardware wallet, copy the receive address, then paste it here.</span>
+                            </p>
+                          )} */}
+                        </div>
+                        
+                        <div className="withdraw-phone-section">
                           <div className="withdraw-phone-label-row">
                             <label>Withdraw amount</label>
                             <button className="withdraw-max-btn" type="button" onClick={handleMax} disabled={exchangeLocked}>
@@ -509,25 +528,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           {amountError && (
                             <p className="withdraw-amount-error">{amountError}</p>
                           )}
-                        </div>
-
-                        <div className="withdraw-phone-section">
-                          <label>Send to address</label>
-                          <input
-                            type="text"
-                            value={sendAddress}
-                            onChange={(e) => {
-                              if (!exchangeLocked) setSendAddress(e.target.value);
-                            }}
-                            disabled={exchangeLocked}
-                            placeholder="Paste wallet receive address"
-                            className={`withdraw-addr-input${addressMismatch ? ' error' : ''}`}
-                          />
-                          {/* {trimmedAddress.length === 0 && (
-                            <p className="withdraw-addr-status hint">
-                              <span>Go to your hardware wallet, copy the receive address, then paste it here.</span>
-                            </p>
-                          )} */}
                         </div>
 
                         <div className="withdraw-phone-summary">
