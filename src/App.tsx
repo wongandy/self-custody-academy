@@ -230,7 +230,7 @@ function App() {
 
           <div className="hero-copy">
             <h1>
-              The most fun way to master <em>self-custody</em> and secure your Bitcoin.
+              The most fun way to master <em>self-custody</em> and secure your Bitcoin.,
             </h1>
             {/* <p className="hero-description">
               Build confidence through hands-on lessons, helpful challenges, and a safe space to learn before your real sats are on the line.
