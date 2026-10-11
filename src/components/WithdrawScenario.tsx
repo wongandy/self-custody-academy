@@ -22,15 +22,16 @@ const SWITCH_INTRO_MESSAGES = [
   'Press "Switch to Exchange Wallet" at the top to head to the exchange on your phone.',
 ];
 
-const EXCHANGE_INTRO_MESSAGES = [
-  // 'To withdraw that 0.05 Bitcoin, you may type that amount in the Withdraw Amount field or click Max to populate it for you.',
-  'In SEND TO ADDRESS field, paste the receive address you copied earlier.',
-  'Next, paste your receive address in the Send to Address field. Your Bitcoin will be sent to that address.',
-  "Once you've filled up the Withdraw Amount and Send To Address fields proceed by clicking Withdraw.",
-];
+type ExchangePhase = 'enter-address' | 'enter-amount' | 'ready-to-withdraw';
+
+const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string> = {
+  'enter-address': 'In SEND TO ADDRESS field, paste the receive address you copied earlier.',
+  'enter-amount': 'Now under WITHDRAW AMOUNT you may type the amount of Bitcoin you wish to withdraw or press the MAX button to populate it for you.',
+  'ready-to-withdraw': 'Now you may click Withdraw to send over your Bitcoin to your hardware wallet.',
+};
 
 const MENTOR_MESSAGES: Record<string, string> = {
-  'panel-exchange': EXCHANGE_INTRO_MESSAGES[EXCHANGE_INTRO_MESSAGES.length - 1],
+  'panel-exchange': 'Follow the instructions to withdraw your Bitcoin to your hardware wallet.',
   'panel-wallet': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-booting': 'The device is booting up. Hang tight for a moment.',
   'wallet-menu': "Choose any option on the device. When you're ready, select 'Receive Bitcoin' to get your receive address.",
@@ -101,7 +102,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
   const [switchIntroStep, setSwitchIntroStep] = useState<number | null>(null);
-  const [exchangeIntroStep, setExchangeIntroStep] = useState<number | null>(null);
+  const [exchangePhase, setExchangePhase] = useState<ExchangePhase>('enter-address');
   const [switchPulse, setSwitchPulse] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'withdraw-slide-left' | 'withdraw-slide-right' | null>(null);
   const usedSwitchPrompt = useRef(false);
@@ -117,17 +118,23 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const isInIntro = !introDone;
   const spotlight = isInIntro && introStep === 0;
+  const isOnExchangeForm = activePanel === 'exchange' && exchangeScreen === 'form';
   const canContinue = nudgeActive
     ? false
     : isInIntro
       ? introStep !== 1
     : switchIntroStep !== null
       ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
-      : exchangeIntroStep !== null
-        ? exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1
+      : isOnExchangeForm
+        ? false
         : exchangeScreen === 'success';
-  const exchangeLocked = activePanel === 'exchange' && exchangeScreen === 'form' && exchangeIntroStep !== null && canContinue;
-  const switchLocked = activePanel === 'exchange' && canContinue;
+  const addressLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
+  const amountLocked = isOnExchangeForm && exchangePhase === 'enter-address';
+  const amountNudgeLocked = isOnExchangeForm && exchangePhase === 'ready-to-withdraw';
+  const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'ready-to-withdraw');
+  const withdrawBtnLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'enter-amount');
+  const switchNudgeLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
+const switchLocked = activePanel === 'exchange' && canContinue;
   const expectedAction: ExpectedAction =
     activePanel === 'wallet' && walletPhase === 'menu' && !hasRetrievedAddress
       ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
@@ -169,10 +176,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         ? MENTOR_MESSAGES['factory-reset-blocked']
         : switchIntroStep !== null
         ? SWITCH_INTRO_MESSAGES[switchIntroStep]
-        : addressMismatch && activePanel === 'exchange'
+        : addressMismatch && isOnExchangeForm
           ? MENTOR_MESSAGES['exchange-address-mismatch']
-          : exchangeIntroStep !== null && activePanel === 'exchange'
-            ? EXCHANGE_INTRO_MESSAGES[exchangeIntroStep]
+          : isOnExchangeForm
+            ? EXCHANGE_PHASE_MESSAGES[exchangePhase]
             : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
@@ -310,22 +317,22 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const handleSwitchPanel = useCallback(() => {
     if (switchLocked) return;
+    if (switchNudgeLocked) {
+      handleUnexpectedAction();
+      return;
+    }
     if (switchIntroStep !== null) {
       setSwitchIntroStep(null);
     }
-    if (activePanel === 'wallet') {
-      setExchangeIntroStep((step) => {
-        if (step === null) return 0;
-        if (step >= EXCHANGE_INTRO_MESSAGES.length - 1) return null;
-        return step;
-      });
-    }
     setSlideDirection(activePanel === 'wallet' ? 'withdraw-slide-right' : 'withdraw-slide-left');
     setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
-  }, [switchLocked, switchIntroStep, activePanel]);
+  }, [switchLocked, switchNudgeLocked, switchIntroStep, activePanel, handleUnexpectedAction]);
 
   const handleAmountChange = useCallback((val: string) => {
-    if (exchangeLocked) return;
+    if (amountLocked || amountNudgeLocked) {
+      handleUnexpectedAction();
+      return;
+    }
     setAmount(val);
     const parsed = parseFloat(val);
     if (val === '' || isNaN(parsed)) {
@@ -337,14 +344,14 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     } else {
       setAmountError('');
     }
-  }, [exchangeLocked]);
+  }, [amountLocked, amountNudgeLocked, handleUnexpectedAction]);
 
   const handleMax = useCallback(() => {
-    if (exchangeLocked) return;
+    if (maxLocked) return;
     const maxAmount = AVAILABLE_BALANCE - NETWORK_FEE;
     setAmount(maxAmount.toFixed(8));
     setAmountError('');
-  }, [exchangeLocked]);
+  }, [maxLocked]);
 
   const numericAmount = parseFloat(amount) || 0;
   const receivedAmount = numericAmount > 0 ? Math.max(numericAmount - NETWORK_FEE, 0) : 0;
@@ -353,15 +360,15 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const canWithdraw = hasRetrievedAddress && isAmountValid && isAddressValid;
 
   const handleWithdraw = () => {
-    if (exchangeLocked) return;
+    if (withdrawBtnLocked) return;
     if (canWithdraw) {
-      setExchangeIntroStep(null);
       setExchangeScreen('confirm');
     }
   };
 
   const handleBackToForm = () => {
     setExchangeScreen('form');
+    setExchangePhase('ready-to-withdraw');
   };
 
   const handleConfirm = () => {
@@ -390,12 +397,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       }
       return;
     }
-    if (exchangeIntroStep !== null && activePanel === 'exchange') {
-      if (exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1) {
-        setExchangeIntroStep(exchangeIntroStep + 1);
-      }
-      return;
-    }
     if (exchangeScreen === 'success') {
       onComplete();
       return;
@@ -406,7 +407,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? 'nudge'
     : isInIntro
       ? `intro-${introStep}`
-      : `${walletStateKey}-${resetBlockedMsg}-${switchIntroStep}-${exchangeIntroStep}-${addressMismatch}`;
+      : `${walletStateKey}-${resetBlockedMsg}-${switchIntroStep}-${exchangePhase}-${addressMismatch}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -420,6 +421,17 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
+
+  useEffect(() => {
+    if (!isOnExchangeForm) return;
+    if (exchangePhase === 'enter-address' && isAddressValid) {
+      setExchangePhase('enter-amount');
+    } else if (exchangePhase === 'enter-amount' && isAmountValid && isAddressValid) {
+      setExchangePhase('ready-to-withdraw');
+    } else if (exchangePhase === 'ready-to-withdraw' && !isAmountValid) {
+      setExchangePhase('enter-amount');
+    }
+  }, [isOnExchangeForm, exchangePhase, isAddressValid, isAmountValid]);
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
@@ -466,9 +478,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                             className="withdraw-asset-dropdown"
                             type="button"
                             onClick={() => {
-                              if (!exchangeLocked) setAssetDropdownOpen(!assetDropdownOpen);
+                              setAssetDropdownOpen(!assetDropdownOpen);
                             }}
-                            disabled={exchangeLocked}
+                            disabled
                           >
                             <span className="withdraw-asset-icon">
                               <span className="withdraw-asset-btc">B</span>
@@ -495,9 +507,13 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                             type="text"
                             value={sendAddress}
                             onChange={(e) => {
-                              if (!exchangeLocked) setSendAddress(e.target.value);
+                              if (addressLocked) {
+                                handleUnexpectedAction();
+                                return;
+                              }
+                              setSendAddress(e.target.value);
                             }}
-                            disabled={exchangeLocked}
+                            disabled={amountLocked}
                             placeholder="Paste wallet receive address"
                             className={`withdraw-addr-input${addressMismatch ? ' error' : ''}`}
                           />
@@ -511,7 +527,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                         <div className="withdraw-phone-section">
                           <div className="withdraw-phone-label-row">
                             <label>Withdraw amount</label>
-                            <button className="withdraw-max-btn" type="button" onClick={handleMax} disabled={exchangeLocked}>
+                            <button className="withdraw-max-btn" type="button" onClick={handleMax} disabled={maxLocked}>
                               MAX
                             </button>
                           </div>
@@ -520,7 +536,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                               type="text"
                               value={amount}
                               onChange={(e) => handleAmountChange(e.target.value)}
-                              disabled={exchangeLocked}
+                              disabled={amountLocked}
                               placeholder="0.00"
                               className={amountError ? 'error' : ''}
                             />
@@ -550,7 +566,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           className="withdraw-btn"
                           type="button"
                           onClick={handleWithdraw}
-                          disabled={!canWithdraw || exchangeLocked}
+                          disabled={!canWithdraw || withdrawBtnLocked}
                         >
                           Withdraw
                         </button>

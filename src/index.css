@@ -4741,6 +4741,11 @@ a {
   border-color: rgba(167, 232, 67, 0.5);
 }
 
+.withdraw-amount-input-wrap input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .withdraw-amount-input-wrap input.error {
   border-color: rgba(232, 113, 113, 0.5);
 }
@@ -4769,9 +4774,14 @@ a {
   transition: all 160ms ease;
 }
 
-.withdraw-max-btn:hover {
+.withdraw-max-btn:hover:not(:disabled) {
   border-color: rgba(241, 189, 105, 0.6);
   background: rgba(241, 189, 105, 0.15);
+}
+
+.withdraw-max-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .withdraw-amount-error {
@@ -4815,6 +4825,11 @@ a {
 
 .withdraw-addr-input.error {
   border-color: rgba(232, 113, 113, 0.5);
+}
+
+.withdraw-addr-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .withdraw-addr-status {
