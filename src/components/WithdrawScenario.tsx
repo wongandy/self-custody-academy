@@ -25,9 +25,9 @@ const SWITCH_INTRO_MESSAGES = [
 type ExchangePhase = 'enter-address' | 'enter-amount' | 'ready-to-withdraw';
 
 const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string> = {
-  'enter-address': 'Under SEND TO ADDRESS field, paste the receive address you copied earlier. That is where your Bitcoin will be sent.',
-  'enter-amount': 'Now under WITHDRAW AMOUNT you may type the amount of Bitcoin you wish to withdraw or press the MAX button to populate it for you.',
-  'ready-to-withdraw': 'Now you may click Withdraw to send over your Bitcoin to your hardware wallet.',
+  'enter-address': 'Under SEND TO ADDRESS field, paste the receive address you copied earlier. That is where your Bitcoin will be withdrawn to.',
+  'enter-amount': 'Good job. Now under WITHDRAW AMOUNT you may type the amount of Bitcoin you wish to withdraw or just press the MAX button.',
+  'ready-to-withdraw': 'Alright. Now click Withdraw to initiate the process of withdrawing your Bitcoin to your hardware wallet.',
 };
 
 const MENTOR_MESSAGES: Record<string, string> = {
