@@ -36,6 +36,14 @@ export type WalletPhase =
 
 type MenuPhase = WalletPhase | 'recover-soon' | 'recover-type';
 
+export type ExpectedAction =
+  | { type: 'power-on' }
+  | { type: 'confirm-menu-item'; label: string }
+  | { type: 'confirm' }
+  | { type: 'external' }
+  | { type: 'copy-address' }
+  | { type: 'none' };
+
 type HardwareWalletProps = {
   onComplete: () => void;
   onPowerChange?: (isOn: boolean) => void;
@@ -45,6 +53,7 @@ type HardwareWalletProps = {
   onReadyMenuSelect?: (label: string) => void;
   onFactoryResetAttempt?: () => void;
   onConnectConfirm?: () => void;
+  onUnexpectedAction?: () => void;
   connectRequest?: boolean;
   advanceToReadyMenu?: boolean;
   advanceFromRecoverIntro?: boolean;
@@ -54,6 +63,7 @@ type HardwareWalletProps = {
   initialPhase?: WalletPhase;
   explicitReset?: boolean;
   expectedMnemonic?: string[];
+  expectedAction?: ExpectedAction;
 };
 
 export const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
@@ -96,7 +106,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, connectRequest = false, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onUnexpectedAction, connectRequest = false, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
   const [wiped, setWiped] = useState(false);
@@ -273,17 +283,25 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     if (phase === 'off') {
       startBoot();
       onPowerChange?.(true);
-    } else {
-      updatePhase('off');
-      setBootStep(0);
-      setMenuIndex(0);
-      resetWalletState();
-      onPowerChange?.(false);
+      return;
     }
-  }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase, locked]);
+    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item' || expectedAction.type === 'confirm' || expectedAction.type === 'external' || expectedAction.type === 'copy-address') {
+      onUnexpectedAction?.();
+      return;
+    }
+    updatePhase('off');
+    setBootStep(0);
+    setMenuIndex(0);
+    resetWalletState();
+    onPowerChange?.(false);
+  }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase, locked, expectedAction, onUnexpectedAction]);
 
   const handleUp = useCallback(() => {
     if (locked) return;
+    if (expectedAction.type === 'copy-address' && phase === 'receive-address') {
+      onUnexpectedAction?.();
+      return;
+    }
     if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === 0 ? menuItems.length - 1 : menuIndex - 1;
       setMenuIndex(nextIndex);
@@ -300,10 +318,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setTypeListIndex((s) => (s === 0 ? typeList.length - 1 : s - 1));
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked, expectedAction, onUnexpectedAction]);
 
   const handleDown = useCallback(() => {
     if (locked) return;
+    if (expectedAction.type === 'copy-address' && phase === 'receive-address') {
+      onUnexpectedAction?.();
+      return;
+    }
     if (phase === 'menu' || phase === 'ready-menu') {
       const nextIndex = menuIndex === menuItems.length - 1 ? 0 : menuIndex + 1;
       setMenuIndex(nextIndex);
@@ -320,10 +342,25 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setTypeListIndex((s) => (s + 1) % typeList.length);
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked, expectedAction, onUnexpectedAction]);
+
+  const isExpectedMenuItem = useCallback((): boolean => {
+    if (expectedAction.type !== 'confirm-menu-item') return true;
+    if (phase !== 'menu' && phase !== 'ready-menu') return true;
+    const item = menuItems[menuIndex];
+    return item && item.label === expectedAction.label;
+  }, [expectedAction, phase, menuItems, menuIndex]);
 
   const handleEnter = useCallback(() => {
     if (locked) return;
+    if (expectedAction.type === 'confirm-menu-item' && (phase === 'menu' || phase === 'ready-menu') && !isExpectedMenuItem()) {
+      onUnexpectedAction?.();
+      return;
+    }
+    if (expectedAction.type === 'external' || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
+      onUnexpectedAction?.();
+      return;
+    }
     if (phase === 'reset-warn') {
       updatePhase('reset-confirm');
       return;
@@ -501,15 +538,19 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     wiped,
     locked,
     onConnectConfirm,
+    expectedAction,
+    onUnexpectedAction,
+    isExpectedMenuItem,
   ]);
 
   const handleCopyAddress = useCallback(() => {
+    if (locked) return;
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
     setAddrCopied(true);
     onCopyAddress?.();
     if (copyTimer.current) clearTimeout(copyTimer.current);
     copyTimer.current = setTimeout(() => setAddrCopied(false), 2000);
-  }, [onCopyAddress]);
+  }, [onCopyAddress, locked]);
 
   useEffect(() => () => {
     if (copyTimer.current) clearTimeout(copyTimer.current);
@@ -517,6 +558,21 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, []);
 
   const handleCancel = useCallback(() => {
+    if (locked) return;
+    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item') {
+      if (phase === 'menu' || phase === 'ready-menu') {
+        onUnexpectedAction?.();
+        return;
+      }
+    }
+    if (expectedAction.type === 'confirm' && (phase === 'create-intro' || phase === 'create-words' || phase === 'create-quiz')) {
+      onUnexpectedAction?.();
+      return;
+    }
+    if (expectedAction.type === 'external' || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
+      onUnexpectedAction?.();
+      return;
+    }
     if (phase === 'connect-confirm') return;
     if (phase === 'reset-warn') {
       updatePhase('settings');
@@ -547,11 +603,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       }
       return;
     }
-    if (phase === 'menu') return;
+    if (phase === 'menu' || phase === 'ready-menu') return;
     resetWalletState();
     updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin]);
+  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin, expectedAction, onUnexpectedAction, locked]);
 
   useEffect(() => {
     if (phase !== 'reset-done') return;
@@ -886,7 +942,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             </button>
           </div>
           <div className="hw-controls-actions">
-            <button className="hw-btn hw-btn-nav hw-btn-cancel" type="button" onClick={handleCancel} disabled={!isOn || isBooting || phase === 'menu' || phase === 'ready-menu'} aria-label="Cancel">
+            <button className="hw-btn hw-btn-nav hw-btn-cancel" type="button" onClick={handleCancel} disabled={!isOn || isBooting} aria-label="Cancel">
               <X size={16} strokeWidth={2.4} />
             </button>
             <button className="hw-btn hw-btn-nav hw-btn-enter" type="button" onClick={handleEnter} disabled={!isOn || isBooting || typeEnterDisabled} aria-label="Confirm">
