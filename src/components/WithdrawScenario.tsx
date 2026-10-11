@@ -513,7 +513,7 @@ const switchLocked = activePanel === 'exchange' && canContinue;
                               }
                               setSendAddress(e.target.value);
                             }}
-                            disabled={amountLocked}
+                            disabled={addressLocked}
                             placeholder="Paste wallet receive address"
                             className={`withdraw-addr-input${addressMismatch ? ' error' : ''}`}
                           />
