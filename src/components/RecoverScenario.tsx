@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronRight, FileText, X } from 'lucide-react';
-import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
+import HardwareWallet, { type WalletPhase, type ExpectedAction } from '@/components/HardwareWallet';
 import { loadMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
 
@@ -28,6 +28,9 @@ const RECOVER_INTRO_MESSAGES = [
 
 const RECOVER_TYPE_MESSAGE =
   "You may type each word directly or use Up/Down to pick a letter or suggested word. Use X to backspace if you mistype.";
+
+const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
+const NUDGE_DURATION_MS = 1250;
 
 const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu': "Select Settings to reset the device to factory settings.",
@@ -106,6 +109,8 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
   const [recoverIntroStep, setRecoverIntroStep] = useState(0);
   const [showingWords, setShowingWords] = useState(false);
   const [expectedMnemonic, setExpectedMnemonic] = useState<string[] | null>(null);
+  const [nudgeActive, setNudgeActive] = useState(false);
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevPhase = useRef<WalletPhase>('menu');
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -123,9 +128,11 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
   const isInRecoverType = introDone && walletPhase === 'recover-type';
   const recoverIntroFinal = RECOVER_INTRO_MESSAGES.length - 1;
 
-  const canContinue = !introDone
-    || recoveryDone
-    || isInRecoverIntro;
+  const canContinue = nudgeActive
+    ? false
+    : !introDone
+      || recoveryDone
+      || isInRecoverIntro;
 
   const finalStep = INTRO_MESSAGES.length - 1;
   const postResetMenu = wiped && walletPhase === 'menu';
@@ -152,15 +159,47 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     ? (MENTOR_MESSAGES[walletStateKey] ?? MENTOR_MESSAGES['wallet-menu'])
     : INTRO_MESSAGES[introStep];
 
-  const mentorMessage = showingWords
-    ? wordsMessage
-    : isInRecoverIntro
-      ? recoverIntroMessage
-      : isInRecoverType
-        ? RECOVER_TYPE_MESSAGE
-        : baseMentorMessage;
+  const mentorMessage = nudgeActive
+    ? NUDGE_MESSAGE
+    : showingWords
+      ? wordsMessage
+      : isInRecoverIntro
+        ? recoverIntroMessage
+        : isInRecoverType
+          ? RECOVER_TYPE_MESSAGE
+          : baseMentorMessage;
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
+
+  const handleUnexpectedAction = useCallback(() => {
+    setNudgeActive(true);
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+  }, []);
+
+  useEffect(() => {
+    if (nudgeActive) {
+      setNudgeActive(false);
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    }
+  }, [walletPhase]);
+
+  useEffect(() => () => {
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+  }, []);
+
+  const expectedAction: ExpectedAction =
+    !introDone
+      ? { type: 'none' }
+    : walletPhase === 'menu' && !wiped
+      ? { type: 'confirm-menu-item', label: 'Settings' }
+    : walletPhase === 'menu' && wiped
+      ? { type: 'confirm-menu-item', label: 'Recover wallet' }
+    : walletPhase === 'settings' || walletPhase === 'reset-warn' || walletPhase === 'reset-confirm'
+      ? { type: 'confirm' }
+    : walletPhase === 'recover-type'
+      ? { type: 'confirm' }
+    : { type: 'none' };
 
   const handleMenuSelectionChange = useCallback((sel: MenuSelection) => {
     setMenuSelection(sel);
@@ -305,7 +344,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
   }, []);
 
   const showPaperButton = isInRecoverType || (isInRecoverIntro && recoverIntroStep === recoverIntroFinal);
-  const walletLocked = isInRecoverIntro;
+  const walletLocked = (isInRecoverIntro || recoveryDone) && !nudgeActive;
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
@@ -320,6 +359,8 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
                 locked={walletLocked}
                 advanceFromRecoverIntro={advanceFromIntro}
                 expectedMnemonic={expectedMnemonic ?? undefined}
+                expectedAction={expectedAction}
+                onUnexpectedAction={handleUnexpectedAction}
                 onComplete={() => {}}
                 onPhaseChange={handlePhaseChange}
                 onMenuSelectionChange={handleMenuSelectionChange}
@@ -352,7 +393,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={showingWords ? 'words' : introDone ? `${walletStateKey}-${recoverIntroStep}` : `intro-${introStep}`}>
+            <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : showingWords ? 'words' : introDone ? `${walletStateKey}-${recoverIntroStep}` : `intro-${introStep}`}>
               <span className="mentor-bubble-name">Andy</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
