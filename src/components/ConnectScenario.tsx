@@ -51,7 +51,7 @@ const MARIA_MESSAGES = [
 const WALLET_WAITING_MESSAGE = "Let's wait for it to finish initializing.";
 
 const WALLET_INTRO_MESSAGE =
-  "This is the Transactions tab. You can view the Bitcoin balance of your wallet here. Along with all the sending and receiving transactions it's involved with as well."";
+  "This is the Transactions tab. You can view your wallet's Bitcoin balance here, along with all the sending and receiving transactions it is involved with.";
 
 const DEVICE_ARRIVAL_MESSAGE =
   "But first we need to plug our hardware wallet into the laptop and pair it with the app in order to see your wallet's transaction history. Let's do that.";
