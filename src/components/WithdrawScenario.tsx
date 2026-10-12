@@ -118,7 +118,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   const isInIntro = !introDone;
-  const spotlight = isInIntro && introStep === 0;
+  const spotlight = isInIntro && introStep <= 1;
   const isOnExchangeForm = activePanel === 'exchange' && exchangeScreen === 'form';
   const canContinue = nudgeActive
     ? false
@@ -383,6 +383,10 @@ const switchLocked = activePanel === 'exchange' && canContinue;
     }
     if (isInIntro) {
       if (introStep === 0) {
+        setIntroStep(1);
+        return;
+      }
+      if (introStep === 1) {
         if (portraitRef.current && bubbleRef.current) {
           flipRects.current = {
             portrait: portraitRef.current.getBoundingClientRect(),
@@ -390,10 +394,6 @@ const switchLocked = activePanel === 'exchange' && canContinue;
           };
         }
         setWalletEntered(true);
-        setIntroStep(1);
-        return;
-      }
-      if (introStep === 1) {
         setIntroStep(2);
         return;
       }
