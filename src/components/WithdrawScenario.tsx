@@ -14,6 +14,7 @@ const NETWORK_FEE = 0.00002;
 
 const INTRO_MESSAGES = [
   "This time I will teach you how to withdraw your Bitcoin from the exchange to your hardware wallet.",
+  'This is what self-custody is all about. Having your Bitcoin in your own wallet means you take full ownership of it.',
   "Now that you've already set up your hardware wallet, it's time to select 'Receive Bitcoin' to generate a receive address.",
 ];
 
@@ -122,7 +123,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const canContinue = nudgeActive
     ? false
     : isInIntro
-      ? introStep !== 1
+      ? introStep !== 2
     : switchIntroStep !== null
       ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
       : isOnExchangeForm
@@ -380,16 +381,22 @@ const switchLocked = activePanel === 'exchange' && canContinue;
       skip();
       return;
     }
-    if (isInIntro && introStep === 0) {
-      if (portraitRef.current && bubbleRef.current) {
-        flipRects.current = {
-          portrait: portraitRef.current.getBoundingClientRect(),
-          bubble: bubbleRef.current.getBoundingClientRect(),
-        };
+    if (isInIntro) {
+      if (introStep === 0) {
+        if (portraitRef.current && bubbleRef.current) {
+          flipRects.current = {
+            portrait: portraitRef.current.getBoundingClientRect(),
+            bubble: bubbleRef.current.getBoundingClientRect(),
+          };
+        }
+        setWalletEntered(true);
+        setIntroStep(1);
+        return;
       }
-      setWalletEntered(true);
-      setIntroStep(1);
-      return;
+      if (introStep === 1) {
+        setIntroStep(2);
+        return;
+      }
     }
     if (switchIntroStep !== null) {
       if (switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1) {
