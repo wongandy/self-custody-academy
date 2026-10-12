@@ -55,12 +55,11 @@ const WALLET_INTRO_MESSAGE =
 
 const DEVICE_ARRIVAL_MESSAGE =
   "Currently we have not yet connected our hardware wallet into the laptop and paired it with Cairn so let's do that now.";
-  // "But first we need to connect our hardware wallet into the laptop and pair it with the app in order to see your wallet's transaction history. Let's do that.";
 
 const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
 
 const CONNECT_DEVICE_MESSAGE =
-  'Your hardware wallet is now connected to the laptop. Click the Connect hardware wallet button on the app to send the pairing request.';
+  'Your hardware wallet is now connected to the laptop. Click the CONNECT HARDWARE WALLET button on the app to send the pairing request.';
 
 const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
 const NUDGE_DURATION_MS = 1250;
