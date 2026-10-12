@@ -56,8 +56,6 @@ const WALLET_INTRO_MESSAGE =
 const DEVICE_ARRIVAL_MESSAGE =
   "Currently we have not yet connected our hardware wallet into the laptop and paired it with Cairn so let's do that now.";
 
-const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
-
 const CONNECT_DEVICE_MESSAGE =
   'Your hardware wallet is now connected to the laptop. Click the CONNECT HARDWARE WALLET button on the app to send the pairing request.';
 
@@ -152,7 +150,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [connectRequested, setConnectRequested] = useState(false);
   const [connected, setConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [blocked, setBlocked] = useState(false);
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
   const [arrivalRequested, setArrivalRequested] = useState(false);
   const [arrivalStarted, setArrivalStarted] = useState(false);
@@ -181,11 +178,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const walletBooting = step.kind === 'wallet-intro' && bootPhase !== 'ready';
   const message = nudgeActive
     ? NUDGE_MESSAGE
-    : blocked
-      ? BLOCKED_MESSAGE
-      : walletBooting
-        ? WALLET_WAITING_MESSAGE
-        : stepMessage(step, stepIndex);
+    : walletBooting
+      ? WALLET_WAITING_MESSAGE
+      : stepMessage(step, stepIndex);
   const { displayed, done, skip } = useTypewriter(message);
 
   const walletVisible = stepIndex >= WALLET_INTRO_INDEX;
@@ -211,7 +206,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     ? false
     : arrivalWaiting
       ? done && !walletBooting
-      : done && !walletBooting && !sliding && (blocked || (!devicePending && !connecting));
+      : done && !walletBooting && !sliding && (!devicePending && !connecting);
   const softwareLocked = interactionLocked || (canContinue && !nudgeActive);
   const deviceLocked = interactionLocked || (canContinue && !nudgeActive);
   const connectButtonEnabled = step.kind === 'connect-request' && usbConnectionComplete && done && !nudgeActive;
@@ -362,10 +357,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       return;
     }
     if (walletBooting) return;
-    if (blocked) {
-      setBlocked(false);
-      return;
-    }
     if (step.kind === 'device-arrival' && !arrivalRequested) {
       setArrivalRequested(true);
       return;
@@ -382,7 +373,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, walletBooting, blocked, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
+  }, [done, skip, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
 
   const handleRequestConnect = () => {
     if (!connectButtonEnabled || connectRequested) return;
@@ -586,7 +577,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item active"
-                      onClick={() => setBlocked(false)}
+                      onClick={() => {}}
                       disabled={softwareLocked}
                       aria-pressed="true"
                     >
@@ -596,7 +587,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item"
-                      onClick={() => setBlocked(true)}
+                      onClick={handleUnexpectedAction}
                       disabled={softwareLocked}
                       aria-pressed="false"
                     >
@@ -606,7 +597,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item"
-                      onClick={() => setBlocked(true)}
+                      onClick={handleUnexpectedAction}
                       disabled={softwareLocked}
                       aria-pressed="false"
                     >
