@@ -30,6 +30,7 @@
 - Lucide React
 - Bolt Database
 - PostgreSQL
+- Supabase (Local Development)
 ---
 ## Requirements
 
@@ -37,13 +38,49 @@ Before installing the project, make sure you have:
 
 - Node.js 18 or newer
 - npm
+- Docker (required for running local Supabase)
 - A Bolt Database project for authentication and saved progress
 
 ---
 ## Quick start (local only)
-```bash
-git clone https://github.com/wongandy/self-custody-academy.git
-cd self-custody-academy
-npm install
-npm run dev
-```
+1. Clone the repository and navigate into the project directory:
+    ```bash
+    git clone [https://github.com/wongandy/self-custody-academy.git](https://github.com/wongandy/self-custody-academy.git)
+    cd self-custody-academy
+    ```
+
+2. Install all core project dependencies and packages:
+    ```bash
+    npm install
+    ```
+
+3. Install the Supabase CLI locally as a development dependency:
+    ```bash
+    npm install supabase --save-dev 
+    ```
+
+4. Initialize a local Supabase project structure (creates `supabase/config.toml`):
+    ```bash
+    npx supabase init
+    ```
+
+5. Boot up the local Supabase container environment via Docker:
+    ```bash
+    npx supabase start
+    ```
+
+6. Retrieve your local database credentials:
+    ```bash
+    npx supabase status
+    ```
+
+7. Create your environment file and configure your keys:
+   Create a `.env` file in your root directory and assign the value of the **Publishable** field from the status output to your `VITE_SUPABASE_ANON_KEY`:
+    ```env
+    VITE_SUPABASE_ANON_KEY=your_publishable_key_here
+    ```
+
+8. Launch the local development server (Vite) and open the local URL shown in your terminal (typically `http://localhost:5173`) in your browser to check the running site:
+    ```bash
+    npm run dev
+    ```
