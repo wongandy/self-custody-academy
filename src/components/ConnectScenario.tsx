@@ -54,7 +54,7 @@ const WALLET_INTRO_MESSAGE =
   "This is the Transactions tab. This is where you can view your wallet's Bitcoin balance, along with all the sending and receiving transactions it is involved with.";
 
 const DEVICE_ARRIVAL_MESSAGE =
-  "Currently we have not yet connected our hardware wallet into the laptop and pair it with the Cairn so let's do that.";
+  "Currently we have not yet connected our hardware wallet into the laptop and pair it with Cairn so let's do that.";
   // "But first we need to connect our hardware wallet into the laptop and pair it with the app in order to see your wallet's transaction history. Let's do that.";
 
 const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
