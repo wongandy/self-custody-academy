@@ -13,12 +13,13 @@ const AVAILABLE_BALANCE = 0.05;
 const NETWORK_FEE = 0.00002;
 
 const INTRO_MESSAGES = [
-  "This time I will teach you how to withdraw your Bitcoin from the exchange to your hardware wallet.",
-  "Now that you've already set up your hardware wallet, it's time to select 'Receive Bitcoin' to generate a receive address.",
+  "This time I will teach you how to withdraw your Bitcoin from the exchange to your hardware wallet. Having your Bitcoin in your own wallet means you take full ownership over it.",
+  "You are not relying anymore on any third-party to hold it for you. Your Bitcoin is now in your hands — giving you total financial sovereignty. This is what self-custody is all about.",
+  "Now that you've already set up your hardware wallet from earlier, it's time to select 'Receive Bitcoin' to generate a receive address.",
 ];
 
 const SWITCH_INTRO_MESSAGES = [
-  "Receive address copied! Now let's switch over to the exchange on your phone.",
+  "Receive address copied! Now let's switch over to the exchange on your phone so we can paste it there.",
   'Press "Switch to Exchange Wallet" at the top to head to the exchange on your phone.',
 ];
 
@@ -117,12 +118,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   const isInIntro = !introDone;
-  const spotlight = isInIntro && introStep === 0;
+  const spotlight = isInIntro && introStep <= 1;
   const isOnExchangeForm = activePanel === 'exchange' && exchangeScreen === 'form';
   const canContinue = nudgeActive
     ? false
     : isInIntro
-      ? introStep !== 1
+      ? introStep !== 2
     : switchIntroStep !== null
       ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
       : isOnExchangeForm
@@ -380,16 +381,22 @@ const switchLocked = activePanel === 'exchange' && canContinue;
       skip();
       return;
     }
-    if (isInIntro && introStep === 0) {
-      if (portraitRef.current && bubbleRef.current) {
-        flipRects.current = {
-          portrait: portraitRef.current.getBoundingClientRect(),
-          bubble: bubbleRef.current.getBoundingClientRect(),
-        };
+    if (isInIntro) {
+      if (introStep === 0) {
+        setIntroStep(1);
+        return;
       }
-      setWalletEntered(true);
-      setIntroStep(1);
-      return;
+      if (introStep === 1) {
+        if (portraitRef.current && bubbleRef.current) {
+          flipRects.current = {
+            portrait: portraitRef.current.getBoundingClientRect(),
+            bubble: bubbleRef.current.getBoundingClientRect(),
+          };
+        }
+        setWalletEntered(true);
+        setIntroStep(2);
+        return;
+      }
     }
     if (switchIntroStep !== null) {
       if (switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1) {
