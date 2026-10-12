@@ -155,6 +155,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [syncing, setSyncing] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
+  const [arrivalRequested, setArrivalRequested] = useState(false);
   const [arrivalStarted, setArrivalStarted] = useState(false);
   const [bootPhase, setBootPhase] = useState<BootPhase>('pending');
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
@@ -193,12 +194,14 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const mobileCableHalf = isMobile && walletVisible && step.kind === 'device-arrival' && arrivalStarted && !mobileDeviceEntered;
   const showCable = mobileCableHalf || connection === 'plugging' || connection === 'seating' || connection === 'linked';
   const showMobileSwitch = isMobile && walletVisible && arrivalStarted;
+  const arrivalWaiting = step.kind === 'device-arrival' && !arrivalRequested;
+  const arrivalAnimating = step.kind === 'device-arrival' && arrivalRequested && !arrivalStarted;
   const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
-  const sliding = step.kind === 'device-arrival' && !arrivalStarted;
+  const sliding = arrivalAnimating;
 
   // Nothing on the laptop, device or phone responds until the mentor has finished talking
   // and Cairn has finished starting up.
-  const interactionLocked = !done || connecting || walletBooting;
+  const interactionLocked = !done || walletBooting || arrivalWaiting || arrivalAnimating || connecting;
   const usbConnectionComplete = connection === 'linked';
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
@@ -207,7 +210,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   const canContinue = nudgeActive
     ? false
-    : done && !walletBooting && !sliding && (blocked || (!devicePending && !connecting));
+    : arrivalWaiting
+      ? done && !walletBooting
+      : done && !walletBooting && !sliding && (blocked || (!devicePending && !connecting));
   const softwareLocked = interactionLocked || (canContinue && !nudgeActive);
   const deviceLocked = interactionLocked || (canContinue && !nudgeActive);
   const connectButtonEnabled = step.kind === 'connect-request' && usbConnectionComplete && done && !nudgeActive;
@@ -275,7 +280,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // Maria finishes the plug-in line: slide the window from center to its final
   // spot, then start the device and cord sequence once the slide has settled.
   useEffect(() => {
-    if (step.kind !== 'device-arrival' || !done || arrivalStarted) return;
+    if (step.kind !== 'device-arrival' || !done || !arrivalRequested || arrivalStarted) return;
 
     const windowEl = laptopRef.current;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -293,7 +298,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
     const timer = setTimeout(() => setArrivalStarted(true), reduce ? 0 : SLIDE_SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [step.kind, done, arrivalStarted]);
+  }, [step.kind, done, arrivalRequested, arrivalStarted]);
 
   // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
   // On phones the linked cord stays visible for a beat before the view returns to the app.
@@ -362,10 +367,11 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       setBlocked(false);
       return;
     }
-    if (step.kind === 'device-arrival' && !arrivalStarted) {
+    if (step.kind === 'device-arrival' && !arrivalRequested) {
+      setArrivalRequested(true);
       return;
     }
-    if (devicePending || connecting) return;
+    if (devicePending || connecting || arrivalAnimating) return;
     if (step.kind === 'connected') {
       onComplete();
       return;
@@ -377,7 +383,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, walletBooting, blocked, step, stepIndex, arrivalStarted, devicePending, connecting, onComplete]);
+  }, [done, skip, walletBooting, blocked, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
 
   const handleRequestConnect = () => {
     if (!connectButtonEnabled || connectRequested) return;
