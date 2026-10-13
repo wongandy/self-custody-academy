@@ -298,7 +298,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   const handleUp = useCallback(() => {
     if (locked) return;
-    if (expectedAction.type === 'copy-address' && phase === 'receive-address') {
+    if (
+      (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu'))
+      || (expectedAction.type === 'confirm' && phase === 'connect-confirm')
+      || (expectedAction.type === 'copy-address' && phase === 'receive-address')
+    ) {
       onUnexpectedAction?.();
       return;
     }
@@ -322,7 +326,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   const handleDown = useCallback(() => {
     if (locked) return;
-    if (expectedAction.type === 'copy-address' && phase === 'receive-address') {
+    if (
+      (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu'))
+      || (expectedAction.type === 'confirm' && phase === 'connect-confirm')
+      || (expectedAction.type === 'copy-address' && phase === 'receive-address')
+    ) {
       onUnexpectedAction?.();
       return;
     }
@@ -565,7 +573,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         return;
       }
     }
-    if (expectedAction.type === 'confirm' && (phase === 'create-intro' || phase === 'create-words' || phase === 'create-quiz')) {
+    if (expectedAction.type === 'confirm' && (phase === 'create-intro' || phase === 'create-words' || phase === 'create-quiz' || phase === 'connect-confirm')) {
       onUnexpectedAction?.();
       return;
     }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight, Layers, Link2 } from 'lucide-react';
-import HardwareWallet from '@/components/HardwareWallet';
+import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
 
@@ -51,15 +51,16 @@ const MARIA_MESSAGES = [
 const WALLET_WAITING_MESSAGE = "Let's wait for it to finish initializing.";
 
 const WALLET_INTRO_MESSAGE =
-  'This is the Transactions tab. Every sending or receiving transaction your wallet is involved will show up here.';
+  "This is the Transactions tab. This is where you can view your wallet's Bitcoin balance, along with all the sending and receiving transactions it is involved with.";
 
 const DEVICE_ARRIVAL_MESSAGE =
-  "But first we need to plug our hardware wallet into the laptop and pair it with the app in order to see your wallet's transaction history. Let's do that.";
-
-const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
+  "Currently we have not yet connected our hardware wallet into the laptop and paired it with Cairn so let's do that now.";
 
 const CONNECT_DEVICE_MESSAGE =
-  'Your hardware wallet is now connected to the laptop. Click the Connect hardware wallet button on the app to send the pairing request.';
+  'Your hardware wallet is now connected to the laptop. Click the CONNECT HARDWARE WALLET button on the app to send the pairing request.';
+
+const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
+const NUDGE_DURATION_MS = 1250;
 
 const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware wallet by pressing the checkmark button.";
 
@@ -149,14 +150,16 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [connectRequested, setConnectRequested] = useState(false);
   const [connected, setConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [blocked, setBlocked] = useState(false);
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
+  const [arrivalRequested, setArrivalRequested] = useState(false);
   const [arrivalStarted, setArrivalStarted] = useState(false);
   const [bootPhase, setBootPhase] = useState<BootPhase>('pending');
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const [mobilePanel, setMobilePanel] = useState<'software' | 'device'>('software');
   const [mobileDeviceEntered, setMobileDeviceEntered] = useState(false);
+  const [nudgeActive, setNudgeActive] = useState(false);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 600px)');
@@ -173,8 +176,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // Maria asks the learner to wait until Cairn has finished starting up, then
   // explains the Transactions tab once the app is on screen.
   const walletBooting = step.kind === 'wallet-intro' && bootPhase !== 'ready';
-  const message = blocked
-    ? BLOCKED_MESSAGE
+  const message = nudgeActive
+    ? NUDGE_MESSAGE
     : walletBooting
       ? WALLET_WAITING_MESSAGE
       : stepMessage(step, stepIndex);
@@ -185,18 +188,35 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const mobileCableHalf = isMobile && walletVisible && step.kind === 'device-arrival' && arrivalStarted && !mobileDeviceEntered;
   const showCable = mobileCableHalf || connection === 'plugging' || connection === 'seating' || connection === 'linked';
   const showMobileSwitch = isMobile && walletVisible && arrivalStarted;
+  const arrivalWaiting = step.kind === 'device-arrival' && !arrivalRequested;
+  const arrivalAnimating = step.kind === 'device-arrival' && arrivalRequested && !arrivalStarted;
   const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
-  const sliding = step.kind === 'device-arrival' && !arrivalStarted;
+  const sliding = arrivalAnimating;
 
   // Nothing on the laptop, device or phone responds until the mentor has finished talking
   // and Cairn has finished starting up.
-  const interactionLocked = !done || connecting || walletBooting;
+  const interactionLocked = !done || walletBooting || arrivalWaiting || arrivalAnimating || connecting;
+  const usbConnectionComplete = connection === 'linked';
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
   const confirmPending = step.kind === 'device-prompt' && (!connected || syncing);
   const devicePending = requestPending || confirmPending;
 
-  const canContinue = done && !walletBooting && !sliding && (blocked || (!devicePending && !connecting));
+  const canContinue = nudgeActive
+    ? false
+    : arrivalWaiting
+      ? done && !walletBooting
+      : done && !walletBooting && !sliding && (!devicePending && !connecting);
+  const softwareLocked = interactionLocked || (canContinue && !nudgeActive);
+  const deviceLocked = interactionLocked || (canContinue && !nudgeActive);
+  const connectButtonEnabled = step.kind === 'connect-request' && usbConnectionComplete && done && !nudgeActive;
+
+  const expectedAction: ExpectedAction =
+    step.kind === 'connect-request'
+      ? { type: 'external' }
+      : step.kind === 'device-prompt'
+        ? { type: 'confirm' }
+        : { type: 'none' };
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -254,7 +274,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // Maria finishes the plug-in line: slide the window from center to its final
   // spot, then start the device and cord sequence once the slide has settled.
   useEffect(() => {
-    if (step.kind !== 'device-arrival' || !done || arrivalStarted) return;
+    if (step.kind !== 'device-arrival' || !done || !arrivalRequested || arrivalStarted) return;
 
     const windowEl = laptopRef.current;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -272,7 +292,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
     const timer = setTimeout(() => setArrivalStarted(true), reduce ? 0 : SLIDE_SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [step.kind, done, arrivalStarted]);
+  }, [step.kind, done, arrivalRequested, arrivalStarted]);
 
   // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
   // On phones the linked cord stays visible for a beat before the view returns to the app.
@@ -337,14 +357,11 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       return;
     }
     if (walletBooting) return;
-    if (blocked) {
-      setBlocked(false);
+    if (step.kind === 'device-arrival' && !arrivalRequested) {
+      setArrivalRequested(true);
       return;
     }
-    if (step.kind === 'device-arrival' && !arrivalStarted) {
-      return;
-    }
-    if (devicePending || connecting) return;
+    if (devicePending || connecting || arrivalAnimating) return;
     if (step.kind === 'connected') {
       onComplete();
       return;
@@ -356,10 +373,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, walletBooting, blocked, step, stepIndex, arrivalStarted, devicePending, connecting, onComplete]);
+  }, [done, skip, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
 
   const handleRequestConnect = () => {
-    if (interactionLocked || connectRequested) return;
+    if (!connectButtonEnabled || connectRequested) return;
     setConnectRequested(true);
     setStepIndex((current) => (STEPS[current].kind === 'connect-request' ? current + 1 : current));
   };
@@ -373,6 +390,23 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     }
     setMobilePanel((current) => (current === 'device' ? 'software' : 'device'));
   };
+
+  const handleUnexpectedAction = useCallback(() => {
+    setNudgeActive(true);
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+  }, []);
+
+  useEffect(() => {
+    if (nudgeActive) {
+      setNudgeActive(false);
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    }
+  }, [stepIndex, connection]);
+
+  useEffect(() => () => {
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+  }, []);
 
   const handleDeviceConfirm = () => {
     setConnected(true);
@@ -543,8 +577,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item active"
-                      onClick={() => setBlocked(false)}
-                      disabled={interactionLocked}
+                      onClick={() => {}}
+                      disabled={softwareLocked}
                       aria-pressed="true"
                     >
                       <ArrowLeftRight strokeWidth={2.2} />
@@ -553,8 +587,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item"
-                      onClick={() => setBlocked(true)}
-                      disabled={interactionLocked}
+                      onClick={handleUnexpectedAction}
+                      disabled={softwareLocked}
                       aria-pressed="false"
                     >
                       <ArrowUpRight strokeWidth={2.2} />
@@ -563,8 +597,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item"
-                      onClick={() => setBlocked(true)}
-                      disabled={interactionLocked}
+                      onClick={handleUnexpectedAction}
+                      disabled={softwareLocked}
                       aria-pressed="false"
                     >
                       <ArrowDownLeft strokeWidth={2.2} />
@@ -610,7 +644,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                                       type="button"
                                       className={requestPending ? 'wallet-connect-btn attention' : 'wallet-connect-btn'}
                                       onClick={handleRequestConnect}
-                                      disabled={interactionLocked || step.kind !== 'connect-request'}
+                                      disabled={!connectButtonEnabled}
                                     >
                                       <Link2 size={14} strokeWidth={2.2} />
                                       <span>Connect hardware wallet</span>
@@ -648,8 +682,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                   <HardwareWallet
                     mode="withdraw"
                     initialPhase="ready-menu"
-                    locked={interactionLocked}
+                    locked={deviceLocked}
                     connectRequest={connectRequested}
+                    expectedAction={expectedAction}
+                    onUnexpectedAction={handleUnexpectedAction}
                     onConnectConfirm={handleDeviceConfirm}
                     onComplete={() => {}}
                   />
@@ -678,7 +714,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={`${mentorName}-${stepIndex}-${message}`}>
+            <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : `${mentorName}-${stepIndex}-${message}`}>
               <span className="mentor-bubble-name">{mentorName}</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>

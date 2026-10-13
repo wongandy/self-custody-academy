@@ -22,11 +22,11 @@ type Scenario = {
 
 const scenarios: Scenario[] = [
   { number: 1, title: 'Set up hardware wallet', icon: WalletCards },
-  { number: 2, title: 'Withdraw BTC from exchange', icon: ArrowDownToLine },
+  { number: 2, title: 'Withdraw Bitcoin from exchange', icon: ArrowDownToLine },
   { number: 3, title: 'Recover hardware wallet', icon: KeyRound },
-  { number: 4, title: 'Connect wallet', icon: Usb },
-  { number: 5, title: 'Sending BTC', icon: ArrowUpFromLine },
-  { number: 6, title: 'Receiving BTC', icon: ArrowDownToLine },
+  { number: 4, title: 'Connect to wallet software', icon: Usb },
+  { number: 5, title: 'Sending Bitcoin', icon: ArrowUpFromLine },
+  { number: 6, title: 'Receiving Bitcoin', icon: ArrowDownToLine },
 ];
 
 const nodePositions = [
