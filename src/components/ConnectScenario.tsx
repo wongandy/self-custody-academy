@@ -59,7 +59,7 @@ const DEVICE_ARRIVAL_MESSAGE =
 const CONNECT_DEVICE_MESSAGE =
   'Your hardware wallet is now connected to the laptop. Click the CONNECT HARDWARE WALLET button on the app to send the pairing request.';
 
-const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
+const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the current step.";
 const NUDGE_DURATION_MS = 1250;
 
 const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware wallet by pressing the checkmark button.";
