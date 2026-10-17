@@ -11,7 +11,7 @@ type ScenarioBriefingProps = {
   onComplete: () => void;
 };
 
-const POWER_ON_MESSAGE = 'Start by clicking the power button to turn it on.';
+const POWER_ON_MESSAGE = "That's a neat hardware wallet you got there! Ok let's start by clicking the power button to turn it on.";
 
 // Andy reads these in order while the device is still hidden. The last entry is
 // always the power-button line: the wallet window and device appear on it, so
