@@ -10,7 +10,7 @@ type ConnectScenarioProps = {
 };
 
 type Step =
-  | { kind: 'mentor'; mentor: 'andy' | 'maria' }
+  | { kind: 'mentor'; mentor: 'andy' | 'maria'; message: string }
   | { kind: 'wallet-intro' }
   | { kind: 'device-arrival' }
   | { kind: 'connect-request' }
@@ -42,10 +42,16 @@ const HANDOFF_MESSAGES = [
   "She'll be the one to teach you all about the connecting part — I'll let her take it from here.",
 ];
 
+// Maria reads these in order while the wallet window is still hidden. The
+// hand-over line is always the last entry: the window appears on it, so
+// anything added above it plays first, in the spotlight.
+const HANDOVER_MESSAGE =
+  "We'll be using one you already have installed on your laptop called Cairn. Let's open it and take a look inside.";
+
 const MARIA_MESSAGES = [
   "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
   "A wallet software is simply an app in your laptop that lets you view and manage your Bitcoin — your balance, your history, your payments.",
-  "We'll be using one you already have installed on your laptop called Cairn. Let's open it and take a look inside.",
+  HANDOVER_MESSAGE,
 ];
 
 const WALLET_WAITING_MESSAGE = "Let's wait for it to finish initializing.";
@@ -66,12 +72,15 @@ const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware 
 
 const WALLET_CONNECTED_MESSAGE = "Good job! You have successfully paired your hardware wallet with the Cairn wallet software.";
 
+// The mentor lines and the steps are built from one script, so a line can
+// never be added without its step appearing alongside it.
+const MENTOR_SCRIPT: { mentor: 'andy' | 'maria'; message: string }[] = [
+  ...HANDOFF_MESSAGES.map((message) => ({ mentor: 'andy' as const, message })),
+  ...MARIA_MESSAGES.map((message) => ({ mentor: 'maria' as const, message })),
+];
+
 const STEPS: Step[] = [
-  { kind: 'mentor', mentor: 'andy' },
-  { kind: 'mentor', mentor: 'andy' },
-  { kind: 'mentor', mentor: 'maria' },
-  { kind: 'mentor', mentor: 'maria' },
-  { kind: 'mentor', mentor: 'maria' },
+  ...MENTOR_SCRIPT.map(({ mentor, message }) => ({ kind: 'mentor' as const, mentor, message })),
   { kind: 'wallet-intro' },
   { kind: 'device-arrival' },
   { kind: 'connect-request' },
@@ -79,7 +88,14 @@ const STEPS: Step[] = [
   { kind: 'connected' },
 ];
 
-const WALLET_INTRO_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-intro');
+// Resolved by lookup, not by counting, so the window still appears on the
+// hand-over line after mentor lines are added or removed above it.
+const HANDOVER_STEP_INDEX = (() => {
+  const index = STEPS.findIndex((s) => s.kind === 'mentor' && s.message === HANDOVER_MESSAGE);
+  if (index !== -1) return index;
+  const walletIntro = STEPS.findIndex((s) => s.kind === 'wallet-intro');
+  return walletIntro === -1 ? STEPS.length - 1 : Math.max(walletIntro - 1, 0);
+})();
 
 const WALLET_BALANCE = '0.04998';
 const WALLET_APP_NAME = 'Cairn';
@@ -127,11 +143,10 @@ function useTypewriter(text: string, speed = 6) {
   return { displayed, done, skip };
 }
 
-function stepMessage(step: Step, stepIndex: number): string {
+function stepMessage(step: Step): string {
   switch (step.kind) {
     case 'mentor':
-      if (step.mentor === 'andy') return HANDOFF_MESSAGES[stepIndex];
-      return MARIA_MESSAGES[stepIndex - HANDOFF_MESSAGES.length];
+      return step.message;
     case 'wallet-intro':
       return WALLET_INTRO_MESSAGE;
     case 'device-arrival':
@@ -180,11 +195,13 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     ? NUDGE_MESSAGE
     : walletBooting
       ? WALLET_WAITING_MESSAGE
-      : stepMessage(step, stepIndex);
+      : stepMessage(step);
   const { displayed, done, skip } = useTypewriter(message);
 
-  const walletVisible = stepIndex >= WALLET_INTRO_INDEX;
-  const spotlight = !walletVisible;
+  // The window stays hidden, and the mentor stays in the spotlight, until the
+  // hand-over line; that line is where the window appears.
+  const walletVisible = stepIndex >= HANDOVER_STEP_INDEX;
+  const spotlight = stepIndex < HANDOVER_STEP_INDEX;
   const mobileCableHalf = isMobile && walletVisible && step.kind === 'device-arrival' && arrivalStarted && !mobileDeviceEntered;
   const showCable = mobileCableHalf || connection === 'plugging' || connection === 'seating' || connection === 'linked';
   const showMobileSwitch = isMobile && walletVisible && arrivalStarted;
@@ -366,7 +383,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       onComplete();
       return;
     }
-    if (step.kind === 'mentor' && stepIndex === WALLET_INTRO_INDEX - 1 && portraitRef.current && bubbleRef.current) {
+    if (stepIndex === HANDOVER_STEP_INDEX - 1 && portraitRef.current && bubbleRef.current) {
       flipRects.current = {
         portrait: portraitRef.current.getBoundingClientRect(),
         bubble: bubbleRef.current.getBoundingClientRect(),
