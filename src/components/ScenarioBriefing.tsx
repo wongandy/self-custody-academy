@@ -37,7 +37,7 @@ const FACTORY_RESET_MESSAGE =
 // explanation first, then the warning. The continue button moves between them.
 const CREATE_WORDS_MESSAGES = [
   "Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper — never take a photo or type it on a computer.",
-  "Remember to keep your copy somewhere safe and private. Whoever gets a copy your recovery phrase is able to steal your Bitcoin.",
+  "Remember to keep your copy somewhere safe and private. Whoever gets a copy of your recovery phrase is able to steal your Bitcoin.",
 ];
 
 // Andy's wrap-up for the new wallet, delivered as two lines: what the device
@@ -56,7 +56,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'create-intro': "Before your device can generate those private keys, it needs to create a 12-word recovery phrase first. Press the checkmark to continue.",
   'create-words': CREATE_WORDS_MESSAGES[0],
   'create-quiz':
-    "Okay now it's time to prove you made a copy your recovery phrase. Pick the correct word for the position shown, then press the checkmark to confirm.",
+    "Okay now it's time to prove you made a copy of your recovery phrase. Pick the correct word for the position shown, then press the checkmark to confirm.",
   'create-done': CREATE_DONE_MESSAGES[0],
   'recover-intro': "We'll cover wallet recovery later. Select Create Wallet for now.",
   'recover-quiz': '',
