@@ -42,7 +42,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'create-intro': "Before your device can generate those private keys, it needs to create a 12-word seed phrase first. Press the checkmark to continue.",
   'create-words':
     // "Here's your 12-word recovery phrase. In real life you'd write these down on paper — NEVER on a screen. When you're done, press the checkmark.",
-    "Here is your 12-word recovery phrase, which creates your private keys. You must write this only on paper — never take a photo or type it on a screen. Press the checkmark when done.",
+    "Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper — never take a photo or type it on a screen. Press the checkmark when done.",
   'create-quiz':
     "Time to prove you saved your words. Pick the correct word for the position shown, then press the checkmark to confirm.",
   'create-done': "Nice work! You have now created a wallet. You can now use this to receive or send Bitcoin.",
