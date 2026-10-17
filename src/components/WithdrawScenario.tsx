@@ -21,6 +21,8 @@ const HANDOVER_MESSAGE =
 const INTRO_MESSAGES = [
   "This time I will teach you how to withdraw your Bitcoin from the exchange to your hardware wallet. Having your Bitcoin in your own wallet means you take full ownership over it.",
   "You are not relying anymore on any third-party to hold it for you. Your Bitcoin is now in your hands — giving you total financial sovereignty. This is what self-custody is all about.",
+  "x",
+  "y",
   HANDOVER_MESSAGE,
 ];
 
