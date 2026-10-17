@@ -198,9 +198,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       : stepMessage(step);
   const { displayed, done, skip } = useTypewriter(message);
 
-  // The window stays hidden, and the mentor stays in the spotlight, until the
-  // hand-over line; that line is where the window appears.
-  const walletVisible = stepIndex >= HANDOVER_STEP_INDEX;
+  // The window stays hidden, and the mentor stays in the spotlight, through
+  // the hand-over line; the window appears on the step after it, where Maria
+  // narrates the app starting up.
+  const walletVisible = stepIndex > HANDOVER_STEP_INDEX;
   const spotlight = stepIndex < HANDOVER_STEP_INDEX;
   const mobileCableHalf = isMobile && walletVisible && step.kind === 'device-arrival' && arrivalStarted && !mobileDeviceEntered;
   const showCable = mobileCableHalf || connection === 'plugging' || connection === 'seating' || connection === 'linked';
@@ -383,7 +384,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       onComplete();
       return;
     }
-    if (stepIndex === HANDOVER_STEP_INDEX - 1 && portraitRef.current && bubbleRef.current) {
+    if (stepIndex === HANDOVER_STEP_INDEX && portraitRef.current && bubbleRef.current) {
       flipRects.current = {
         portrait: portraitRef.current.getBoundingClientRect(),
         bubble: bubbleRef.current.getBoundingClientRect(),
