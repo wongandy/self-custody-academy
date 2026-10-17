@@ -18,7 +18,7 @@ const POWER_ON_MESSAGE = "That's a neat hardware wallet you got there! Okay let'
 // anything added above it plays first, in the spotlight.
 const INTRO_MESSAGES = [
   "Let me teach you how to setup your hardware wallet. In case you need a refresher, a hardware wallet is a physical device that allows you to store the private keys to your Bitcoin.",
-  "The private keys are what allow you to send and manage your Bitcoin. It is protected by a secure chip inside the device.",
+  "The private keys are what allow you to send and manage your Bitcoin. They are protected by a secure chip inside the device.",
   POWER_ON_MESSAGE,
 ];
 
