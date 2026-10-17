@@ -19,6 +19,8 @@ const POWER_ON_MESSAGE = 'Start by clicking the power button to turn it on.';
 const INTRO_MESSAGES = [
   "Let me teach you how to setup your hardware wallet. In case you need a refresher, a hardware wallet is a physical device that allows you to store the private keys to your Bitcoin offline.",
   "Your private keys are what allow you to send and withdraw your Bitcoin. They are protected by a secure chip inside the device.",
+  "a",
+  "b",
   POWER_ON_MESSAGE,
 ];
 
