@@ -37,7 +37,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: POWER_ON_MESSAGE,
   booting: 'Great — the device is booting up. Hang tight for a moment.',
   // menu: "You'll see 'Create wallet' highlighted. Press the checkmark button to select it.",
-   menu: "Next you need to create a wallet. The private keys will be stored here. Press the checkmark button to select it.",
+   menu: "Next, you need to create a wallet. This is where your device will generate your unique private keys and lock them safely inside the secure chip. Press the checkmark button to select it.",
   'create-intro': "On the next screen your 12-word recovery phrase will be shown. Press the checkmark to continue.",
   'create-words':
     "Here's your 12-word recovery phrase. In real life you'd write these down on paper — NEVER on a screen. When you're done, press the checkmark.",
