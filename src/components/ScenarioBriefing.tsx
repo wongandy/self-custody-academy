@@ -56,7 +56,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'create-intro': "Before your device can generate those private keys, it needs to create a 12-word recovery phrase first. Press the checkmark to continue.",
   'create-words': CREATE_WORDS_MESSAGES[0],
   'create-quiz':
-    "Okay now it's time to prove you made a copy of your recovery phrase. Pick the correct word for the position shown, then press the checkmark to confirm.",
+    "Okay now it's time to prove you made a copy of it. Pick the correct word for the position shown, then press the checkmark to confirm.",
   'create-done': CREATE_DONE_MESSAGES[0],
   'recover-intro': "We'll cover wallet recovery later. Select Create Wallet for now.",
   'recover-quiz': '',
