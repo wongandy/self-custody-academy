@@ -12,7 +12,7 @@ type ScenarioBriefingProps = {
 };
 
 const INTRO_MESSAGES = [
-  "Let me teach you how to setup your hardware wallet. In case you're unaware, a hardware wallet is a physical device that allows you to store the private keys to your Bitcoin. Don't worry, we'll walk through it together.",
+  "Let me teach you how to setup your hardware wallet. In case you're unaware, a hardware wallet is a physical device that allows you to store the private keys to your Bitcoin.",
   "test",
   "Start by clicking the power button to turn it on.",
 ];
