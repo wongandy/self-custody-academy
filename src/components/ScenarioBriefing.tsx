@@ -33,6 +33,13 @@ const READY_MENU_MESSAGE =
 const FACTORY_RESET_MESSAGE =
   "Resetting the device isn't part of this scenario, so we'll leave it as it is for now. Let's wrap this up instead.";
 
+// Andy delivers these one at a time while the 12 words are on screen: the
+// explanation first, then the warning. The continue button moves between them.
+const CREATE_WORDS_MESSAGES = [
+  "Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper — never take a photo or type it on a computer.",
+  "Note that whoever has a copy of your recovery phrase is potentially able to steal your Bitcoin.",
+];
+
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: POWER_ON_MESSAGE,
   booting: 'Great — the device is booting up. Hang tight for a moment.',
@@ -40,9 +47,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
    menu: "Next, you need to create a wallet. This is where your device will generate your private keys. Press the checkmark button to select it.",
   // 'create-intro': "On the next screen your 12-word recovery phrase will be shown. Press the checkmark to continue.",
   'create-intro': "Before your device can generate those private keys, it needs to create a 12-word seed phrase first. Press the checkmark to continue.",
-  'create-words':
-    // "Here's your 12-word recovery phrase. In real life you'd write these down on paper — NEVER on a screen. When you're done, press the checkmark.",
-    "Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper — never take a photo or type it on a computer.",
+  'create-words': CREATE_WORDS_MESSAGES[0],
   'create-quiz':
     "Okay now it's time to prove you made a copy your recovery phrase. Pick the correct word for the position shown, then press the checkmark to confirm.",
   'create-done': "Nice work! You have now created a wallet. You can now use this to receive or send Bitcoin.",
@@ -106,6 +111,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
   const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('create-intro');
+  const [createWordsStep, setCreateWordsStep] = useState(0);
   const [readyMenuSeen, setReadyMenuSeen] = useState(false);
   const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
   const [resetRefused, setResetRefused] = useState(false);
@@ -120,6 +126,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   // power-button line; that line is where the wallet window slides in.
   const walletVisible = introStep >= POWER_ON_INDEX;
   const spotlight = isInIntro && introStep < POWER_ON_INDEX;
+  const createWordsLastStep = createWordsStep >= CREATE_WORDS_MESSAGES.length - 1;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
   const baseMentorMessage = isInIntro
     ? currentIntroMessage
@@ -129,7 +136,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       ? "We'll cover wallet recovery later. Select Create Wallet for now."
       : walletPhase === 'ready-menu' && readyMenuHint
         ? readyMenuHint
-        : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
+        : walletPhase === 'create-words'
+          ? CREATE_WORDS_MESSAGES[createWordsStep] ?? CREATE_WORDS_MESSAGES[0]
+          : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
   const mentorMessage = nudgeActive ? NUDGE_MESSAGE : baseMentorMessage;
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
@@ -137,11 +146,13 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     ? false
     : isInIntro
       ? introStep < POWER_ON_INDEX && done
-      : walletPhase === 'create-done' || walletPhase === 'ready-menu';
+      : walletPhase === 'create-words'
+        ? !createWordsLastStep && done
+        : walletPhase === 'create-done' || walletPhase === 'ready-menu';
 
-  // The device ignores input while Andy is still talking; during the wallet
-  // phases it follows the continue state as before.
-  const deviceLocked = canContinue || (isInIntro && !done);
+  // The device ignores input while Andy is still talking — both in the intro
+  // and while he is reading the recovery-phrase lines.
+  const deviceLocked = canContinue || (isInIntro && !done) || (walletPhase === 'create-words' && !done);
 
   useEffect(() => {
     if (walletPhase !== 'off' && !introDone) {
@@ -157,6 +168,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
 
   useEffect(() => {
     if (walletPhase !== 'create-words') return;
+    setCreateWordsStep(0);
     const words = getSessionMnemonic();
     if (words && words.length === 12) {
       persistMnemonic(words);
@@ -177,6 +189,12 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
         };
       }
       setIntroStep(nextStep);
+      return;
+    }
+    if (walletPhase === 'create-words') {
+      if (!createWordsLastStep) {
+        setCreateWordsStep((step) => step + 1);
+      }
       return;
     }
     if (walletPhase === 'create-done') {
@@ -238,7 +256,13 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     );
   }, []);
 
-  const bubbleKey = nudgeActive ? 'nudge' : isInIntro ? `intro-${introStep}` : `${walletPhase}-${resetRefused}`;
+  const bubbleKey = nudgeActive
+    ? 'nudge'
+    : isInIntro
+      ? `intro-${introStep}`
+      : walletPhase === 'create-words'
+        ? `create-words-${createWordsStep}`
+        : `${walletPhase}-${resetRefused}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
