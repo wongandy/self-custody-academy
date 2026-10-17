@@ -36,7 +36,7 @@ const FACTORY_RESET_MESSAGE =
 // Andy delivers these one at a time while the 12 words are on screen: the
 // explanation first, then the warning. The continue button moves between them.
 const CREATE_WORDS_MESSAGES = [
-  "Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper and keep it safe — never take a photo or type it on a computer.",
+  "Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper — never take a photo or type it on a computer.",
   "Note that whoever has a copy of your recovery phrase is potentially able to steal your Bitcoin.",
 ];
 
