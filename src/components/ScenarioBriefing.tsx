@@ -37,7 +37,7 @@ const FACTORY_RESET_MESSAGE =
 // explanation first, then the warning. The continue button moves between them.
 const CREATE_WORDS_MESSAGES = [
   "Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper — never take a photo or type it on a computer.",
-  "Note that whoever has a copy of your recovery phrase is potentially able to steal your Bitcoin.",
+  "Remember to keep your copy somewhere safe and private. Whoever gets a copy your recovery phrase is able to steal your Bitcoin.",
 ];
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
