@@ -13,11 +13,24 @@ type RecoverScenarioProps = {
 
 type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked';
 
+// Andy reads these in order while the wallet is still hidden. The hand-over
+// line is always the last entry: the wallet window appears on it, so anything
+// added above it plays first, in the spotlight.
+const HANDOVER_MESSAGE =
+  "Let's head back to your hardware wallet and I'll teach you how to do it.";
+
 const INTRO_MESSAGES = [
   "Now let's talk about one of the most overlooked aspect of self-custody — recovering one's wallet.",
   'Wallet recovery is a straightforward process and is essential if your hardware wallet ever gets lost, stolen or destroyed.',
-  "Let's head back to your hardware wallet and I'll teach you how to do it.",
+  HANDOVER_MESSAGE,
 ];
+
+// Resolved by lookup, not by counting, so the reveal stays on the hand-over
+// line no matter how many setup lines are added above it.
+const HANDOVER_INDEX = (() => {
+  const index = INTRO_MESSAGES.indexOf(HANDOVER_MESSAGE);
+  return index === -1 ? INTRO_MESSAGES.length - 1 : index;
+})();
 
 const RECOVER_INTRO_MESSAGES = [
   'On the next screen, you will be asked to input each word of your recovery phrase.',
@@ -123,18 +136,14 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     });
   }, []);
 
-  const spotlight = !introDone;
+  // The wallet stays hidden, and Andy stays in the spotlight, until his
+  // hand-over line; that line is where the wallet window slides in.
+  const walletVisible = introDone || introStep >= HANDOVER_INDEX;
+  const spotlight = !introDone && introStep < HANDOVER_INDEX;
   const isInRecoverIntro = introDone && walletPhase === 'recover-intro';
   const isInRecoverType = introDone && walletPhase === 'recover-type';
   const recoverIntroFinal = RECOVER_INTRO_MESSAGES.length - 1;
 
-  const canContinue = nudgeActive
-    ? false
-    : !introDone
-      || recoveryDone
-      || isInRecoverIntro;
-
-  const finalStep = INTRO_MESSAGES.length - 1;
   const postResetMenu = wiped && walletPhase === 'menu';
   const walletStateKey = recoveryDone
     ? (recoveryDoneStep === 1 ? 'wallet-recover-celebrate' : 'wallet-recover-done')
@@ -171,6 +180,12 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
+  const canContinue = nudgeActive
+    ? false
+    : !introDone
+      ? introStep < HANDOVER_INDEX && done
+      : recoveryDone || isInRecoverIntro;
+
   const handleUnexpectedAction = useCallback(() => {
     setNudgeActive(true);
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
@@ -187,6 +202,15 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
   useEffect(() => () => {
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
   }, []);
+
+  // The intro ends as soon as the learner touches the wallet, so the mentor
+  // never lingers on the hand-over line after control has been handed over.
+  useEffect(() => {
+    if (introDone) return;
+    if (walletPhase !== 'menu') {
+      setIntroDone(true);
+    }
+  }, [walletPhase, introDone]);
 
   const expectedAction: ExpectedAction =
     !introDone
@@ -295,18 +319,18 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
       return;
     }
     if (!introDone) {
-      if (introStep < finalStep) {
+      if (introStep < HANDOVER_INDEX) {
+        if (introStep === HANDOVER_INDEX - 1 && portraitRef.current && bubbleRef.current) {
+          flipRects.current = {
+            portrait: portraitRef.current.getBoundingClientRect(),
+            bubble: bubbleRef.current.getBoundingClientRect(),
+          };
+        }
         setIntroStep(introStep + 1);
-        return;
       }
-      if (portraitRef.current && bubbleRef.current) {
-        flipRects.current = {
-          portrait: portraitRef.current.getBoundingClientRect(),
-          bubble: bubbleRef.current.getBoundingClientRect(),
-        };
-      }
-      setIntroDone(true);
-    } else if (isInRecoverIntro) {
+      return;
+    }
+    if (isInRecoverIntro) {
       if (recoverIntroStep < recoverIntroFinal) {
         setRecoverIntroStep(recoverIntroStep + 1);
       } else {
@@ -321,7 +345,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
         onBack();
       }
     }
-  }, [done, skip, introDone, introStep, finalStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, onBack, onComplete]);
+  }, [done, skip, introDone, introStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, onBack, onComplete]);
 
   const [advanceFromIntro, setAdvanceFromIntro] = useState(false);
 
@@ -345,18 +369,21 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
 
   const showPaperButton = isInRecoverType || (isInRecoverIntro && recoverIntroStep === recoverIntroFinal);
   const walletLocked = (isInRecoverIntro || recoveryDone) && !nudgeActive;
+  // The wallet ignores input while Andy is still talking, and while the
+  // continue button is the only expected action.
+  const deviceLocked = walletLocked || (!introDone && !done);
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        {!spotlight && (
+        {walletVisible && (
           <div className="recover-device-area">
             <div className="recover-device-enter">
               <HardwareWallet
                 mode="withdraw"
                 initialPhase="menu"
                 explicitReset
-                locked={walletLocked}
+                locked={deviceLocked}
                 advanceFromRecoverIntro={advanceFromIntro}
                 expectedMnemonic={expectedMnemonic ?? undefined}
                 expectedAction={expectedAction}
