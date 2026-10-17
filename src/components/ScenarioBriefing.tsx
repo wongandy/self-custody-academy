@@ -53,7 +53,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   // menu: "You'll see 'Create wallet' highlighted. Press the checkmark button to select it.",
    menu: "Next, you need to create a wallet. This is where your device will generate your private keys. Press the checkmark button to select it.",
   // 'create-intro': "On the next screen your 12-word recovery phrase will be shown. Press the checkmark to continue.",
-  'create-intro': "Before your device can generate those private keys, it needs to create a 12-word seed phrase first. Press the checkmark to continue.",
+  'create-intro': "Before your device can generate those private keys, it needs to create a 12-word recovery phrase first. Press the checkmark to continue.",
   'create-words': CREATE_WORDS_MESSAGES[0],
   'create-quiz':
     "Okay now it's time to prove you made a copy your recovery phrase. Pick the correct word for the position shown, then press the checkmark to confirm.",
