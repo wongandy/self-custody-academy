@@ -11,11 +11,21 @@ type ScenarioBriefingProps = {
   onComplete: () => void;
 };
 
+const POWER_ON_MESSAGE = 'Start by clicking the power button to turn it on.';
+
+// Andy reads these in order while the device is still hidden. The last entry is
+// always the power-button line: the wallet window and device appear on it, so
+// anything added above it plays first, in the spotlight.
 const INTRO_MESSAGES = [
   "Let me teach you how to setup your hardware wallet. In case you need a refresher, a hardware wallet is a physical device that allows you to store the private keys to your Bitcoin offline.",
   "Your private keys are what allow you to send and withdraw your Bitcoin. They are protected by a secure chip inside the device.",
-  "Start by clicking the power button to turn it on.",
+  POWER_ON_MESSAGE,
 ];
+
+const POWER_ON_INDEX = (() => {
+  const index = INTRO_MESSAGES.indexOf(POWER_ON_MESSAGE);
+  return index === -1 ? INTRO_MESSAGES.length - 1 : index;
+})();
 
 const READY_MENU_MESSAGE =
   "These options will be covered in the next scenarios, Let's wrap this up for now.";
@@ -24,7 +34,7 @@ const FACTORY_RESET_MESSAGE =
   "Resetting the device isn't part of this scenario, so we'll leave it as it is for now. Let's wrap this up instead.";
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
-  off: "Start by clicking the power button to turn it on.",
+  off: POWER_ON_MESSAGE,
   booting: 'Great — the device is booting up. Hang tight for a moment.',
   menu: "You'll see 'Create wallet' highlighted. Press the checkmark button to select it.",
   'create-intro': "On the next screen your 12-word recovery phrase will be shown. Press the checkmark to continue.",
@@ -93,7 +103,6 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
   const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('create-intro');
-  const [walletVisible, setWalletVisible] = useState(false);
   const [readyMenuSeen, setReadyMenuSeen] = useState(false);
   const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
   const [resetRefused, setResetRefused] = useState(false);
@@ -104,7 +113,10 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   const isInIntro = !introDone;
-  const spotlight = isInIntro && introStep === 0;
+  // The device stays hidden, and Andy stays in the spotlight, until his
+  // power-button line; that line is where the wallet window slides in.
+  const walletVisible = introStep >= POWER_ON_INDEX;
+  const spotlight = isInIntro && introStep < POWER_ON_INDEX;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
   const baseMentorMessage = isInIntro
     ? currentIntroMessage
@@ -121,8 +133,12 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const canContinue = nudgeActive
     ? false
     : isInIntro
-      ? introStep === 0 && done
+      ? introStep < POWER_ON_INDEX && done
       : walletPhase === 'create-done' || walletPhase === 'ready-menu';
+
+  // The device ignores input while Andy is still talking; during the wallet
+  // phases it follows the continue state as before.
+  const deviceLocked = canContinue || (isInIntro && !done);
 
   useEffect(() => {
     if (walletPhase !== 'off' && !introDone) {
@@ -149,15 +165,15 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       skip();
       return;
     }
-    if (isInIntro && introStep === 0) {
-      if (portraitRef.current && bubbleRef.current) {
+    if (isInIntro && introStep < POWER_ON_INDEX) {
+      const nextStep = introStep + 1;
+      if (nextStep === POWER_ON_INDEX && portraitRef.current && bubbleRef.current) {
         flipRects.current = {
           portrait: portraitRef.current.getBoundingClientRect(),
           bubble: bubbleRef.current.getBoundingClientRect(),
         };
       }
-      setWalletVisible(true);
-      setIntroStep(1);
+      setIntroStep(nextStep);
       return;
     }
     if (walletPhase === 'create-done') {
@@ -288,7 +304,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             onUnexpectedAction={handleUnexpectedAction}
             advanceToReadyMenu={readyMenuSeen}
             expectedAction={expectedAction}
-            locked={canContinue}
+            locked={deviceLocked}
           />
         </div>
         <div className="mentor-row">
