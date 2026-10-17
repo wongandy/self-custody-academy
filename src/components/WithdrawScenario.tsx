@@ -12,11 +12,24 @@ type WithdrawScenarioProps = {
 const AVAILABLE_BALANCE = 0.05;
 const NETWORK_FEE = 0.00002;
 
+// Andy reads these in order while the wallet is still hidden. The hand-over
+// line is always the last entry: the wallet window appears on it, so anything
+// added above it plays first, in the spotlight.
+const HANDOVER_MESSAGE =
+  "Now that you've already set up your hardware wallet from earlier, it's time to select 'Receive Bitcoin' to generate a receive address.";
+
 const INTRO_MESSAGES = [
   "This time I will teach you how to withdraw your Bitcoin from the exchange to your hardware wallet. Having your Bitcoin in your own wallet means you take full ownership over it.",
   "You are not relying anymore on any third-party to hold it for you. Your Bitcoin is now in your hands — giving you total financial sovereignty. This is what self-custody is all about.",
-  "Now that you've already set up your hardware wallet from earlier, it's time to select 'Receive Bitcoin' to generate a receive address.",
+  HANDOVER_MESSAGE,
 ];
+
+// Resolved by lookup, not by counting, so the reveal stays on the hand-over
+// line no matter how many setup lines are added above it.
+const HANDOVER_INDEX = (() => {
+  const index = INTRO_MESSAGES.indexOf(HANDOVER_MESSAGE);
+  return index === -1 ? INTRO_MESSAGES.length - 1 : index;
+})();
 
 const SWITCH_INTRO_MESSAGES = [
   "Receive address copied! Now let's switch over to the exchange on your phone so we can paste it there.",
@@ -112,30 +125,22 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
-  const [walletEntered, setWalletEntered] = useState(false);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   const isInIntro = !introDone;
-  const spotlight = isInIntro && introStep <= 1;
+  // The wallet stays hidden, and Andy stays in the spotlight, until his
+  // hand-over line; that line is where the wallet window slides in.
+  const walletVisible = introStep >= HANDOVER_INDEX;
+  const spotlight = isInIntro && introStep < HANDOVER_INDEX;
   const isOnExchangeForm = activePanel === 'exchange' && exchangeScreen === 'form';
-  const canContinue = nudgeActive
-    ? false
-    : isInIntro
-      ? introStep !== 2
-    : switchIntroStep !== null
-      ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
-      : isOnExchangeForm
-        ? false
-        : exchangeScreen === 'success';
   const addressLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
   const amountLocked = isOnExchangeForm && exchangePhase === 'enter-address';
   const amountNudgeLocked = isOnExchangeForm && exchangePhase === 'ready-to-withdraw';
   const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'ready-to-withdraw');
   const withdrawBtnLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'enter-amount');
   const switchNudgeLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
-const switchLocked = activePanel === 'exchange' && canContinue;
   const expectedAction: ExpectedAction =
     activePanel === 'wallet' && walletPhase === 'menu' && !hasRetrievedAddress
       ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
@@ -184,6 +189,23 @@ const switchLocked = activePanel === 'exchange' && canContinue;
             : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
+
+  const canContinue = nudgeActive
+    ? false
+    : isInIntro
+      ? introStep < HANDOVER_INDEX && done
+      : switchIntroStep !== null
+        ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
+        : isOnExchangeForm
+          ? false
+          : exchangeScreen === 'success';
+
+  const switchLocked = activePanel === 'exchange' && canContinue;
+
+  // The wallet ignores input while Andy is still talking, and while the
+  // continue button is the only expected action.
+  const deviceLocked = canContinue || (isInIntro && !done);
+
   const copyButtonInstruction = "There's your receive address. Click the copy button next to it to copy it.";
   const renderMentorText = (text: string) => {
     if (mentorMessage !== copyButtonInstruction || !text.includes('copy button')) {
@@ -381,22 +403,15 @@ const switchLocked = activePanel === 'exchange' && canContinue;
       skip();
       return;
     }
-    if (isInIntro) {
-      if (introStep === 0) {
-        setIntroStep(1);
-        return;
+    if (isInIntro && introStep < HANDOVER_INDEX) {
+      if (introStep === HANDOVER_INDEX - 1 && portraitRef.current && bubbleRef.current) {
+        flipRects.current = {
+          portrait: portraitRef.current.getBoundingClientRect(),
+          bubble: bubbleRef.current.getBoundingClientRect(),
+        };
       }
-      if (introStep === 1) {
-        if (portraitRef.current && bubbleRef.current) {
-          flipRects.current = {
-            portrait: portraitRef.current.getBoundingClientRect(),
-            bubble: bubbleRef.current.getBoundingClientRect(),
-          };
-        }
-        setWalletEntered(true);
-        setIntroStep(2);
-        return;
-      }
+      setIntroStep(introStep + 1);
+      return;
     }
     if (switchIntroStep !== null) {
       if (switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1) {
@@ -678,13 +693,13 @@ const switchLocked = activePanel === 'exchange' && canContinue;
             </div>
 
             {/* ── Hardware wallet panel ── */}
-            {walletEntered && (
+            {walletVisible && (
               <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${activePanel === 'wallet' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
                 <div className="hw-wallet-slot">
                   <HardwareWallet
                     mode="withdraw"
                     startAtMenu
-                    locked={canContinue}
+                    locked={deviceLocked}
                     onComplete={() => {}}
                     onPhaseChange={setWalletPhase}
                     onMenuSelectionChange={handleMenuSelectionChange}
