@@ -62,7 +62,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-wiped':
     "The device is blank now — just like a new one out of the box. Let's practice recovering your wallet. Select Recover wallet.",
   'wallet-recover-done':
-    "Your wallet is restored! This is the power of self-custody — as long as your recovery phrase is safe, your Bitcoin is never truly lost.",
+    "Your wallet is restored! As long as your recovery phrase is safe, your Bitcoin is never truly lost.",
   'wallet-recover-celebrate':
     "Great job recovering your wallet! You just did something most Bitcoin owners never practice. Let's wrap this up!",
   'wallet-receive-blocked':
