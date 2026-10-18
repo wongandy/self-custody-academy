@@ -948,6 +948,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             className={phase === 'off' ? 'hw-btn hw-btn-power' : 'hw-btn hw-btn-power on'}
             type="button"
             onClick={handlePower}
+            disabled={isBooting}
             aria-label={phase === 'off' ? 'Power on' : 'Power off'}
           >
             <Power size={16} strokeWidth={2.4} />
