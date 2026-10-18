@@ -278,8 +278,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     }
   }, [expectedMnemonic, recoverIndex, updatePhase]);
 
+  const isBootingPhase = useCallback(() => phase === 'booting', [phase]);
+
   const handlePower = useCallback(() => {
     if (locked) return;
+    if (isBootingPhase()) return;
     if (phase === 'off') {
       startBoot();
       onPowerChange?.(true);
@@ -294,7 +297,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     setMenuIndex(0);
     resetWalletState();
     onPowerChange?.(false);
-  }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase, locked, expectedAction, onUnexpectedAction]);
+  }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase, locked, expectedAction, onUnexpectedAction, isBootingPhase]);
 
   const handleUp = useCallback(() => {
     if (locked) return;
