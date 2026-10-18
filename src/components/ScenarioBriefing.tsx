@@ -44,7 +44,7 @@ const CREATE_WORDS_MESSAGES = [
 // is not, then what it actually holds. The continue button moves between them.
 const CREATE_DONE_MESSAGES = [
   "Nice work! You have now created a wallet. Remember, your Bitcoin doesn't actually live inside this hardware device — it stays safely on the blockchain.",
-  "Your device simply holds the private keys that give you the power to send and receive it!",
+  "Your device simply holds the private keys that give you the power to send and manage it!",
 ];
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
