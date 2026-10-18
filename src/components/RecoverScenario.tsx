@@ -17,7 +17,7 @@ type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-addres
 // line is always the last entry: the wallet window appears on it, so anything
 // added above it plays first, in the spotlight.
 const HANDOVER_MESSAGE =
-  "Let's head back to your hardware wallet and I'll teach you how to do it.";
+  // "Let's head back to your hardware wallet and I'll teach you how to do it.";
   "First we need to perform a factory reset in order to wipe the device clean. Proceed by going to Settings.";
 
 const INTRO_MESSAGES = [
