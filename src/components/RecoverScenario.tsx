@@ -155,7 +155,11 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
         : walletPhase === 'menu'
           ? menuSelection === 'idle'
             ? 'wallet-menu'
-            : `wallet-menu-${menuSelection}`
+            : menuSelection === 'send-blocked'
+              ? 'wallet-send-blocked'
+              : menuSelection === 'receive-address'
+                ? 'wallet-receive-blocked'
+                : `wallet-menu-${menuSelection}`
           : walletPhase === 'settings'
             ? 'wallet-settings'
             : `wallet-${walletPhase}`;
@@ -214,7 +218,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
   }, [walletPhase, introDone]);
 
   const expectedAction: ExpectedAction =
-    !introDone
+    !walletVisible
       ? { type: 'none' }
     : walletPhase === 'menu' && !wiped
       ? { type: 'confirm-menu-item', label: 'Settings' }

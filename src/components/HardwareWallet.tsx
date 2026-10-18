@@ -577,7 +577,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onUnexpectedAction?.();
       return;
     }
-    if (expectedAction.type === 'confirm' && (phase === 'settings' || phase === 'reset-warn')) {
+    if (expectedAction.type === 'confirm' && (phase === 'settings' || phase === 'reset-warn' || phase === 'reset-confirm')) {
       onUnexpectedAction?.();
       return;
     }
