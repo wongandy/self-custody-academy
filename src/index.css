@@ -2992,6 +2992,12 @@ a {
   color: var(--green);
 }
 
+.mentor-copy-button-indicator.paper {
+  border-color: var(--gold-light);
+  background: rgba(241, 189, 105, 0.12);
+  color: var(--gold-light);
+}
+
 .mentor-portrait-badge {
   position: absolute;
   bottom: -10px;

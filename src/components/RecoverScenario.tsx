@@ -192,7 +192,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     return (
       <>
         {text.slice(0, markerEnd)}
-        <span className="mentor-copy-button-indicator" aria-hidden="true">
+        <span className="mentor-copy-button-indicator paper" aria-hidden="true">
           <FileText size={12} strokeWidth={2.2} />
         </span>
         {text.slice(markerEnd)}
