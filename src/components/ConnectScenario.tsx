@@ -65,12 +65,12 @@ const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware 
 
 const WALLET_CONNECTED_MESSAGE = "Good job! You have successfully paired your hardware wallet with the Cairn wallet software.";
 
+// One speaking turn per line, in order: Andy hands over, then Maria takes it.
+// Deriving the turns from the message lists means adding or removing a line
+// can never leave a turn without a line or shift the lines out of step.
 const STEPS: Step[] = [
-  { kind: 'mentor', mentor: 'andy' },
-  { kind: 'mentor', mentor: 'andy' },
-  { kind: 'mentor', mentor: 'maria' },
-  { kind: 'mentor', mentor: 'maria' },
-  { kind: 'mentor', mentor: 'maria' },
+  ...HANDOFF_MESSAGES.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
+  ...MARIA_MESSAGES.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
   { kind: 'wallet-intro' },
   { kind: 'device-arrival' },
   { kind: 'connect-request' },
@@ -129,8 +129,8 @@ function useTypewriter(text: string, speed = 6) {
 function stepMessage(step: Step, stepIndex: number): string {
   switch (step.kind) {
     case 'mentor':
-      if (step.mentor === 'andy') return HANDOFF_MESSAGES[stepIndex];
-      return MARIA_MESSAGES[stepIndex - HANDOFF_MESSAGES.length];
+      if (step.mentor === 'andy') return HANDOFF_MESSAGES[stepIndex] ?? '';
+      return MARIA_MESSAGES[stepIndex - HANDOFF_MESSAGES.length] ?? '';
     case 'wallet-intro':
       return WALLET_INTRO_MESSAGE;
     case 'device-arrival':
