@@ -18,6 +18,7 @@ type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-addres
 // added above it plays first, in the spotlight.
 const HANDOVER_MESSAGE =
   "Let's head back to your hardware wallet and I'll teach you how to do it.";
+  "First we need to perform a factory reset in order to wipe the device clean. Proceed by going to Settings.";
 
 const INTRO_MESSAGES = [
   "Now let's talk about one of the most overlooked aspects of self-custody — recovering one's wallet. It is an important skill to have in case your hardware wallet ever gets lost, stolen or destroyed.",
