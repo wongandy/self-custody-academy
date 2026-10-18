@@ -432,6 +432,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
               <button
                 className={`paper-reveal-btn paper-reveal-pop ${showingWords ? 'active' : 'paper-reveal-pulse'}`}
                 type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={handlePaperClick}
                 aria-label={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
                 title={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
