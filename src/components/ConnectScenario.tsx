@@ -42,7 +42,7 @@ const HANDOFF_MESSAGES = [
 ];
 
 const MARIA_MESSAGES = [
-  "Hi, I'm Maria! I'll help you safely connect your device to a wallet software — an app on your laptop used to view your Bitcoin balance, history, and payments.",
+  "Hi, I'm Maria! I'll help you safely connect your device to a wallet software — an app on your laptop used to view your Bitcoin wallet's balance, history, and payments.",
   "We'll be using one you already have installed on your laptop called Cairn. Let's open it and take a look inside.",
 ];
 
