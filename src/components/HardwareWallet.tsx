@@ -577,6 +577,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onUnexpectedAction?.();
       return;
     }
+    if (expectedAction.type === 'confirm' && (phase === 'settings' || phase === 'reset-warn')) {
+      onUnexpectedAction?.();
+      return;
+    }
+    if (expectedAction.type === 'confirm' && phase === 'recover-type' && typeInput.length === 0 && !acceptedWord) {
+      onUnexpectedAction?.();
+      return;
+    }
     if (expectedAction.type === 'external' || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
       onUnexpectedAction?.();
       return;
