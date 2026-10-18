@@ -436,7 +436,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       if (e.key !== 'Enter') return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      if (!canContinue) return;
+      if (!canContinue && done) return;
       e.preventDefault();
       handleContinue();
     };
