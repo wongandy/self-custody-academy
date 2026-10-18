@@ -362,10 +362,15 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
+  // The paper button must not compete with the continue arrow: while the
+  // continue button is active, the reveal stays inert.
+  const paperEnabled = !canContinue;
+
   const handlePaperClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!paperEnabled) return;
     setShowingWords((prev) => !prev);
-  }, []);
+  }, [paperEnabled]);
 
   const showPaperButton = isInRecoverType || (isInRecoverIntro && recoverIntroStep === recoverIntroFinal);
   const walletLocked = (isInRecoverIntro || recoveryDone) && !nudgeActive;
