@@ -34,10 +34,10 @@ const HANDOVER_INDEX = (() => {
 })();
 
 const RECOVER_INTRO_MESSAGES = [
-  'On the next screen, you will be asked to input each word of your recovery phrase.',
+  "On the next screen, you will be asked to input each word of your recovery phrase.",
   "In case you lost your copy, don't worry — since this is just a simulation, you'll have an option to view it.",
-  'But in real life though, if you lose your recovery phrase, no one can help you so make sure to have a copy of it in paper.',
-  'To view your recovery phrase, just press the button with a paper symbol just below my portrait.',
+  "In real life, however, if you lose your recovery phrase, no one can help you. So make sure to always have a copy of it on paper.",
+  "To view your recovery phrase, just press the button with a paper symbol just below my portrait.",
 ];
 
 const RECOVER_TYPE_MESSAGE =
