@@ -283,6 +283,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const handlePower = useCallback(() => {
     if (locked) return;
     if (isBootingPhase()) return;
+    // The wipe has to run to completion before the device accepts input again.
+    if (phase === 'reset-done') return;
     if (phase === 'off') {
       startBoot();
       onPowerChange?.(true);
@@ -948,7 +950,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             className={phase === 'off' ? 'hw-btn hw-btn-power' : 'hw-btn hw-btn-power on'}
             type="button"
             onClick={handlePower}
-            disabled={isBooting}
+            disabled={isBooting || phase === 'reset-done'}
             aria-label={phase === 'off' ? 'Power on' : 'Power off'}
           >
             <Power size={16} strokeWidth={2.4} />
