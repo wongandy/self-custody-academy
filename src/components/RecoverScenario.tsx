@@ -20,7 +20,7 @@ const HANDOVER_MESSAGE =
   "Let's head back to your hardware wallet and I'll teach you how to do it.";
 
 const INTRO_MESSAGES = [
-  "Now let's talk about one of the most overlooked aspects of self-custody — recovering one's wallet. It is an important skill to have in the case your hardware wallet ever gets lost, stolen or destroyed.",
+  "Now let's talk about one of the most overlooked aspects of self-custody — recovering one's wallet. It is an important skill to have in case your hardware wallet ever gets lost, stolen or destroyed.",
   'Wallet recovery is a straightforward process and is essential if your hardware wallet ever gets lost, stolen or destroyed.',
   HANDOVER_MESSAGE,
 ];
