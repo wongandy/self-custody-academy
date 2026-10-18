@@ -53,7 +53,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-reset-warn':
     "Don't worry. As long as you have written down a copy of your recovery phrase, your Bitcoin is totally safe.",
   'wallet-reset-confirm':
-    "Last warning. Be completely sure that your recovery phrase has been written down. There's no going back after this.",
+    "Last warning. Be completely sure that your recovery phrase has been written down. I can't emphasize that enough.",
   'wallet-reset-cancelled':
     "Nothing was erased. Your wallet is still on the device. We can head back into Settings whenever you're ready.",
   'wallet-reset-done':
