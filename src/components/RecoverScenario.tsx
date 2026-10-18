@@ -185,6 +185,21 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
 
+  const renderMentorText = (text: string) => {
+    if (!text.includes('paper symbol')) return text;
+    const marker = 'paper symbol';
+    const markerEnd = text.indexOf(marker) + marker.length;
+    return (
+      <>
+        {text.slice(0, markerEnd)}
+        <span className="mentor-copy-button-indicator" aria-hidden="true">
+          <FileText size={12} strokeWidth={2.2} />
+        </span>
+        {text.slice(markerEnd)}
+      </>
+    );
+  };
+
   const canContinue = nudgeActive
     ? false
     : !introDone
@@ -433,9 +448,9 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : showingWords ? 'words' : introDone ? `${walletStateKey}-${recoverIntroStep}` : `intro-${introStep}`}>
               <span className="mentor-bubble-name">Andy</span>
               <div className="mentor-bubble-text-wrap">
-                <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
+                <p className="mentor-bubble-text-ghost">{renderMentorText(mentorMessage)}</p>
                 <p className="mentor-bubble-text">
-                  {displayed}
+                  {renderMentorText(displayed)}
                   {!done && <span className="typewriter-cursor" />}
                 </p>
               </div>
