@@ -51,7 +51,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-settings':
     "A factory reset clears everything — meaning the device will have no memory of your wallet. Only the recovery phrase you wrote down can restore it.",
   'wallet-reset-warn':
-    "Don't worry. As long as you have written down a copy of your recovery phrase, your Bitcoin is safe.",
+    "Don't worry. As long as you have written down a copy of your recovery phrase, your Bitcoin is totally safe.",
   'wallet-reset-confirm':
     "Last warning. Be completely sure that your recovery phrase has been written down. There's no going back after this.",
   'wallet-reset-cancelled':
