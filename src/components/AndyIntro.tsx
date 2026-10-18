@@ -7,8 +7,8 @@ type Props = {
 };
 
 const ANDY_MESSAGES = [
-  "Hey there! I'm Andy, and I will teach you how to self-custody your Bitcoin. Learning to store your own Bitcoin takes practice.",
-  "Everything here is simulated, so you can explore freely with zero risk. We'll practice the basics until you feel confident.",
+  "Hey there! I'm Andy, and I will teach you how to self-custody your Bitcoin. Learning to secure your own Bitcoin requires patience and some practice.",
+  "Everything here is simulated, so you can explore freely with zero risk. We'll practice the fundamentals until you feel comfortable and confident.",
   "Your learning path has six missions. Each one unlocks the next. Let's take a look at your roadmap.",
 ];
 
