@@ -46,13 +46,15 @@ const pathSegments = [
   'M112 756.2C112 818.2 288 833 288 895',
 ];
 
-function glideToMission(el: HTMLButtonElement | null) {
-  if (!el) return;
+function glideToMission(el: HTMLButtonElement | null): boolean {
+  if (!el) return false;
   const rect = el.getBoundingClientRect();
   const topMargin = 96;
   const bottomMargin = 80;
-  if (rect.top >= topMargin && rect.bottom <= window.innerHeight - bottomMargin) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (rect.top >= topMargin && rect.bottom <= window.innerHeight - bottomMargin) return false;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+  return !reduced;
 }
 
 function Roadmap({
@@ -93,14 +95,17 @@ function Roadmap({
     }
 
     doneRef.current = false;
+    arrivalScrolledRef.current = true;
     const finish = () => {
       setCelebrationPhase('done');
       doneRef.current = true;
-      arrivalScrolledRef.current = true;
-      const next = Math.min(justCompletedScenario + 1, scenarios.length);
-      glideToMission(missionRefs.current[next - 1] ?? null);
       onCelebrationDone?.();
     };
+
+    const next = Math.min(justCompletedScenario + 1, scenarios.length);
+    const gliding = glideToMission(missionRefs.current[next - 1] ?? null);
+    const lead = gliding ? 700 : 0;
+
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) {
       finish();
@@ -111,14 +116,14 @@ function Roadmap({
     const isLast = justCompletedScenario >= scenarios.length;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    timers.push(setTimeout(() => setCelebrationPhase('checkmark'), 100));
+    timers.push(setTimeout(() => setCelebrationPhase('checkmark'), lead + 100));
 
     if (!isLast) {
-      timers.push(setTimeout(() => setCelebrationPhase('path'), 550));
-      timers.push(setTimeout(() => setCelebrationPhase('pulse'), 1250));
-      timers.push(setTimeout(finish, 1900));
+      timers.push(setTimeout(() => setCelebrationPhase('path'), lead + 550));
+      timers.push(setTimeout(() => setCelebrationPhase('pulse'), lead + 1250));
+      timers.push(setTimeout(finish, lead + 1900));
     } else {
-      timers.push(setTimeout(finish, 900));
+      timers.push(setTimeout(finish, lead + 900));
     }
 
     return () => {
