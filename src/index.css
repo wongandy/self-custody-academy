@@ -6256,3 +6256,195 @@ html.theme-light {
   to { transform: translate(-50%, 0) scale(1); }
 }
 
+/* ── Light theme contrast pass ── */
+
+.theme-light .app-shell {
+  --bg: #f6f4ef;
+  --bg-deep: #ebe8e0;
+  --panel: #fffdf8;
+  --panel-strong: #e9e6de;
+  --text: #17212a;
+  --muted: #46525b;
+  --faint: #68747c;
+  --line: rgba(23, 33, 42, 0.17);
+  --gold: #a85c0a;
+  --gold-light: #a85c0a;
+  --green: #3f701f;
+  --green-dark: #315d18;
+  background:
+    radial-gradient(circle at 18% 46%, rgba(217, 148, 60, 0.09), transparent 27rem),
+    radial-gradient(circle at 84% 16%, rgba(99, 145, 28, 0.05), transparent 25rem),
+    var(--bg);
+}
+
+.theme-light .site-header,
+.theme-light .character-footer {
+  background: rgba(246, 244, 239, 0.96);
+  border-color: rgba(23, 33, 42, 0.14);
+}
+
+.theme-light .brand-name strong,
+.theme-light .character-role,
+.theme-light .character-dialog-label,
+.theme-light .roadmap-label,
+.theme-light .scenario-card-topline span:last-child,
+.theme-light .scenario-eyebrow,
+.theme-light .eyebrow {
+  color: #9a5508;
+}
+
+.theme-light .character-dialog {
+  border-color: rgba(168, 92, 10, 0.27);
+  background: rgba(255, 253, 248, 0.82);
+  box-shadow: 0 14px 34px rgba(56, 45, 29, 0.06);
+}
+
+.theme-light .character-dialog::before {
+  border-color: rgba(168, 92, 10, 0.27);
+  background: #fffdf8;
+}
+
+.theme-light .character-message p,
+.theme-light .scenario-copy p,
+.theme-light .scenario-lede,
+.theme-light .scenario-wallet-info .scenario-lede,
+.theme-light .scenario-wallet-tip span,
+.theme-light .tx-sim-body {
+  color: #34414a;
+}
+
+.theme-light .bubble-next {
+  color: #52606a;
+  background: #fffdf8;
+  border-color: rgba(23, 33, 42, 0.2);
+}
+
+.theme-light .bubble-next.ready {
+  color: #2b1905;
+  border-color: #c97916;
+  background: #f5ad43;
+}
+
+.theme-light .character-proceed,
+.theme-light .primary-button {
+  color: #2b1905;
+}
+
+.theme-light .roadmap-path-status,
+.theme-light .scenario-card-topline,
+.theme-light .scenario-wallet-status,
+.theme-light .tx-sim-field label,
+.theme-light .withdraw-phone-section label,
+.theme-light .withdraw-phone-label-row label,
+.theme-light .withdraw-phone-statusbar {
+  color: #5d6971;
+}
+
+.theme-light .roadmap-mission-title-plate {
+  color: #24313a;
+  background: rgba(232, 234, 230, 0.96);
+  box-shadow: 0 3px 10px rgba(24, 32, 38, 0.08);
+}
+
+.theme-light .roadmap-mission.locked .roadmap-mission-title-plate {
+  color: #68747c;
+  background: rgba(222, 225, 222, 0.96);
+}
+
+.theme-light .roadmap-mission-marker {
+  box-shadow: 0 0 0 4px rgba(246, 244, 239, 0.9), inset 0 0 0 1px rgba(16, 25, 28, 0.2), 0 5px 0 rgba(13, 21, 24, 0.14);
+}
+
+.theme-light .roadmap-mission.locked .roadmap-mission-marker {
+  color: #e7ecec;
+  background: linear-gradient(145deg, #65777c, #465a60);
+}
+
+.theme-light .scenario-card {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.8), transparent 50%),
+    linear-gradient(145deg, #fffdf8, #ebe8e0);
+  box-shadow: 0 24px 70px rgba(45, 38, 28, 0.12);
+}
+
+.theme-light .scenario-wallet-tip,
+.theme-light .scenario-wallet-status {
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.theme-light .scenario-wallet-status.active,
+.theme-light .recover-status {
+  color: #37651c;
+  border-color: rgba(63, 112, 31, 0.35);
+}
+
+.theme-light .tx-sim-panel,
+.theme-light .hw-wallet-device {
+  border-color: rgba(23, 33, 42, 0.22);
+  box-shadow: 0 20px 60px rgba(45, 38, 28, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.theme-light .tx-sim-header,
+.theme-light .withdraw-phone-app-header {
+  color: #37651c;
+  border-color: rgba(63, 112, 31, 0.3);
+}
+
+.theme-light .tx-sim-balance {
+  color: #945007;
+}
+
+.theme-light .tx-sim-field input,
+.theme-light .withdraw-asset-dropdown,
+.theme-light .withdraw-amount-input-wrap input,
+.theme-light .withdraw-addr-input {
+  color: #17212a;
+  border-color: rgba(23, 33, 42, 0.24);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.theme-light .tx-sim-field input::placeholder,
+.theme-light .withdraw-amount-input-wrap input::placeholder,
+.theme-light .withdraw-addr-input::placeholder {
+  color: #77828a;
+}
+
+.theme-light .withdraw-phone {
+  border-color: #687076;
+  background: #d3d0c8;
+}
+
+.theme-light .withdraw-phone-screen {
+  background: linear-gradient(180deg, #fbfaf7, #e9e6de);
+}
+
+.theme-light .withdraw-asset-name,
+.theme-light .withdraw-phone-section label,
+.theme-light .withdraw-phone-label-row label {
+  color: #53606a;
+}
+
+.theme-light .withdraw-asset-dropdown,
+.theme-light .withdraw-asset-menu {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.theme-light .withdraw-phone-summary {
+  color: #4a5760;
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(23, 33, 42, 0.18);
+}
+
+.theme-light .header-account,
+.theme-light .theme-toggle,
+.theme-light .close-button,
+.theme-light .recover-close,
+.theme-light .hw-reset-btn {
+  color: #53606a;
+  border-color: rgba(23, 33, 42, 0.2);
+}
+
+.theme-light .site-footer {
+  color: #68747c;
+}
+
