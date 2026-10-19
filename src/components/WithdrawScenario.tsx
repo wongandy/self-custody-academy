@@ -38,8 +38,16 @@ const SWITCH_INTRO_MESSAGES = [
 
 type ExchangePhase = 'enter-address' | 'enter-amount' | 'ready-to-withdraw';
 
+// Andy delivers these in order the first time the learner lands on the
+// exchange. The last line is the paste instruction, so the address field
+// stays locked until the learner steps through to it.
+const EXCHANGE_INTRO_MESSAGES = [
+  "I can see you are using BitExchange as your exchange of choice. You have 0.05 Bitcoin currently sitting there. Let's withdraw that now.",
+  'Under SEND TO ADDRESS field, paste the receive address you copied earlier. That is where your Bitcoin will be withdrawn to.',
+];
+
 const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string> = {
-  'enter-address': 'Under SEND TO ADDRESS field, paste the receive address you copied earlier. That is where your Bitcoin will be withdrawn to.',
+  'enter-address': EXCHANGE_INTRO_MESSAGES[EXCHANGE_INTRO_MESSAGES.length - 1],
   'enter-amount': 'Good job. Now under WITHDRAW AMOUNT you may type the amount of Bitcoin you wish to withdraw or just press the MAX button.',
   'ready-to-withdraw': 'Alright. Now click Withdraw to initiate the process of withdrawing your Bitcoin to your hardware wallet.',
 };
@@ -122,6 +130,8 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
   const [receiveAddressStep, setReceiveAddressStep] = useState<number | null>(null);
+  const [exchangeIntroStep, setExchangeIntroStep] = useState<number | null>(null);
+  const exchangeIntroPlayed = useRef(false);
   const [switchIntroStep, setSwitchIntroStep] = useState<number | null>(null);
   const [exchangePhase, setExchangePhase] = useState<ExchangePhase>('enter-address');
   const [switchPulse, setSwitchPulse] = useState(false);
@@ -142,7 +152,8 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const walletVisible = introStep >= HANDOVER_INDEX;
   const spotlight = isInIntro && introStep < HANDOVER_INDEX;
   const isOnExchangeForm = activePanel === 'exchange' && exchangeScreen === 'form';
-  const addressLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
+  const exchangeIntroLocking = exchangeIntroStep !== null && exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1;
+  const addressLocked = isOnExchangeForm && (exchangeIntroLocking || exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
   const amountLocked = isOnExchangeForm && exchangePhase === 'enter-address';
   const amountNudgeLocked = isOnExchangeForm && exchangePhase === 'ready-to-withdraw';
   const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'ready-to-withdraw');
@@ -187,7 +198,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       ? currentIntroMessage
       : receiveAddressStep !== null
         ? RECEIVE_ADDRESS_MESSAGES[receiveAddressStep]
-        : resetBlockedMsg && activePanel === 'wallet'
+        : exchangeIntroStep !== null
+          ? EXCHANGE_INTRO_MESSAGES[exchangeIntroStep]
+          : resetBlockedMsg && activePanel === 'wallet'
         ? MENTOR_MESSAGES['factory-reset-blocked']
         : switchIntroStep !== null
         ? SWITCH_INTRO_MESSAGES[switchIntroStep]
@@ -205,7 +218,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       ? introStep < HANDOVER_INDEX && done
       : receiveAddressStep !== null
         ? receiveAddressStep < RECEIVE_ADDRESS_MESSAGES.length - 1 && done
-        : switchIntroStep !== null
+        : exchangeIntroStep !== null
+          ? exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1 && done
+          : switchIntroStep !== null
           ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
           : isOnExchangeForm
             ? false
@@ -215,7 +230,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   // The wallet ignores input while Andy is still talking, and while the
   // continue button is the only expected action.
-  const deviceLocked = canContinue || (isInIntro && !done) || (receiveAddressStep !== null && !done);
+  const deviceLocked = canContinue || (isInIntro && !done) || (receiveAddressStep !== null && !done) || (exchangeIntroStep !== null && !done);
 
   const copyButtonInstruction = "There's your receive address. Click the copy button next to it to copy it.";
   const renderMentorText = (text: string) => {
@@ -366,6 +381,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     if (switchIntroStep !== null) {
       setSwitchIntroStep(null);
     }
+    if (activePanel === 'wallet' && !exchangeIntroPlayed.current) {
+      exchangeIntroPlayed.current = true;
+      setExchangeIntroStep(0);
+    }
     setSlideDirection(activePanel === 'wallet' ? 'withdraw-slide-right' : 'withdraw-slide-left');
     setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
   }, [switchLocked, switchNudgeLocked, switchIntroStep, activePanel, handleUnexpectedAction]);
@@ -438,6 +457,14 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       }
       return;
     }
+    if (exchangeIntroStep !== null) {
+      if (exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1) {
+        setExchangeIntroStep(exchangeIntroStep + 1);
+      } else {
+        setExchangeIntroStep(null);
+      }
+      return;
+    }
     if (switchIntroStep !== null) {
       if (switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1) {
         setSwitchIntroStep(switchIntroStep + 1);
@@ -454,7 +481,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? 'nudge'
     : isInIntro
       ? `intro-${introStep}`
-      : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${switchIntroStep}-${exchangePhase}-${addressMismatch}`;
+      : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${addressMismatch}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
