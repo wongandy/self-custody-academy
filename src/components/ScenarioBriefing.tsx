@@ -28,7 +28,7 @@ const POWER_ON_INDEX = (() => {
 })();
 
 const READY_MENU_MESSAGE =
-  "These options will be covered in the next scenarios, Let's wrap this up for now.";
+  "These options will be covered in the following missions, Let's wrap this up for now.";
 
 const FACTORY_RESET_MESSAGE =
   "Resetting the device isn't part of this scenario, so we'll leave it as it is for now. Let's wrap this up instead.";
@@ -277,8 +277,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     setResetRefused(false);
     setReadyMenuHint(
       label === 'Receive Bitcoin'
-        ? "These options will be covered in the succeeding missions, Let's wrap this up for now."
-        : "These options will be covered in the succeeding missions, Let's wrap this up for now.",
+        ? "These options will be covered in the next scenarios, Let's wrap this up for now."
+        : "These options will be covered in the next scenarios, Let's wrap this up for now.",
     );
   }, []);
 
