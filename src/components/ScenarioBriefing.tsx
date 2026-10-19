@@ -43,7 +43,7 @@ const CREATE_WORDS_MESSAGES = [
 // Andy's wrap-up for the new wallet, delivered as two lines: what the device
 // is not, then what it actually holds. The continue button moves between them.
 const CREATE_DONE_MESSAGES = [
-  "Nice work! You have now created a wallet. Remember, your Bitcoin doesn't actually live inside this hardware device — it stays safely on the blockchain.",
+  "Nice work! You have now created a wallet. Remember, your Bitcoin doesn't actually live inside this hardware device — it stays safely recorded on the blockchain.",
   "Your device simply holds the private keys that give you the ability to send and manage it!",
 ];
 
