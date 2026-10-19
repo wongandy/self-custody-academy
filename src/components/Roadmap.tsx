@@ -72,6 +72,8 @@ function Roadmap({
   const doneRef = useRef(true);
   const arrivalScrolledRef = useRef(false);
   const missionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const celebrationDoneRef = useRef(onCelebrationDone);
+  celebrationDoneRef.current = onCelebrationDone;
 
   useEffect(() => {
     if (!animate) {
@@ -96,43 +98,53 @@ function Roadmap({
 
     doneRef.current = false;
     arrivalScrolledRef.current = true;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let cancelled = false;
+
     const finish = () => {
       setCelebrationPhase('done');
       doneRef.current = true;
-      onCelebrationDone?.();
+      celebrationDoneRef.current?.();
     };
 
-    const next = Math.min(justCompletedScenario + 1, scenarios.length);
-    const gliding = glideToMission(missionRefs.current[next - 1] ?? null);
-    const lead = gliding ? 700 : 0;
+    const runCelebration = () => {
+      if (cancelled) return;
 
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) {
-      finish();
-      return;
-    }
+      const next = Math.min(justCompletedScenario + 1, scenarios.length);
+      const gliding = glideToMission(missionRefs.current[next - 1] ?? null);
 
-    setCelebrationPhase('pre');
-    const isLast = justCompletedScenario >= scenarios.length;
-    const timers: ReturnType<typeof setTimeout>[] = [];
+      if (prefersReduced) {
+        finish();
+        return;
+      }
 
-    timers.push(setTimeout(() => setCelebrationPhase('checkmark'), lead + 100));
+      setCelebrationPhase('pre');
+      const lead = gliding ? 700 : 0;
+      const isLast = justCompletedScenario >= scenarios.length;
 
-    if (!isLast) {
-      timers.push(setTimeout(() => setCelebrationPhase('path'), lead + 550));
-      timers.push(setTimeout(() => setCelebrationPhase('pulse'), lead + 1250));
-      timers.push(setTimeout(finish, lead + 1900));
-    } else {
-      timers.push(setTimeout(finish, lead + 900));
-    }
+      timers.push(setTimeout(() => setCelebrationPhase('checkmark'), lead + 100));
 
-    return () => {
-      timers.forEach(clearTimeout);
-      if (!doneRef.current) {
-        onCelebrationDone?.();
+      if (!isLast) {
+        timers.push(setTimeout(() => setCelebrationPhase('path'), lead + 550));
+        timers.push(setTimeout(() => setCelebrationPhase('pulse'), lead + 1250));
+        timers.push(setTimeout(finish, lead + 1900));
+      } else {
+        timers.push(setTimeout(finish, lead + 900));
       }
     };
-  }, [justCompletedScenario, completedScenarios, onCelebrationDone]);
+
+    timers.push(setTimeout(runCelebration, 60));
+
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+      if (!doneRef.current) {
+        celebrationDoneRef.current?.();
+      }
+    };
+  }, [justCompletedScenario, completedScenarios]);
 
   const celebrating = celebrationPhase !== 'idle' && celebrationPhase !== 'done';
   const justCompleted = justCompletedScenario ?? 0;
