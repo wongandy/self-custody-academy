@@ -500,12 +500,13 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     if (!isOnExchangeForm) return;
     if (exchangePhase === 'enter-address' && isAddressValid) {
       setExchangePhase('enter-amount');
+      if (exchangeIntroStep !== null) setExchangeIntroStep(null);
     } else if (exchangePhase === 'enter-amount' && isAmountValid && isAddressValid) {
       setExchangePhase('ready-to-withdraw');
     } else if (exchangePhase === 'ready-to-withdraw' && !isAmountValid) {
       setExchangePhase('enter-amount');
     }
-  }, [isOnExchangeForm, exchangePhase, isAddressValid, isAmountValid]);
+  }, [isOnExchangeForm, exchangePhase, isAddressValid, isAmountValid, exchangeIntroStep]);
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
