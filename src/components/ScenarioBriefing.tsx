@@ -28,7 +28,7 @@ const POWER_ON_INDEX = (() => {
 })();
 
 const READY_MENU_MESSAGE =
-  "These options will be covered in the following missions, Let's wrap this up for now.";
+  "These options will be covered in the next scenarios, Let's wrap this up for now.";
 
 const FACTORY_RESET_MESSAGE =
   "Resetting the device isn't part of this scenario, so we'll leave it as it is for now. Let's wrap this up instead.";
@@ -43,8 +43,8 @@ const CREATE_WORDS_MESSAGES = [
 // Andy's wrap-up for the new wallet, delivered as two lines: what the device
 // is not, then what it actually holds. The continue button moves between them.
 const CREATE_DONE_MESSAGES = [
-  "Nice work! You have now created a wallet. Remember, your Bitcoin doesn't actually live inside this hardware device — it stays safely recorded on the blockchain.",
-  "Your device simply holds the private keys — the secret data that mathematically proves to the blockchain that the Bitcoin is yours to spend.",
+  "Nice work! You have now created a wallet. Remember, your Bitcoin doesn't actually live inside this hardware device — it stays safely on the blockchain.",
+  "Your device simply holds the private keys that give you the ability to send and manage it!",
 ];
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
