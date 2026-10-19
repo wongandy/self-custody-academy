@@ -43,7 +43,7 @@ type ExchangePhase = 'enter-address' | 'enter-amount' | 'ready-to-withdraw';
 // stays locked until the learner steps through to it.
 const EXCHANGE_INTRO_MESSAGES = [
   "I can see you are using BitExchange as your exchange of choice. You have 0.05 Bitcoin currently sitting there. Let's withdraw that now.",
-  'Under SEND TO ADDRESS field, paste the receive address you copied earlier. That is where your Bitcoin will be withdrawn to.',
+  'Under SEND TO ADDRESS field, paste the receive address you copied earlier. That is where your Bitcoin will be sent to.',
 ];
 
 const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string> = {
