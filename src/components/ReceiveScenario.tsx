@@ -243,7 +243,7 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
   );
 
   return (
-    <main className="scenario-page scenario-page-fit scenario-page-connect">
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         {!spotlight && (
           <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
