@@ -5383,7 +5383,12 @@ html.theme-light {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  scrollbar-width: none;
   align-items: flex-start;
+}
+
+.scenario-page-connect .wallet-canvas::-webkit-scrollbar {
+  display: none;
 }
 
 .scenario-page-connect .mentor-row {
@@ -5954,9 +5959,14 @@ html.theme-light {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  scrollbar-width: none;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.18);
+}
+
+.wallet-tx-table-wrap::-webkit-scrollbar {
+  display: none;
 }
 
 .wallet-tx-table {
