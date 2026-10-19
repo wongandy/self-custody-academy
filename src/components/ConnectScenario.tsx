@@ -62,7 +62,7 @@ const NUDGE_DURATION_MS = 1250;
 
 const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware wallet by pressing the checkmark button.";
 
-const WALLET_CONNECTED_MESSAGE = "Good job! You have successfully paired your hardware wallet with the Cairn wallet software. You can now view your transactions, check your current balance, or prepare to send and receive Bitcoin.";
+const WALLET_CONNECTED_MESSAGE = "Good job! You have successfully paired your hardware wallet with the Cairn wallet software. You can now view your transactions, check your current balance, and send or receive Bitcoin using the software.";
 
 // One speaking turn per line, in order: Andy hands over, then Maria takes it.
 // Deriving the turns from the message lists means adding or removing a line
