@@ -277,8 +277,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     setResetRefused(false);
     setReadyMenuHint(
       label === 'Receive Bitcoin'
-        ? "These options will be covered in the next scenarios, Let's wrap this up for now."
-        : "These options will be covered in the next scenarios, Let's wrap this up for now.",
+        ? "These options will be covered in the succeeding missions, Let's wrap this up for now."
+        : "These options will be covered in the succeeding missions, Let's wrap this up for now.",
     );
   }, []);
 
