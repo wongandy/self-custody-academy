@@ -274,8 +274,8 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                         disabled={softwareLocked}
                         aria-pressed="false"
                       >
-                        <ArrowUpRight strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Send</span>
+                        <ArrowDownLeft strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Receive</span>
                       </button>
                       <button
                         type="button"
@@ -284,8 +284,8 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                         disabled={softwareLocked}
                         aria-pressed="false"
                       >
-                        <ArrowDownLeft strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Receive</span>
+                        <ArrowUpRight strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Send</span>
                       </button>
                     </aside>
                     <div className="wallet-canvas">
