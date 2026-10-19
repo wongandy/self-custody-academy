@@ -25,8 +25,8 @@ const scenarios: Scenario[] = [
   { number: 2, title: 'Withdraw Bitcoin from exchange', icon: ArrowDownToLine },
   { number: 3, title: 'Recover hardware wallet', icon: KeyRound },
   { number: 4, title: 'Connect to wallet software', icon: Usb },
-  { number: 5, title: 'Sending Bitcoin', icon: ArrowUpFromLine },
-  { number: 6, title: 'Receiving Bitcoin', icon: ArrowDownToLine },
+  { number: 5, title: 'Receiving Bitcoin', icon: ArrowDownToLine },
+  { number: 6, title: 'Sending Bitcoin', icon: ArrowUpFromLine },
 ];
 
 const nodePositions = [

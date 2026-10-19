@@ -324,7 +324,7 @@ function App() {
       )}
 
       {screen === 'scenario-5' && (
-        <SendScenario
+        <ReceiveScenario
           completed={completedScenarios >= 5}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(5)}
@@ -332,7 +332,7 @@ function App() {
       )}
 
       {screen === 'scenario-6' && (
-        <ReceiveScenario
+        <SendScenario
           completed={completedScenarios >= 6}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(6)}

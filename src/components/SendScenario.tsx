@@ -16,12 +16,12 @@ export default function SendScenario({ completed, onBack }: SendScenarioProps) {
 
       <section className="scenario-card">
         <div className="scenario-card-topline">
-          <span>Mission 05 · Sending BTC</span>
+          <span>Mission 06 · Sending BTC</span>
           <span><ArrowUpFromLine size={14} /> Simulation only</span>
         </div>
         <div className="scenario-wallet-layout">
           <div className="scenario-wallet-info">
-            <span className="roadmap-label">Your fifth mission</span>
+            <span className="roadmap-label">Your final mission</span>
             <h1>Sending BTC</h1>
             <p className="scenario-lede">
               Sending bitcoin is where careful habits matter most. This mission will walk you through building, signing, and broadcasting a payment from your connected hardware wallet.
