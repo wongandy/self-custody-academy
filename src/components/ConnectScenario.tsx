@@ -354,6 +354,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       skip();
       return;
     }
+    // A nudge replaces the mentor's line for a beat; while it is on screen the
+    // learner can still fast-forward it, but must not be able to advance the lesson.
+    if (nudgeActive) return;
     if (walletBooting) return;
     if (step.kind === 'device-arrival' && !arrivalRequested) {
       setArrivalRequested(true);
@@ -371,7 +374,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
+  }, [done, skip, nudgeActive, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
 
   const handleRequestConnect = () => {
     if (!connectButtonEnabled || connectRequested) return;
