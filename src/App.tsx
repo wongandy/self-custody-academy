@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { LogOut, X } from 'lucide-react';
+import { LogOut, Moon, Sun, X } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
@@ -14,6 +14,7 @@ import bitcoinImage from '@/components/bitcoin.webp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { clearLocalProgress, getLocalProgress, setLocalProgress } from '@/lib/localProgress';
+import { applyTheme, getStoredTheme, type Theme } from '@/lib/theme';
 import { clearStoredMnemonic } from '@/lib/walletSession';
 
 const TOTAL_SCENARIOS = 6;
@@ -42,6 +43,15 @@ function App() {
   const [, setActiveScenario] = useState(1);
   const [roadmapAnimate, setRoadmapAnimate] = useState(false);
   const [justCompletedScenario, setJustCompletedScenario] = useState<number | null>(null);
+  const [theme, setTheme] = useState<Theme>(getStoredTheme);
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  }, []);
 
   const loadLocalProgress = useCallback(() => {
     setCompletedScenarios(getLocalProgress());
@@ -163,7 +173,7 @@ function App() {
   const isInScenario = SCENARIO_SCREENS.includes(screen);
 
   return (
-    <div className="app-shell theme-dark">
+    <div className={`app-shell theme-${theme}`}>
       <header className="site-header">
         {isInScenario || screen === 'andy-intro' ? (
           <button
@@ -197,6 +207,16 @@ function App() {
         )}
 
         <div className="header-actions">
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <Sun size={16} strokeWidth={2.1} className="theme-toggle-icon theme-toggle-sun" />
+            <Moon size={16} strokeWidth={2.1} className="theme-toggle-icon theme-toggle-moon" />
+          </button>
           {user && (
             <button className="header-account" type="button" onClick={handleSignOut} title="Sign out">
               <span className="header-account-dot" />
