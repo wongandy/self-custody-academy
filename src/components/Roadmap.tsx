@@ -46,6 +46,15 @@ const pathSegments = [
   'M112 756.2C112 818.2 288 833 288 895',
 ];
 
+function glideToMission(el: HTMLButtonElement | null) {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const topMargin = 96;
+  const bottomMargin = 80;
+  if (rect.top >= topMargin && rect.bottom <= window.innerHeight - bottomMargin) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function Roadmap({
   completedScenarios,
   isLoading,
@@ -59,6 +68,8 @@ function Roadmap({
   const [revealed, setRevealed] = useState(!animate);
   const [celebrationPhase, setCelebrationPhase] = useState<CelebrationPhase>('idle');
   const doneRef = useRef(true);
+  const arrivalScrolledRef = useRef(false);
+  const missionRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
     if (!animate) {
@@ -82,11 +93,17 @@ function Roadmap({
     }
 
     doneRef.current = false;
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) {
+    const finish = () => {
       setCelebrationPhase('done');
       doneRef.current = true;
+      arrivalScrolledRef.current = true;
+      const next = Math.min(justCompletedScenario + 1, scenarios.length);
+      glideToMission(missionRefs.current[next - 1] ?? null);
       onCelebrationDone?.();
+    };
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) {
+      finish();
       return;
     }
 
@@ -99,17 +116,9 @@ function Roadmap({
     if (!isLast) {
       timers.push(setTimeout(() => setCelebrationPhase('path'), 550));
       timers.push(setTimeout(() => setCelebrationPhase('pulse'), 1250));
-      timers.push(setTimeout(() => {
-        setCelebrationPhase('done');
-        doneRef.current = true;
-        onCelebrationDone?.();
-      }, 1900));
+      timers.push(setTimeout(finish, 1900));
     } else {
-      timers.push(setTimeout(() => {
-        setCelebrationPhase('done');
-        doneRef.current = true;
-        onCelebrationDone?.();
-      }, 900));
+      timers.push(setTimeout(finish, 900));
     }
 
     return () => {
@@ -128,6 +137,15 @@ function Roadmap({
     : completedScenarios;
 
   const availableScenario = Math.min(displayCompleted + 1, scenarios.length);
+
+  useEffect(() => {
+    if (animate || isLoading || justCompletedScenario || arrivalScrolledRef.current) return;
+    const timer = setTimeout(() => {
+      arrivalScrolledRef.current = true;
+      glideToMission(missionRefs.current[availableScenario - 1] ?? null);
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [animate, isLoading, justCompletedScenario, availableScenario]);
 
   const getNodeState = (scenarioNumber: number): 'complete' | 'available' | 'locked' => {
     if (celebrating && scenarioNumber === justCompleted + 1) {
@@ -209,6 +227,9 @@ function Roadmap({
                 className={`roadmap-mission ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''} ${animate ? 'roadmap-node-reveal' : ''} ${nodeCelebrationClass(scenario.number)} ${nextNodeCelebrationClass(scenario.number)}`}
                 key={scenario.number}
                 type="button"
+                ref={(node) => {
+                  missionRefs.current[index] = node;
+                }}
                 disabled={isLocked || isLoading}
                 onClick={() => onSelectScenario(scenario.number)}
                 aria-label={`${scenario.title}${isLocked ? ', locked' : ''}`}
