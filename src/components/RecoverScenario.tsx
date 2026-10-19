@@ -49,7 +49,7 @@ const NUDGE_DURATION_MS = 1250;
 const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu': "Select Settings to reset the device to factory settings.",
   'wallet-settings':
-    "A factory reset clears everything — meaning the device will have no memory of your wallet. Only the recovery phrase you wrote down can restore it.",
+    "A factory reset clears everything — meaning the device will have no memory of your wallet. Only the recovery phrase you wrote down earlier can restore it.",
   'wallet-reset-warn':
     "Don't worry. As long as you have written down a copy of your recovery phrase, your Bitcoin is totally safe.",
   'wallet-reset-confirm':
