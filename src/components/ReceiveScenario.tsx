@@ -6,9 +6,11 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
+  ClipboardPaste,
   Copy,
   Eye,
   QrCode,
+  SendHorizontal,
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import mariaPortrait from '@/components/Maria.webp';
@@ -21,27 +23,42 @@ type ReceiveScenarioProps = {
 const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the current step.";
 const NUDGE_DURATION_MS = 1250;
 
-// One speaking turn per line, in order. The scene step is the handover: it is
-// where the already-connected laptop and device appear, so deriving both from
-// STEPS keeps the reveal on the right line if intro lines are added or removed.
-const INTRO_MESSAGES = [
-  "Now let me teach how you to receive Bitcoin.",
-  // "test",
+const INTRO_MESSAGE = "Now let me teach how you to receive Bitcoin.";
+const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the wallet — that's where you'll get your receive address.";
+const VERIFY_RULE_MESSAGE = "This is your receive address. But before copying anything, let's prove it really came from your device — press 'Verify address on device' below the address.";
+const COMPARE_CHECK_MESSAGE = "Your device now shows the address. Compare it with the one here in the wallet — if they match, press the checkmark button on the device to confirm it.";
+const COPY_NOW_MESSAGE = "Verified — the address genuinely came from your device. Now press 'Copy address' to copy it.";
+const HAND_OVER_MESSAGE = "Now paste the address you copied and send it to me, so I can pay you.";
+const WARN_MESSAGE = "Wait — that doesn't match the address your device showed. The copied address changed somewhere along the way; that's exactly the attack this step catches. Re-copy it from the wallet and send it again.";
+const OPEN_TX_MESSAGE = "It's on its way. Open the Transactions tab in your wallet so we can watch for it.";
+const WAITING_MESSAGE = "Let's wait for it to arrive — it usually takes just a few seconds.";
+const FINISHED_MESSAGE = "And there it is — 0.1 BTC received. Share an address, verify it on your device, and watch the payment arrive. That's receiving! Mission complete.";
+const SENDING_LINES = [
+  "That matches perfectly. Give me a moment — I'm opening my own Bitcoin wallet.",
+  "I've put your address in, entered 0.1 BTC, and I'm waiting for it to send…",
 ];
 
-const SCENE_MESSAGE = "Let's head to the Receive tab where you will copy the receive address to your wallet.";
+type MentorStage =
+  | 'intro'
+  | 'go-receive'
+  | 'verify-rule'
+  | 'compare-check'
+  | 'copy-now'
+  | 'hand-over'
+  | 'sending'
+  | 'open-tx'
+  | 'waiting'
+  | 'finished';
 
-type SceneStep = { kind: 'intro' } | { kind: 'scene' };
-const STEPS: SceneStep[] = [
-  ...INTRO_MESSAGES.map((): SceneStep => ({ kind: 'intro' })),
-  { kind: 'scene' },
-];
-const SCENE_INDEX = Math.max(STEPS.findIndex((s) => s.kind === 'scene'), 0);
+const CONTINUE_STAGES = new Set<MentorStage>(['intro', 'sending', 'finished']);
 
-const WALLET_BALANCE = '0.04998';
-const TRANSACTIONS = [
-  { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
-];
+type TransactionRow = {
+  date: string;
+  value: string;
+  balance: string;
+  incoming: boolean;
+  fresh?: boolean;
+};
 
 const RECEIVE_ADDRESS = 'bc1qq92v3345fkzdjsxwg9r7mvkgjatqqhahfpiuav99q5uw0kweaq3fuqo0';
 
@@ -132,14 +149,18 @@ function useTypewriter(text: string, speed = 6) {
   return { displayed, done, skip };
 }
 
-function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }) {
-  const [stepIndex, setStepIndex] = useState(0);
+function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
+  const [stage, setStage] = useState<MentorStage>('intro');
+  const [sendingStep, setSendingStep] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
   const [walletTab, setWalletTab] = useState<'transactions' | 'receive'>('transactions');
   const [addrCopied, setAddrCopied] = useState(false);
   const [addrVerified, setAddrVerified] = useState(false);
   const [verifyingAddr, setVerifyingAddr] = useState(false);
   const [verifyRequested, setVerifyRequested] = useState(false);
+  const [warned, setWarned] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [txArrived, setTxArrived] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -154,21 +175,37 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
     return () => query.removeEventListener('change', onChange);
   }, []);
 
-  const step = STEPS[stepIndex];
   const message = nudgeActive
     ? NUDGE_MESSAGE
-    : step.kind === 'intro'
-      ? INTRO_MESSAGES[stepIndex] ?? ''
-      : SCENE_MESSAGE;
+    : stage === 'intro'
+      ? INTRO_MESSAGE
+      : stage === 'go-receive'
+        ? GO_RECEIVE_MESSAGE
+        : stage === 'verify-rule'
+          ? VERIFY_RULE_MESSAGE
+          : stage === 'compare-check'
+            ? COMPARE_CHECK_MESSAGE
+            : stage === 'copy-now'
+              ? COPY_NOW_MESSAGE
+              : stage === 'hand-over'
+                ? warned ? WARN_MESSAGE : HAND_OVER_MESSAGE
+                : stage === 'sending'
+                  ? SENDING_LINES[sendingStep] ?? SENDING_LINES[0]
+                  : stage === 'open-tx'
+                    ? OPEN_TX_MESSAGE
+                    : stage === 'waiting'
+                      ? WAITING_MESSAGE
+                      : FINISHED_MESSAGE;
   const { displayed, done, skip } = useTypewriter(message);
 
-  const spotlight = step.kind === 'intro';
+  const spotlight = stage === 'intro';
   const interactionLocked = !done;
-  const canContinue = done && !nudgeActive;
+  const canContinue = done && !nudgeActive && CONTINUE_STAGES.has(stage);
   // While Maria is mid-line the devices freeze; once she finishes, the learner
   // may press device buttons — every press is gently nudged back on track.
   const deviceLocked = interactionLocked;
   const softwareLocked = deviceLocked;
+  const chatLocked = !done || nudgeActive;
 
   const expectedAction: ExpectedAction = { type: 'external' };
 
@@ -178,47 +215,98 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
     nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
   }, []);
 
-  const allowReceive = step.kind === 'scene' && done;
-
   const handleTransactionsTab = useCallback(() => {
-    setWalletTab('transactions');
-  }, []);
-
-  const handleReceiveTab = useCallback(() => {
-    if (!allowReceive) {
+    const allowed = stage === 'open-tx' || stage === 'waiting' || stage === 'finished';
+    if (!allowed) {
       handleUnexpectedAction();
       return;
     }
-    setAddrVerified(false);
-    setVerifyingAddr(false);
-    setVerifyRequested(false);
+    setWalletTab('transactions');
+    if (stage === 'open-tx') {
+      setStage('waiting');
+    }
+  }, [stage, handleUnexpectedAction]);
+
+  const handleReceiveTab = useCallback(() => {
+    if (stage === 'go-receive') {
+      setWalletTab('receive');
+      setStage('verify-rule');
+      return;
+    }
+    if (stage === 'open-tx' || stage === 'waiting' || stage === 'finished') {
+      handleUnexpectedAction();
+      return;
+    }
     setWalletTab('receive');
-  }, [allowReceive, handleUnexpectedAction]);
+  }, [stage, handleUnexpectedAction]);
 
   const handleCopyAddress = useCallback(() => {
+    if (!addrVerified) {
+      handleUnexpectedAction();
+      return;
+    }
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
     setAddrCopied(true);
     if (copyTimer.current) clearTimeout(copyTimer.current);
     copyTimer.current = setTimeout(() => setAddrCopied(false), 2000);
-  }, []);
+    if (stage === 'copy-now') {
+      setStage('hand-over');
+    }
+  }, [addrVerified, stage, handleUnexpectedAction]);
 
   const handleVerifyAddress = useCallback(() => {
-    if (verifyingAddr || verifyRequested) return;
+    if (verifyingAddr || verifyRequested || addrVerified) return;
     setVerifyingAddr(true);
     setVerifyRequested(true);
-  }, [verifyingAddr, verifyRequested]);
+    setStage('compare-check');
+  }, [verifyingAddr, verifyRequested, addrVerified]);
 
   const handleDeviceVerified = useCallback(() => {
     setVerifyingAddr(false);
     setAddrVerified(true);
+    setStage('copy-now');
   }, []);
+
+  const handlePaste = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setChatInput(text.trim());
+      }
+    } catch {
+      // Clipboard read refused — the learner can still paste into the field.
+    }
+  }, []);
+
+  const handleSubmitAddress = useCallback(() => {
+    if (chatLocked) return;
+    const trimmed = chatInput.trim();
+    if (!trimmed) return;
+    if (trimmed === RECEIVE_ADDRESS) {
+      setWarned(false);
+      setChatInput('');
+      setStage('sending');
+      setSendingStep(0);
+    } else {
+      setWarned(true);
+    }
+  }, [chatInput, chatLocked]);
+
+  useEffect(() => {
+    if (stage !== 'waiting') return;
+    const timer = setTimeout(() => {
+      setTxArrived(true);
+      setStage('finished');
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [stage]);
 
   useEffect(() => {
     if (nudgeActive) {
       setNudgeActive(false);
       if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
     }
-  }, [stepIndex]);
+  }, [stage]);
 
   useEffect(() => () => {
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
@@ -230,19 +318,27 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
       skip();
       return;
     }
-    if (nudgeActive) return;
-    if (step.kind === 'intro') {
-      if (stepIndex === SCENE_INDEX - 1 && portraitRef.current && bubbleRef.current) {
+    if (nudgeActive || !CONTINUE_STAGES.has(stage)) return;
+    if (stage === 'intro') {
+      if (portraitRef.current && bubbleRef.current) {
         flipRects.current = {
           portrait: portraitRef.current.getBoundingClientRect(),
           bubble: bubbleRef.current.getBoundingClientRect(),
         };
       }
-      setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
+      setStage('go-receive');
       return;
     }
-    onEnterPractice();
-  }, [done, skip, nudgeActive, step.kind, stepIndex, onEnterPractice]);
+    if (stage === 'sending') {
+      if (sendingStep < SENDING_LINES.length - 1) {
+        setSendingStep((current) => current + 1);
+      } else {
+        setStage('open-tx');
+      }
+      return;
+    }
+    onFinish();
+  }, [done, skip, nudgeActive, stage, sendingStep, onFinish]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -299,6 +395,14 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
     );
   }, [spotlight]);
 
+  const balance = txArrived ? '0.14998' : '0.04998';
+  const baseTransactions: TransactionRow[] = [
+    { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
+  ];
+  const transactions: TransactionRow[] = txArrived
+    ? [{ date: '2026-10-20 14:32', value: '+0.10000 BTC', balance: '0.14998 BTC', incoming: true, fresh: true }, ...baseTransactions]
+    : baseTransactions;
+
   const cableEl = (
     <div className={`connect-cable is-linked${isMobile ? ' cable-under-wallet' : ''}`} aria-hidden="true">
       <span className="plug-end-track">
@@ -331,6 +435,14 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
       </span>
     </div>
   );
+
+  const bubbleKey = nudgeActive
+    ? 'nudge'
+    : stage === 'hand-over'
+      ? `hand-over-${warned}`
+      : stage === 'sending'
+        ? `sending-${sendingStep}`
+        : stage;
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
@@ -389,7 +501,11 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                             <ReceiveQrCode />
                           </div>
                           <p className="rx-addr">{RECEIVE_ADDRESS}</p>
-                          <button className="tx-sim-btn primary rx-btn" type="button" onClick={handleCopyAddress}>
+                          <button
+                            className="tx-sim-btn primary rx-btn"
+                            type="button"
+                            onClick={handleCopyAddress}
+                          >
                             {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
                             <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
                           </button>
@@ -403,7 +519,7 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                               className="tx-sim-btn ghost rx-btn"
                               type="button"
                               onClick={handleVerifyAddress}
-                              disabled={verifyingAddr}
+                              disabled={verifyingAddr || stage === 'go-receive'}
                             >
                               <Eye size={14} strokeWidth={2} />
                               <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>
@@ -415,11 +531,11 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                         <div className="wallet-tx-summary">
                           <div className="wallet-tx-summary-item">
                             <span className="wallet-tx-summary-label">Balance</span>
-                            <span className="wallet-tx-summary-value">{WALLET_BALANCE} BTC</span>
+                            <span className="wallet-tx-summary-value">{balance} BTC</span>
                           </div>
                           <div className="wallet-tx-summary-item">
                             <span className="wallet-tx-summary-label">Transactions</span>
-                            <span className="wallet-tx-summary-value">{TRANSACTIONS.length}</span>
+                            <span className="wallet-tx-summary-value">{transactions.length}</span>
                           </div>
                         </div>
                         <div className="wallet-tx-table-wrap">
@@ -432,8 +548,8 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                               </tr>
                             </thead>
                             <tbody>
-                              {TRANSACTIONS.map((tx) => (
-                                <tr key={tx.date}>
+                              {transactions.map((tx) => (
+                                <tr key={tx.date} className={tx.fresh ? 'fresh' : undefined}>
                                   <td>{tx.date}</td>
                                   <td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td>
                                   <td>{tx.balance}</td>
@@ -491,7 +607,7 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : `maria-${stepIndex}-${message}`}>
+            <div className="mentor-bubble-content" key={bubbleKey}>
               <span className="mentor-bubble-name">Maria</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
@@ -500,19 +616,60 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                   {!done && <span className="typewriter-cursor" />}
                 </p>
               </div>
+              {stage === 'hand-over' && (
+                <div className="mentor-chat-input-row" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    className="mentor-chat-input"
+                    type="text"
+                    value={chatInput}
+                    placeholder="Paste the receive address…"
+                    aria-label="Paste the receive address"
+                    disabled={chatLocked}
+                    onChange={(e) => {
+                      setChatInput(e.target.value);
+                      if (warned) setWarned(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmitAddress();
+                      }
+                    }}
+                  />
+                  <button
+                    className="mentor-chat-btn"
+                    type="button"
+                    onClick={handlePaste}
+                    disabled={chatLocked}
+                    aria-label="Paste from clipboard"
+                  >
+                    <ClipboardPaste size={16} strokeWidth={2} />
+                  </button>
+                  <button
+                    className="mentor-chat-btn send"
+                    type="button"
+                    onClick={handleSubmitAddress}
+                    disabled={chatLocked || !chatInput.trim()}
+                    aria-label="Send address to Maria"
+                  >
+                    <SendHorizontal size={16} strokeWidth={2.2} />
+                  </button>
+                </div>
+              )}
             </div>
-            <button
-              className={`bubble-next ${canContinue ? 'ready' : ''}`}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleContinue();
-              }}
-              disabled={!canContinue}
-              aria-label="Finish mission"
-            >
-              {step.kind === 'scene' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
-            </button>
+            {canContinue && (
+              <button
+                className={`bubble-next ready`}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleContinue();
+                }}
+                aria-label={stage === 'finished' ? 'Finish mission' : 'Continue'}
+              >
+                {stage === 'finished' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -523,7 +680,7 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
 export default function ReceiveScenario({ onBack, onComplete }: ReceiveScenarioProps) {
   return (
     <ReceiveMentorScene
-      onEnterPractice={() => {
+      onFinish={() => {
         onComplete();
         onBack();
       }}
