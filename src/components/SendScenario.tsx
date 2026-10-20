@@ -326,14 +326,10 @@ function SendMentorScene({ onEnterPractice }: { onEnterPractice: () => void }) {
                   </div>
                 </div>
               </div>
+
+              {isMobile && cableEl}
             </div>
 
-            {isMobile && cableEl}
-          </div>
-        )}
-
-        {!spotlight && (
-          <>
             {!isMobile && cableEl}
 
             <div className="connect-device-stage phase-linked">
@@ -348,7 +344,7 @@ function SendMentorScene({ onEnterPractice }: { onEnterPractice: () => void }) {
                 />
               </div>
             </div>
-          </>
+          </div>
         )}
 
         <div className="mentor-row">
