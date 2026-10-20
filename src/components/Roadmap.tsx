@@ -233,6 +233,8 @@ function Roadmap({
       onClickCapture={(e) => {
         if (!animate || revealed) return;
         if (e.button !== 0) return;
+        const target = e.target as HTMLElement | null;
+        if (target && target.closest('.roadmap-mission')) return;
         e.preventDefault();
         e.stopPropagation();
         skipReveal();
