@@ -29,7 +29,9 @@ const NUDGE_DURATION_MS = 1250;
 // One speaking turn per line, in order. The scene step is the handover: it is
 // where the already-connected laptop and device appear, so deriving both from
 // STEPS keeps the reveal on the right line if intro lines are added or removed.
-const INTRO_MESSAGES = ['Hi'];
+const INTRO_MESSAGES = [
+  "Now let me teach how you to receive Bitcoin",
+  "test"];
 const SCENE_MESSAGE = 'Hello';
 
 type SceneStep = { kind: 'intro' } | { kind: 'scene' };
