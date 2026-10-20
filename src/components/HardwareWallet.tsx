@@ -494,6 +494,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setTypeListIndex(0);
       updatePhase('recover-type');
     } else if (phase === 'recover-type') {
+      if (acceptedWord) {
+        setAcceptedWord(null);
+        setTypeInput('');
+        setTypeList(buildTypeList(''));
+        setTypeListIndex(0);
+        if (acceptTimer.current) clearTimeout(acceptTimer.current);
+      }
       const selected = typeList[typeListIndex];
       if (!selected) return;
       if (selected.length === 1) {
@@ -773,8 +780,16 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     aria-label={`Type word ${recoverIndex + 1} of 12`}
                     onChange={(e) => {
                       const filtered = e.target.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
-                      setTypeInput(filtered);
-                      setTypeList(buildTypeList(filtered));
+                      let next = filtered;
+                      if (acceptedWord) {
+                        if (next.startsWith(acceptedWord)) {
+                          next = next.slice(acceptedWord.length);
+                        }
+                        if (acceptTimer.current) clearTimeout(acceptTimer.current);
+                        setAcceptedWord(null);
+                      }
+                      setTypeInput(next);
+                      setTypeList(buildTypeList(next));
                       setTypeListIndex(0);
                       setRecoverWrong(false);
                     }}
@@ -811,6 +826,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                         onMouseDown={(e) => e.preventDefault()}
                         onMouseEnter={() => setTypeListIndex(actualIndex)}
                         onClick={() => {
+                          if (acceptedWord) {
+                            if (acceptTimer.current) clearTimeout(acceptTimer.current);
+                            setAcceptedWord(null);
+                            setTypeInput('');
+                            setTypeList(buildTypeList(''));
+                            setTypeListIndex(0);
+                          }
                           if (isLetter) {
                             const newInput = typeInput + item;
                             setTypeInput(newInput);
