@@ -139,10 +139,10 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
   const [addrCopied, setAddrCopied] = useState(false);
   const [addrVerified, setAddrVerified] = useState(false);
   const [verifyingAddr, setVerifyingAddr] = useState(false);
+  const [verifyRequested, setVerifyRequested] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const verifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -191,6 +191,7 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
     }
     setAddrVerified(false);
     setVerifyingAddr(false);
+    setVerifyRequested(false);
     setWalletTab('receive');
   }, [allowReceive, handleUnexpectedAction]);
 
@@ -202,14 +203,15 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
   }, []);
 
   const handleVerifyAddress = useCallback(() => {
-    if (verifyingAddr) return;
+    if (verifyingAddr || verifyRequested) return;
     setVerifyingAddr(true);
-    if (verifyTimer.current) clearTimeout(verifyTimer.current);
-    verifyTimer.current = setTimeout(() => {
-      setVerifyingAddr(false);
-      setAddrVerified(true);
-    }, 1600);
-  }, [verifyingAddr]);
+    setVerifyRequested(true);
+  }, [verifyingAddr, verifyRequested]);
+
+  const handleDeviceVerified = useCallback(() => {
+    setVerifyingAddr(false);
+    setAddrVerified(true);
+  }, []);
 
   useEffect(() => {
     if (nudgeActive) {
@@ -221,7 +223,6 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
   useEffect(() => () => {
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
     if (copyTimer.current) clearTimeout(copyTimer.current);
-    if (verifyTimer.current) clearTimeout(verifyTimer.current);
   }, []);
 
   const handleContinue = useCallback(() => {
@@ -461,6 +462,9 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                   locked={deviceLocked}
                   expectedAction={expectedAction}
                   onUnexpectedAction={handleUnexpectedAction}
+                  verifyRequest={verifyRequested}
+                  verifyAddress={RECEIVE_ADDRESS}
+                  onVerifyConfirm={handleDeviceVerified}
                   onComplete={() => {}}
                 />
               </div>

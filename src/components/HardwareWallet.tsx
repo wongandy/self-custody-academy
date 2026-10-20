@@ -32,7 +32,9 @@ export type WalletPhase =
   | 'reset-done'
   | 'ready-menu'
   | 'connect-confirm'
-  | 'connect-done';
+  | 'connect-done'
+  | 'verify-address'
+  | 'verify-done';
 
 type MenuPhase = WalletPhase | 'recover-soon' | 'recover-type';
 
@@ -53,8 +55,11 @@ type HardwareWalletProps = {
   onReadyMenuSelect?: (label: string) => void;
   onFactoryResetAttempt?: () => void;
   onConnectConfirm?: () => void;
+  onVerifyConfirm?: () => void;
   onUnexpectedAction?: () => void;
   connectRequest?: boolean;
+  verifyRequest?: boolean;
+  verifyAddress?: string;
   advanceToReadyMenu?: boolean;
   advanceFromRecoverIntro?: boolean;
   startAtMenu?: boolean;
@@ -106,7 +111,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onUnexpectedAction, connectRequest = false, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
   const [wiped, setWiped] = useState(false);
@@ -213,6 +218,12 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     const timer = setTimeout(() => updatePhase('connect-confirm'), 450);
     return () => clearTimeout(timer);
   }, [connectRequest, phase, updatePhase]);
+
+  useEffect(() => {
+    if (!verifyRequest || (phase !== 'ready-menu' && phase !== 'menu')) return;
+    const timer = setTimeout(() => updatePhase('verify-address'), 450);
+    return () => clearTimeout(timer);
+  }, [verifyRequest, phase, updatePhase]);
 
   useEffect(() => {
     if (!advanceFromRecoverIntro || phase !== 'recover-intro') return;
@@ -370,7 +381,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onUnexpectedAction?.();
       return;
     }
-    if (expectedAction.type === 'external' || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
+    if ((expectedAction.type === 'external' && phase !== 'verify-address' && phase !== 'verify-done') || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
       onUnexpectedAction?.();
       return;
     }
@@ -386,6 +397,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     if (phase === 'connect-confirm') {
       updatePhase('connect-done');
       onConnectConfirm?.();
+      return;
+    }
+    if (phase === 'verify-address') {
+      updatePhase('verify-done');
+      onVerifyConfirm?.();
       return;
     }
     if (phase === 'reset-done') return;
@@ -948,6 +964,22 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                   <span className="hw-receive-addr">{RECEIVE_ADDRESS}</span>
                 </div>
                 <p className="hw-screen-body">Use this address to receive Bitcoin. Press the checkmark to go back.</p>
+              </div>
+            )}
+            {phase === 'verify-address' && (
+              <div className="hw-screen-text">
+                <span className="hw-screen-title">Verify address</span>
+                <div className="hw-receive-addr-box">
+                  <span className="hw-receive-addr">{verifyAddress ?? RECEIVE_ADDRESS}</span>
+                </div>
+                <p className="hw-screen-body">Compare it with the wallet software. Press the checkmark to confirm it matches.</p>
+              </div>
+            )}
+            {phase === 'verify-done' && (
+              <div className="hw-screen-text hw-screen-success">
+                <CheckCircle2 size={28} strokeWidth={1.8} />
+                <span className="hw-screen-title">Address verified</span>
+                <p className="hw-screen-body">The receive address matches the wallet software.</p>
               </div>
             )}
             {phase === 'connect-confirm' && (

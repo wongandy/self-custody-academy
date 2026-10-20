@@ -71,6 +71,8 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'ready-menu': READY_MENU_MESSAGE,
   'connect-confirm': '',
   'connect-done': '',
+  'verify-address': '',
+  'verify-done': '',
 };
 
 function useTypewriter(text: string, speed = 6) {
