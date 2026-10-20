@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, LockKeyhole, Usb, WalletCards } from 'lucide-react';
 
 type RoadmapProps = {
@@ -69,6 +69,7 @@ function Roadmap({
 }: RoadmapProps) {
   const [revealed, setRevealed] = useState(!animate);
   const [celebrationPhase, setCelebrationPhase] = useState<CelebrationPhase>('idle');
+  const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneRef = useRef(true);
   const arrivalScrolledRef = useRef(false);
   const missionRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -85,9 +86,33 @@ function Roadmap({
       setRevealed(true);
       return;
     }
-    const timer = setTimeout(() => setRevealed(true), 2800);
-    return () => clearTimeout(timer);
+    revealTimerRef.current = setTimeout(() => setRevealed(true), 2800);
+    return () => {
+      if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
+    };
   }, [animate]);
+
+  const skipReveal = useCallback(() => {
+    if (!animate) return;
+    if (revealTimerRef.current) {
+      clearTimeout(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
+    setRevealed(true);
+  }, [animate]);
+
+  useEffect(() => {
+    if (!animate || revealed) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      e.preventDefault();
+      skipReveal();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [animate, revealed, skipReveal]);
 
   useEffect(() => {
     if (!justCompletedScenario || justCompletedScenario !== completedScenarios) {
@@ -203,7 +228,16 @@ function Roadmap({
   };
 
   return (
-    <main className={`roadmap-page ${animate ? 'is-revealing' : ''} ${revealed ? 'is-revealed' : ''}`}>
+    <main
+      className={`roadmap-page ${animate ? 'is-revealing' : ''} ${revealed ? 'is-revealed' : ''}`}
+      onClickCapture={(e) => {
+        if (!animate || revealed) return;
+        if (e.button !== 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        skipReveal();
+      }}
+    >
       <section className="roadmap-board">
         <div className="roadmap-board-heading">
           <span className="roadmap-label">Your learning path</span>
