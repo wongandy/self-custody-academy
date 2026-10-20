@@ -394,7 +394,7 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                             <ReceiveQrCode />
                           </div>
                           <p className="rx-addr">{RECEIVE_ADDRESS}</p>
-                          <button className="tx-sim-btn primary rx-btn" type="button" onClick={handleCopyAddress}>
+                          <button className="rx-btn rx-btn-dark" type="button" onClick={handleCopyAddress}>
                             {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
                             <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
                           </button>
@@ -405,7 +405,7 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                             </div>
                           ) : (
                             <button
-                              className="tx-sim-btn ghost rx-btn"
+                              className="rx-btn rx-btn-outline"
                               type="button"
                               onClick={handleVerifyAddress}
                               disabled={verifyingAddr}
