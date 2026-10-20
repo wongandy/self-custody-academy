@@ -34,7 +34,7 @@ const INTRO_MESSAGES = [
   // "test",
 ];
 
-const SCENE_MESSAGE = 'Hello';
+const SCENE_MESSAGE = "Let's head to the Receive tab";
 
 type SceneStep = { kind: 'intro' } | { kind: 'scene' };
 const STEPS: SceneStep[] = [
