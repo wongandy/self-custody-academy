@@ -31,7 +31,7 @@ const NUDGE_DURATION_MS = 1250;
 // STEPS keeps the reveal on the right line if intro lines are added or removed.
 const INTRO_MESSAGES = [
   "Now let me teach how you to receive Bitcoin",
-  "test"
+  "test",
 ];
 
 const SCENE_MESSAGE = 'Hello';
