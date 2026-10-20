@@ -4398,52 +4398,6 @@ html.theme-light {
 
 .rx-btn {
   min-width: min(240px, 80%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 18px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 180ms ease;
-}
-
-.rx-btn-dark {
-  border: none;
-  color: #f5f2ed;
-  background: #15262f;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
-}
-
-.rx-btn-dark:hover {
-  background: #1d323d;
-  transform: translateY(-1px);
-}
-
-.rx-btn-dark:disabled,
-.rx-btn-outline:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.rx-btn-outline {
-  border: 1px solid var(--line);
-  color: var(--text);
-  background: transparent;
-}
-
-.rx-btn-outline:hover {
-  border-color: rgba(241, 189, 105, 0.45);
-  background: var(--panel);
-}
-
-.rx-btn-outline:hover:disabled {
-  border-color: var(--line);
-  background: transparent;
 }
 
 .tx-copy-btn.copied {
