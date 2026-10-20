@@ -34,7 +34,7 @@ const INTRO_MESSAGES = [
   // "test",
 ];
 
-const SCENE_MESSAGE = "Let's head to the Receive tab";
+const SCENE_MESSAGE = "Let's head to the Receive tab where you will copy the receive address to your wallet.";
 
 type SceneStep = { kind: 'intro' } | { kind: 'scene' };
 const STEPS: SceneStep[] = [
