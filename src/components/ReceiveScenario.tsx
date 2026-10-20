@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownLeft,
   ArrowLeft,
@@ -11,6 +11,7 @@ import {
   CircleDollarSign,
   Copy,
   Download,
+  Eye,
   QrCode,
   User,
 } from 'lucide-react';
@@ -47,6 +48,55 @@ const WALLET_BALANCE = '0.04998';
 const TRANSACTIONS = [
   { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
 ];
+
+const RECEIVE_ADDRESS = 'bc1qq92v3345fkzdjsxwg9r7mvkgjatqqhahfpiuav99q5uw0kweaq3fuqo0';
+
+const QR_MODULES = 25;
+
+// Decorative QR-style matrix seeded deterministically; not a scannable code.
+function buildQrModules(): boolean[][] {
+  let seed = 0x9e3779b9;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 0xffffffff;
+  };
+  const grid: boolean[][] = Array.from({ length: QR_MODULES }, () =>
+    Array.from({ length: QR_MODULES }, () => rand() > 0.52));
+
+  const drawFinder = (row0: number, col0: number) => {
+    for (let r = -1; r <= 7; r++) {
+      for (let c = -1; c <= 7; c++) {
+        const row = row0 + r;
+        const col = col0 + c;
+        if (row < 0 || col < 0 || row >= QR_MODULES || col >= QR_MODULES) continue;
+        if (r === -1 || r === 7 || c === -1 || c === 7) {
+          grid[row][col] = false;
+          continue;
+        }
+        const ring = r === 0 || r === 6 || c === 0 || c === 6;
+        const core = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        grid[row][col] = ring || core;
+      }
+    }
+  };
+
+  drawFinder(0, 0);
+  drawFinder(0, QR_MODULES - 7);
+  drawFinder(QR_MODULES - 7, 0);
+  return grid;
+}
+
+function ReceiveQrCode() {
+  const modules = useMemo(buildQrModules, []);
+  return (
+    <svg viewBox={`0 0 ${QR_MODULES} ${QR_MODULES}`} shapeRendering="crispEdges" role="img" aria-label="Receive address QR code">
+      <rect width={QR_MODULES} height={QR_MODULES} fill="#ffffff" />
+      {modules.flatMap((row, r) =>
+        row.map((on, c) =>
+          on ? <rect key={`${r}-${c}`} x={c} y={r} width={1} height={1} fill="#17191b" /> : null))}
+    </svg>
+  );
+}
 
 function useTypewriter(text: string, speed = 6) {
   const [displayed, setDisplayed] = useState('');
@@ -91,8 +141,14 @@ function useTypewriter(text: string, speed = 6) {
 function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
+  const [walletTab, setWalletTab] = useState<'transactions' | 'receive'>('transactions');
+  const [addrCopied, setAddrCopied] = useState(false);
+  const [addrVerified, setAddrVerified] = useState(false);
+  const [verifyingAddr, setVerifyingAddr] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const verifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -115,18 +171,51 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
   const spotlight = step.kind === 'intro';
   const interactionLocked = !done;
   const canContinue = done && !nudgeActive;
-  // The device takes no part yet: Maria is speaking, and once she finishes the
-  // continue button is the expected action, so it stays locked in both cases.
-  const deviceLocked = interactionLocked || canContinue;
+  // While Maria is mid-line the devices freeze; once she finishes, the learner
+  // may press device buttons — every press is gently nudged back on track.
+  const deviceLocked = interactionLocked;
   const softwareLocked = deviceLocked;
 
-  const expectedAction: ExpectedAction = { type: 'none' };
+  const expectedAction: ExpectedAction = { type: 'external' };
 
   const handleUnexpectedAction = useCallback(() => {
     setNudgeActive(true);
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
     nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
   }, []);
+
+  const allowReceive = step.kind === 'scene' && done;
+
+  const handleTransactionsTab = useCallback(() => {
+    setWalletTab('transactions');
+  }, []);
+
+  const handleReceiveTab = useCallback(() => {
+    if (!allowReceive) {
+      handleUnexpectedAction();
+      return;
+    }
+    setAddrVerified(false);
+    setVerifyingAddr(false);
+    setWalletTab('receive');
+  }, [allowReceive, handleUnexpectedAction]);
+
+  const handleCopyAddress = useCallback(() => {
+    navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
+    setAddrCopied(true);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setAddrCopied(false), 2000);
+  }, []);
+
+  const handleVerifyAddress = useCallback(() => {
+    if (verifyingAddr) return;
+    setVerifyingAddr(true);
+    if (verifyTimer.current) clearTimeout(verifyTimer.current);
+    verifyTimer.current = setTimeout(() => {
+      setVerifyingAddr(false);
+      setAddrVerified(true);
+    }, 1600);
+  }, [verifyingAddr]);
 
   useEffect(() => {
     if (nudgeActive) {
@@ -137,6 +226,8 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
 
   useEffect(() => () => {
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    if (verifyTimer.current) clearTimeout(verifyTimer.current);
   }, []);
 
   const handleContinue = useCallback(() => {
@@ -263,20 +354,20 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                     <aside className="wallet-sidebar">
                       <button
                         type="button"
-                        className="wallet-nav-item active"
-                        onClick={() => {}}
+                        className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}`}
+                        onClick={handleTransactionsTab}
                         disabled={softwareLocked}
-                        aria-pressed="true"
+                        aria-pressed={walletTab === 'transactions'}
                       >
                         <ArrowLeftRight strokeWidth={2.2} />
                         <span className="wallet-nav-label">Transactions</span>
                       </button>
                       <button
                         type="button"
-                        className="wallet-nav-item"
-                        onClick={handleUnexpectedAction}
+                        className={`wallet-nav-item${walletTab === 'receive' ? ' active' : ''}`}
+                        onClick={handleReceiveTab}
                         disabled={softwareLocked}
-                        aria-pressed="false"
+                        aria-pressed={walletTab === 'receive'}
                       >
                         <ArrowDownLeft strokeWidth={2.2} />
                         <span className="wallet-nav-label">Receive</span>
@@ -293,6 +384,38 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                       </button>
                     </aside>
                     <div className="wallet-canvas">
+                      {walletTab === 'receive' ? (
+                        <div className="rx-panel">
+                          <div className="rx-panel-heading">
+                            <QrCode size={14} strokeWidth={2} />
+                            <span>Receive address</span>
+                          </div>
+                          <div className="rx-qr-frame" aria-hidden="true">
+                            <ReceiveQrCode />
+                          </div>
+                          <p className="rx-addr">{RECEIVE_ADDRESS}</p>
+                          <button className="tx-sim-btn primary rx-btn" type="button" onClick={handleCopyAddress}>
+                            {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
+                            <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
+                          </button>
+                          {addrVerified ? (
+                            <div className="tx-addr-verified">
+                              <CheckCircle2 size={16} />
+                              <span>Address verified on device</span>
+                            </div>
+                          ) : (
+                            <button
+                              className="tx-sim-btn ghost rx-btn"
+                              type="button"
+                              onClick={handleVerifyAddress}
+                              disabled={verifyingAddr}
+                            >
+                              <Eye size={14} strokeWidth={2} />
+                              <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>
+                            </button>
+                          )}
+                        </div>
+                      ) : (
                       <div className="wallet-transactions">
                         <div className="wallet-tx-summary">
                           <div className="wallet-tx-summary-item">
@@ -325,6 +448,7 @@ function ReceiveMentorScene({ onEnterPractice }: { onEnterPractice: () => void }
                           </table>
                         </div>
                       </div>
+                      )}
                     </div>
                   </div>
                 </div>
