@@ -31,7 +31,7 @@ const NUDGE_DURATION_MS = 1250;
 // where the already-connected laptop and device appear, so deriving both from
 // STEPS keeps the reveal on the right line if intro lines are added or removed.
 const INTRO_MESSAGES = [
-  "Now let me teach how you to receive Bitcoin",
+  "Now let me teach how you to receive Bitcoin.",
   // "test",
 ];
 
