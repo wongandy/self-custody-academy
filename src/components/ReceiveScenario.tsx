@@ -24,7 +24,7 @@ const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the curr
 const NUDGE_DURATION_MS = 1250;
 
 const INTRO_MESSAGE = "Now let me teach how you to receive Bitcoin.";
-const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the wallet — that's where you'll get your receive address.";
+const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the wallet software — that's where you'll get your receive address.";
 const VERIFY_RULE_MESSAGE = "This is your receive address. But before copying anything, let's prove it really came from your device — press 'Verify address on device' below the address.";
 const COMPARE_CHECK_MESSAGE = "Your device now shows the address. Compare it with the one here in the wallet — if they match, press the checkmark button on the device to confirm it.";
 const COPY_NOW_MESSAGE = "Verified — the address genuinely came from your device. Now press 'Copy address' to copy it.";
