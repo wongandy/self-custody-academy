@@ -246,7 +246,7 @@ function App() {
                 type="button"
                 onClick={() => setScreen('andy-intro')}
               >
-                <span>Get started</span>
+                <span>Let's go</span>
               </button>
               <button className="profile-link" type="button" onClick={handleProfileLink}>
                 I already have an account
