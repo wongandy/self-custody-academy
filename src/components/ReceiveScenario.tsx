@@ -13,7 +13,6 @@ import {
   SendHorizontal,
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
-import LaptopKeyboard from '@/components/LaptopKeyboard';
 import mariaPortrait from '@/components/Maria.webp';
 
 type ReceiveScenarioProps = {
@@ -25,7 +24,7 @@ const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the curr
 const NUDGE_DURATION_MS = 1250;
 
 const INTRO_MESSAGE = "Now let me teach how you to receive Bitcoin.";
-const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the wallet software — that's where you'll get your receive address.";
+const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the wallet — that's where you'll get your receive address.";
 const VERIFY_RULE_MESSAGE = "This is your receive address. But before copying anything, let's prove it really came from your device — press 'Verify address on device' below the address.";
 const COMPARE_CHECK_MESSAGE = "Your device now shows the address. Compare it with the one here in the wallet — if they match, press the checkmark button on the device to confirm it.";
 const COPY_NOW_MESSAGE = "Verified — the address genuinely came from your device. Now press 'Copy address' to copy it.";
@@ -33,7 +32,7 @@ const HAND_OVER_MESSAGE = "Now paste the address you copied and send it to me, s
 const WARN_MESSAGE = "Wait — that doesn't match the address your device showed. The copied address changed somewhere along the way; that's exactly the attack this step catches. Re-copy it from the wallet and send it again.";
 const OPEN_TX_MESSAGE = "It's on its way. Open the Transactions tab in your wallet so we can watch for it.";
 const WAITING_MESSAGE = "Let's wait for it to arrive — it usually takes just a few seconds.";
-const FINISHED_MESSAGE = "And there it is — 0.1 BTC received. Share an address, verify it on your device, and watch the payment arrive. That's how receiving Bitcoin works! Nice work.";
+const FINISHED_MESSAGE = "And there it is — 0.1 BTC received. Share an address, verify it on your device, and watch the payment arrive. That's receiving! Mission complete.";
 const SENDING_LINES = [
   "That matches perfectly. Give me a moment — I'm opening my own Bitcoin wallet.",
   "I've put your address in, entered 0.1 BTC, and I'm waiting for it to send…",
@@ -565,8 +564,6 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                   </div>
                 </div>
               </div>
-
-              <LaptopKeyboard />
 
               {isMobile && cableEl}
             </div>

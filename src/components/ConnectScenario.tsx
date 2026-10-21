@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight, Layers, Link2 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
-import LaptopKeyboard from '@/components/LaptopKeyboard';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
 
@@ -672,8 +671,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
               {isMobile && (mobileCableHalf || showCable) && cableEl}
             </div>
-
-            {!isMobile && <LaptopKeyboard />}
 
             {!isMobile && cableEl}
 

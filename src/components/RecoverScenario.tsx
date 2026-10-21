@@ -22,7 +22,7 @@ const HANDOVER_MESSAGE =
 
 const INTRO_MESSAGES = [
   "Now let's talk about one of the most overlooked aspects of self-custody — recovering one's wallet. It is an important skill to have in case your hardware wallet ever gets lost, stolen or destroyed.",
-  "Your recovery phrase is universal, meaning it works on compatible hardware wallets. Now let's go back to your device and I'll show you how to do it.",
+  "Your recovery phrase is universal, meaning it works on most hardware wallets. Now let's go back to your device and I'll show you how to do it.",
   HANDOVER_MESSAGE,
 ];
 
