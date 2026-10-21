@@ -32,7 +32,7 @@ const HAND_OVER_MESSAGE = "Now paste the address you copied and send it to me, s
 const WARN_MESSAGE = "Wait — that doesn't match the address your device showed. The copied address changed somewhere along the way; that's exactly the attack this step catches. Re-copy it from the wallet and send it again.";
 const OPEN_TX_MESSAGE = "It's on its way. Open the Transactions tab in your wallet so we can watch for it.";
 const WAITING_MESSAGE = "Let's wait for it to arrive — it usually takes just a few seconds.";
-const FINISHED_MESSAGE = "And there it is — 0.1 BTC received. Share an address, verify it on your device, and watch the payment arrive. That's receiving! Mission complete.";
+const FINISHED_MESSAGE = "And there it is — 0.1 BTC received. Share an address, verify it on your device, and watch the payment arrive. That's how receiving Bitcoin works! Nice work.";
 const SENDING_LINES = [
   "That matches perfectly. Give me a moment — I'm opening my own Bitcoin wallet.",
   "I've put your address in, entered 0.1 BTC, and I'm waiting for it to send…",
