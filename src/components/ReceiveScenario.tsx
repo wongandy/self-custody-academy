@@ -13,6 +13,7 @@ import {
   SendHorizontal,
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
+import LaptopKeyboard from '@/components/LaptopKeyboard';
 import mariaPortrait from '@/components/Maria.webp';
 
 type ReceiveScenarioProps = {
@@ -564,6 +565,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                   </div>
                 </div>
               </div>
+
+              <LaptopKeyboard />
 
               {isMobile && cableEl}
             </div>

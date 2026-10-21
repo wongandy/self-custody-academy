@@ -15,6 +15,7 @@ import {
   User,
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
+import LaptopKeyboard from '@/components/LaptopKeyboard';
 import mariaPortrait from '@/components/Maria.webp';
 
 type SendScenarioProps = {
@@ -329,6 +330,8 @@ function SendMentorScene({ onEnterPractice }: { onEnterPractice: () => void }) {
 
               {isMobile && cableEl}
             </div>
+
+            {!isMobile && <LaptopKeyboard />}
 
             {!isMobile && cableEl}
 
