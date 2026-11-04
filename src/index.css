@@ -2267,9 +2267,9 @@ html.theme-light {
 }
 
 .device-caption {
-  align-self: center;
-  width: max-content;
-  margin: 0 auto;
+  align-self: stretch;
+  width: 100%;
+  margin: 0;
 }
 
 .hw-wallet-device {

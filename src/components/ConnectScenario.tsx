@@ -219,6 +219,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
+  const laptopCaptionRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
@@ -247,14 +248,11 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => clearTimeout(timer);
   }, [step.kind, connection, arrivalStarted, isMobile]);
 
-  // While Maria introduces the app the wallet window is held at screen center
-  // by a position offset; the layout beneath is already the final side-by-side
-  // one, so the window's size never changes. When Maria finishes the plug-in
-  // line the offset animates to zero: a pure position slide, no resize or reflow.
-  // The offset lives on the window (not the animated laptop wrapper) so the
-  // entrance animation's fill mode can never override it.
+  // While Maria introduces the app the wallet window and its caption are held at
+  // screen center. When the plug-in line finishes, both return to the final layout.
   useLayoutEffect(() => {
     const windowEl = laptopRef.current;
+    const captionEl = laptopCaptionRef.current;
     if (!windowEl || !walletVisible || arrivalStarted) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -262,7 +260,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       windowEl.style.transform = 'none';
       const rect = windowEl.getBoundingClientRect();
       const dx = window.innerWidth / 2 - (rect.left + rect.width / 2);
-      windowEl.style.transform = `translateX(${dx}px)`;
+      const transform = `translateX(${dx}px)`;
+      windowEl.style.transform = transform;
+      if (captionEl) captionEl.style.transform = transform;
     };
     apply();
     window.addEventListener('resize', apply);
@@ -275,6 +275,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     if (step.kind !== 'device-arrival' || !done || !arrivalRequested || arrivalStarted) return;
 
     const windowEl = laptopRef.current;
+    const captionEl = laptopCaptionRef.current;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (windowEl && !reduce) {
       const from = windowEl.style.transform || 'translateX(0)';
@@ -286,6 +287,17 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
         ],
         { duration: SLIDE_SETTLE_MS, fill: 'forwards' },
       );
+      if (captionEl) {
+        const captionFrom = captionEl.style.transform || from;
+        captionEl.style.transform = '';
+        captionEl.animate(
+          [
+            { transform: captionFrom, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+            { transform: 'translateX(0)', easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          ],
+          { duration: SLIDE_SETTLE_MS, fill: 'forwards' },
+        );
+      }
     }
 
     const timer = setTimeout(() => setArrivalStarted(true), reduce ? 0 : SLIDE_SETTLE_MS);
@@ -670,7 +682,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               </div>
 
               {isMobile && (mobileCableHalf || showCable) && cableEl}
-              <div className="device-caption">Wallet software</div>
+              <div ref={laptopCaptionRef} className="device-caption">Wallet software</div>
             </div>
 
             {!isMobile && cableEl}
