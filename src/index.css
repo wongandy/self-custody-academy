@@ -3338,6 +3338,7 @@ html.theme-light {
 }
 
 .wallet-window {
+  width: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 16px;
