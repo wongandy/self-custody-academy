@@ -972,14 +972,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <div className="hw-receive-addr-box">
                   <span className="hw-receive-addr">{verifyAddress ?? RECEIVE_ADDRESS}</span>
                 </div>
-                <p className="hw-screen-body">Compare it with the wallet software. Press the checkmark to confirm it matches.</p>
+                {/* <p className="hw-screen-body">Compare it with the wallet software. Press the checkmark to confirm it matches.</p> */}
               </div>
             )}
             {phase === 'verify-done' && (
               <div className="hw-screen-text hw-screen-success">
                 <CheckCircle2 size={28} strokeWidth={1.8} />
                 <span className="hw-screen-title">Address verified</span>
-                <p className="hw-screen-body">The receive address matches the wallet software.</p>
+                {/* <p className="hw-screen-body">The receive address matches the wallet software.</p> */}
               </div>
             )}
             {phase === 'connect-confirm' && (
