@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronRight, FileText, X } from 'lucide-react';
+import { ChevronRight, FileText } from 'lucide-react';
 import HardwareWallet, { type WalletPhase, type ExpectedAction } from '@/components/HardwareWallet';
 import { loadMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
@@ -111,7 +111,7 @@ function useTypewriter(text: string, speed = 6) {
   return { displayed, done, skip };
 }
 
-export default function RecoverScenario({ completed, onClose, onComplete, onBack }: RecoverScenarioProps) {
+export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('menu');

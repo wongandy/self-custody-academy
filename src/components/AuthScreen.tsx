@@ -15,7 +15,7 @@ type AuthScreenProps = {
   subtitle?: string;
 };
 
-function AuthScreen({ mode, onBack, onSuccess, onSwitchMode, onSkip, title, subtitle }: AuthScreenProps) {
+function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: AuthScreenProps) {
   const { signUp, signIn, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

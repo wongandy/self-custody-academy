@@ -2387,16 +2387,40 @@ html.theme-light {
 }
 
 .hw-menu-item {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
+  border: 1px solid transparent;
   border-radius: 8px;
+  background: transparent;
   color: rgba(167, 232, 67, 0.5);
   font-family: 'DM Mono', monospace;
   font-size: 12px;
-  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
   transition: all 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hw-menu-item:not(:disabled):hover {
+  border-color: rgba(167, 232, 67, 0.25);
+  color: rgba(167, 232, 67, 0.85);
+  background: rgba(167, 232, 67, 0.04);
+}
+
+.hw-menu-item:focus-visible,
+.hw-quiz-option:focus-visible,
+.hw-type-item:focus-visible {
+  outline: 2px solid rgba(167, 232, 67, 0.75);
+  outline-offset: 2px;
+}
+
+.hw-menu-item:disabled,
+.hw-quiz-option:disabled,
+.hw-type-item:disabled {
+  cursor: default;
 }
 
 .hw-menu-item.active {
@@ -2505,6 +2529,7 @@ html.theme-light {
 }
 
 .hw-quiz-option {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2515,7 +2540,16 @@ html.theme-light {
   color: rgba(167, 232, 67, 0.6);
   font-family: 'DM Mono', monospace;
   font-size: 11px;
+  text-align: left;
+  cursor: pointer;
   transition: all 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hw-quiz-option:not(:disabled):hover {
+  border-color: rgba(167, 232, 67, 0.3);
+  color: var(--green);
+  background: rgba(167, 232, 67, 0.06);
 }
 
 .hw-quiz-option.active {
@@ -2734,6 +2768,7 @@ html.theme-light {
 }
 
 .hw-type-item {
+  width: 100%;
   display: flex;
   align-items: center;
   padding: 4px 8px;
@@ -2743,6 +2778,7 @@ html.theme-light {
   color: rgba(167, 232, 67, 0.6);
   font-family: 'DM Mono', monospace;
   font-size: 11px;
+  text-align: left;
   transition: all 160ms ease;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;

@@ -10,7 +10,6 @@ import ReceiveScenario from '@/components/ReceiveScenario';
 import RecoverScenario from '@/components/RecoverScenario';
 import AuthScreen from '@/components/AuthScreen';
 import heroImage from '@/components/hero.webp';
-import bitcoinImage from '@/components/bitcoin.webp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { clearLocalProgress, getLocalProgress, setLocalProgress } from '@/lib/localProgress';

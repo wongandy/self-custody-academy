@@ -61,7 +61,6 @@ function Roadmap({
   completedScenarios,
   isLoading,
   errorMessage,
-  isLoggedIn,
   onSelectScenario,
   animate = false,
   justCompletedScenario = null,

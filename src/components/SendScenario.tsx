@@ -11,7 +11,6 @@ import {
   CircleDollarSign,
   Construction,
   Copy,
-  QrCode,
   User,
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';

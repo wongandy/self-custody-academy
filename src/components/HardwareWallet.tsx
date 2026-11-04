@@ -312,8 +312,75 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     onPowerChange?.(false);
   }, [phase, startBoot, onPowerChange, resetWalletState, updatePhase, locked, expectedAction, onUnexpectedAction, isBootingPhase]);
 
+  const activateMenuItem = useCallback((item: { label: string; phase: MenuPhase }) => {
+    const target = item.phase;
+    if (phase === 'ready-menu') {
+      if (target === 'settings') {
+        setSettingsOrigin('ready-menu');
+        updatePhase('settings');
+        return;
+      }
+      onReadyMenuSelect?.(item.label);
+      return;
+    }
+    if (phase !== 'menu') return;
+    if (wiped) {
+      if (target === 'recover-intro') {
+        setRecoverIndex(0);
+        setRecoverWrong(false);
+        setTypeInput('');
+        setTypeList(buildTypeList(''));
+        setTypeListIndex(0);
+        updatePhase('recover-intro');
+        return;
+      }
+      onMenuSelectionChange?.('create-intro');
+      return;
+    }
+    if (target === 'settings') {
+      setSettingsOrigin('menu');
+      updatePhase('settings');
+      return;
+    }
+    if (target === 'recover-soon') {
+      onMenuSelectionChange?.('recover-intro');
+      return;
+    }
+    if (target === 'send-blocked') {
+      onMenuSelectionChange?.('send-blocked');
+      return;
+    }
+    if (target === 'receive-address') {
+      updatePhase('receive-address');
+      onMenuSelectionChange?.('receive-address');
+      return;
+    }
+    if (target === 'create-intro') {
+      const words = generateMnemonic(12);
+      setMnemonic(words);
+      setSessionMnemonic(words);
+    }
+    updatePhase(target);
+  }, [phase, wiped, updatePhase, onReadyMenuSelect, onMenuSelectionChange]);
+
+  const handleMenuItemClick = useCallback((index: number) => {
+    if (locked || isBootingPhase()) return;
+    if (phase !== 'menu' && phase !== 'ready-menu') return;
+    const item = menuItems[index];
+    if (!item) return;
+    if (
+      (expectedAction.type === 'confirm-menu-item' && item.label !== expectedAction.label)
+      || (expectedAction.type !== 'none' && expectedAction.type !== 'confirm-menu-item')
+    ) {
+      onUnexpectedAction?.();
+      return;
+    }
+    setMenuIndex(index);
+    activateMenuItem(item);
+  }, [locked, isBootingPhase, phase, menuItems, expectedAction, onUnexpectedAction, activateMenuItem]);
+
   const handleUp = useCallback(() => {
-    if (locked) return;
+    if (locked || isBootingPhase()) return;
     if (
       (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu'))
       || (expectedAction.type === 'confirm' && phase === 'connect-confirm')
@@ -338,10 +405,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setTypeListIndex((s) => (s === 0 ? typeList.length - 1 : s - 1));
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked, expectedAction, onUnexpectedAction]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked, expectedAction, onUnexpectedAction, isBootingPhase]);
 
   const handleDown = useCallback(() => {
-    if (locked) return;
+    if (locked || isBootingPhase()) return;
     if (
       (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu'))
       || (expectedAction.type === 'confirm' && phase === 'connect-confirm')
@@ -366,7 +433,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setTypeListIndex((s) => (s + 1) % typeList.length);
       setRecoverWrong(false);
     }
-  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked, expectedAction, onUnexpectedAction]);
+  }, [phase, menuIndex, menuItems, notifyMenuSelection, quizOptions.length, recoverOptions.length, typeList.length, locked, expectedAction, onUnexpectedAction, isBootingPhase]);
 
   const isExpectedMenuItem = useCallback((): boolean => {
     if (expectedAction.type !== 'confirm-menu-item') return true;
@@ -375,8 +442,77 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     return item && item.label === expectedAction.label;
   }, [expectedAction, phase, menuItems, menuIndex]);
 
+  const handleQuizOptionClick = useCallback((selectedIndex: number) => {
+    if (locked || isBootingPhase()) return;
+    if (phase === 'create-quiz') {
+      const expectedWord = mnemonic[quizPositions[quizIndex]];
+      const answeredWord = quizOptions[selectedIndex];
+      setQuizSelected(selectedIndex);
+      if (answeredWord === expectedWord) {
+        setQuizWrong(false);
+        if (quizIndex + 1 >= quizPositions.length) {
+          onComplete();
+          updatePhase('create-done');
+        } else {
+          const nextIndex = quizIndex + 1;
+          setQuizIndex(nextIndex);
+          const nextCorrect = mnemonic[quizPositions[nextIndex]];
+          setQuizOptions(buildQuizOptions(nextCorrect));
+          setQuizSelected(0);
+        }
+      } else {
+        setQuizWrong(true);
+      }
+      return;
+    }
+    if (phase === 'recover-quiz') {
+      const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
+      const answeredWord = recoverOptions[selectedIndex];
+      setRecoverSelected(selectedIndex);
+      if (answeredWord === expectedWord) {
+        setRecoverWrong(false);
+        if (recoverIndex + 1 >= 12) {
+          updatePhase('recover-done');
+        } else {
+          const nextIndex = recoverIndex + 1;
+          setRecoverIndex(nextIndex);
+          const nextCorrect = expectedMnemonic?.[nextIndex] ?? '';
+          setRecoverOptions(buildQuizOptions(nextCorrect));
+          setRecoverSelected(0);
+        }
+      } else {
+        setRecoverWrong(true);
+      }
+    }
+  }, [locked, isBootingPhase, phase, mnemonic, quizPositions, quizIndex, quizOptions, onComplete, updatePhase, expectedMnemonic, recoverIndex, recoverOptions]);
+
+  const handleTypeItemClick = useCallback((item: string, actualIndex: number) => {
+    if (locked || isBootingPhase()) return;
+    if (expectedAction.type !== 'none' && expectedAction.type !== 'confirm') {
+      onUnexpectedAction?.();
+      return;
+    }
+    setTypeListIndex(actualIndex);
+    if (acceptedWord) {
+      if (acceptTimer.current) clearTimeout(acceptTimer.current);
+      setAcceptedWord(null);
+      setTypeInput('');
+      setTypeList(buildTypeList(''));
+      setTypeListIndex(0);
+    }
+    if (item.length === 1) {
+      const newInput = typeInput + item;
+      setTypeInput(newInput);
+      setTypeList(buildTypeList(newInput));
+      setTypeListIndex(0);
+      setRecoverWrong(false);
+    } else {
+      advanceRecoverWord(item);
+    }
+  }, [locked, isBootingPhase, expectedAction, onUnexpectedAction, acceptedWord, typeInput, advanceRecoverWord]);
+
   const handleEnter = useCallback(() => {
-    if (locked) return;
+    if (locked || isBootingPhase()) return;
     if (expectedAction.type === 'confirm-menu-item' && (phase === 'menu' || phase === 'ready-menu') && !isExpectedMenuItem()) {
       onUnexpectedAction?.();
       return;
@@ -414,55 +550,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       updatePhase('reset-warn');
       return;
     }
-    if (phase === 'ready-menu') {
-      if (menuItems[menuIndex].phase === 'settings') {
-        setSettingsOrigin('ready-menu');
-        updatePhase('settings');
-        return;
-      }
-      onReadyMenuSelect?.(menuItems[menuIndex].label);
-      return;
-    }
-    if (phase === 'menu') {
-      const target: MenuPhase = menuItems[menuIndex].phase;
-      if (wiped) {
-        if (target === 'recover-intro') {
-          setRecoverIndex(0);
-          // setRecoverIndex(11);
-          setRecoverWrong(false);
-          setTypeInput('');
-          setTypeList(buildTypeList(''));
-          setTypeListIndex(0);
-          updatePhase('recover-intro');
-          return;
-        }
-        onMenuSelectionChange?.('create-intro');
-        return;
-      }
-      if (target === 'settings') {
-        setSettingsOrigin('menu');
-        updatePhase('settings');
-        return;
-      }
-      if (target === 'recover-soon') {
-        onMenuSelectionChange?.('recover-intro');
-        return;
-      }
-      if (target === 'send-blocked') {
-        onMenuSelectionChange?.('send-blocked');
-        return;
-      }
-      if (target === 'receive-address') {
-        updatePhase('receive-address');
-        onMenuSelectionChange?.('receive-address');
-        return;
-      }
-      if (target === 'create-intro') {
-        const words = generateMnemonic(12);
-        setMnemonic(words);
-        setSessionMnemonic(words);
-      }
-      updatePhase(target);
+    if (phase === 'ready-menu' || phase === 'menu') {
+      const item = menuItems[menuIndex];
+      if (item) activateMenuItem(item);
     } else if (phase === 'receive-address') {
       updatePhase('menu');
       setMenuIndex(0);
@@ -483,23 +573,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       setQuizSelected(0);
       updatePhase('create-quiz');
     } else if (phase === 'create-quiz') {
-      const expectedWord = mnemonic[quizPositions[quizIndex]];
-      const answeredWord = quizOptions[quizSelected];
-      if (answeredWord === expectedWord) {
-        setQuizWrong(false);
-        if (quizIndex + 1 >= quizPositions.length) {
-          onComplete();
-          updatePhase('create-done');
-        } else {
-          const nextIndex = quizIndex + 1;
-          setQuizIndex(nextIndex);
-          const nextCorrect = mnemonic[quizPositions[nextIndex]];
-          setQuizOptions(buildQuizOptions(nextCorrect));
-          setQuizSelected(0);
-        }
-      } else {
-        setQuizWrong(true);
-      }
+      handleQuizOptionClick(quizSelected);
     } else if (phase === 'recover-intro') {
       setRecoverIndex(0);
       // setRecoverIndex(11);
@@ -528,22 +602,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         advanceRecoverWord(selected);
       }
     } else if (phase === 'recover-quiz') {
-      const expectedWord = expectedMnemonic?.[recoverIndex] ?? '';
-      const answeredWord = recoverOptions[recoverSelected];
-      if (answeredWord === expectedWord) {
-        setRecoverWrong(false);
-        if (recoverIndex + 1 >= 12) {
-          updatePhase('recover-done');
-        } else {
-          const nextIndex = recoverIndex + 1;
-          setRecoverIndex(nextIndex);
-          const nextCorrect = expectedMnemonic?.[nextIndex] ?? '';
-          setRecoverOptions(buildQuizOptions(nextCorrect));
-          setRecoverSelected(0);
-        }
-      } else {
-        setRecoverWrong(true);
-      }
+      handleQuizOptionClick(recoverSelected);
     } else if (phase === 'recover-done') {
       onComplete();
     }
@@ -561,10 +620,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     recoverOptions,
     recoverSelected,
     expectedMnemonic,
+    acceptedWord,
     typeInput,
     typeList,
     typeListIndex,
     advanceRecoverWord,
+    handleQuizOptionClick,
+    activateMenuItem,
     updatePhase,
     onReadyMenuSelect,
     onMenuSelectionChange,
@@ -573,20 +635,26 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     explicitReset,
     wiped,
     locked,
+    isBootingPhase,
     onConnectConfirm,
+    onVerifyConfirm,
     expectedAction,
     onUnexpectedAction,
     isExpectedMenuItem,
   ]);
 
   const handleCopyAddress = useCallback(() => {
-    if (locked) return;
+    if (locked || isBootingPhase()) return;
+    if (expectedAction.type !== 'none' && expectedAction.type !== 'copy-address') {
+      onUnexpectedAction?.();
+      return;
+    }
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
     setAddrCopied(true);
     onCopyAddress?.();
     if (copyTimer.current) clearTimeout(copyTimer.current);
     copyTimer.current = setTimeout(() => setAddrCopied(false), 2000);
-  }, [onCopyAddress, locked]);
+  }, [onCopyAddress, locked, isBootingPhase, expectedAction, onUnexpectedAction]);
 
   useEffect(() => () => {
     if (copyTimer.current) clearTimeout(copyTimer.current);
@@ -594,7 +662,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, []);
 
   const handleCancel = useCallback(() => {
-    if (locked) return;
+    if (locked || isBootingPhase()) return;
     if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item') {
       if (phase === 'menu' || phase === 'ready-menu') {
         onUnexpectedAction?.();
@@ -651,7 +719,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     resetWalletState();
     updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin, expectedAction, onUnexpectedAction, locked]);
+  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin, expectedAction, onUnexpectedAction, locked, isBootingPhase]);
 
   useEffect(() => {
     if (phase !== 'reset-done') return;
@@ -695,10 +763,17 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-menu">
                 <span className="hw-screen-title">Select option</span>
                 {menuItems.map((item, i) => (
-                  <div key={item.label} className={i === menuIndex ? 'hw-menu-item active' : 'hw-menu-item'}>
+                  <button
+                    key={item.label}
+                    className={i === menuIndex ? 'hw-menu-item active' : 'hw-menu-item'}
+                    type="button"
+                    onClick={() => handleMenuItemClick(i)}
+                    disabled={locked || isBooting}
+                    aria-pressed={i === menuIndex}
+                  >
                     <span>{item.label}</span>
                     {i === menuIndex && <Check size={12} strokeWidth={2.8} />}
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -739,7 +814,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">Which word is in position {currentQuizPosition + 1}?</p>
                 <div className="hw-quiz-options">
                   {quizOptions.map((opt, i) => (
-                    <div
+                    <button
                       key={opt}
                       className={
                         i === quizSelected
@@ -748,10 +823,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                             : 'hw-quiz-option active'
                           : 'hw-quiz-option'
                       }
+                      type="button"
+                      onClick={() => handleQuizOptionClick(i)}
+                      disabled={locked || isBooting}
+                      aria-pressed={i === quizSelected}
                     >
                       <span className="hw-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
                       <span>{opt}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <span className="hw-quiz-progress">
@@ -794,6 +873,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     autoCorrect="off"
                     spellCheck={false}
                     aria-label={`Type word ${recoverIndex + 1} of 12`}
+                    disabled={locked || isBooting}
                     onChange={(e) => {
                       const filtered = e.target.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
                       let next = filtered;
@@ -837,29 +917,15 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     const actualIndex = typeVisibleStart + i;
                     const isLetter = item.length === 1;
                     return (
-                      <div
+                      <button
                         key={item + i}
+                        type="button"
                         onMouseDown={(e) => e.preventDefault()}
-                        onMouseEnter={() => setTypeListIndex(actualIndex)}
-                        onClick={() => {
-                          if (acceptedWord) {
-                            if (acceptTimer.current) clearTimeout(acceptTimer.current);
-                            setAcceptedWord(null);
-                            setTypeInput('');
-                            setTypeList(buildTypeList(''));
-                            setTypeListIndex(0);
-                          }
-                          if (isLetter) {
-                            const newInput = typeInput + item;
-                            setTypeInput(newInput);
-                            setTypeList(buildTypeList(newInput));
-                            setTypeListIndex(0);
-                            setRecoverWrong(false);
-                          } else {
-                            setTypeListIndex(actualIndex);
-                            advanceRecoverWord(item);
-                          }
+                        onMouseEnter={() => {
+                          if (!locked && !isBooting) setTypeListIndex(actualIndex);
                         }}
+                        onClick={() => handleTypeItemClick(item, actualIndex)}
+                        disabled={locked || isBooting}
                         className={
                           actualIndex === typeListIndex
                             ? `hw-type-item active${isLetter ? ' letter' : ''}${recoverWrong ? ' wrong' : ''}`
@@ -867,7 +933,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                         }
                       >
                         {isLetter ? <span className="hw-type-letter-key">{item}</span> : <span>{item}</span>}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -884,7 +950,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">Which word is in position {recoverIndex + 1}?</p>
                 <div className="hw-quiz-options">
                   {recoverOptions.map((opt, i) => (
-                    <div
+                    <button
                       key={opt}
                       className={
                         i === recoverSelected
@@ -893,10 +959,14 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                             : 'hw-quiz-option active'
                           : 'hw-quiz-option'
                       }
+                      type="button"
+                      onClick={() => handleQuizOptionClick(i)}
+                      disabled={locked || isBooting}
+                      aria-pressed={i === recoverSelected}
                     >
                       <span className="hw-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
                       <span>{opt}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <span className="hw-quiz-progress">
@@ -918,10 +988,16 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Settings</span>
                 <div className="hw-settings-list">
-                  <div className="hw-menu-item active">
+                  <button
+                    className="hw-menu-item active"
+                    type="button"
+                    onClick={handleEnter}
+                    disabled={locked || isBooting}
+                    aria-label="Reset to Factory Settings"
+                  >
                     <span>Reset to Factory Settings</span>
                     <Check size={12} strokeWidth={2.8} />
-                  </div>
+                  </button>
                 </div>
               </div>
             )}
@@ -957,6 +1033,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                     className={addrCopied ? 'hw-copy-btn copied' : 'hw-copy-btn'}
                     type="button"
                     onClick={handleCopyAddress}
+                    disabled={locked || isBooting}
                     aria-label={addrCopied ? 'Address copied' : 'Copy address'}
                   >
                     {addrCopied ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.2} />}
