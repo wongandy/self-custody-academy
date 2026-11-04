@@ -401,11 +401,6 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
-      <button className="character-back" type="button" onClick={onBack}>
-        <ArrowLeft size={16} strokeWidth={2.4} />
-        <span>Back to roadmap</span>
-      </button>
-
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         {!spotlight && (
           <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
