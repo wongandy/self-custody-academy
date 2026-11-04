@@ -21,7 +21,7 @@ const HANDOVER_MESSAGE =
   "First we need to perform a factory reset in order to wipe the device clean. Proceed by going to Settings.";
 
 const INTRO_MESSAGES = [
-  "Now let's talk about one of the most overlooked aspects of self-custody—wallet recovery. Knowing how to recover your funds is essential in case your hardware wallet ever gets lost, stolen, or destroyed.",
+  "Now let's talk about one of the most overlooked aspects of self-custody—wallet recovery. Knowing how to recover your Bitcoin is essential in case your hardware wallet ever gets lost, stolen, or destroyed.",
   "Your recovery phrase is universal, meaning it works on most hardware wallets. Now let's go back to your device and I'll show you how to do it.",
   HANDOVER_MESSAGE,
 ];
