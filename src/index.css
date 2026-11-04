@@ -4485,24 +4485,6 @@ html.theme-light {
   min-width: min(240px, 80%);
 }
 
-.rx-btn-verify {
-  color: var(--text);
-  border-color: rgba(241, 189, 105, 0.42);
-  background: rgba(241, 189, 105, 0.04);
-}
-
-.rx-btn-verify:hover {
-  color: var(--text);
-  border-color: rgba(241, 189, 105, 0.7);
-  background: rgba(241, 189, 105, 0.1);
-}
-
-.rx-btn-verify:disabled {
-  opacity: 0.62;
-  cursor: not-allowed;
-  transform: none;
-}
-
 .tx-copy-btn.copied {
   color: var(--green);
   border-color: rgba(167, 232, 67, 0.4);
