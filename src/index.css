@@ -6708,3 +6708,282 @@ html.theme-light {
   box-shadow: 0 24px 70px rgba(33, 50, 58, 0.16);
 }
 
+
+/* ---- Mission 6: Sending Bitcoin ---- */
+
+.scenario-page-send {
+  background:
+    radial-gradient(1100px 520px at 18% -8%, rgba(46, 174, 122, 0.12), transparent 60%),
+    radial-gradient(900px 480px at 88% 108%, rgba(34, 118, 195, 0.1), transparent 62%),
+    linear-gradient(155deg, #0c151c 0%, #101d26 52%, #0b141b 100%);
+}
+
+.send-scenario-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 72px 24px 32px;
+  flex: 1;
+  min-height: 0;
+}
+
+.send-scenario-layout.spotlight {
+  justify-content: center;
+  align-items: center;
+}
+
+.send-practice-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 26px;
+  align-items: stretch;
+  width: 100%;
+  animation: fade-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.send-wallet-column,
+.send-hardware-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.send-wallet-laptop {
+  gap: 20px;
+  flex: 1;
+}
+
+.send-wallet-window {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.send-wallet-canvas {
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.send-form-screen,
+.send-review-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.send-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.send-form-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 650;
+  color: #eaf3ee;
+}
+
+.send-form-title svg {
+  color: #46c48a;
+}
+
+.send-form-balance,
+.send-review-status {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8fa89b;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.send-review-status {
+  color: #5fd39d;
+}
+
+.send-recipient-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(70, 196, 138, 0.35);
+  background: rgba(70, 196, 138, 0.08);
+}
+
+.send-recipient-label {
+  display: block;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5fd39d;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.send-recipient-address {
+  display: block;
+  font-family: 'SFMono-Regular', ui-monospace, monospace;
+  font-size: 12px;
+  color: #cfe0d6;
+  word-break: break-all;
+}
+
+.send-use-address {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(70, 196, 138, 0.5);
+  background: rgba(70, 196, 138, 0.14);
+  color: #7fe0b0;
+  font-size: 12px;
+  font-weight: 650;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.send-use-address:hover:not(:disabled) {
+  background: rgba(70, 196, 138, 0.24);
+  transform: translateY(-1px);
+}
+
+.send-use-address:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.send-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.send-amount-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.send-amount-field span {
+  font-size: 12px;
+  font-weight: 650;
+  color: #8fa89b;
+}
+
+.send-fee-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.send-fee-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.send-fee-heading > span:first-child {
+  font-size: 13px;
+  font-weight: 700;
+  color: #eaf3ee;
+}
+
+.send-fee-explanation {
+  font-size: 11px;
+  color: #8fa89b;
+  text-align: right;
+}
+
+.send-fee-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.send-fee-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10.5px;
+  color: #6f8679;
+}
+
+.send-fee-range input[type='range'] {
+  flex: 1;
+  accent-color: #46c48a;
+}
+
+.send-fee-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: #9db4a8;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+}
+
+.send-fee-total strong {
+  font-family: 'SFMono-Regular', ui-monospace, monospace;
+  color: #eaf3ee;
+}
+
+.send-success-screen {
+  align-items: flex-start;
+}
+
+.send-completion-status {
+  align-self: center;
+}
+
+.hw-send-review-screen {
+  gap: 6px;
+}
+
+.hw-send-review-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #9db4a8;
+  font-weight: 700;
+}
+
+.hw-send-review-value {
+  display: block;
+  font-family: 'SFMono-Regular', ui-monospace, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #eaf3ee;
+}
+
+.hw-send-review-value.address {
+  font-size: 11px;
+  line-height: 1.45;
+  word-break: break-all;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .send-practice-area {
+    grid-template-columns: 1fr;
+  }
+}

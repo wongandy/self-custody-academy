@@ -34,7 +34,9 @@ export type WalletPhase =
   | 'connect-confirm'
   | 'connect-done'
   | 'verify-address'
-  | 'verify-done';
+  | 'verify-done'
+  | 'send-review'
+  | 'send-confirmed';
 
 type MenuPhase = WalletPhase | 'recover-soon' | 'recover-type';
 
@@ -56,10 +58,15 @@ type HardwareWalletProps = {
   onFactoryResetAttempt?: () => void;
   onConnectConfirm?: () => void;
   onVerifyConfirm?: () => void;
+  onSendConfirm?: () => void;
   onUnexpectedAction?: () => void;
   connectRequest?: boolean;
   verifyRequest?: boolean;
   verifyAddress?: string;
+  sendRequest?: boolean;
+  sendAddress?: string;
+  sendAmount?: string;
+  sendFee?: string;
   advanceToReadyMenu?: boolean;
   advanceFromRecoverIntro?: boolean;
   startAtMenu?: boolean;
@@ -111,7 +118,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onSendConfirm, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
   const [wiped, setWiped] = useState(false);
@@ -139,6 +146,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [typeList, setTypeList] = useState<string[]>([]);
   const [typeListIndex, setTypeListIndex] = useState(0);
   const [addrCopied, setAddrCopied] = useState(false);
+  const [sendReviewStep, setSendReviewStep] = useState(0);
   const [acceptedWord, setAcceptedWord] = useState<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const acceptTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -224,6 +232,12 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     const timer = setTimeout(() => updatePhase('verify-address'), 450);
     return () => clearTimeout(timer);
   }, [verifyRequest, phase, updatePhase]);
+
+  useEffect(() => {
+    if (!sendRequest || (phase !== 'ready-menu' && phase !== 'menu')) return;
+    setSendReviewStep(0);
+    updatePhase('send-review');
+  }, [sendRequest, phase, updatePhase]);
 
   useEffect(() => {
     if (!advanceFromRecoverIntro || phase !== 'recover-intro') return;
@@ -385,6 +399,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu'))
       || (expectedAction.type === 'confirm' && phase === 'connect-confirm')
       || (expectedAction.type === 'copy-address' && phase === 'receive-address')
+      || (expectedAction.type === 'confirm' && phase === 'send-review')
     ) {
       onUnexpectedAction?.();
       return;
@@ -413,6 +428,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu'))
       || (expectedAction.type === 'confirm' && phase === 'connect-confirm')
       || (expectedAction.type === 'copy-address' && phase === 'receive-address')
+      || (expectedAction.type === 'confirm' && phase === 'send-review')
     ) {
       onUnexpectedAction?.();
       return;
@@ -540,6 +556,15 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onVerifyConfirm?.();
       return;
     }
+    if (phase === 'send-review') {
+      if (sendReviewStep < 2) {
+        setSendReviewStep((step) => step + 1);
+      } else {
+        updatePhase('send-confirmed');
+        onSendConfirm?.();
+      }
+      return;
+    }
     if (phase === 'reset-done') return;
     if (phase === 'settings') {
       onFactoryResetAttempt?.();
@@ -638,6 +663,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     isBootingPhase,
     onConnectConfirm,
     onVerifyConfirm,
+    onSendConfirm,
+    sendReviewStep,
+    sendAddress,
+    sendAmount,
+    sendFee,
     expectedAction,
     onUnexpectedAction,
     isExpectedMenuItem,
@@ -682,6 +712,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       return;
     }
     if (expectedAction.type === 'external' || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
+      onUnexpectedAction?.();
+      return;
+    }
+    if (expectedAction.type === 'confirm' && phase === 'send-review') {
       onUnexpectedAction?.();
       return;
     }
@@ -1057,6 +1091,42 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <CheckCircle2 size={28} strokeWidth={1.8} />
                 <span className="hw-screen-title">Address verified</span>
                 {/* <p className="hw-screen-body">The receive address matches the wallet software.</p> */}
+              </div>
+            )}
+            {phase === 'send-review' && (
+              <div className="hw-screen-text hw-send-review-screen">
+                <span className="hw-screen-title">
+                  {sendReviewStep === 0 ? 'Review recipient' : sendReviewStep === 1 ? 'Review amount' : 'Review fee'}
+                </span>
+                {sendReviewStep === 0 && (
+                  <>
+                    <span className="hw-send-review-label">Send to</span>
+                    <span className="hw-send-review-value address">{sendAddress}</span>
+                    <p className="hw-screen-body">Check the full address, then press the checkmark.</p>
+                  </>
+                )}
+                {sendReviewStep === 1 && (
+                  <>
+                    <span className="hw-send-review-label">Amount</span>
+                    <span className="hw-send-review-value">{sendAmount} BTC</span>
+                    <p className="hw-screen-body">Confirm the amount before continuing.</p>
+                  </>
+                )}
+                {sendReviewStep === 2 && (
+                  <>
+                    <span className="hw-send-review-label">Network fee</span>
+                    <span className="hw-send-review-value">{sendFee} BTC</span>
+                    <p className="hw-screen-body">Press the checkmark to approve this transaction.</p>
+                  </>
+                )}
+                <span className="hw-quiz-progress">Review {sendReviewStep + 1} of 3</span>
+              </div>
+            )}
+            {phase === 'send-confirmed' && (
+              <div className="hw-screen-text hw-screen-success">
+                <CheckCircle2 size={28} strokeWidth={1.8} />
+                <span className="hw-screen-title">Transaction approved</span>
+                <p className="hw-screen-body">The wallet software can now broadcast this payment.</p>
               </div>
             )}
             {phase === 'connect-confirm' && (

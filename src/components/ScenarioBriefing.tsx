@@ -73,6 +73,8 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'connect-done': '',
   'verify-address': '',
   'verify-done': '',
+  'send-review': '',
+  'send-confirmed': '',
 };
 
 function useTypewriter(text: string, speed = 6) {
