@@ -501,29 +501,41 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                             <ReceiveQrCode />
                           </div>
                           <p className="rx-addr">{RECEIVE_ADDRESS}</p>
-                          <button
-                            className="tx-sim-btn primary rx-btn"
-                            type="button"
-                            onClick={handleCopyAddress}
-                          >
-                            {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
-                            <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
-                          </button>
                           {addrVerified ? (
-                            <div className="tx-addr-verified">
-                              <CheckCircle2 size={16} />
-                              <span>Address verified on device</span>
-                            </div>
+                            <>
+                              <button
+                                className="tx-sim-btn primary rx-btn"
+                                type="button"
+                                onClick={handleCopyAddress}
+                              >
+                                {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
+                                <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
+                              </button>
+                              <div className="tx-addr-verified">
+                                <CheckCircle2 size={16} />
+                                <span>Address verified on device</span>
+                              </div>
+                            </>
                           ) : (
-                            <button
-                              className="tx-sim-btn ghost rx-btn"
-                              type="button"
-                              onClick={handleVerifyAddress}
-                              disabled={verifyingAddr || stage === 'go-receive'}
-                            >
-                              <Eye size={14} strokeWidth={2} />
-                              <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>
-                            </button>
+                            <>
+                              <button
+                                className="tx-sim-btn ghost rx-btn rx-btn-verify"
+                                type="button"
+                                onClick={handleVerifyAddress}
+                                disabled={verifyingAddr || stage === 'go-receive'}
+                              >
+                                <Eye size={14} strokeWidth={2} />
+                                <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>
+                              </button>
+                              <button
+                                className="tx-sim-btn ghost rx-btn"
+                                type="button"
+                                onClick={handleCopyAddress}
+                              >
+                                <Copy size={14} strokeWidth={2} />
+                                <span>Copy address</span>
+                              </button>
+                            </>
                           )}
                         </div>
                       ) : (
