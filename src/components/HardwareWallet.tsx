@@ -1104,6 +1104,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
           </div>
         </div>
       </div>
+      <div className="hw-device-label">Hardware wallet</div>
     </div>
   );
 }
