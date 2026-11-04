@@ -23,7 +23,10 @@ type ReceiveScenarioProps = {
 const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the current step.";
 const NUDGE_DURATION_MS = 1250;
 
-const INTRO_MESSAGE = "Now let’s walk through receiving Bitcoin using your hardware wallet. Keep in mind: Bitcoin lives on the blockchain, not inside the device. Your hardware wallet's main job is just to hold your private keys so you can safely access and control those funds.";
+const INTRO_LINES = [
+  "Now let’s walk through receiving Bitcoin using your hardware wallet. Keep in mind: Bitcoin lives on the blockchain, not inside the device. Your hardware wallet's main job is just to hold your private keys so you can safely access and control those funds.",
+  'test',
+];
 const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the Cairn wallet software — that's where you'll get your receive address.";
 const VERIFY_RULE_MESSAGE = "This is your receive address. But before copying it, let's prove it really came from your device — press 'Verify address on device' below the address.";
 const COMPARE_CHECK_MESSAGE = "Your device now shows the address. Compare it with the one here in the wallet software — if they match, press the checkmark button on the device to confirm it.";
@@ -151,6 +154,7 @@ function useTypewriter(text: string, speed = 6) {
 
 function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const [stage, setStage] = useState<MentorStage>('intro');
+  const [introStep, setIntroStep] = useState(0);
   const [sendingStep, setSendingStep] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
   const [walletTab, setWalletTab] = useState<'transactions' | 'receive'>('transactions');
@@ -178,7 +182,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const message = nudgeActive
     ? NUDGE_MESSAGE
     : stage === 'intro'
-      ? INTRO_MESSAGE
+      ? INTRO_LINES[introStep] ?? INTRO_LINES[0]
       : stage === 'go-receive'
         ? GO_RECEIVE_MESSAGE
         : stage === 'verify-rule'
@@ -320,6 +324,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     }
     if (nudgeActive || !CONTINUE_STAGES.has(stage)) return;
     if (stage === 'intro') {
+      if (introStep < INTRO_LINES.length - 1) {
+        setIntroStep((current) => current + 1);
+        return;
+      }
       if (portraitRef.current && bubbleRef.current) {
         flipRects.current = {
           portrait: portraitRef.current.getBoundingClientRect(),
@@ -338,7 +346,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
       return;
     }
     onFinish();
-  }, [done, skip, nudgeActive, stage, sendingStep, onFinish]);
+  }, [done, skip, nudgeActive, stage, introStep, sendingStep, onFinish]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -438,11 +446,13 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
 
   const bubbleKey = nudgeActive
     ? 'nudge'
-    : stage === 'hand-over'
-      ? `hand-over-${warned}`
-      : stage === 'sending'
-        ? `sending-${sendingStep}`
-        : stage;
+    : stage === 'intro'
+      ? `intro-${introStep}`
+      : stage === 'hand-over'
+        ? `hand-over-${warned}`
+        : stage === 'sending'
+          ? `sending-${sendingStep}`
+          : stage;
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
