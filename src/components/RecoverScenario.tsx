@@ -22,7 +22,7 @@ const HANDOVER_MESSAGE =
 
 const INTRO_MESSAGES = [
   "Now let's talk about one of the most overlooked aspects of self-custody—wallet recovery. Knowing how to recover your Bitcoin is essential in case your hardware wallet ever gets lost, stolen, or destroyed.",
-  "Your recovery phrase follows the BIP39 standard, meaning it works on hardware wallets that use the same standard. Now let's go back to your device and I'll show you how to do it.",
+  "Your recovery phrase follows the BIP39 standard, meaning it works on most hardware wallets. Now let's go back to your device and I'll show you how to do it.",
   HANDOVER_MESSAGE,
 ];
 
