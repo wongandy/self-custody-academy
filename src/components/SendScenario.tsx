@@ -253,7 +253,6 @@ function SendMentorScene({ onEnterPractice }: { onEnterPractice: () => void }) {
                   <span className="tl-dot red" />
                   <span className="tl-dot yellow" />
                   <span className="tl-dot green" />
-                  <span className="wallet-window-title">Cairn — wallet software</span>
                 </div>
                 <div className="wallet-window-body">
                   <div className="wallet-app">
@@ -328,6 +327,7 @@ function SendMentorScene({ onEnterPractice }: { onEnterPractice: () => void }) {
               </div>
 
               {isMobile && cableEl}
+              <div className="device-caption">Wallet software</div>
             </div>
 
             {!isMobile && cableEl}
