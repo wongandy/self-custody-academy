@@ -2234,6 +2234,7 @@ html.theme-light {
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  animation: hw-wallet-enter 2500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes hw-wallet-enter {
@@ -2248,7 +2249,7 @@ html.theme-light {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hw-wallet-device,
+  .hw-wallet-stage,
   .withdraw-phone-wrap {
     animation: none;
   }
@@ -2266,8 +2267,9 @@ html.theme-light {
 }
 
 .device-caption {
-  width: 100%;
-  margin-top: 10px;
+  align-self: center;
+  width: max-content;
+  margin: 0 auto;
 }
 
 .hw-wallet-device {
@@ -2275,7 +2277,6 @@ html.theme-light {
   flex-direction: column;
   gap: 12px;
   padding: 18px 20px 16px;
-  animation: hw-wallet-enter 2500ms cubic-bezier(0.22, 1, 0.36, 1) both;
   border: 2px solid rgba(255, 255, 255, 0.08);
   border-radius: 28px;
   background: linear-gradient(160deg, #2a2d30, #1a1d1f);
@@ -3321,6 +3322,7 @@ html.theme-light {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 20px;
   width: 100%;
   max-width: 720px;
   margin-top: 36px;
@@ -5711,7 +5713,7 @@ html.theme-light {
   justify-content: center;
 }
 
-.connect-device-stage .hw-wallet-device {
+.connect-device-stage .hw-wallet-stage {
   animation: none;
 }
 
