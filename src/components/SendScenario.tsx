@@ -57,8 +57,8 @@ const FEE_OPTIONS: FeeOption[] = [
 ];
 
 const INTRO_LINES = [
-  "Today we're going to practice sending Bitcoin safely. The wallet software will prepare the payment, but the hardware wallet will protect the final approval.",
-  "I'll give you my receiving address and ask you to send a small amount of Bitcoin to it. Always compare the destination carefully before you approve a transaction.",
+  "Today we're going to practice sending Bitcoin safely. The wallet software will prepare the transaction, and the final approval will be done on the hardware wallet.",
+  "I'll give you my receiving address and ask you to send a small amount of Bitcoin to it. Always compare the address carefully before you approve a transaction.",
 ];
 
 const OPEN_SEND_MESSAGE = 'Open the Send tab in the wallet software to get started.';
