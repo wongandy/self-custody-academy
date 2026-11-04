@@ -23,7 +23,7 @@ type ReceiveScenarioProps = {
 const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the current step.";
 const NUDGE_DURATION_MS = 1250;
 
-const INTRO_MESSAGE = "Now let’s walk through receiving Bitcoin using your hardware wallet. Keep in mind: Bitcoin lives on the blockchain, not inside the device. Your hardware wallet's main job is just to hold your private keys so you can safely access and control those funds.";
+const INTRO_MESSAGE = "Now let me teach how you to receive Bitcoin to your hardware wallet.";
 const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the Cairn wallet software — that's where you'll get your receive address.";
 const VERIFY_RULE_MESSAGE = "This is your receive address. But before copying it, let's prove it really came from your device — press 'Verify address on device' below the address.";
 const COMPARE_CHECK_MESSAGE = "Your device now shows the address. Compare it with the one here in the wallet software — if they match, press the checkmark button on the device to confirm it.";
