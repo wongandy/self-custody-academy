@@ -2254,8 +2254,8 @@ html.theme-light {
   }
 }
 
-.device-caption {
-  margin-top: -6px;
+.device-caption,
+.hw-device-label {
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
@@ -2265,14 +2265,9 @@ html.theme-light {
   pointer-events: none;
 }
 
-.hw-device-label {
-  margin-top: -10px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  pointer-events: none;
+.device-caption {
+  width: 100%;
+  margin-top: 10px;
 }
 
 .hw-wallet-device {
@@ -3323,6 +3318,9 @@ html.theme-light {
 /* ── Scenario 4 laptop wallet preview ── */
 
 .wallet-laptop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   max-width: 720px;
   margin-top: 36px;
