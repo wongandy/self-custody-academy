@@ -31,11 +31,24 @@ type FeeOption = {
   fee: string;
 };
 
-const NUDGE_MESSAGE = "No need to do that now. Let's stick to the current sending step.";
+type SendStage =
+  | 'intro'
+  | 'open-send'
+  | 'enter-address'
+  | 'enter-amount'
+  | 'explain-fees'
+  | 'select-fee'
+  | 'review-tx'
+  | 'hardware-review'
+  | 'tx-sent'
+  | 'finished';
+
+const CONTINUE_STAGES = new Set<SendStage>(['intro', 'explain-fees', 'finished']);
+
+const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the current step.";
 const NUDGE_DURATION_MS = 1250;
 const SEND_AMOUNT = '0.005';
 const MARIA_ADDRESS = RECEIVE_ADDRESS;
-const MARIA_LABEL = 'Maria';
 
 const FEE_OPTIONS: FeeOption[] = [
   { id: 'low', label: 'Low', rate: '2 sats/vB', fee: '0.00000120' },
@@ -43,37 +56,24 @@ const FEE_OPTIONS: FeeOption[] = [
   { id: 'high', label: 'High', rate: '18 sats/vB', fee: '0.00001080' },
 ];
 
-const HANDOVER_LINE = 'The wallet is ready. Open the Send tab, and I will walk you through the payment from there.';
-const ADDRESS_LINE = "First, enter my receiving address in the Pay to field. You can use the address card above the form to avoid typing mistakes.";
-const AMOUNT_LINE = `Now enter ${SEND_AMOUNT} BTC as the amount. This is a small practice payment, so you can focus on the review steps.`;
-const FEE_LINE = 'The fee pays the network to process the transaction. Choose the medium priority option, then review the fee before building the transaction.';
-const REVIEW_LINE = 'Review the recipient, amount, and fee in the wallet software. When everything matches, send the transaction to the hardware wallet for its own review.';
-const HARDWARE_LINE = 'Now check each detail on the hardware wallet screen. Press the checkmark to move through the recipient, amount, and fee, then confirm the payment on the device.';
-const SUCCESS_LINE = 'Excellent work. You verified the address, understood the network fee, and approved the payment on the hardware wallet. This is the complete sending habit to carry forward.';
-
-const GUIDANCE_LINES = [
-  'Today we are going to practice sending Bitcoin safely. The wallet software will prepare the payment, but the hardware wallet will protect the final approval.',
-  'I will give you my receiving address and ask you to send a small amount of Bitcoin to it. Always compare the destination carefully before you approve a transaction.',
-  'A transaction fee is paid to the Bitcoin network so miners can include the payment in a block. A higher fee can help a transaction confirm sooner, but it also costs more.',
-  HANDOVER_LINE,
-  ADDRESS_LINE,
-  AMOUNT_LINE,
-  FEE_LINE,
-  REVIEW_LINE,
-  HARDWARE_LINE,
-  SUCCESS_LINE,
+const INTRO_LINES = [
+  "Today we're going to practice sending Bitcoin safely. The wallet software will prepare the payment, but the hardware wallet will protect the final approval.",
+  "I'll give you my receiving address and ask you to send a small amount of Bitcoin to it. Always compare the destination carefully before you approve a transaction.",
 ];
 
-const HANDOVER_INDEX = Math.max(GUIDANCE_LINES.indexOf(HANDOVER_LINE), GUIDANCE_LINES.length - 1);
-const ADDRESS_INDEX = GUIDANCE_LINES.indexOf(ADDRESS_LINE);
-const AMOUNT_INDEX = GUIDANCE_LINES.indexOf(AMOUNT_LINE);
-const FEE_INDEX = GUIDANCE_LINES.indexOf(FEE_LINE);
-const REVIEW_INDEX = GUIDANCE_LINES.indexOf(REVIEW_LINE);
-const HARDWARE_INDEX = GUIDANCE_LINES.indexOf(HARDWARE_LINE);
-const SUCCESS_INDEX = GUIDANCE_LINES.indexOf(SUCCESS_LINE);
+const OPEN_SEND_MESSAGE = 'Open the Send tab in the wallet software to get started.';
+const ENTER_ADDRESS_MESSAGE = 'First, enter my receiving address in the Pay to field. You can use the address card above the form to avoid typing mistakes.';
+const ENTER_AMOUNT_MESSAGE = `Now enter ${SEND_AMOUNT} BTC as the amount. This is a small practice payment so you can focus on the review steps.`;
+const EXPLAIN_FEES_MESSAGE = 'Before you send, you need to choose a transaction fee. The fee pays the Bitcoin network to process your payment — a higher fee can help your transaction confirm sooner, but it also costs more.';
+const SELECT_FEE_MESSAGE = "Choose the Medium fee option, then click 'Review transaction' to build the payment.";
+const REVIEW_TX_MESSAGE = 'Review the recipient, amount, and fee carefully. When everything matches, send the transaction to your hardware wallet for its own review.';
+const HARDWARE_REVIEW_MESSAGE = 'Now check each detail on the hardware wallet screen. Press the checkmark to move through the recipient, amount, and fee, then confirm the payment on the device.';
+const TX_SENT_MESSAGE = 'The payment has been broadcast to the network. Let us check your updated balance.';
+const FINISHED_MESSAGE = 'Excellent work! You verified the address, understood the network fee, and approved the payment on the hardware wallet. That is the complete sending habit to carry forward.';
 
 const WALLET_BALANCE = '0.04998';
-const STARTING_TRANSACTION = { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC' };
+const SENT_BALANCE = '0.04497';
+const LABEL_TEXT = 'Maria';
 
 function useTypewriter(text: string, speed = 6) {
   const [displayed, setDisplayed] = useState('');
@@ -115,37 +115,70 @@ function useTypewriter(text: string, speed = 6) {
   return { displayed, done, skip };
 }
 
-export default function SendScenario({ completed, onBack, onComplete }: SendScenarioProps) {
-  const [lineIndex, setLineIndex] = useState(0);
+export default function SendScenario({ onBack, onComplete }: SendScenarioProps) {
+  const [stage, setStage] = useState<SendStage>('intro');
+  const [introStep, setIntroStep] = useState(0);
+  const [nudgeActive, setNudgeActive] = useState(false);
   const [walletTab, setWalletTab] = useState<'transactions' | 'send'>('transactions');
   const [recipient, setRecipient] = useState('');
-  const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
   const [feeLevel, setFeeLevel] = useState<FeeLevel>('medium');
   const [transactionBuilt, setTransactionBuilt] = useState(false);
   const [sendRequest, setSendRequest] = useState(false);
   const [sent, setSent] = useState(false);
-  const [addressCopied, setAddressCopied] = useState(false);
-  const [nudgeActive, setNudgeActive] = useState(false);
+  const [addressUsed, setAddressUsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const useAddressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
-  const message = nudgeActive ? NUDGE_MESSAGE : GUIDANCE_LINES[lineIndex] ?? GUIDANCE_LINES[0];
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 600px)');
+    const onChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  const message = nudgeActive
+    ? NUDGE_MESSAGE
+    : stage === 'intro'
+      ? INTRO_LINES[introStep] ?? INTRO_LINES[0]
+      : stage === 'open-send'
+        ? OPEN_SEND_MESSAGE
+        : stage === 'enter-address'
+          ? ENTER_ADDRESS_MESSAGE
+          : stage === 'enter-amount'
+            ? ENTER_AMOUNT_MESSAGE
+            : stage === 'explain-fees'
+              ? EXPLAIN_FEES_MESSAGE
+              : stage === 'select-fee'
+                ? SELECT_FEE_MESSAGE
+                : stage === 'review-tx'
+                  ? REVIEW_TX_MESSAGE
+                  : stage === 'hardware-review'
+                    ? HARDWARE_REVIEW_MESSAGE
+                    : stage === 'tx-sent'
+                      ? TX_SENT_MESSAGE
+                      : FINISHED_MESSAGE;
   const { displayed, done, skip } = useTypewriter(message);
-  const spotlight = lineIndex < HANDOVER_INDEX;
-  const walletVisible = lineIndex >= HANDOVER_INDEX;
-  const canContinue = !nudgeActive && done && (lineIndex < HANDOVER_INDEX || lineIndex === SUCCESS_INDEX);
-  const softwareLocked = !done || lineIndex === HARDWARE_INDEX || canContinue || sent;
-  const deviceLocked = !done || canContinue || (lineIndex >= HANDOVER_INDEX && lineIndex !== HARDWARE_INDEX && lineIndex !== SUCCESS_INDEX) || sent;
+
+  const spotlight = stage === 'intro';
+  const interactionLocked = !done;
+  const canContinue = done && !nudgeActive && CONTINUE_STAGES.has(stage);
+  const softwareLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review' || stage === 'tx-sent';
+  const deviceLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'tx-sent';
+
   const selectedFee = FEE_OPTIONS.find((option) => option.id === feeLevel) ?? FEE_OPTIONS[1];
-  const formValid = recipient.trim() === MARIA_ADDRESS && label.trim().length > 0 && amount.trim() === SEND_AMOUNT;
-  const expectedAction: ExpectedAction = lineIndex === HARDWARE_INDEX && sendRequest
-    ? { type: 'confirm' }
-    : lineIndex >= HANDOVER_INDEX && lineIndex < SUCCESS_INDEX
-      ? { type: 'external' }
-      : { type: 'none' };
+  const formValid = recipient.trim() === MARIA_ADDRESS && amount.trim() === SEND_AMOUNT;
+
+  const expectedAction: ExpectedAction =
+    stage === 'hardware-review'
+      ? { type: 'confirm' }
+      : stage === 'open-send' || stage === 'enter-address' || stage === 'enter-amount' || stage === 'select-fee' || stage === 'review-tx'
+        ? { type: 'external' }
+        : { type: 'none' };
 
   const handleUnexpectedAction = useCallback(() => {
     setNudgeActive(true);
@@ -155,8 +188,11 @@ export default function SendScenario({ completed, onBack, onComplete }: SendScen
 
   useEffect(() => {
     if (!nudgeActive) return;
-    const timer = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
-    return () => clearTimeout(timer);
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+    return () => {
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    };
   }, [nudgeActive]);
 
   useEffect(() => {
@@ -164,11 +200,18 @@ export default function SendScenario({ completed, onBack, onComplete }: SendScen
       setNudgeActive(false);
       if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
     }
-  }, [lineIndex]);
+  }, [stage]);
 
   useEffect(() => () => {
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    if (useAddressTimer.current) clearTimeout(useAddressTimer.current);
   }, []);
+
+  useEffect(() => {
+    if (stage !== 'tx-sent') return;
+    const timer = setTimeout(() => setStage('finished'), 2500);
+    return () => clearTimeout(timer);
+  }, [stage]);
 
   const handleContinue = useCallback(() => {
     if (!done) {
@@ -176,25 +219,36 @@ export default function SendScenario({ completed, onBack, onComplete }: SendScen
       return;
     }
     if (nudgeActive || !canContinue) return;
-    if (lineIndex < HANDOVER_INDEX) {
-      if (lineIndex === HANDOVER_INDEX - 1 && portraitRef.current && bubbleRef.current) {
+    if (stage === 'intro') {
+      if (introStep < INTRO_LINES.length - 1) {
+        setIntroStep((current) => current + 1);
+        return;
+      }
+      if (portraitRef.current && bubbleRef.current) {
         flipRects.current = {
           portrait: portraitRef.current.getBoundingClientRect(),
           bubble: bubbleRef.current.getBoundingClientRect(),
         };
       }
-      setLineIndex((current) => current + 1);
+      setStage('open-send');
       return;
     }
-    if (lineIndex === SUCCESS_INDEX) onComplete();
-  }, [canContinue, done, lineIndex, nudgeActive, onComplete, skip]);
+    if (stage === 'explain-fees') {
+      setStage('select-fee');
+      return;
+    }
+    if (stage === 'finished') {
+      onComplete();
+      return;
+    }
+  }, [done, skip, nudgeActive, canContinue, stage, introStep, onComplete]);
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Enter') return;
-      const target = event.target as HTMLElement | null;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      event.preventDefault();
+      e.preventDefault();
       handleContinue();
     };
     window.addEventListener('keydown', onKeyDown);
@@ -203,305 +257,415 @@ export default function SendScenario({ completed, onBack, onComplete }: SendScen
 
   useLayoutEffect(() => {
     if (spotlight || !flipRects.current) return;
-    const portrait = portraitRef.current;
-    const bubble = bubbleRef.current;
-    if (!portrait || !bubble) return;
+    const portraitEl = portraitRef.current;
+    const bubbleEl = bubbleRef.current;
+    if (!portraitEl || !bubbleEl) return;
 
-    const firstPortrait = flipRects.current.portrait;
-    const firstBubble = flipRects.current.bubble;
-    const lastPortrait = portrait.getBoundingClientRect();
-    const lastBubble = bubble.getBoundingClientRect();
+    const pFirst = flipRects.current.portrait;
+    const bFirst = flipRects.current.bubble;
+    const pLast = portraitEl.getBoundingClientRect();
+    const bLast = bubbleEl.getBoundingClientRect();
     flipRects.current = null;
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const options: KeyframeAnimationOptions = { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+    const opts: KeyframeAnimationOptions = { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
 
-    portrait.style.transformOrigin = 'top left';
-    portrait.animate([
-      { transform: `translate(${firstPortrait.left - lastPortrait.left}px, ${firstPortrait.top - lastPortrait.top}px) scale(${firstPortrait.width / lastPortrait.width}, ${firstPortrait.height / lastPortrait.height})` },
-      { transform: 'translate(0, 0) scale(1, 1)' },
-    ], options);
+    portraitEl.style.transformOrigin = 'top left';
+    portraitEl.animate(
+      [
+        { transform: `translate(${pFirst.left - pLast.left}px, ${pFirst.top - pLast.top}px) scale(${pFirst.width / pLast.width}, ${pFirst.height / pLast.height})` },
+        { transform: 'translate(0, 0) scale(1, 1)' },
+      ],
+      opts,
+    );
 
-    bubble.style.transformOrigin = 'top left';
-    bubble.animate([
-      { transform: `translate(${firstBubble.left - lastBubble.left}px, ${firstBubble.top - lastBubble.top}px) scale(${firstBubble.width / lastBubble.width}, ${firstBubble.height / lastBubble.height})` },
-      { transform: 'translate(0, 0) scale(1, 1)' },
-    ], options);
+    bubbleEl.style.transformOrigin = 'top left';
+    bubbleEl.animate(
+      [
+        { transform: `translate(${bFirst.left - bLast.left}px, ${bFirst.top - bLast.top}px) scale(${bFirst.width / bLast.width}, ${bFirst.height / bLast.height})` },
+        { transform: 'translate(0, 0) scale(1, 1)' },
+      ],
+      opts,
+    );
   }, [spotlight]);
 
-  const advanceTo = (expectedIndex: number, nextIndex: number) => {
-    if (softwareLocked || lineIndex !== expectedIndex) {
-      if (!softwareLocked) handleUnexpectedAction();
-      return;
-    }
-    setLineIndex(nextIndex);
-  };
-
-  const handleWalletTab = (tab: 'transactions' | 'send') => {
+  const handleSendTab = useCallback(() => {
     if (softwareLocked) return;
-    if (tab === 'send' && lineIndex === HANDOVER_INDEX) {
+    if (stage === 'open-send') {
       setWalletTab('send');
-      setLineIndex(ADDRESS_INDEX);
+      setStage('enter-address');
       return;
     }
-    if (tab === walletTab) return;
+    if (walletTab === 'send') return;
     handleUnexpectedAction();
-  };
+  }, [softwareLocked, stage, walletTab, handleUnexpectedAction]);
 
-  const handleUseAddress = () => {
-    if (softwareLocked || lineIndex !== ADDRESS_INDEX) {
+  const handleTransactionsTab = useCallback(() => {
+    if (softwareLocked) return;
+    handleUnexpectedAction();
+  }, [softwareLocked, handleUnexpectedAction]);
+
+  const handleUseAddress = useCallback(() => {
+    if (softwareLocked || stage !== 'enter-address') {
       if (!softwareLocked) handleUnexpectedAction();
       return;
     }
     setRecipient(MARIA_ADDRESS);
-    setAddressCopied(true);
-    window.setTimeout(() => setAddressCopied(false), 1600);
-  };
+    setAddressUsed(true);
+    if (useAddressTimer.current) clearTimeout(useAddressTimer.current);
+    useAddressTimer.current = setTimeout(() => setAddressUsed(false), 2000);
+  }, [softwareLocked, stage, handleUnexpectedAction]);
 
-  const handleAddressContinue = () => {
-    if (recipient.trim() !== MARIA_ADDRESS) {
-      handleUnexpectedAction();
+  const handleFormAction = useCallback(() => {
+    if (softwareLocked) return;
+    if (stage === 'enter-address') {
+      if (recipient.trim() !== MARIA_ADDRESS) {
+        handleUnexpectedAction();
+        return;
+      }
+      setStage('enter-amount');
       return;
     }
-    advanceTo(ADDRESS_INDEX, AMOUNT_INDEX);
-  };
-
-  const handleAmountContinue = () => {
-    if (amount.trim() !== SEND_AMOUNT) {
-      handleUnexpectedAction();
+    if (stage === 'enter-amount') {
+      if (amount.trim() !== SEND_AMOUNT) {
+        handleUnexpectedAction();
+        return;
+      }
+      setStage('explain-fees');
       return;
     }
-    advanceTo(AMOUNT_INDEX, FEE_INDEX);
-  };
+    if (stage === 'select-fee') {
+      if (!formValid) {
+        handleUnexpectedAction();
+        return;
+      }
+      setTransactionBuilt(true);
+      setStage('review-tx');
+      return;
+    }
+  }, [softwareLocked, stage, recipient, amount, formValid, handleUnexpectedAction]);
 
-  const handleFeeSelect = (nextFee: FeeLevel) => {
-    if (softwareLocked || lineIndex !== FEE_INDEX) {
+  const handleFeeSelect = useCallback((nextFee: FeeLevel) => {
+    if (softwareLocked || stage !== 'select-fee') {
       if (!softwareLocked) handleUnexpectedAction();
       return;
     }
     setFeeLevel(nextFee);
-  };
+  }, [softwareLocked, stage, handleUnexpectedAction]);
 
-  const handleBuildTransaction = () => {
-    if (!formValid) {
-      handleUnexpectedAction();
-      return;
-    }
-    advanceTo(FEE_INDEX, REVIEW_INDEX);
-    setTransactionBuilt(true);
-  };
-
-  const handleSendToHardware = () => {
-    if (softwareLocked || !transactionBuilt || lineIndex !== REVIEW_INDEX) {
+  const handleSendToHardware = useCallback(() => {
+    if (softwareLocked || stage !== 'review-tx') {
       if (!softwareLocked) handleUnexpectedAction();
       return;
     }
     setSendRequest(true);
-    setLineIndex(HARDWARE_INDEX);
-  };
+    setStage('hardware-review');
+  }, [softwareLocked, stage, handleUnexpectedAction]);
 
-  const handleHardwareConfirm = () => {
-    if (lineIndex !== HARDWARE_INDEX) return;
+  const handleHardwareConfirm = useCallback(() => {
     setSent(true);
-    setLineIndex(SUCCESS_INDEX);
-  };
+    setWalletTab('transactions');
+    setStage('tx-sent');
+  }, []);
+
+  const cableEl = (
+    <div className={`connect-cable is-linked${isMobile ? ' cable-under-wallet' : ''}`} aria-hidden="true">
+      <span className="plug-end-track">
+        <svg className="connect-cable-wire connect-cable-wire-h" viewBox="0 0 100 40" preserveAspectRatio="none">
+          <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+          <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+        </svg>
+        <svg className="connect-cable-wire connect-cable-wire-v" viewBox="0 0 40 100" preserveAspectRatio="none">
+          <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+          <path className="cable-pulse" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
+        </svg>
+        <svg className="connect-cable-wire connect-cable-wire-under" viewBox="0 0 240 48" preserveAspectRatio="none">
+          <path className="cable-line" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
+          <path className="cable-pulse" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
+        </svg>
+        <span className="connect-cable-plug plug-start" />
+        <span className="connect-cable-plug plug-end" />
+      </span>
+    </div>
+  );
+
+  const bubbleKey = nudgeActive
+    ? 'nudge'
+    : stage === 'intro'
+      ? `intro-${introStep}`
+      : stage;
+
+  const formFieldsEnabled = !softwareLocked && (stage === 'enter-address' || stage === 'enter-amount');
+  const feeButtonsEnabled = !softwareLocked && stage === 'select-fee';
+  const useAddressEnabled = !softwareLocked && stage === 'enter-address';
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-send'}`}>
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
       <button className="character-back" type="button" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2.4} />
         <span>Back to roadmap</span>
       </button>
 
-      <div className={`send-scenario-layout ${spotlight ? 'spotlight' : ''}`}>
-        {walletVisible && (
-          <div className="send-practice-area">
-            <div className="send-wallet-column">
-              <div className="wallet-laptop send-wallet-laptop">
-                <div className="wallet-window send-wallet-window">
-                  <div className="wallet-window-titlebar">
-                    <span className="tl-dot red" />
-                    <span className="tl-dot yellow" />
-                    <span className="tl-dot green" />
-                  </div>
-                  <div className="wallet-window-body">
-                    <div className="wallet-app">
-                      <aside className="wallet-sidebar">
-                        <button
-                          type="button"
-                          className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}`}
-                          onClick={() => handleWalletTab('transactions')}
-                          disabled={softwareLocked}
-                          aria-pressed={walletTab === 'transactions'}
-                        >
-                          <ArrowLeftRight strokeWidth={2.2} />
-                          <span className="wallet-nav-label">Transactions</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={`wallet-nav-item${walletTab === 'send' ? ' active' : ''}`}
-                          onClick={() => handleWalletTab('send')}
-                          disabled={softwareLocked}
-                          aria-pressed={walletTab === 'send'}
-                        >
-                          <ArrowUpRight strokeWidth={2.2} />
-                          <span className="wallet-nav-label">Send</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="wallet-nav-item"
-                          onClick={() => handleUnexpectedAction()}
-                          disabled={softwareLocked}
-                          aria-pressed="false"
-                        >
-                          <ArrowDownLeft strokeWidth={2.2} />
-                          <span className="wallet-nav-label">Receive</span>
-                        </button>
-                      </aside>
-
-                      <div className="wallet-canvas send-wallet-canvas">
-                        {walletTab === 'transactions' && (
-                          <div className="wallet-transactions">
-                            <div className="wallet-tx-summary">
-                              <div className="wallet-tx-summary-item">
-                                <span className="wallet-tx-summary-label">Balance</span>
-                                <span className="wallet-tx-summary-value">{sent ? '0.04497 BTC' : WALLET_BALANCE} BTC</span>
-                              </div>
-                              <div className="wallet-tx-summary-item">
-                                <span className="wallet-tx-summary-label">Transactions</span>
-                                <span className="wallet-tx-summary-value">{sent ? 2 : 1}</span>
-                              </div>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
+        {!spotlight && (
+          <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
+            <div className="wallet-laptop laptop-enter">
+              <div className="wallet-window">
+                <div className="wallet-window-titlebar">
+                  <span className="tl-dot red" />
+                  <span className="tl-dot yellow" />
+                  <span className="tl-dot green" />
+                </div>
+                <div className="wallet-window-body">
+                  <div className="wallet-app">
+                    <aside className="wallet-sidebar">
+                      <button
+                        type="button"
+                        className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}`}
+                        onClick={handleTransactionsTab}
+                        disabled={softwareLocked}
+                        aria-pressed={walletTab === 'transactions'}
+                      >
+                        <ArrowLeftRight strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Transactions</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`wallet-nav-item${walletTab === 'send' ? ' active' : ''}`}
+                        onClick={handleSendTab}
+                        disabled={softwareLocked}
+                        aria-pressed={walletTab === 'send'}
+                      >
+                        <ArrowUpRight strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Send</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="wallet-nav-item"
+                        onClick={handleUnexpectedAction}
+                        disabled={softwareLocked}
+                        aria-pressed="false"
+                      >
+                        <ArrowDownLeft strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Receive</span>
+                      </button>
+                    </aside>
+                    <div className="wallet-canvas">
+                      {walletTab === 'transactions' && (
+                        <div className="wallet-transactions">
+                          <div className="wallet-tx-summary">
+                            <div className="wallet-tx-summary-item">
+                              <span className="wallet-tx-summary-label">Balance</span>
+                              <span className="wallet-tx-summary-value">{sent ? `${SENT_BALANCE} BTC` : `${WALLET_BALANCE} BTC`}</span>
                             </div>
-                            <div className="wallet-tx-table-wrap">
-                              <table className="wallet-tx-table">
-                                <thead>
-                                  <tr><th>Date</th><th>Value</th><th>Balance</th></tr>
-                                </thead>
-                                <tbody>
-                                  {sent && (
-                                    <tr><td>2026-11-04 10:24</td><td className="out">-0.00500 BTC</td><td>0.04497 BTC</td></tr>
-                                  )}
-                                  <tr><td>{STARTING_TRANSACTION.date}</td><td className="in">{STARTING_TRANSACTION.value}</td><td>{STARTING_TRANSACTION.balance}</td></tr>
-                                </tbody>
-                              </table>
+                            <div className="wallet-tx-summary-item">
+                              <span className="wallet-tx-summary-label">Transactions</span>
+                              <span className="wallet-tx-summary-value">{sent ? 2 : 1}</span>
                             </div>
                           </div>
-                        )}
+                          <div className="wallet-tx-table-wrap">
+                            <table className="wallet-tx-table">
+                              <thead>
+                                <tr><th>Date</th><th>Value</th><th>Balance</th></tr>
+                              </thead>
+                              <tbody>
+                                {sent && (
+                                  <tr className="fresh"><td>2026-11-04 10:24</td><td className="out">-0.00500 BTC</td><td>{SENT_BALANCE} BTC</td></tr>
+                                )}
+                                <tr><td>2026-09-21 09:48</td><td className="in">+0.04998 BTC</td><td>{WALLET_BALANCE} BTC</td></tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
 
-                        {walletTab === 'send' && !transactionBuilt && (
-                          <div className="send-form-screen">
-                            <div className="send-form-heading">
-                              <div className="send-form-title"><Send size={18} strokeWidth={2} /><span>Send Bitcoin</span></div>
-                              <span className="send-form-balance">Balance {WALLET_BALANCE} BTC</span>
+                      {walletTab === 'send' && !transactionBuilt && !sent && (
+                        <div className="send-form-screen">
+                          <div className="send-form-heading">
+                            <div className="send-form-title"><Send size={18} strokeWidth={2} /><span>Send Bitcoin</span></div>
+                            <span className="send-form-balance">Balance {WALLET_BALANCE} BTC</span>
+                          </div>
+                          <div className="send-recipient-card">
+                            <div>
+                              <span className="send-recipient-label">Maria's receiving address</span>
+                              <span className="send-recipient-address">{MARIA_ADDRESS}</span>
                             </div>
-                            <div className="send-recipient-card">
-                              <div>
-                                <span className="send-recipient-label">Maria's receiving address</span>
-                                <span className="send-recipient-address">{MARIA_ADDRESS}</span>
-                              </div>
-                              <button type="button" className="send-use-address" onClick={handleUseAddress} disabled={softwareLocked}>
-                                {addressCopied ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} strokeWidth={2} />}
-                                <span>{addressCopied ? 'Added' : 'Use address'}</span>
-                              </button>
-                            </div>
-                            <div className="send-form-fields">
-                              <label className="tx-sim-field">
-                                <span>Pay to</span>
-                                <input className="tx-sim-addr" value={recipient} onChange={(event) => setRecipient(event.target.value)} placeholder="bc1…" disabled={softwareLocked} />
-                              </label>
-                              <label className="tx-sim-field">
-                                <span>Label</span>
-                                <input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Required" disabled={softwareLocked} />
-                              </label>
-                              <label className="tx-sim-field">
-                                <span>Amount</span>
-                                <div className="send-amount-field"><input value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.005" disabled={softwareLocked} /><span>BTC</span></div>
-                              </label>
-                            </div>
-                            <div className="send-fee-section">
-                              <div className="send-fee-heading"><span>Fee</span><span className="send-fee-explanation">Pays the network to process your payment.</span></div>
-                              <div className="send-fee-options">
-                                {FEE_OPTIONS.map((option) => (
-                                  <button key={option.id} type="button" className={`tx-fee-btn${feeLevel === option.id ? ' active' : ''}`} onClick={() => handleFeeSelect(option.id)} disabled={softwareLocked}>
-                                    <span>{option.label}</span><small>{option.rate}</small>
-                                  </button>
-                                ))}
-                              </div>
-                              <div className="send-fee-range"><span>Lower fee</span><input type="range" min="0" max="2" value={FEE_OPTIONS.findIndex((option) => option.id === feeLevel)} onChange={(event) => handleFeeSelect(FEE_OPTIONS[Number(event.target.value)]?.id ?? 'medium')} disabled={softwareLocked} /><span>Faster</span></div>
-                              <div className="send-fee-total"><span>Estimated fee</span><strong>{selectedFee.fee} BTC</strong></div>
-                            </div>
-                            <button className="tx-sim-btn primary" type="button" onClick={handleBuildTransaction} disabled={softwareLocked || lineIndex !== FEE_INDEX || !formValid}>
-                              <span>Review transaction</span><ArrowRight size={16} strokeWidth={2.4} />
+                            <button type="button" className="send-use-address" onClick={handleUseAddress} disabled={!useAddressEnabled}>
+                              {addressUsed ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} strokeWidth={2} />}
+                              <span>{addressUsed ? 'Added' : 'Use address'}</span>
                             </button>
                           </div>
-                        )}
-
-                        {walletTab === 'send' && transactionBuilt && !sent && (
-                          <div className="send-review-screen">
-                            <div className="send-form-heading"><div className="send-form-title"><ReceiptText size={18} strokeWidth={2} /><span>Review transaction</span></div><span className="send-review-status">Ready to sign</span></div>
-                            <div className="tx-sim-confirm-box">
-                              <div className="tx-confirm-row"><span>Recipient</span><strong className="tx-confirm-addr">{MARIA_ADDRESS.slice(0, 12)}…{MARIA_ADDRESS.slice(-8)}</strong></div>
-                              <div className="tx-confirm-row"><span>Amount</span><strong>{SEND_AMOUNT} BTC</strong></div>
-                              <div className="tx-confirm-row"><span>Network fee</span><strong>{selectedFee.fee} BTC</strong></div>
-                              <div className="tx-confirm-row total"><span>Total</span><strong>{(Number(SEND_AMOUNT) + Number(selectedFee.fee)).toFixed(8)} BTC</strong></div>
+                          <div className="send-form-fields">
+                            <label className="tx-sim-field">
+                              <span>Pay to</span>
+                              <input className="tx-sim-addr" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="bc1…" disabled={!formFieldsEnabled} />
+                            </label>
+                            <label className="tx-sim-field">
+                              <span>Label</span>
+                              <input value={LABEL_TEXT} readOnly disabled />
+                            </label>
+                            <label className="tx-sim-field">
+                              <span>Amount</span>
+                              <div className="send-amount-field">
+                                <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.005" disabled={!formFieldsEnabled} />
+                                <span>BTC</span>
+                              </div>
+                            </label>
+                          </div>
+                          <div className="send-fee-section">
+                            <div className="send-fee-heading">
+                              <span>Fee</span>
+                              <span className="send-fee-explanation">Pays the network to process your payment.</span>
                             </div>
-                            <p className="tx-sim-body">The hardware wallet must review and approve this transaction before it can be broadcast.</p>
-                            <button className="tx-sim-btn primary" type="button" onClick={handleSendToHardware} disabled={softwareLocked || lineIndex !== REVIEW_INDEX}><ShieldCheck size={16} strokeWidth={2.2} /><span>Review on hardware wallet</span></button>
+                            <div className="send-fee-options">
+                              {FEE_OPTIONS.map((option) => (
+                                <button
+                                  key={option.id}
+                                  type="button"
+                                  className={`tx-fee-btn${feeLevel === option.id ? ' active' : ''}`}
+                                  onClick={() => handleFeeSelect(option.id)}
+                                  disabled={!feeButtonsEnabled}
+                                >
+                                  <span>{option.label}</span>
+                                  <small>{option.rate}</small>
+                                </button>
+                              ))}
+                            </div>
+                            <div className="send-fee-total">
+                              <span>Estimated fee</span>
+                              <strong>{selectedFee.fee} BTC</strong>
+                            </div>
                           </div>
-                        )}
+                          {stage === 'enter-address' && (
+                            <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || recipient.trim() !== MARIA_ADDRESS}>
+                              <span>Next</span><ArrowRight size={16} strokeWidth={2.4} />
+                            </button>
+                          )}
+                          {stage === 'enter-amount' && (
+                            <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || amount.trim() !== SEND_AMOUNT}>
+                              <span>Next</span><ArrowRight size={16} strokeWidth={2.4} />
+                            </button>
+                          )}
+                          {stage === 'select-fee' && (
+                            <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || !formValid}>
+                              <span>Review transaction</span><ArrowRight size={16} strokeWidth={2.4} />
+                            </button>
+                          )}
+                        </div>
+                      )}
 
-                        {sent && (
-                          <div className="tx-sim-screen tx-sim-success-screen send-success-screen">
-                            <CheckCircle2 size={38} strokeWidth={1.6} />
-                            <span className="tx-sim-success-title">Payment sent</span>
-                            <p className="tx-sim-success-body">{SEND_AMOUNT} BTC was approved by the hardware wallet and broadcast to Maria's address.</p>
-                            <div className="tx-sim-receipt"><div className="tx-confirm-row"><span>Status</span><strong className="tx-confirmed">Broadcast</strong></div><div className="tx-confirm-row"><span>Fee</span><strong>{selectedFee.fee} BTC</strong></div></div>
+                      {walletTab === 'send' && transactionBuilt && !sent && (
+                        <div className="send-review-screen">
+                          <div className="send-form-heading">
+                            <div className="send-form-title"><ReceiptText size={18} strokeWidth={2} /><span>Review transaction</span></div>
+                            <span className="send-review-status">Ready to sign</span>
                           </div>
-                        )}
-                      </div>
+                          <div className="tx-sim-confirm-box">
+                            <div className="tx-confirm-row">
+                              <span>Recipient</span>
+                              <strong className="tx-confirm-addr">{MARIA_ADDRESS.slice(0, 12)}…{MARIA_ADDRESS.slice(-8)}</strong>
+                            </div>
+                            <div className="tx-confirm-row"><span>Amount</span><strong>{SEND_AMOUNT} BTC</strong></div>
+                            <div className="tx-confirm-row"><span>Network fee</span><strong>{selectedFee.fee} BTC</strong></div>
+                            <div className="tx-confirm-row total">
+                              <span>Total</span>
+                              <strong>{(Number(SEND_AMOUNT) + Number(selectedFee.fee)).toFixed(8)} BTC</strong>
+                            </div>
+                          </div>
+                          <p className="tx-sim-body">The hardware wallet must review and approve this transaction before it can be broadcast.</p>
+                          <button
+                            className="tx-sim-btn primary"
+                            type="button"
+                            onClick={handleSendToHardware}
+                            disabled={softwareLocked || stage !== 'review-tx'}
+                          >
+                            <ShieldCheck size={16} strokeWidth={2.2} />
+                            <span>Review on hardware wallet</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {walletTab === 'send' && sent && (
+                        <div className="tx-sim-screen tx-sim-success-screen send-success-screen">
+                          <CheckCircle2 size={38} strokeWidth={1.6} />
+                          <span className="tx-sim-success-title">Payment sent</span>
+                          <p className="tx-sim-success-body">{SEND_AMOUNT} BTC was approved by the hardware wallet and broadcast to Maria's address.</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="device-caption">Wallet software</div>
               </div>
+              {isMobile && cableEl}
+              <div className="device-caption">Wallet software</div>
             </div>
 
-            <div className="send-hardware-column">
-              <HardwareWallet
-                mode="withdraw"
-                initialPhase="ready-menu"
-                locked={deviceLocked}
-                expectedAction={expectedAction}
-                sendRequest={sendRequest}
-                sendAddress={MARIA_ADDRESS}
-                sendAmount={SEND_AMOUNT}
-                sendFee={selectedFee.fee}
-                onSendConfirm={handleHardwareConfirm}
-                onUnexpectedAction={handleUnexpectedAction}
-                onComplete={() => {}}
-              />
+            {!isMobile && cableEl}
+
+            <div className="connect-device-stage phase-linked">
+              <div className="connect-device-row">
+                <HardwareWallet
+                  mode="withdraw"
+                  initialPhase="ready-menu"
+                  locked={deviceLocked}
+                  expectedAction={expectedAction}
+                  sendRequest={sendRequest}
+                  sendAddress={MARIA_ADDRESS}
+                  sendAmount={SEND_AMOUNT}
+                  sendFee={selectedFee.fee}
+                  onSendConfirm={handleHardwareConfirm}
+                  onUnexpectedAction={handleUnexpectedAction}
+                  onComplete={() => {}}
+                />
+              </div>
             </div>
           </div>
         )}
 
         <div className="mentor-row">
-          <div ref={portraitRef} className="mentor-portrait mentor-portrait-enter" aria-label="Maria, your mentor" role="img">
+          <div
+            key="maria"
+            ref={portraitRef}
+            className="mentor-portrait mentor-portrait-enter"
+            aria-label="Maria, your mentor"
+            role="img"
+          >
             <div className="mentor-portrait-glow" />
-            <div className="mentor-portrait-ring"><img className="mentor-portrait-image" src={mariaPortrait} alt="Maria, your mentor" /></div>
+            <div className="mentor-portrait-ring">
+              <img className="mentor-portrait-image" src={mariaPortrait} alt="Maria, your mentor" />
+            </div>
             <div className="mentor-portrait-badge">Maria</div>
           </div>
-          <div ref={bubbleRef} className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`} onClick={handleContinue}>
-            <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : `maria-send-${lineIndex}-${message}`}>
+          <div
+            ref={bubbleRef}
+            className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
+            onClick={handleContinue}
+          >
+            <div className="mentor-bubble-content" key={bubbleKey}>
               <span className="mentor-bubble-name">Maria</span>
-              <div className="mentor-bubble-text-wrap"><p className="mentor-bubble-text-ghost">{message}</p><p className="mentor-bubble-text">{displayed}{!done && <span className="typewriter-cursor" />}</p></div>
+              <div className="mentor-bubble-text-wrap">
+                <p className="mentor-bubble-text-ghost">{message}</p>
+                <p className="mentor-bubble-text">
+                  {displayed}
+                  {!done && <span className="typewriter-cursor" />}
+                </p>
+              </div>
             </div>
-            <button className={`bubble-next ${canContinue ? 'ready' : ''}`} type="button" onClick={(event) => { event.stopPropagation(); handleContinue(); }} disabled={!canContinue} aria-label={lineIndex === SUCCESS_INDEX ? 'Complete mission' : 'Continue'}>
-              {lineIndex === SUCCESS_INDEX ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
-            </button>
+            {canContinue && (
+              <button
+                className="bubble-next ready"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleContinue();
+                }}
+                aria-label={stage === 'finished' ? 'Complete mission' : 'Continue'}
+              >
+                {stage === 'finished' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
+              </button>
+            )}
           </div>
         </div>
-
-        {(completed || sent) && <div className="scenario-wallet-status active send-completion-status"><span className="scenario-wallet-status-dot" /><span>Mission completed</span></div>}
       </div>
     </main>
   );
