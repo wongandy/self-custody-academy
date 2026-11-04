@@ -24,7 +24,7 @@ const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the curr
 const NUDGE_DURATION_MS = 1250;
 
 const INTRO_LINES = [
-  "Now let’s walk through receiving Bitcoin using your hardware wallet. Keep in mind: Bitcoin lives on the blockchain, not inside the device.",
+  "Now let’s walk through receiving Bitcoin using your hardware wallet. Keep in mind: Your Bitcoin lives on the blockchain, not inside the device.",
   "Your hardware wallet's main job is just to hold your private keys so you can safely access and control those funds.",
 ];
 const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the Cairn wallet software — that's where you'll get your receive address.";
