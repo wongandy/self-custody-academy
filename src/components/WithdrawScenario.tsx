@@ -68,6 +68,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-menu-receive-address': "Select 'Receive Bitcoin' to get your receive address.",
   'wallet-menu-send-blocked': "You can explore the wallet options here. Select 'Receive Bitcoin' whenever you're ready to continue.",
   'wallet-receive-copied': 'If you have already copied the receive address, press the switch button above to go back to the exchange.',
+  'wallet-receive-copied-desktop': "Address copied. The exchange is now open next to your wallet — let's paste the address there.",
   'exchange-address-mismatch': "That address doesn't match the one your hardware wallet gave you. One wrong character sends your Bitcoin somewhere else — go back to your wallet and copy it again.",
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
   'exchange-success': "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
@@ -142,16 +143,25 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
+  const [phoneVisible, setPhoneVisible] = useState(false);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 600px)');
+    const onChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
 
   const isInIntro = !introDone;
   // The wallet stays hidden, and Andy stays in the spotlight, until his
   // hand-over line; that line is where the wallet window slides in.
   const walletVisible = introStep >= HANDOVER_INDEX;
   const spotlight = isInIntro && introStep < HANDOVER_INDEX;
-  const isOnExchangeForm = activePanel === 'exchange' && exchangeScreen === 'form';
+  const isOnExchangeForm = (isMobile ? activePanel === 'exchange' : phoneVisible) && exchangeScreen === 'form';
   const exchangeIntroLocking = exchangeIntroStep !== null && exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1;
   const addressLocked = isOnExchangeForm && (exchangeIntroLocking || exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
   const amountLocked = isOnExchangeForm && exchangePhase === 'enter-address';
@@ -183,7 +193,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       ? `wallet-menu-${menuSelection}`
       : walletPhase === 'receive-address'
         ? addressCopied
-          ? 'wallet-receive-copied'
+          ? isMobile ? 'wallet-receive-copied' : 'wallet-receive-copied-desktop'
           : 'wallet-receive-address'
         : `wallet-${walletPhase}`
     : exchangeScreen === 'confirm'
@@ -368,12 +378,18 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     setAddressCopied(true);
     if (!usedSwitchPrompt.current) {
       usedSwitchPrompt.current = true;
-      setSwitchIntroStep(0);
+      if (isMobile) {
+        setSwitchIntroStep(0);
+      } else {
+        setPhoneVisible(true);
+        exchangeIntroPlayed.current = true;
+        setExchangeIntroStep(0);
+      }
     }
-  }, []);
+  }, [isMobile]);
 
   const handleSwitchPanel = useCallback(() => {
-    if (switchLocked) return;
+    if (!isMobile || switchLocked) return;
     if (switchNudgeLocked) {
       handleUnexpectedAction();
       return;
@@ -512,7 +528,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
         <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
-          {showSwitchButton && (
+          {showSwitchButton && isMobile && (
             <button
               className={`withdraw-switch-btn withdraw-switch-btn-enter${switchPulse ? ' withdraw-switch-btn-pulse' : ''}`}
               type="button"
@@ -528,7 +544,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
           <div className="withdraw-panels-wrap">
             {/* ── Smartphone exchange panel ── */}
-            <div className={`withdraw-phone-wrap ${activePanel === 'exchange' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
+            <div className={`withdraw-phone-wrap ${!isMobile ? (phoneVisible ? 'withdraw-phone-desktop-enter' : 'withdraw-panel-hidden') : activePanel === 'exchange' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
               <div className="withdraw-phone">
                 <div className="withdraw-phone-notch" />
                 <div className="withdraw-phone-screen">
@@ -743,11 +759,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                   </div>
                 </div>
               </div>
+              <div className="device-caption">Phone</div>
             </div>
 
             {/* ── Hardware wallet panel ── */}
             {walletVisible && (
-              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${activePanel === 'wallet' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
+              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${isMobile ? (activePanel === 'wallet' ? slideDirection ?? '' : 'withdraw-panel-hidden') : ''}`}>
                 <div className="hw-wallet-slot">
                   <HardwareWallet
                     mode="withdraw"

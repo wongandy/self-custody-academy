@@ -7005,3 +7005,34 @@ html.theme-light {
   user-select: all;
   -webkit-user-select: all;
 }
+
+/* ── Mission 2: desktop side-by-side layout ── */
+
+@media (min-width: 601px) {
+  .withdraw-panels-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    max-width: 960px;
+  }
+
+  .withdraw-middle-area {
+    max-width: 960px;
+  }
+
+  .withdraw-phone-wrap.withdraw-phone-desktop-enter {
+    animation: withdraw-phone-desktop-slide-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes withdraw-phone-desktop-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(80px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
