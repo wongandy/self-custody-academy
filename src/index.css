@@ -6987,3 +6987,21 @@ html.theme-light {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Mission 6: address display in mentor bubble ---- */
+
+.mentor-address-display {
+  flex: 1;
+  min-width: 0;
+  font-family: 'SFMono-Regular', ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #b8c9d1;
+  word-break: break-all;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  user-select: all;
+  -webkit-user-select: all;
+}

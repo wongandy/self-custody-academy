@@ -8,6 +8,7 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
+  ClipboardPaste,
   Copy,
   ReceiptText,
   Send,
@@ -35,6 +36,7 @@ type SendStage =
   | 'intro'
   | 'open-send'
   | 'enter-address'
+  | 'enter-label'
   | 'enter-amount'
   | 'explain-fees'
   | 'select-fee'
@@ -62,7 +64,8 @@ const INTRO_LINES = [
 ];
 
 const OPEN_SEND_MESSAGE = 'Open the Send tab in the wallet software to get started.';
-const ENTER_ADDRESS_MESSAGE = "In the Pay to field, paste the address of the person you're sending Bitcoin to. Here’s my address below—go ahead and copy and paste it there.";
+const ENTER_ADDRESS_MESSAGE = "In the Pay to field, paste the address of the person you're sending Bitcoin to. Here's my address below — go ahead and copy and paste it there.";
+const ENTER_LABEL_MESSAGE = "It's good practice to add a label to your transactions so you can remember what they were for later. Type a label in the Label field, then continue.";
 const ENTER_AMOUNT_MESSAGE = `Now in the Amount field, enter ${SEND_AMOUNT} BTC.`;
 const EXPLAIN_FEES_MESSAGE = 'Before you send, you need to choose a transaction fee. This fee pays the network to process your payment. Technically known as a miner fee, paying a higher rate can help your transaction confirm faster, but it costs more.';
 const SELECT_FEE_MESSAGE = "Choose the Medium fee option, then click 'Review transaction' to build the payment.";
@@ -73,7 +76,6 @@ const FINISHED_MESSAGE = 'Excellent work! You verified the address, understood t
 
 const WALLET_BALANCE = '0.04998';
 const SENT_BALANCE = '0.04497';
-const LABEL_TEXT = 'Maria';
 
 function useTypewriter(text: string, speed = 6) {
   const [displayed, setDisplayed] = useState('');
@@ -121,15 +123,16 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
   const [nudgeActive, setNudgeActive] = useState(false);
   const [walletTab, setWalletTab] = useState<'transactions' | 'send'>('transactions');
   const [recipient, setRecipient] = useState('');
+  const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
   const [feeLevel, setFeeLevel] = useState<FeeLevel>('medium');
   const [transactionBuilt, setTransactionBuilt] = useState(false);
   const [sendRequest, setSendRequest] = useState(false);
   const [sent, setSent] = useState(false);
-  const [addressUsed, setAddressUsed] = useState(false);
+  const [addressCopied, setAddressCopied] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const useAddressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -149,19 +152,21 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
         ? OPEN_SEND_MESSAGE
         : stage === 'enter-address'
           ? ENTER_ADDRESS_MESSAGE
-          : stage === 'enter-amount'
-            ? ENTER_AMOUNT_MESSAGE
-            : stage === 'explain-fees'
-              ? EXPLAIN_FEES_MESSAGE
-              : stage === 'select-fee'
-                ? SELECT_FEE_MESSAGE
-                : stage === 'review-tx'
-                  ? REVIEW_TX_MESSAGE
-                  : stage === 'hardware-review'
-                    ? HARDWARE_REVIEW_MESSAGE
-                    : stage === 'tx-sent'
-                      ? TX_SENT_MESSAGE
-                      : FINISHED_MESSAGE;
+          : stage === 'enter-label'
+            ? ENTER_LABEL_MESSAGE
+            : stage === 'enter-amount'
+              ? ENTER_AMOUNT_MESSAGE
+              : stage === 'explain-fees'
+                ? EXPLAIN_FEES_MESSAGE
+                : stage === 'select-fee'
+                  ? SELECT_FEE_MESSAGE
+                  : stage === 'review-tx'
+                    ? REVIEW_TX_MESSAGE
+                    : stage === 'hardware-review'
+                      ? HARDWARE_REVIEW_MESSAGE
+                      : stage === 'tx-sent'
+                        ? TX_SENT_MESSAGE
+                        : FINISHED_MESSAGE;
   const { displayed, done, skip } = useTypewriter(message);
 
   const spotlight = stage === 'intro';
@@ -176,7 +181,7 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
   const expectedAction: ExpectedAction =
     stage === 'hardware-review'
       ? { type: 'confirm' }
-      : stage === 'open-send' || stage === 'enter-address' || stage === 'enter-amount' || stage === 'select-fee' || stage === 'review-tx'
+      : stage === 'open-send' || stage === 'enter-address' || stage === 'enter-label' || stage === 'enter-amount' || stage === 'select-fee' || stage === 'review-tx'
         ? { type: 'external' }
         : { type: 'none' };
 
@@ -204,7 +209,7 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
 
   useEffect(() => () => {
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
-    if (useAddressTimer.current) clearTimeout(useAddressTimer.current);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
   }, []);
 
   useEffect(() => {
@@ -305,21 +310,25 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
     handleUnexpectedAction();
   }, [softwareLocked, handleUnexpectedAction]);
 
-  const handleUseAddress = useCallback(() => {
-    if (softwareLocked || stage !== 'enter-address') {
-      if (!softwareLocked) handleUnexpectedAction();
-      return;
-    }
-    setRecipient(MARIA_ADDRESS);
-    setAddressUsed(true);
-    if (useAddressTimer.current) clearTimeout(useAddressTimer.current);
-    useAddressTimer.current = setTimeout(() => setAddressUsed(false), 2000);
-  }, [softwareLocked, stage, handleUnexpectedAction]);
+  const handleCopyAddress = useCallback(() => {
+    navigator.clipboard?.writeText(MARIA_ADDRESS).catch(() => {});
+    setAddressCopied(true);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setAddressCopied(false), 2000);
+  }, []);
 
   const handleFormAction = useCallback(() => {
     if (softwareLocked) return;
     if (stage === 'enter-address') {
       if (recipient.trim() !== MARIA_ADDRESS) {
+        handleUnexpectedAction();
+        return;
+      }
+      setStage('enter-label');
+      return;
+    }
+    if (stage === 'enter-label') {
+      if (label.trim().length === 0) {
         handleUnexpectedAction();
         return;
       }
@@ -343,7 +352,7 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
       setStage('review-tx');
       return;
     }
-  }, [softwareLocked, stage, recipient, amount, formValid, handleUnexpectedAction]);
+  }, [softwareLocked, stage, recipient, label, amount, formValid, handleUnexpectedAction]);
 
   const handleFeeSelect = useCallback((nextFee: FeeLevel) => {
     if (softwareLocked || stage !== 'select-fee') {
@@ -395,9 +404,11 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
       ? `intro-${introStep}`
       : stage;
 
-  const formFieldsEnabled = !softwareLocked && (stage === 'enter-address' || stage === 'enter-amount');
+  const addressFieldEnabled = !softwareLocked && stage === 'enter-address';
+  const labelFieldEnabled = !softwareLocked && stage === 'enter-label';
+  const amountFieldEnabled = !softwareLocked && stage === 'enter-amount';
   const feeButtonsEnabled = !softwareLocked && stage === 'select-fee';
-  const useAddressEnabled = !softwareLocked && stage === 'enter-address';
+  const showAddressInBubble = stage === 'enter-address' && !nudgeActive;
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
@@ -480,29 +491,19 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
                             <div className="send-form-title"><Send size={18} strokeWidth={2} /><span>Send Bitcoin</span></div>
                             <span className="send-form-balance">Balance {WALLET_BALANCE} BTC</span>
                           </div>
-                          <div className="send-recipient-card">
-                            <div>
-                              <span className="send-recipient-label">Maria's receiving address</span>
-                              <span className="send-recipient-address">{MARIA_ADDRESS}</span>
-                            </div>
-                            <button type="button" className="send-use-address" onClick={handleUseAddress} disabled={!useAddressEnabled}>
-                              {addressUsed ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} strokeWidth={2} />}
-                              <span>{addressUsed ? 'Added' : 'Use address'}</span>
-                            </button>
-                          </div>
                           <div className="send-form-fields">
                             <label className="tx-sim-field">
                               <span>Pay to</span>
-                              <input className="tx-sim-addr" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="bc1…" disabled={!formFieldsEnabled} />
+                              <input className="tx-sim-addr" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="bc1…" disabled={!addressFieldEnabled} />
                             </label>
                             <label className="tx-sim-field">
                               <span>Label</span>
-                              <input value={LABEL_TEXT} readOnly disabled />
+                              <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Add a label…" disabled={!labelFieldEnabled} />
                             </label>
                             <label className="tx-sim-field">
                               <span>Amount</span>
                               <div className="send-amount-field">
-                                <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.005" disabled={!formFieldsEnabled} />
+                                <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.005" disabled={!amountFieldEnabled} />
                                 <span>BTC</span>
                               </div>
                             </label>
@@ -533,6 +534,11 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
                           </div>
                           {stage === 'enter-address' && (
                             <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || recipient.trim() !== MARIA_ADDRESS}>
+                              <span>Next</span><ArrowRight size={16} strokeWidth={2.4} />
+                            </button>
+                          )}
+                          {stage === 'enter-label' && (
+                            <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || label.trim().length === 0}>
                               <span>Next</span><ArrowRight size={16} strokeWidth={2.4} />
                             </button>
                           )}
@@ -645,6 +651,19 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
                   {!done && <span className="typewriter-cursor" />}
                 </p>
               </div>
+              {showAddressInBubble && (
+                <div className="mentor-chat-input-row" onClick={(e) => e.stopPropagation()}>
+                  <span className="mentor-address-display">{MARIA_ADDRESS}</span>
+                  <button
+                    className="mentor-chat-btn"
+                    type="button"
+                    onClick={handleCopyAddress}
+                    aria-label="Copy Maria's address"
+                  >
+                    {addressCopied ? <Check size={16} strokeWidth={2.4} /> : <Copy size={16} strokeWidth={2} />}
+                  </button>
+                </div>
+              )}
             </div>
             {canContinue && (
               <button
