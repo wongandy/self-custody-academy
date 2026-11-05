@@ -481,16 +481,6 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                       </button>
                       <button
                         type="button"
-                        className={`wallet-nav-item${walletTab === 'receive' ? ' active' : ''}`}
-                        onClick={handleReceiveTab}
-                        disabled={softwareLocked}
-                        aria-pressed={walletTab === 'receive'}
-                      >
-                        <ArrowDownLeft strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Receive</span>
-                      </button>
-                      <button
-                        type="button"
                         className="wallet-nav-item"
                         onClick={handleUnexpectedAction}
                         disabled={softwareLocked}
@@ -498,6 +488,16 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                       >
                         <ArrowUpRight strokeWidth={2.2} />
                         <span className="wallet-nav-label">Send</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`wallet-nav-item${walletTab === 'receive' ? ' active' : ''}`}
+                        onClick={handleReceiveTab}
+                        disabled={softwareLocked}
+                        aria-pressed={walletTab === 'receive'}
+                      >
+                        <ArrowDownLeft strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Receive</span>
                       </button>
                     </aside>
                     <div className="wallet-canvas">
