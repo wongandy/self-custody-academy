@@ -188,19 +188,20 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const looksLikeFullAddress = trimmedAddress.length >= 10;
   const addressMismatch = trimmedAddress.length > 0 && !matchesReceiveAddress && looksLikeFullAddress;
 
-  const walletStateKey = activePanel === 'wallet'
-    ? walletPhase === 'menu'
+  const isExchangePanelActive = isMobile ? activePanel === 'exchange' : phoneVisible;
+  const walletStateKey = isExchangePanelActive
+    ? exchangeScreen === 'confirm'
+      ? 'exchange-confirm'
+      : exchangeScreen === 'success'
+        ? 'exchange-success'
+        : 'panel-exchange'
+    : walletPhase === 'menu'
       ? `wallet-menu-${menuSelection}`
       : walletPhase === 'receive-address'
         ? addressCopied
           ? isMobile ? 'wallet-receive-copied' : 'wallet-receive-copied-desktop'
           : 'wallet-receive-address'
-        : `wallet-${walletPhase}`
-    : exchangeScreen === 'confirm'
-      ? 'exchange-confirm'
-      : exchangeScreen === 'success'
-        ? 'exchange-success'
-        : `panel-${activePanel}`;
+        : `wallet-${walletPhase}`;
 
   const mentorMessage = nudgeActive
     ? NUDGE_MESSAGE
