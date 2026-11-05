@@ -63,8 +63,8 @@ const INTRO_LINES = [
 
 const OPEN_SEND_MESSAGE = 'Open the Send tab in the wallet software to get started.';
 const ENTER_ADDRESS_MESSAGE = "In the Pay to field, paste the address of the person you're sending Bitcoin to. Here’s my address below—go ahead and copy and paste it there.";
-const ENTER_AMOUNT_MESSAGE = `Now enter ${SEND_AMOUNT} BTC as the amount. This is a small practice payment so you can focus on the review steps.`;
-const EXPLAIN_FEES_MESSAGE = 'Before you send, you need to choose a transaction fee. The fee pays the Bitcoin network to process your payment — a higher fee can help your transaction confirm sooner, but it also costs more.';
+const ENTER_AMOUNT_MESSAGE = `Now in the Amount field, enter ${SEND_AMOUNT} BTC.`;
+const EXPLAIN_FEES_MESSAGE = 'Before you send, you need to choose a transaction fee. This fee pays the network to process your payment. Technically known as a miner fee, paying a higher rate can help your transaction confirm faster, but it costs more.';
 const SELECT_FEE_MESSAGE = "Choose the Medium fee option, then click 'Review transaction' to build the payment.";
 const REVIEW_TX_MESSAGE = 'Review the recipient, amount, and fee carefully. When everything matches, send the transaction to your hardware wallet for its own review.';
 const HARDWARE_REVIEW_MESSAGE = 'Now check each detail on the hardware wallet screen. Press the checkmark to move through the recipient, amount, and fee, then confirm the payment on the device.';
