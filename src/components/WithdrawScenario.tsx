@@ -434,6 +434,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const isAmountValid = numericAmount > 0 && numericAmount <= AVAILABLE_BALANCE && amountError === '';
   const isAddressValid = matchesReceiveAddress;
   const canWithdraw = hasRetrievedAddress && isAmountValid && isAddressValid;
+  const displayAddress = sendAddress || RECEIVE_ADDRESS;
+  const addressBreakIndex = Math.ceil(displayAddress.length / 2);
+  const addressFirstLine = displayAddress.slice(0, addressBreakIndex);
+  const addressSecondLine = displayAddress.slice(addressBreakIndex);
 
   const handleWithdraw = () => {
     if (withdrawBtnLocked) return;
@@ -682,9 +686,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                             <span>Network</span>
                             <strong>Bitcoin</strong>
                           </div>
-                          <div className="withdraw-confirm-detail">
+                          <div className="withdraw-confirm-detail withdraw-confirm-address-detail">
                             <span>Address</span>
-                            <strong className="withdraw-confirm-addr">{sendAddress || RECEIVE_ADDRESS}</strong>
+                            <strong className="withdraw-confirm-addr" aria-label={displayAddress} title={displayAddress}>
+                              <span>{addressFirstLine}</span>
+                              <span>{addressSecondLine}</span>
+                            </strong>
                           </div>
                           <div className="withdraw-confirm-detail">
                             <span>Withdrawal amount</span>
@@ -742,9 +749,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                               <span>Received</span>
                               <strong className="withdraw-success-received">{receivedAmount.toFixed(8)} BTC</strong>
                             </div>
-                            <div className="withdraw-confirm-detail">
+                            <div className="withdraw-confirm-detail withdraw-confirm-address-detail">
                               <span>Address</span>
-                              <strong className="withdraw-confirm-addr">{sendAddress || RECEIVE_ADDRESS}</strong>
+                              <strong className="withdraw-confirm-addr" aria-label={displayAddress} title={displayAddress}>
+                                <span>{addressFirstLine}</span>
+                                <span>{addressSecondLine}</span>
+                              </strong>
                             </div>
                           </div>
 
