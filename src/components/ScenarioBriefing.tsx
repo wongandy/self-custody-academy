@@ -341,13 +341,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     }
     setReadyMenuSeen(true);
     setReadyMenuHint(null);
-    setKnowledgeCheckActive(false);
-    setQuiz([]);
-    setQuizIndex(0);
-    setSelectedOption(null);
-    setCheckedAnswer(false);
-    setKnowledgeFeedback('prompt');
-    setWrongOptionId(null);
+    onComplete();
   };
 
   const handleFactoryResetAttempt = useCallback(() => {
