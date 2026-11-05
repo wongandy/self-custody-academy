@@ -764,7 +764,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
             {/* ── Hardware wallet panel ── */}
             {walletVisible && (
-              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${isMobile ? (activePanel === 'wallet' ? slideDirection ?? '' : 'withdraw-panel-hidden') : ''}`}>
+              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${isMobile ? (activePanel === 'wallet' ? slideDirection ?? '' : 'withdraw-panel-hidden') : phoneVisible ? 'withdraw-wallet-desktop-shift' : ''}`}>
                 <div className="hw-wallet-slot">
                   <HardwareWallet
                     mode="withdraw"

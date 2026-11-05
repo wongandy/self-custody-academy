@@ -7021,8 +7021,29 @@ html.theme-light {
     max-width: 960px;
   }
 
+  .withdraw-wallet-wrap {
+    order: 1;
+  }
+
+  .withdraw-phone-wrap {
+    order: 2;
+  }
+
   .withdraw-phone-wrap.withdraw-phone-desktop-enter {
-    animation: withdraw-phone-desktop-slide-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: withdraw-phone-desktop-slide-in 700ms 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .withdraw-wallet-wrap.withdraw-wallet-desktop-shift {
+    animation: withdraw-wallet-desktop-shift 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes withdraw-wallet-desktop-shift {
+  from {
+    transform: translateX(154px);
+  }
+  to {
+    transform: translateX(0);
   }
 }
 
@@ -7034,5 +7055,12 @@ html.theme-light {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .withdraw-phone-wrap.withdraw-phone-desktop-enter,
+  .withdraw-wallet-wrap.withdraw-wallet-desktop-shift {
+    animation: none;
   }
 }
