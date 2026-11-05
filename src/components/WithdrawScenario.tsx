@@ -42,7 +42,7 @@ type ExchangePhase = 'enter-address' | 'enter-amount' | 'ready-to-withdraw';
 // exchange. The last line is the paste instruction, so the address field
 // stays locked until the learner steps through to it.
 const EXCHANGE_INTRO_MESSAGES = [
-  "I can see you are using BitExchange as your exchange of choice. You have 0.05 Bitcoin currently sitting there. Let's withdraw that now.",
+  "I see your BitExchange app open on your phone with 0.05 BTC in it. Let me show you how to withdraw that over to your hardware wallet.",
   'Under SEND TO ADDRESS field, paste the receive address you copied earlier. That is where your Bitcoin will be sent to.',
 ];
 
