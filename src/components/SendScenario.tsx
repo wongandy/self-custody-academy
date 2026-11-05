@@ -8,7 +8,6 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
-  ClipboardPaste,
   Copy,
   ReceiptText,
   Send,
@@ -65,7 +64,8 @@ const INTRO_LINES = [
 
 const OPEN_SEND_MESSAGE = 'Open the Send tab in the wallet software to get started.';
 const ENTER_ADDRESS_MESSAGE = "In the Pay to field, paste the address of the person you're sending Bitcoin to. Here's my address below — go ahead and copy and paste it there.";
-const ENTER_LABEL_MESSAGE = "It's good practice to add a label to your transactions so you can remember what they were for later. Type a label in the Label field, then continue.";
+const ADDRESS_WRONG_MESSAGE = "That address doesn't look right. One wrong character sends your Bitcoin to someone else permanently. Please double-check and paste my exact address from below.";
+const ENTER_LABEL_MESSAGE = "It's good practice to add a label to your transactions so you can remember what they were for later. Type a label in the Label field.";
 const ENTER_AMOUNT_MESSAGE = `Now in the Amount field, enter ${SEND_AMOUNT} BTC.`;
 const EXPLAIN_FEES_MESSAGE = 'Before you send, you need to choose a transaction fee. This fee pays the network to process your payment. Technically known as a miner fee, paying a higher rate can help your transaction confirm faster, but it costs more.';
 const SELECT_FEE_MESSAGE = "Choose the Medium fee option, then click 'Review transaction' to build the payment.";
@@ -130,6 +130,7 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
   const [sendRequest, setSendRequest] = useState(false);
   const [sent, setSent] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
+  const [addressWrong, setAddressWrong] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -146,32 +147,34 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
 
   const message = nudgeActive
     ? NUDGE_MESSAGE
-    : stage === 'intro'
-      ? INTRO_LINES[introStep] ?? INTRO_LINES[0]
-      : stage === 'open-send'
-        ? OPEN_SEND_MESSAGE
-        : stage === 'enter-address'
-          ? ENTER_ADDRESS_MESSAGE
-          : stage === 'enter-label'
-            ? ENTER_LABEL_MESSAGE
-            : stage === 'enter-amount'
-              ? ENTER_AMOUNT_MESSAGE
-              : stage === 'explain-fees'
-                ? EXPLAIN_FEES_MESSAGE
-                : stage === 'select-fee'
-                  ? SELECT_FEE_MESSAGE
-                  : stage === 'review-tx'
-                    ? REVIEW_TX_MESSAGE
-                    : stage === 'hardware-review'
-                      ? HARDWARE_REVIEW_MESSAGE
-                      : stage === 'tx-sent'
-                        ? TX_SENT_MESSAGE
-                        : FINISHED_MESSAGE;
+    : addressWrong && stage === 'enter-address'
+      ? ADDRESS_WRONG_MESSAGE
+      : stage === 'intro'
+        ? INTRO_LINES[introStep] ?? INTRO_LINES[0]
+        : stage === 'open-send'
+          ? OPEN_SEND_MESSAGE
+          : stage === 'enter-address'
+            ? ENTER_ADDRESS_MESSAGE
+            : stage === 'enter-label'
+              ? ENTER_LABEL_MESSAGE
+              : stage === 'enter-amount'
+                ? ENTER_AMOUNT_MESSAGE
+                : stage === 'explain-fees'
+                  ? EXPLAIN_FEES_MESSAGE
+                  : stage === 'select-fee'
+                    ? SELECT_FEE_MESSAGE
+                    : stage === 'review-tx'
+                      ? REVIEW_TX_MESSAGE
+                      : stage === 'hardware-review'
+                        ? HARDWARE_REVIEW_MESSAGE
+                        : stage === 'tx-sent'
+                          ? TX_SENT_MESSAGE
+                          : FINISHED_MESSAGE;
   const { displayed, done, skip } = useTypewriter(message);
 
   const spotlight = stage === 'intro';
   const interactionLocked = !done;
-  const canContinue = done && !nudgeActive && CONTINUE_STAGES.has(stage);
+  const canContinue = done && !nudgeActive && !addressWrong && CONTINUE_STAGES.has(stage);
   const softwareLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review' || stage === 'tx-sent';
   const deviceLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'tx-sent';
 
@@ -218,6 +221,41 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
     return () => clearTimeout(timer);
   }, [stage]);
 
+  // Auto-advance: correct address -> enter-label stage
+  // Wrong address (10+ chars that don't match) -> show wrong-address warning
+  useEffect(() => {
+    if (stage !== 'enter-address') return;
+    const trimmed = recipient.trim();
+    if (trimmed.length === 0) {
+      setAddressWrong(false);
+      return;
+    }
+    if (trimmed.toLowerCase() === MARIA_ADDRESS.toLowerCase()) {
+      setAddressWrong(false);
+      setStage('enter-label');
+      return;
+    }
+    if (trimmed.length >= 10) {
+      setAddressWrong(true);
+    }
+  }, [recipient, stage]);
+
+  // Auto-advance: non-empty label -> enter-amount stage (brief delay so learner sees it)
+  useEffect(() => {
+    if (stage !== 'enter-label') return;
+    if (label.trim().length === 0) return;
+    const timer = setTimeout(() => setStage('enter-amount'), 600);
+    return () => clearTimeout(timer);
+  }, [label, stage]);
+
+  // Auto-advance: correct amount -> explain-fees stage (brief delay)
+  useEffect(() => {
+    if (stage !== 'enter-amount') return;
+    if (amount.trim() !== SEND_AMOUNT) return;
+    const timer = setTimeout(() => setStage('explain-fees'), 600);
+    return () => clearTimeout(timer);
+  }, [amount, stage]);
+
   const handleContinue = useCallback(() => {
     if (!done) {
       skip();
@@ -246,7 +284,7 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
       onComplete();
       return;
     }
-  }, [done, skip, nudgeActive, canContinue, stage, introStep, onComplete]);
+  }, [done, skip, nudgeActive, canContinue, addressWrong, stage, introStep, onComplete]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -317,43 +355,6 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
     copyTimer.current = setTimeout(() => setAddressCopied(false), 2000);
   }, []);
 
-  const handleFormAction = useCallback(() => {
-    if (softwareLocked) return;
-    if (stage === 'enter-address') {
-      if (recipient.trim() !== MARIA_ADDRESS) {
-        handleUnexpectedAction();
-        return;
-      }
-      setStage('enter-label');
-      return;
-    }
-    if (stage === 'enter-label') {
-      if (label.trim().length === 0) {
-        handleUnexpectedAction();
-        return;
-      }
-      setStage('enter-amount');
-      return;
-    }
-    if (stage === 'enter-amount') {
-      if (amount.trim() !== SEND_AMOUNT) {
-        handleUnexpectedAction();
-        return;
-      }
-      setStage('explain-fees');
-      return;
-    }
-    if (stage === 'select-fee') {
-      if (!formValid) {
-        handleUnexpectedAction();
-        return;
-      }
-      setTransactionBuilt(true);
-      setStage('review-tx');
-      return;
-    }
-  }, [softwareLocked, stage, recipient, label, amount, formValid, handleUnexpectedAction]);
-
   const handleFeeSelect = useCallback((nextFee: FeeLevel) => {
     if (softwareLocked || stage !== 'select-fee') {
       if (!softwareLocked) handleUnexpectedAction();
@@ -361,6 +362,19 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
     }
     setFeeLevel(nextFee);
   }, [softwareLocked, stage, handleUnexpectedAction]);
+
+  const handleBuildTransaction = useCallback(() => {
+    if (softwareLocked || stage !== 'select-fee') {
+      if (!softwareLocked) handleUnexpectedAction();
+      return;
+    }
+    if (!formValid) {
+      handleUnexpectedAction();
+      return;
+    }
+    setTransactionBuilt(true);
+    setStage('review-tx');
+  }, [softwareLocked, stage, formValid, handleUnexpectedAction]);
 
   const handleSendToHardware = useCallback(() => {
     if (softwareLocked || stage !== 'review-tx') {
@@ -400,9 +414,11 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
 
   const bubbleKey = nudgeActive
     ? 'nudge'
-    : stage === 'intro'
-      ? `intro-${introStep}`
-      : stage;
+    : addressWrong && stage === 'enter-address'
+      ? 'address-wrong'
+      : stage === 'intro'
+        ? `intro-${introStep}`
+        : stage;
 
   const addressFieldEnabled = !softwareLocked && stage === 'enter-address';
   const labelFieldEnabled = !softwareLocked && stage === 'enter-label';
@@ -494,7 +510,16 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
                           <div className="send-form-fields">
                             <label className="tx-sim-field">
                               <span>Pay to</span>
-                              <input className="tx-sim-addr" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="bc1…" disabled={!addressFieldEnabled} />
+                              <input
+                                className={`tx-sim-addr${addressWrong ? ' error' : ''}`}
+                                value={recipient}
+                                onChange={(e) => {
+                                  setRecipient(e.target.value);
+                                  setAddressWrong(false);
+                                }}
+                                placeholder="bc1…"
+                                disabled={!addressFieldEnabled}
+                              />
                             </label>
                             <label className="tx-sim-field">
                               <span>Label</span>
@@ -532,23 +557,8 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
                               <strong>{selectedFee.fee} BTC</strong>
                             </div>
                           </div>
-                          {stage === 'enter-address' && (
-                            <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || recipient.trim() !== MARIA_ADDRESS}>
-                              <span>Next</span><ArrowRight size={16} strokeWidth={2.4} />
-                            </button>
-                          )}
-                          {stage === 'enter-label' && (
-                            <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || label.trim().length === 0}>
-                              <span>Next</span><ArrowRight size={16} strokeWidth={2.4} />
-                            </button>
-                          )}
-                          {stage === 'enter-amount' && (
-                            <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || amount.trim() !== SEND_AMOUNT}>
-                              <span>Next</span><ArrowRight size={16} strokeWidth={2.4} />
-                            </button>
-                          )}
                           {stage === 'select-fee' && (
-                            <button className="tx-sim-btn primary" type="button" onClick={handleFormAction} disabled={softwareLocked || !formValid}>
+                            <button className="tx-sim-btn primary" type="button" onClick={handleBuildTransaction} disabled={softwareLocked || !formValid}>
                               <span>Review transaction</span><ArrowRight size={16} strokeWidth={2.4} />
                             </button>
                           )}

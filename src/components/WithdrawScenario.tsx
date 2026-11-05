@@ -175,7 +175,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const trimmedAddress = sendAddress.trim();
   const matchesReceiveAddress = trimmedAddress.length > 0 && trimmedAddress.toLowerCase() === RECEIVE_ADDRESS.toLowerCase();
-  const looksLikeFullAddress = trimmedAddress.length >= RECEIVE_ADDRESS.length;
+  const looksLikeFullAddress = trimmedAddress.length >= 10;
   const addressMismatch = trimmedAddress.length > 0 && !matchesReceiveAddress && looksLikeFullAddress;
 
   const walletStateKey = activePanel === 'wallet'
