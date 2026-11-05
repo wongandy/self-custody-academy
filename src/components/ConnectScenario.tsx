@@ -604,8 +604,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                       disabled={softwareLocked}
                       aria-pressed="false"
                     >
-                      <ArrowDownLeft strokeWidth={2.2} />
-                      <span className="wallet-nav-label">Receive</span>
+                      <ArrowUpRight strokeWidth={2.2} />
+                      <span className="wallet-nav-label">Send</span>
                     </button>
                     <button
                       type="button"
@@ -614,8 +614,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                       disabled={softwareLocked}
                       aria-pressed="false"
                     >
-                      <ArrowUpRight strokeWidth={2.2} />
-                      <span className="wallet-nav-label">Send</span>
+                      <ArrowDownLeft strokeWidth={2.2} />
+                      <span className="wallet-nav-label">Receive</span>
                     </button>
                   </aside>
                   <div className="wallet-canvas">
