@@ -172,11 +172,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const expectedAction: ExpectedAction =
     activePanel === 'wallet' && walletPhase === 'menu' && !hasRetrievedAddress
       ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
-      : activePanel === 'wallet' && walletPhase === 'receive-address' && !addressCopied
+      : activePanel === 'wallet' && walletPhase === 'receive-address'
         ? { type: 'copy-address' }
-        : activePanel === 'wallet' && walletPhase === 'receive-address' && addressCopied
-          ? { type: 'external' }
-          : { type: 'none' };
+        : { type: 'none' };
 
   const showSwitchButton = !isInIntro && (
     switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1 : addressCopied || activePanel === 'exchange'
