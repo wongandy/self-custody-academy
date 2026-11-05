@@ -47,23 +47,61 @@ const CREATE_DONE_MESSAGES = [
   "Your device simply holds the private keys that give you the ability to send and manage it!",
 ];
 
-const KNOWLEDGE_CHECK = {
-  question: 'Where should you keep your 12-word recovery phrase?',
-  options: [
-    { id: 'photo', label: "Take a photo of it — it's always in my pocket" },
-    { id: 'paper', label: 'Write it on paper and store it somewhere safe and private' },
-    { id: 'phone', label: 'Save it in a note on my phone' },
-  ],
-  correctId: 'paper',
+type KnowledgeQuestion = {
+  id: string;
+  question: string;
+  options: Array<{ id: string; label: string }>;
+  correctId: string;
+  wrongLine: string;
+  correctLine: string;
 };
 
+const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
+  {
+    id: 'recovery-phrase',
+    question: 'Where should you keep your 12-word recovery phrase?',
+    options: [
+      { id: 'photo', label: "Take a photo of it — it's always in my pocket" },
+      { id: 'paper', label: 'Write it on paper and store it somewhere safe and private' },
+      { id: 'phone', label: 'Save it in a note on my phone' },
+    ],
+    correctId: 'paper',
+    wrongLine: "Not quite. A photo or a phone note could be stolen, synced, or backed up without you knowing. Write your recovery phrase down and store it somewhere safe and private.",
+    correctLine: 'Exactly. Write it down and keep it private. Anyone who gets your recovery phrase can control your Bitcoin.',
+  },
+  {
+    id: 'keys-offline',
+    question: 'Your hardware wallet keeps your Bitcoin safe because…',
+    options: [
+      { id: 'offline', label: 'Your private keys never leave the device — even when you send Bitcoin' },
+      { id: 'app', label: 'It runs a security app that scans every transaction for threats' },
+      { id: 'backup', label: 'It automatically backs your Bitcoin up to the company that made it' },
+    ],
+    correctId: 'offline',
+    wrongLine: "Not quite. The device holds your private keys on a secure chip and never exposes them — it approves transactions without the keys ever leaving it.",
+    correctLine: 'Right. Your keys live on the secure chip and never leave the device, so your Bitcoin stays protected even on a compromised computer.',
+  },
+];
+
+function shuffled<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
 const KNOWLEDGE_CHECK_LINES = {
-  prompt: ["Nice work. Before we wrap up, one quick question to make sure the key idea sticks."],
-  wrong: ["Not quite. A photo or a phone note could be stolen, synced, or backed up without you knowing. Write your recovery phrase down and store it somewhere safe and private."],
-  correct: ["Exactly. Write it down and keep it private. Anyone who gets your recovery phrase can control your Bitcoin."],
+  prompt: ["Nice work. Before we wrap up, two quick questions to make sure the key ideas stick."],
 } as const;
 
-type KnowledgeFeedback = keyof typeof KNOWLEDGE_CHECK_LINES;
+type KnowledgeFeedback = 'prompt' | 'wrong' | 'correct';
+
+type QuizEntry = {
+  question: KnowledgeQuestion;
+  options: Array<{ id: string; label: string }>;
+};
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: POWER_ON_MESSAGE,
@@ -146,6 +184,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
   const [resetRefused, setResetRefused] = useState(false);
   const [knowledgeCheckActive, setKnowledgeCheckActive] = useState(false);
+  const [quiz, setQuiz] = useState<QuizEntry[]>([]);
+  const [quizIndex, setQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [checkedAnswer, setCheckedAnswer] = useState(false);
   const [knowledgeFeedback, setKnowledgeFeedback] = useState<KnowledgeFeedback>('prompt');
@@ -163,11 +203,16 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const spotlight = isInIntro && introStep < POWER_ON_INDEX;
   const createWordsLastStep = createWordsStep >= CREATE_WORDS_MESSAGES.length - 1;
   const createDoneLastStep = createDoneStep >= CREATE_DONE_MESSAGES.length - 1;
+  const currentQuizEntry = quiz[quizIndex] ?? quiz[0] ?? null;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
   const baseMentorMessage = isInIntro
     ? currentIntroMessage
     : knowledgeCheckActive
-      ? KNOWLEDGE_CHECK_LINES[knowledgeFeedback][0]
+      ? knowledgeFeedback === 'wrong'
+        ? currentQuizEntry?.question.wrongLine ?? KNOWLEDGE_CHECK_LINES.prompt[0]
+        : knowledgeFeedback === 'correct'
+          ? currentQuizEntry?.question.correctLine ?? KNOWLEDGE_CHECK_LINES.prompt[0]
+          : KNOWLEDGE_CHECK_LINES.prompt[0]
       : resetRefused
       ? FACTORY_RESET_MESSAGE
       : walletPhase === 'menu' && menuSelection === 'recover-intro'
@@ -260,6 +305,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
         setCreateDoneStep((step) => step + 1);
         return;
       }
+      setQuiz(shuffled(KNOWLEDGE_QUESTIONS).map((question) => ({ question, options: shuffled(question.options) })));
+      setQuizIndex(0);
       setKnowledgeCheckActive(true);
       return;
     }
@@ -269,8 +316,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   };
 
   const handleCheckAnswer = () => {
-    if (!selectedOption || !knowledgeCheckCanAnswer) return;
-    if (selectedOption === KNOWLEDGE_CHECK.correctId) {
+    if (!selectedOption || !knowledgeCheckCanAnswer || !currentQuizEntry) return;
+    if (selectedOption === currentQuizEntry.question.correctId) {
       setKnowledgeFeedback('correct');
       setCheckedAnswer(true);
       return;
@@ -280,11 +327,23 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     setSelectedOption(null);
   };
 
+  const isLastQuizQuestion = quizIndex >= quiz.length - 1;
+
   const handleContinueFromCheck = () => {
     if (!checkedAnswer || !done) return;
+    if (!isLastQuizQuestion) {
+      setQuizIndex((index) => index + 1);
+      setSelectedOption(null);
+      setCheckedAnswer(false);
+      setKnowledgeFeedback('prompt');
+      setWrongOptionId(null);
+      return;
+    }
     setReadyMenuSeen(true);
     setReadyMenuHint(null);
     setKnowledgeCheckActive(false);
+    setQuiz([]);
+    setQuizIndex(0);
     setSelectedOption(null);
     setCheckedAnswer(false);
     setKnowledgeFeedback('prompt');
@@ -343,7 +402,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const bubbleKey = nudgeActive
     ? 'nudge'
     : knowledgeCheckActive
-      ? `knowledge-check-${knowledgeFeedback}`
+      ? `knowledge-check-${quizIndex}-${knowledgeFeedback}`
       : isInIntro
       ? `intro-${introStep}`
       : walletPhase === 'create-words'
@@ -467,12 +526,13 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             <div className="knowledge-check-header">
               <HelpCircle size={16} strokeWidth={2.2} />
               <span>Quick check</span>
+              <span className="knowledge-check-progress">Question {quizIndex + 1} of {quiz.length}</span>
             </div>
-            <p className="knowledge-check-question">{KNOWLEDGE_CHECK.question}</p>
+            <p className="knowledge-check-question">{currentQuizEntry?.question.question}</p>
             <div className="knowledge-check-options">
-              {KNOWLEDGE_CHECK.options.map((option) => {
+              {(currentQuizEntry?.options ?? []).map((option) => {
                 const isSelected = selectedOption === option.id;
-                const isCorrect = checkedAnswer && option.id === KNOWLEDGE_CHECK.correctId;
+                const isCorrect = checkedAnswer && option.id === currentQuizEntry.question.correctId;
                 const isWrong = wrongOptionId === option.id;
                 return (
                   <button
@@ -513,7 +573,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
                   onClick={handleContinueFromCheck}
                   disabled={!done}
                 >
-                  Finish lesson
+                  {isLastQuizQuestion ? 'Finish lesson' : 'Next question'}
                 </button>
               </>
             )}
