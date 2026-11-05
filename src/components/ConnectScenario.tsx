@@ -334,7 +334,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   }, [step.kind, connected, syncing]);
 
   // The app boots once the wallet window is on screen: brand mark, a short load,
-  // then the tabs and history fade in. Leaving the mission unmounts this component,
+  // then the tabs and history fade in. Leaving the lesson unmounts this component,
   // so the sequence replays on every visit.
   useEffect(() => {
     if (!walletVisible) return;
@@ -746,7 +746,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 handleContinue();
               }}
               disabled={!canContinue}
-              aria-label={step.kind === 'connected' ? 'Complete mission' : 'Continue'}
+              aria-label={step.kind === 'connected' ? 'Complete lesson' : 'Continue'}
             >
               {step.kind === 'connected' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
             </button>

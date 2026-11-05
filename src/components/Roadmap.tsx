@@ -46,7 +46,7 @@ const pathSegments = [
   'M112 756.2C112 818.2 288 833 288 895',
 ];
 
-function glideToMission(el: HTMLButtonElement | null): boolean {
+function glideToLesson(el: HTMLButtonElement | null): boolean {
   if (!el) return false;
   const rect = el.getBoundingClientRect();
   const topMargin = 96;
@@ -71,7 +71,7 @@ function Roadmap({
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneRef = useRef(true);
   const arrivalScrolledRef = useRef(false);
-  const missionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const lessonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const celebrationDoneRef = useRef(onCelebrationDone);
   celebrationDoneRef.current = onCelebrationDone;
 
@@ -137,7 +137,7 @@ function Roadmap({
       if (cancelled) return;
 
       const next = Math.min(justCompletedScenario + 1, scenarios.length);
-      const gliding = glideToMission(missionRefs.current[next - 1] ?? null);
+      const gliding = glideToLesson(lessonRefs.current[next - 1] ?? null);
 
       if (prefersReduced) {
         finish();
@@ -183,7 +183,7 @@ function Roadmap({
     if (animate || isLoading || justCompletedScenario || arrivalScrolledRef.current) return;
     const timer = setTimeout(() => {
       arrivalScrolledRef.current = true;
-      glideToMission(missionRefs.current[availableScenario - 1] ?? null);
+      glideToLesson(lessonRefs.current[availableScenario - 1] ?? null);
     }, 80);
     return () => clearTimeout(timer);
   }, [animate, isLoading, justCompletedScenario, availableScenario]);
@@ -233,7 +233,7 @@ function Roadmap({
         if (!animate || revealed) return;
         if (e.button !== 0) return;
         const target = e.target as HTMLElement | null;
-        if (target && target.closest('.roadmap-mission')) return;
+        if (target && target.closest('.roadmap-lesson')) return;
         e.preventDefault();
         e.stopPropagation();
         skipReveal();
@@ -243,14 +243,14 @@ function Roadmap({
         <div className="roadmap-board-heading">
           <span className="roadmap-label">Your learning path</span>
           <span className="roadmap-path-status">
-            {completedScenarios === scenarios.length ? 'Path complete' : `${completedScenarios} of ${scenarios.length} missions complete`}
+            {completedScenarios === scenarios.length ? 'Path complete' : `${completedScenarios} of ${scenarios.length} lessons complete`}
           </span>
         </div>
 
         {errorMessage && <p className="roadmap-error">We couldn't refresh saved progress. Your current view is still available.</p>}
         {isLoading && <p className="roadmap-loading">Loading your academy progress…</p>}
 
-        <div className="roadmap-track-board" aria-label="Six-scenario learning path">
+        <div className="roadmap-track-board" aria-label="Six-lesson learning path">
           <svg className="roadmap-route" viewBox="0 0 400 960" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
             {pathSegments.map((d, i) => {
               const segComplete = isSegComplete(i);
@@ -276,11 +276,11 @@ function Roadmap({
 
             return (
               <button
-                className={`roadmap-mission ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''} ${animate ? 'roadmap-node-reveal' : ''} ${nodeCelebrationClass(scenario.number)} ${nextNodeCelebrationClass(scenario.number)}`}
+                className={`roadmap-lesson ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''} ${animate ? 'roadmap-node-reveal' : ''} ${nodeCelebrationClass(scenario.number)} ${nextNodeCelebrationClass(scenario.number)}`}
                 key={scenario.number}
                 type="button"
                 ref={(node) => {
-                  missionRefs.current[index] = node;
+                  lessonRefs.current[index] = node;
                 }}
                 disabled={isLocked || isLoading}
                 onClick={() => onSelectScenario(scenario.number)}
@@ -292,10 +292,10 @@ function Roadmap({
                     START
                   </span>
                 )}
-                <span className="roadmap-mission-marker">
+                <span className="roadmap-lesson-marker">
                   {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
                 </span>
-                <span className={`roadmap-mission-title-plate ${index % 2 === 0 ? 'side-right' : 'side-left'}`}>{scenario.title}</span>
+                <span className={`roadmap-lesson-title-plate ${index % 2 === 0 ? 'side-right' : 'side-left'}`}>{scenario.title}</span>
               </button>
             );
           })}

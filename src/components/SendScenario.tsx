@@ -683,7 +683,7 @@ export default function SendScenario({ onBack, onComplete }: SendScenarioProps) 
                   e.stopPropagation();
                   handleContinue();
                 }}
-                aria-label={stage === 'finished' ? 'Complete mission' : 'Continue'}
+                aria-label={stage === 'finished' ? 'Complete lesson' : 'Continue'}
               >
                 {stage === 'finished' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
               </button>

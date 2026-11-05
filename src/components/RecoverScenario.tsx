@@ -66,9 +66,9 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-recover-celebrate':
     "Great job recovering your wallet! You just did something most Bitcoin owners never practice. Let's wrap this up!",
   'wallet-receive-blocked':
-    "Receiving isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
+    "Receiving isn't part of this lesson. Stick with Settings so we can reset the device and practise recovering it.",
   'wallet-send-blocked':
-    "Sending isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
+    "Sending isn't part of this lesson. Stick with Settings so we can reset the device and practise recovering it.",
 };
 
 function useTypewriter(text: string, speed = 6) {
@@ -167,7 +167,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
   const recoverIntroMessage = RECOVER_INTRO_MESSAGES[recoverIntroStep] ?? '';
   const wordsMessage = expectedMnemonic
     ? `Here are your 12 words: ${expectedMnemonic.map((w, i) => `${i + 1}. ${w}`).join('  ')}`
-    : 'I could not find your simulation phrase. You may need to redo Mission 1 to generate a new wallet.';
+    : 'I could not find your simulation phrase. You may need to redo Lesson 1 to generate a new wallet.';
 
   const baseMentorMessage = introDone
     ? (MENTOR_MESSAGES[walletStateKey] ?? MENTOR_MESSAGES['wallet-menu'])

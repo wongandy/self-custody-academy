@@ -31,7 +31,7 @@ const READY_MENU_MESSAGE =
   "These options will be covered in the next scenarios, Let's wrap this up for now.";
 
 const FACTORY_RESET_MESSAGE =
-  "Resetting the device isn't part of this scenario, so we'll leave it as it is for now. Let's wrap this up instead.";
+  "Resetting the device isn't part of this lesson, so we'll leave it as it is for now. Let's wrap this up instead.";
 
 // Andy delivers these one at a time while the 12 words are on screen: the
 // explanation first, then the warning. The continue button moves between them.
@@ -81,7 +81,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'recover-type': '',
   'recover-done': '',
   'receive-address': 'This is your receive address — press the copy button to copy it.',
-  'send-blocked': 'Sending from this wallet is not part of this mission yet. Let us get your receive address first.',
+  'send-blocked': 'Sending from this wallet is not part of this lesson yet. Let us get your receive address first.',
   settings: READY_MENU_MESSAGE,
   'reset-warn': FACTORY_RESET_MESSAGE,
   'reset-confirm': FACTORY_RESET_MESSAGE,
@@ -409,7 +409,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
-        {knowledgeCheckActive && <div className="knowledge-check-kicker">Mission check-in</div>}
+        {knowledgeCheckActive && <div className="knowledge-check-kicker">Lesson check-in</div>}
         {!knowledgeCheckActive && (
           <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
             <HardwareWallet
@@ -513,7 +513,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
                   onClick={handleContinueFromCheck}
                   disabled={!done}
                 >
-                  Finish mission
+                  Finish lesson
                 </button>
               </>
             )}

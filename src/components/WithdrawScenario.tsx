@@ -73,7 +73,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
   'exchange-success': "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
   'factory-reset-blocked':
-    "Resetting your device to factory settings isn't part of this scenario. It would erase your wallet, so we'll leave it untouched. Let's head back and keep going.",
+    "Resetting your device to factory settings isn't part of this lesson. It would erase your wallet, so we'll leave it untouched. Let's head back and keep going.",
 };
 
 const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
