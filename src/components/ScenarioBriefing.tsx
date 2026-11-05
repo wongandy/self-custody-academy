@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { CheckCircle2, ChevronRight, HelpCircle, XCircle } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
@@ -46,6 +46,20 @@ const CREATE_DONE_MESSAGES = [
   "Nice work! You have now created a wallet. Remember, your Bitcoin doesn't actually live inside this hardware device — it stays safely on the blockchain.",
   "Your device simply holds the private keys that give you the ability to send and manage it!",
 ];
+
+const KNOWLEDGE_CHECK = {
+  question: "Quick check — your 12-word recovery phrase is the only backup of your private keys. Where should you keep it?",
+  options: [
+    { id: 'photo', label: "Take a photo of it — it's always in my pocket" },
+    { id: 'paper', label: 'Write it on paper and store it somewhere safe and private' },
+    { id: 'phone', label: 'Save it in a note on my phone' },
+  ],
+  correctId: 'paper',
+  correctFeedback: "Exactly. Written down and kept private is the safe habit — anyone who gets hold of your recovery phrase can instantly steal your Bitcoin.",
+  wrongFeedback: "Not quite. A photo or a phone note can be stolen, synced, or backed up without you knowing. Paper, stored somewhere safe and private, is the habit to build.",
+};
+
+const CHECK_PROMPT_MESSAGE = "Nice work! Before we wrap up, one quick question to make sure the key idea sticks.";
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: POWER_ON_MESSAGE,
@@ -127,6 +141,10 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [readyMenuSeen, setReadyMenuSeen] = useState(false);
   const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
   const [resetRefused, setResetRefused] = useState(false);
+  const [knowledgeCheckActive, setKnowledgeCheckActive] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [checkedAnswer, setCheckedAnswer] = useState(false);
+  const [wrongFeedbackVisible, setWrongFeedbackVisible] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
@@ -143,7 +161,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const currentIntroMessage = INTRO_MESSAGES[introStep];
   const baseMentorMessage = isInIntro
     ? currentIntroMessage
-    : resetRefused
+    : knowledgeCheckActive
+      ? CHECK_PROMPT_MESSAGE
+      : resetRefused
       ? FACTORY_RESET_MESSAGE
       : walletPhase === 'menu' && menuSelection === 'recover-intro'
       ? "We'll cover wallet recovery later. Select Create Wallet for now."
@@ -165,12 +185,13 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
         ? !createWordsLastStep && done
         : walletPhase === 'create-done'
           ? done
-          : walletPhase === 'ready-menu';
+          : walletPhase === 'ready-menu' && !knowledgeCheckActive;
 
   // The device ignores input while Andy is still talking — in the intro, while
   // he reads the recovery-phrase lines, and while he wraps up the new wallet.
   const deviceLocked =
     canContinue ||
+    knowledgeCheckActive ||
     (isInIntro && !done) ||
     ((walletPhase === 'create-words' || walletPhase === 'create-done') && !done);
 
@@ -228,13 +249,32 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
         setCreateDoneStep((step) => step + 1);
         return;
       }
-      setReadyMenuSeen(true);
-      setReadyMenuHint(null);
+      setKnowledgeCheckActive(true);
       return;
     }
     if (walletPhase === 'ready-menu') {
       onComplete();
     }
+  };
+
+  const handleCheckAnswer = () => {
+    if (!selectedOption) return;
+    if (selectedOption === KNOWLEDGE_CHECK.correctId) {
+      setWrongFeedbackVisible(false);
+      setCheckedAnswer(true);
+      return;
+    }
+    setWrongFeedbackVisible(true);
+    setSelectedOption(null);
+  };
+
+  const handleContinueFromCheck = () => {
+    setReadyMenuSeen(true);
+    setReadyMenuHint(null);
+    setKnowledgeCheckActive(false);
+    setSelectedOption(null);
+    setCheckedAnswer(false);
+    setWrongFeedbackVisible(false);
   };
 
   const handleFactoryResetAttempt = useCallback(() => {
@@ -288,7 +328,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
 
   const bubbleKey = nudgeActive
     ? 'nudge'
-    : isInIntro
+    : knowledgeCheckActive
+      ? 'knowledge-check'
+      : isInIntro
       ? `intro-${introStep}`
       : walletPhase === 'create-words'
         ? `create-words-${createWordsStep}`
@@ -403,6 +445,65 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             </button>
           </div>
         </div>
+        {knowledgeCheckActive && (
+          <div className="knowledge-check-card" role="group" aria-label="Quick knowledge check">
+            <div className="knowledge-check-header">
+              <HelpCircle size={16} strokeWidth={2.2} />
+              <span>Quick check</span>
+            </div>
+            <p className="knowledge-check-question">{KNOWLEDGE_CHECK.question}</p>
+            <div className="knowledge-check-options">
+              {KNOWLEDGE_CHECK.options.map((option) => {
+                const isSelected = selectedOption === option.id;
+                const isCorrect = checkedAnswer && option.id === KNOWLEDGE_CHECK.correctId;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`knowledge-check-option ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''}`}
+                    onClick={() => {
+                      if (checkedAnswer) return;
+                      setWrongFeedbackVisible(false);
+                      setSelectedOption(option.id);
+                    }}
+                    disabled={checkedAnswer}
+                  >
+                    {isCorrect ? <CheckCircle2 size={16} strokeWidth={2.2} /> : null}
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {!checkedAnswer ? (
+              <>
+                {wrongFeedbackVisible && (
+                  <div className="knowledge-check-feedback wrong">
+                    <XCircle size={16} strokeWidth={2.2} />
+                    <p>{KNOWLEDGE_CHECK.wrongFeedback}</p>
+                  </div>
+                )}
+                <button
+                  className="knowledge-check-submit"
+                  type="button"
+                  onClick={handleCheckAnswer}
+                  disabled={!selectedOption}
+                >
+                  Check answer
+                </button>
+              </>
+            ) : (
+              <div className="knowledge-check-feedback correct">
+                <CheckCircle2 size={16} strokeWidth={2.2} />
+                <p>{KNOWLEDGE_CHECK.correctFeedback}</p>
+              </div>
+            )}
+            {checkedAnswer && (
+              <button className="knowledge-check-submit" type="button" onClick={handleContinueFromCheck}>
+                Continue
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* <div className="character-footer">
