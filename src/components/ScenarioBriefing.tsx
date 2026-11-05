@@ -48,18 +48,22 @@ const CREATE_DONE_MESSAGES = [
 ];
 
 const KNOWLEDGE_CHECK = {
-  question: "Quick check — your 12-word recovery phrase is the only backup of your private keys. Where should you keep it?",
+  question: 'Where should you keep your 12-word recovery phrase?',
   options: [
     { id: 'photo', label: "Take a photo of it — it's always in my pocket" },
     { id: 'paper', label: 'Write it on paper and store it somewhere safe and private' },
     { id: 'phone', label: 'Save it in a note on my phone' },
   ],
   correctId: 'paper',
-  correctFeedback: "Exactly. Written down and kept private is the safe habit — anyone who gets hold of your recovery phrase can instantly steal your Bitcoin.",
-  wrongFeedback: "Not quite. A photo or a phone note can be stolen, synced, or backed up without you knowing. Paper, stored somewhere safe and private, is the habit to build.",
 };
 
-const CHECK_PROMPT_MESSAGE = "Nice work! Before we wrap up, one quick question to make sure the key idea sticks.";
+const KNOWLEDGE_CHECK_LINES = {
+  prompt: ["Nice work. Before we wrap up, one quick question to make sure the key idea sticks."],
+  wrong: ["Not quite. A photo or a phone note could be stolen, synced, or backed up without you knowing. Write your recovery phrase down and store it somewhere safe and private."],
+  correct: ["Exactly. Write it down and keep it private. Anyone who gets your recovery phrase can control your Bitcoin."],
+} as const;
+
+type KnowledgeFeedback = keyof typeof KNOWLEDGE_CHECK_LINES;
 
 const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   off: POWER_ON_MESSAGE,
@@ -144,7 +148,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [knowledgeCheckActive, setKnowledgeCheckActive] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [checkedAnswer, setCheckedAnswer] = useState(false);
-  const [wrongFeedbackVisible, setWrongFeedbackVisible] = useState(false);
+  const [knowledgeFeedback, setKnowledgeFeedback] = useState<KnowledgeFeedback>('prompt');
+  const [wrongOptionId, setWrongOptionId] = useState<string | null>(null);
   const [nudgeActive, setNudgeActive] = useState(false);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
@@ -162,7 +167,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const baseMentorMessage = isInIntro
     ? currentIntroMessage
     : knowledgeCheckActive
-      ? CHECK_PROMPT_MESSAGE
+      ? KNOWLEDGE_CHECK_LINES[knowledgeFeedback][0]
       : resetRefused
       ? FACTORY_RESET_MESSAGE
       : walletPhase === 'menu' && menuSelection === 'recover-intro'
@@ -176,13 +181,16 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
   const mentorMessage = nudgeActive ? NUDGE_MESSAGE : baseMentorMessage;
   const { displayed, done, skip } = useTypewriter(mentorMessage);
+  const knowledgeCheckCanAnswer = knowledgeCheckActive && !checkedAnswer && done;
 
   const canContinue = nudgeActive
     ? false
     : isInIntro
       ? introStep < POWER_ON_INDEX && done
-      : walletPhase === 'create-words'
-        ? !createWordsLastStep && done
+      : knowledgeCheckActive
+        ? false
+        : walletPhase === 'create-words'
+          ? !createWordsLastStep && done
         : walletPhase === 'create-done'
           ? done
           : walletPhase === 'ready-menu' && !knowledgeCheckActive;
@@ -227,6 +235,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       skip();
       return;
     }
+    if (knowledgeCheckActive) {
+      return;
+    }
     if (isInIntro && introStep < POWER_ON_INDEX) {
       const nextStep = introStep + 1;
       if (nextStep === POWER_ON_INDEX && portraitRef.current && bubbleRef.current) {
@@ -258,23 +269,26 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   };
 
   const handleCheckAnswer = () => {
-    if (!selectedOption) return;
+    if (!selectedOption || !knowledgeCheckCanAnswer) return;
     if (selectedOption === KNOWLEDGE_CHECK.correctId) {
-      setWrongFeedbackVisible(false);
+      setKnowledgeFeedback('correct');
       setCheckedAnswer(true);
       return;
     }
-    setWrongFeedbackVisible(true);
+    setWrongOptionId(selectedOption);
+    setKnowledgeFeedback('wrong');
     setSelectedOption(null);
   };
 
   const handleContinueFromCheck = () => {
+    if (!checkedAnswer || !done) return;
     setReadyMenuSeen(true);
     setReadyMenuHint(null);
     setKnowledgeCheckActive(false);
     setSelectedOption(null);
     setCheckedAnswer(false);
-    setWrongFeedbackVisible(false);
+    setKnowledgeFeedback('prompt');
+    setWrongOptionId(null);
   };
 
   const handleFactoryResetAttempt = useCallback(() => {
@@ -329,7 +343,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const bubbleKey = nudgeActive
     ? 'nudge'
     : knowledgeCheckActive
-      ? 'knowledge-check'
+      ? `knowledge-check-${knowledgeFeedback}`
       : isInIntro
       ? `intro-${introStep}`
       : walletPhase === 'create-words'
@@ -393,22 +407,25 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   }, [spotlight]);
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
-      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
-          <HardwareWallet
-            onComplete={() => {}}
-            onPhaseChange={setWalletPhase}
-            onMenuSelectionChange={setMenuSelection}
-            onReadyMenuSelect={handleReadyMenuSelect}
-            onFactoryResetAttempt={handleFactoryResetAttempt}
-            onUnexpectedAction={handleUnexpectedAction}
-            advanceToReadyMenu={readyMenuSeen}
-            expectedAction={expectedAction}
-            locked={deviceLocked}
-          />
-        </div>
-        <div className="mentor-row">
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
+        {knowledgeCheckActive && <div className="knowledge-check-kicker">Mission check-in</div>}
+        {!knowledgeCheckActive && (
+          <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
+            <HardwareWallet
+              onComplete={() => {}}
+              onPhaseChange={setWalletPhase}
+              onMenuSelectionChange={setMenuSelection}
+              onReadyMenuSelect={handleReadyMenuSelect}
+              onFactoryResetAttempt={handleFactoryResetAttempt}
+              onUnexpectedAction={handleUnexpectedAction}
+              advanceToReadyMenu={readyMenuSeen}
+              expectedAction={expectedAction}
+              locked={deviceLocked}
+            />
+          </div>
+        )}
+        <div className={`mentor-row ${knowledgeCheckActive ? 'knowledge-check-mentor-row' : ''}`}>
           <div ref={portraitRef} className="mentor-portrait" aria-label="Andy, your mentor" role="img">
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
@@ -456,51 +473,49 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
               {KNOWLEDGE_CHECK.options.map((option) => {
                 const isSelected = selectedOption === option.id;
                 const isCorrect = checkedAnswer && option.id === KNOWLEDGE_CHECK.correctId;
+                const isWrong = wrongOptionId === option.id;
                 return (
                   <button
                     key={option.id}
                     type="button"
-                    className={`knowledge-check-option ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''}`}
+                    className={`knowledge-check-option ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''} ${isWrong ? 'wrong' : ''}`}
                     onClick={() => {
-                      if (checkedAnswer) return;
-                      setWrongFeedbackVisible(false);
+                      if (!knowledgeCheckCanAnswer) return;
+                      setWrongOptionId(null);
                       setSelectedOption(option.id);
                     }}
-                    disabled={checkedAnswer}
+                    disabled={!knowledgeCheckCanAnswer}
                   >
-                    {isCorrect ? <CheckCircle2 size={16} strokeWidth={2.2} /> : null}
+                    {isCorrect ? <CheckCircle2 size={16} strokeWidth={2.2} /> : isWrong ? <XCircle size={16} strokeWidth={2.2} /> : null}
                     <span>{option.label}</span>
                   </button>
                 );
               })}
             </div>
             {!checkedAnswer ? (
+              <button
+                className="knowledge-check-submit"
+                type="button"
+                onClick={handleCheckAnswer}
+                disabled={!selectedOption || !knowledgeCheckCanAnswer}
+              >
+                Check answer
+              </button>
+            ) : (
               <>
-                {wrongFeedbackVisible && (
-                  <div className="knowledge-check-feedback wrong">
-                    <XCircle size={16} strokeWidth={2.2} />
-                    <p>{KNOWLEDGE_CHECK.wrongFeedback}</p>
-                  </div>
-                )}
+                <div className="knowledge-check-status correct">
+                  <CheckCircle2 size={16} strokeWidth={2.2} />
+                  <span>Correct</span>
+                </div>
                 <button
                   className="knowledge-check-submit"
                   type="button"
-                  onClick={handleCheckAnswer}
-                  disabled={!selectedOption}
+                  onClick={handleContinueFromCheck}
+                  disabled={!done}
                 >
-                  Check answer
+                  Finish mission
                 </button>
               </>
-            ) : (
-              <div className="knowledge-check-feedback correct">
-                <CheckCircle2 size={16} strokeWidth={2.2} />
-                <p>{KNOWLEDGE_CHECK.correctFeedback}</p>
-              </div>
-            )}
-            {checkedAnswer && (
-              <button className="knowledge-check-submit" type="button" onClick={handleContinueFromCheck}>
-                Continue
-              </button>
             )}
           </div>
         )}
