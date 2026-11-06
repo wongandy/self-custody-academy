@@ -9,7 +9,7 @@ type Props = {
 const ANDY_MESSAGES = [
   "Hey there! I'm Andy, and I will teach you how to self-custody your Bitcoin. Learning to secure it requires patience and some practice.",
   "Everything here is simulated, so you can explore freely with zero risk. We'll practice the fundamentals until you feel comfortable and confident.",
-  "Your learning path is broken down into structured lessons. Each one unlocks the next. Let's take a look at your roadmap.",
+  "You can jump into any lesson whenever you're ready, or just follow along step-by-step. Let me show you what's available on your roadmap.",
 ];
 
 function useTypewriter(text: string, speed = 6) {
