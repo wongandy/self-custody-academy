@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { LogOut, Moon, Sun, X } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
-import PathSelection from '@/components/PathSelection';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
 import WithdrawScenario from '@/components/WithdrawScenario';
 import ConnectScenario from '@/components/ConnectScenario';
@@ -27,7 +26,7 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'andy-intro' | 'path-select' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth';
+type Screen = 'home' | 'andy-intro' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth';
 
 const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6'];
 
@@ -175,18 +174,18 @@ function App() {
   return (
     <div className={`app-shell theme-${theme}`}>
       <header className="site-header">
-        {isInScenario || screen === 'andy-intro' || screen === 'path-select' ? (
+        {isInScenario || screen === 'andy-intro' ? (
           <button
             className="close-button"
             type="button"
             onClick={() => {
-              if (screen === 'andy-intro' || screen === 'path-select') {
+              if (screen === 'andy-intro') {
                 setScreen('home');
               } else {
                 goToRoadmap();
               }
             }}
-            aria-label={screen === 'andy-intro' || screen === 'path-select' ? 'Back to home' : 'Back to roadmap'}
+            aria-label={screen === 'andy-intro' ? 'Back to home' : 'Back to roadmap'}
           >
             <X size={20} strokeWidth={2.4} />
           </button>
@@ -268,12 +267,8 @@ function App() {
       )}
 
       {screen === 'andy-intro' && (
-        <AndyIntro onProceed={() => setScreen('path-select')} />
-      )}
-
-      {screen === 'path-select' && (
-        <PathSelection
-          onSelectFundamentals={() => {
+        <AndyIntro
+          onProceed={() => {
             setRoadmapAnimate(true);
             setScreen('roadmap');
           }}
