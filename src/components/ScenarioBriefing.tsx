@@ -135,7 +135,7 @@ const MENTOR_MESSAGES: Record<WalletPhase, string> = {
   'send-confirmed': '',
 };
 
-function useTypewriter(text: string, speed = 6) {
+function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
@@ -164,7 +164,7 @@ function useTypewriter(text: string, speed = 6) {
 
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [text, speed, resetKey]);
 
   const skip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -228,7 +228,18 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             ? CREATE_DONE_MESSAGES[createDoneStep] ?? CREATE_DONE_MESSAGES[0]
             : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
   const mentorMessage = nudgeActive ? NUDGE_MESSAGE : baseMentorMessage;
-  const { displayed, done, skip } = useTypewriter(mentorMessage);
+  const mentorMessageKey = nudgeActive
+    ? 'nudge'
+    : knowledgeCheckActive
+      ? `knowledge-check-${quizIndex}-${knowledgeFeedback}-${wrongAttempt}`
+      : isInIntro
+      ? `intro-${introStep}`
+      : walletPhase === 'create-words'
+        ? `create-words-${createWordsStep}`
+        : walletPhase === 'create-done'
+          ? `create-done-${createDoneStep}`
+          : `${walletPhase}-${resetRefused}`;
+  const { displayed, done, skip } = useTypewriter(mentorMessage, 6, mentorMessageKey);
   const knowledgeCheckCanAnswer = knowledgeCheckActive && !checkedAnswer && done;
 
   const canContinue = nudgeActive
@@ -284,6 +295,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       return;
     }
     if (knowledgeCheckActive) {
+      if (checkedAnswer) {
+        handleContinueFromCheck();
+      }
       return;
     }
     if (isInIntro && introStep < POWER_ON_INDEX) {
@@ -400,17 +414,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     );
   }, []);
 
-  const bubbleKey = nudgeActive
-    ? 'nudge'
-    : knowledgeCheckActive
-      ? `knowledge-check-${quizIndex}-${knowledgeFeedback}-${wrongAttempt}`
-      : isInIntro
-      ? `intro-${introStep}`
-      : walletPhase === 'create-words'
-        ? `create-words-${createWordsStep}`
-        : walletPhase === 'create-done'
-          ? `create-done-${createDoneStep}`
-          : `${walletPhase}-${resetRefused}`;
+  const bubbleKey = mentorMessageKey;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
