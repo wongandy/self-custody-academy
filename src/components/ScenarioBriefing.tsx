@@ -192,6 +192,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [checkedAnswer, setCheckedAnswer] = useState(false);
   const [knowledgeFeedback, setKnowledgeFeedback] = useState<KnowledgeFeedback>('prompt');
   const [wrongOptionId, setWrongOptionId] = useState<string | null>(null);
+  const [wrongAttempt, setWrongAttempt] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
@@ -328,6 +329,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     }
     setSelectedOption(null);
     setWrongOptionId(optionId);
+    setWrongAttempt((attempt) => attempt + 1);
     setKnowledgeFeedback('wrong');
   };
 
@@ -341,6 +343,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       setCheckedAnswer(false);
       setKnowledgeFeedback('prompt');
       setWrongOptionId(null);
+      setWrongAttempt(0);
       return;
     }
     setReadyMenuSeen(true);
@@ -400,7 +403,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const bubbleKey = nudgeActive
     ? 'nudge'
     : knowledgeCheckActive
-      ? `knowledge-check-${quizIndex}-${knowledgeFeedback}`
+      ? `knowledge-check-${quizIndex}-${knowledgeFeedback}-${wrongAttempt}`
       : isInIntro
       ? `intro-${introStep}`
       : walletPhase === 'create-words'
