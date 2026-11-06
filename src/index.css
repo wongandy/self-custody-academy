@@ -7711,7 +7711,7 @@ html.theme-light {
   }
 
   .path-selector-content {
-    gap: 20px;
+    gap: 16px;
   }
 
   .path-selector-kicker {
@@ -7720,21 +7720,22 @@ html.theme-light {
   }
 
   .path-selector-heading h1 {
-    font-size: clamp(38px, 11vw, 58px);
+    font-size: clamp(36px, 10.5vw, 54px);
+    letter-spacing: -0.09em;
   }
 
   .path-selector-heading p {
-    margin-top: 12px;
+    margin-top: 10px;
     font-size: 12px;
   }
 
   .path-selector-options {
-    gap: 12px;
+    gap: 10px;
   }
 
   .path-card {
     min-height: 0;
-    padding: 16px 14px 15px;
+    padding: 15px 12px 13px;
     border-radius: 18px;
   }
 
@@ -7779,24 +7780,32 @@ html.theme-light {
   }
 
   .path-card h2 {
-    font-size: clamp(22px, 7vw, 34px);
+    min-height: 2em;
+    font-size: clamp(15px, 5.5vw, 23px);
+    letter-spacing: -0.07em;
+    line-height: 0.92;
+    overflow-wrap: anywhere;
+  }
+
+  .path-card-fundamentals h2 {
+    white-space: nowrap;
   }
 
   .path-card-description {
-    margin-top: 9px;
+    margin-top: 8px;
     font-size: 11px;
     line-height: 1.35;
   }
 
   .path-card-includes {
-    margin-top: 10px;
+    margin-top: 9px;
     font-size: 10px;
     line-height: 1.4;
   }
 
   .path-card-action {
     gap: 5px;
-    padding-top: 14px;
+    padding-top: 12px;
   }
 
   .path-card-action svg {
@@ -7816,8 +7825,12 @@ html.theme-light {
   }
 
   .path-card {
-    padding-right: 11px;
-    padding-left: 11px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .path-card h2 {
+    font-size: clamp(14px, 5.2vw, 20px);
   }
 
   .path-card-description,
