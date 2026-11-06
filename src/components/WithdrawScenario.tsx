@@ -48,7 +48,7 @@ const EXCHANGE_INTRO_MESSAGES = [
 
 const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string> = {
   'enter-address': EXCHANGE_INTRO_MESSAGES[EXCHANGE_INTRO_MESSAGES.length - 1],
-  'enter-amount': 'Good job. Now in the Withdraw amount field, you can type 0.05 BTC or just press the MAX button.',
+  'enter-amount': 'Good job. Now in the Withdraw amount field, type 0.05 to send your full balance, or simply tap the MAX button.',
   'ready-to-withdraw': 'Alright. Now click Withdraw to initiate the process of withdrawing your Bitcoin to your hardware wallet.',
 };
 
