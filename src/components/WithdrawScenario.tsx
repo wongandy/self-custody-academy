@@ -46,10 +46,13 @@ const EXCHANGE_INTRO_MESSAGES = [
   'Under Send to address field, paste the receive address you just copied from the hardware wallet. That is where your Bitcoin will be sent to.',
 ];
 
-const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string> = {
-  'enter-address': EXCHANGE_INTRO_MESSAGES[EXCHANGE_INTRO_MESSAGES.length - 1],
-  'enter-amount': 'Good job. Now in the Withdraw amount field, type 0.05 to send your full balance, or simply tap the MAX button.',
-  'ready-to-withdraw': 'Alright. Now click Withdraw to initiate the process of withdrawing your Bitcoin to your hardware wallet.',
+const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string[]> = {
+  'enter-address': [EXCHANGE_INTRO_MESSAGES[EXCHANGE_INTRO_MESSAGES.length - 1]],
+  'enter-amount': [
+    'A small network fee is charged to process the Bitcoin transaction. The amount you enter stays the same, and the fee is shown separately below.',
+    'Good job. Now in the Withdraw amount field, type 0.05 to send your full balance, or simply tap the MAX button.',
+  ],
+  'ready-to-withdraw': ['Alright. Now click Withdraw to initiate the process of withdrawing your Bitcoin to your hardware wallet.'],
 };
 
 // Andy delivers these in order once the wallet shows the receive address.
@@ -135,6 +138,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const exchangeIntroPlayed = useRef(false);
   const [switchIntroStep, setSwitchIntroStep] = useState<number | null>(null);
   const [exchangePhase, setExchangePhase] = useState<ExchangePhase>('enter-address');
+  const [amountGuidanceStep, setAmountGuidanceStep] = useState<number | null>(null);
   const [switchPulse, setSwitchPulse] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'withdraw-slide-left' | 'withdraw-slide-right' | null>(null);
   const usedSwitchPrompt = useRef(false);
@@ -164,9 +168,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const isOnExchangeForm = (isMobile ? activePanel === 'exchange' : phoneVisible) && exchangeScreen === 'form';
   const exchangeIntroLocking = exchangeIntroStep !== null && exchangeIntroStep < EXCHANGE_INTRO_MESSAGES.length - 1;
   const addressLocked = isOnExchangeForm && (exchangeIntroLocking || exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
-  const amountLocked = isOnExchangeForm && exchangePhase === 'enter-address';
+  const amountGuidanceLocked = isOnExchangeForm && exchangePhase === 'enter-amount' && amountGuidanceStep === 0;
+  const amountLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || amountGuidanceLocked);
   const amountNudgeLocked = isOnExchangeForm && exchangePhase === 'ready-to-withdraw';
-  const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'ready-to-withdraw');
+  const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || amountGuidanceLocked || exchangePhase === 'ready-to-withdraw');
   const withdrawBtnLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'enter-amount');
   const switchNudgeLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
   const expectedAction: ExpectedAction =
@@ -216,7 +221,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         : addressMismatch && isOnExchangeForm
           ? MENTOR_MESSAGES['exchange-address-mismatch']
           : isOnExchangeForm
-            ? EXCHANGE_PHASE_MESSAGES[exchangePhase]
+            ? EXCHANGE_PHASE_MESSAGES[exchangePhase][exchangePhase === 'enter-amount' ? amountGuidanceStep ?? 0 : 0]
             : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
@@ -232,7 +237,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
           : switchIntroStep !== null
           ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
           : isOnExchangeForm
-            ? false
+            ? exchangePhase === 'enter-amount' && amountGuidanceStep === 0 && done
             : exchangeScreen === 'success';
 
   const switchLocked = activePanel === 'exchange' && canContinue;
@@ -424,8 +429,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const handleMax = useCallback(() => {
     if (maxLocked) return;
-    const maxAmount = AVAILABLE_BALANCE - NETWORK_FEE;
-    setAmount(maxAmount.toFixed(8));
+    setAmount(AVAILABLE_BALANCE.toFixed(8));
     setAmountError('');
   }, [maxLocked]);
 
@@ -490,6 +494,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       }
       return;
     }
+    if (isOnExchangeForm && exchangePhase === 'enter-amount' && amountGuidanceStep === 0) {
+      setAmountGuidanceStep(1);
+      return;
+    }
     if (exchangeScreen === 'success') {
       onComplete();
       return;
@@ -500,7 +508,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? 'nudge'
     : isInIntro
       ? `intro-${introStep}`
-      : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${addressMismatch}`;
+      : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${amountGuidanceStep}-${addressMismatch}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -519,11 +527,14 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     if (!isOnExchangeForm) return;
     if (exchangePhase === 'enter-address' && isAddressValid) {
       setExchangePhase('enter-amount');
+      setAmountGuidanceStep(0);
       if (exchangeIntroStep !== null) setExchangeIntroStep(null);
     } else if (exchangePhase === 'enter-amount' && isAmountValid && isAddressValid) {
       setExchangePhase('ready-to-withdraw');
+      setAmountGuidanceStep(null);
     } else if (exchangePhase === 'ready-to-withdraw' && !isAmountValid) {
       setExchangePhase('enter-amount');
+      setAmountGuidanceStep(1);
     }
   }, [isOnExchangeForm, exchangePhase, isAddressValid, isAmountValid, exchangeIntroStep]);
 
@@ -700,10 +711,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           <div className="withdraw-confirm-detail">
                             <span>Network fee</span>
                             <strong>{NETWORK_FEE.toFixed(5)} BTC</strong>
-                          </div>
-                          <div className="withdraw-confirm-detail">
-                            <span>Wallet label</span>
-                            <strong>HW Wallet 1</strong>
                           </div>
                         </div>
 

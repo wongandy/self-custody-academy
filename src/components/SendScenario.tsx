@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ArrowDownLeft,
-  ArrowLeft,
   ArrowLeftRight,
   ArrowRight,
   ArrowUpRight,
@@ -117,7 +116,7 @@ function useTypewriter(text: string, speed = 6) {
   return { displayed, done, skip };
 }
 
-export default function SendScenario({ onBack, onComplete }: SendScenarioProps) {
+export default function SendScenario({ onComplete }: SendScenarioProps) {
   const [stage, setStage] = useState<SendStage>('intro');
   const [introStep, setIntroStep] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
