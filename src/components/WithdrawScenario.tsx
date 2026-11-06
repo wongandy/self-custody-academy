@@ -196,7 +196,17 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const addressMismatch = trimmedAddress.length > 0 && !matchesReceiveAddress && looksLikeFullAddress;
   const parsedAmount = Number.parseFloat(amount);
   const numericAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
-  const amountTooLow = amount.trim() !== '' && Number.isFinite(parsedAmount) && parsedAmount < AVAILABLE_BALANCE;
+  // While the learner types toward 0.05 ("0", "0.", "0.0", "0.05" mid-edit),
+  // the value is a prefix of the target and shouldn't trigger the correction.
+  const amountTooLow =
+    amount.trim() !== '' &&
+    Number.isFinite(parsedAmount) &&
+    parsedAmount < AVAILABLE_BALANCE &&
+    !isPrefixOfAvailableBalance(amount.trim());
+
+  function isPrefixOfAvailableBalance(val: string): boolean {
+    return AVAILABLE_BALANCE.toFixed(8).replace(/0+$/, '').startsWith(val.replace(/0+$/, ''));
+  }
 
   const isExchangePanelActive = isMobile ? activePanel === 'exchange' : phoneVisible;
   const walletStateKey = isExchangePanelActive
