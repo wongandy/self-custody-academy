@@ -5,10 +5,7 @@ type PathSelectionProps = {
   onSelectFundamentals: () => void;
 };
 
-type PathId = 'fundamentals' | 'deeper';
-
 function PathSelection({ onSelectFundamentals }: PathSelectionProps) {
-  const [selectedPath, setSelectedPath] = useState<PathId>('fundamentals');
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   return (
@@ -20,7 +17,7 @@ function PathSelection({ onSelectFundamentals }: PathSelectionProps) {
           <p>Start with the essential skills, or explore what comes next as your confidence grows.</p>
         </div>
 
-        <div className="path-selection-options path-selection-desktop-options">
+        <div className="path-selection-options">
           <button className="path-option-card fundamentals" type="button" onClick={onSelectFundamentals}>
             <div className="path-option-topline">
               <span className="path-option-number">01</span>
@@ -53,10 +50,7 @@ function PathSelection({ onSelectFundamentals }: PathSelectionProps) {
           <button
             className="path-option-card deeper"
             type="button"
-            onClick={() => {
-              setSelectedPath('deeper');
-              setShowComingSoon(true);
-            }}
+            onClick={() => setShowComingSoon(true)}
             aria-describedby="going-deeper-status"
           >
             <div className="path-option-topline">
@@ -86,46 +80,6 @@ function PathSelection({ onSelectFundamentals }: PathSelectionProps) {
               In preparation
             </span>
           </button>
-        </div>
-
-        <div className="path-selection-mobile-options" role="group" aria-label="Learning paths">
-          <button
-            className={`path-mobile-option fundamentals ${selectedPath === 'fundamentals' ? 'selected' : ''}`}
-            type="button"
-            onClick={() => setSelectedPath('fundamentals')}
-            aria-pressed={selectedPath === 'fundamentals'}
-          >
-            <span className="path-mobile-option-icon" aria-hidden="true"><LockKeyhole size={24} strokeWidth={1.8} /></span>
-            <span className="path-mobile-option-name">Fundamentals</span>
-            <span className="path-mobile-option-status">Available</span>
-          </button>
-          <button
-            className={`path-mobile-option deeper ${selectedPath === 'deeper' ? 'selected' : ''}`}
-            type="button"
-            onClick={() => {
-              setSelectedPath('deeper');
-              setShowComingSoon(true);
-            }}
-            aria-pressed={selectedPath === 'deeper'}
-          >
-            <span className="path-mobile-option-icon" aria-hidden="true"><KeyRound size={24} strokeWidth={1.8} /></span>
-            <span className="path-mobile-option-name">Going Deeper</span>
-            <span className="path-mobile-option-status">Coming soon</span>
-          </button>
-        </div>
-
-        <div className="path-selection-mobile-detail" aria-live="polite">
-          {selectedPath === 'fundamentals' ? (
-            <>
-              <p>The essential building blocks of self-custody.</p>
-              <button className="path-selection-mobile-action" type="button" onClick={onSelectFundamentals}>
-                Start Fundamentals
-                <ChevronRight size={17} strokeWidth={2.5} />
-              </button>
-            </>
-          ) : (
-            <p>Going Deeper is still being prepared. Start with Fundamentals to build your foundation.</p>
-          )}
         </div>
 
         <p className={`path-selection-status ${showComingSoon ? 'visible' : ''}`} id="going-deeper-status" aria-live="polite">
