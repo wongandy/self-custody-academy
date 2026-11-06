@@ -52,7 +52,6 @@ type KnowledgeQuestion = {
   question: string;
   options: Array<{ id: string; label: string }>;
   correctId: string;
-  wrongLine: string;
   correctLine: string;
 };
 
@@ -66,7 +65,6 @@ const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
       { id: 'phone', label: 'Save it in a note on my phone' },
     ],
     correctId: 'paper',
-    wrongLine: "Not quite. A photo or a phone note could be stolen, synced, or backed up without you knowing. Write your recovery phrase down and store it somewhere safe and private.",
     correctLine: 'Exactly. Write it down and keep it private. Anyone who gets your recovery phrase can control your Bitcoin.',
   },
   {
@@ -78,7 +76,6 @@ const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
       { id: 'backup', label: 'It automatically backs your Bitcoin up to the company that made it' },
     ],
     correctId: 'offline',
-    wrongLine: "Not quite. The device holds your private keys on a secure chip and never exposes them — it approves transactions without the keys ever leaving it.",
     correctLine: 'Right. Your keys live on the secure chip and never leave the device, so your Bitcoin stays protected even on a compromised computer.',
   },
 ];
@@ -92,8 +89,13 @@ function shuffled<T>(items: T[]): T[] {
   return copy;
 }
 
+const WRONG_ANSWER_MESSAGE = 'Not quite. Take another look at the choices and try again.';
+
 const KNOWLEDGE_CHECK_LINES = {
-  prompt: ["Nice work. Before we wrap up, two quick questions to make sure the key ideas stick."],
+  prompt: [
+    'Nice work. Before we wrap up, two quick questions to make sure the key ideas stick.',
+    'Good job. One more question about what makes a hardware wallet secure.',
+  ],
 } as const;
 
 type KnowledgeFeedback = 'prompt' | 'wrong' | 'correct';
@@ -209,10 +211,10 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     ? currentIntroMessage
     : knowledgeCheckActive
       ? knowledgeFeedback === 'wrong'
-        ? currentQuizEntry?.question.wrongLine ?? KNOWLEDGE_CHECK_LINES.prompt[0]
+        ? WRONG_ANSWER_MESSAGE
         : knowledgeFeedback === 'correct'
-          ? currentQuizEntry?.question.correctLine ?? KNOWLEDGE_CHECK_LINES.prompt[0]
-          : KNOWLEDGE_CHECK_LINES.prompt[0]
+          ? currentQuizEntry?.question.correctLine ?? KNOWLEDGE_CHECK_LINES.prompt[quizIndex] ?? KNOWLEDGE_CHECK_LINES.prompt[0]
+          : KNOWLEDGE_CHECK_LINES.prompt[quizIndex] ?? KNOWLEDGE_CHECK_LINES.prompt[0]
       : resetRefused
       ? FACTORY_RESET_MESSAGE
       : walletPhase === 'menu' && menuSelection === 'recover-intro'
@@ -315,16 +317,18 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     }
   };
 
-  const handleCheckAnswer = () => {
-    if (!selectedOption || !knowledgeCheckCanAnswer || !currentQuizEntry) return;
-    if (selectedOption === currentQuizEntry.question.correctId) {
+  const handleOptionSelect = (optionId: string) => {
+    if (!knowledgeCheckCanAnswer || !currentQuizEntry) return;
+    setWrongOptionId(null);
+    if (optionId === currentQuizEntry.question.correctId) {
+      setSelectedOption(optionId);
       setKnowledgeFeedback('correct');
       setCheckedAnswer(true);
       return;
     }
-    setWrongOptionId(selectedOption);
-    setKnowledgeFeedback('wrong');
     setSelectedOption(null);
+    setWrongOptionId(optionId);
+    setKnowledgeFeedback('wrong');
   };
 
   const isLastQuizQuestion = quizIndex >= quiz.length - 1;
@@ -533,11 +537,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
                     key={option.id}
                     type="button"
                     className={`knowledge-check-option ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''} ${isWrong ? 'wrong' : ''}`}
-                    onClick={() => {
-                      if (!knowledgeCheckCanAnswer) return;
-                      setWrongOptionId(null);
-                      setSelectedOption(option.id);
-                    }}
+                    onClick={() => handleOptionSelect(option.id)}
                     disabled={!knowledgeCheckCanAnswer}
                   >
                     {isCorrect ? <CheckCircle2 size={16} strokeWidth={2.2} /> : isWrong ? <XCircle size={16} strokeWidth={2.2} /> : null}
@@ -546,31 +546,14 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
                 );
               })}
             </div>
-            {!checkedAnswer ? (
-              <button
-                className="knowledge-check-submit"
-                type="button"
-                onClick={handleCheckAnswer}
-                disabled={!selectedOption || !knowledgeCheckCanAnswer}
-              >
-                Check answer
-              </button>
-            ) : (
-              <>
-                <div className="knowledge-check-status correct">
-                  <CheckCircle2 size={16} strokeWidth={2.2} />
-                  <span>Correct</span>
-                </div>
-                <button
-                  className="knowledge-check-submit"
-                  type="button"
-                  onClick={handleContinueFromCheck}
-                  disabled={!done}
-                >
-                  {isLastQuizQuestion ? 'Finish lesson' : 'Next question'}
-                </button>
-              </>
-            )}
+            <button
+              className="knowledge-check-submit"
+              type="button"
+              onClick={handleContinueFromCheck}
+              disabled={!checkedAnswer || !done}
+            >
+              {isLastQuizQuestion ? 'Finish lesson' : 'Next question'}
+            </button>
           </div>
         )}
       </div>

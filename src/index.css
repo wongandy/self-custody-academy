@@ -3607,21 +3607,6 @@ html.theme-light {
   color: #ec6a5e;
 }
 
-.knowledge-check-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--green);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.knowledge-check-status svg {
-  color: var(--green);
-}
-
 @media (max-width: 600px) {
   .knowledge-check-scene {
     padding: 72px 16px 20px;
