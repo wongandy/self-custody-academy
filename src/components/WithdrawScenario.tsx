@@ -55,6 +55,10 @@ const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string[]> = {
   'ready-to-withdraw': ['Alright. Now click Withdraw to initiate the process of withdrawing your Bitcoin to your hardware wallet.'],
 };
 
+const AMOUNT_CORRECTION_MESSAGES = [
+  'The amount to withdraw should be 0.05 BTC. Type 0.05 or click MAX to continue.',
+];
+
 // Andy delivers these in order once the wallet shows the receive address.
 // The last line asks the learner to copy, so the device unlocks on it.
 const RECEIVE_ADDRESS_MESSAGES = [
@@ -190,6 +194,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const matchesReceiveAddress = trimmedAddress.length > 0 && trimmedAddress.toLowerCase() === RECEIVE_ADDRESS.toLowerCase();
   const looksLikeFullAddress = trimmedAddress.length >= 10;
   const addressMismatch = trimmedAddress.length > 0 && !matchesReceiveAddress && looksLikeFullAddress;
+  const parsedAmount = Number.parseFloat(amount);
+  const numericAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
+  const amountTooLow = amount.trim() !== '' && Number.isFinite(parsedAmount) && parsedAmount < AVAILABLE_BALANCE;
 
   const isExchangePanelActive = isMobile ? activePanel === 'exchange' : phoneVisible;
   const walletStateKey = isExchangePanelActive
@@ -220,8 +227,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         ? SWITCH_INTRO_MESSAGES[switchIntroStep]
         : addressMismatch && isOnExchangeForm
           ? MENTOR_MESSAGES['exchange-address-mismatch']
-          : isOnExchangeForm
-            ? EXCHANGE_PHASE_MESSAGES[exchangePhase][exchangePhase === 'enter-amount' ? amountGuidanceStep ?? 0 : 0]
+          : amountTooLow && isOnExchangeForm
+            ? AMOUNT_CORRECTION_MESSAGES[0]
+            : isOnExchangeForm
+              ? EXCHANGE_PHASE_MESSAGES[exchangePhase][exchangePhase === 'enter-amount' ? amountGuidanceStep ?? 0 : 0]
             : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
@@ -433,9 +442,8 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     setAmountError('');
   }, [maxLocked]);
 
-  const numericAmount = parseFloat(amount) || 0;
   const receivedAmount = numericAmount > 0 ? Math.max(numericAmount - NETWORK_FEE, 0) : 0;
-  const isAmountValid = numericAmount > 0 && numericAmount <= AVAILABLE_BALANCE && amountError === '';
+  const isAmountValid = numericAmount === AVAILABLE_BALANCE && amountError === '';
   const isAddressValid = matchesReceiveAddress;
   const canWithdraw = hasRetrievedAddress && isAmountValid && isAddressValid;
   const displayAddress = sendAddress || RECEIVE_ADDRESS;
@@ -508,7 +516,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     ? 'nudge'
     : isInIntro
       ? `intro-${introStep}`
-      : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${amountGuidanceStep}-${addressMismatch}`;
+      : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${amountGuidanceStep}-${amountTooLow}-${addressMismatch}`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
