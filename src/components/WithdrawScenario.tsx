@@ -77,7 +77,7 @@ const MENTOR_MESSAGES: Record<string, string> = {
   'wallet-receive-copied': 'If you have already copied the receive address, press the switch button above to go back to the exchange.',
   'wallet-receive-copied-desktop': "Address copied. The exchange is now open next to your wallet — let's paste the address there.",
   'exchange-address-mismatch': "That address doesn't match the one your hardware wallet gave you. One wrong character sends your Bitcoin somewhere else — go back to your wallet and copy it again.",
-  'exchange-confirm': 'Review the withdrawal details carefully. Make sure the address you provided on the exchange matches the address on your device. Once you confirm, the transaction cannot be cancelled.',
+  'exchange-confirm': 'Review everything carefully. Make sure the address you provided on the exchange matches the address from your device. Once you confirm, the transaction cannot be cancelled.',
   'exchange-success': "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
   'factory-reset-blocked':
     "Resetting your device to factory settings isn't part of this lesson. It would erase your wallet, so we'll leave it untouched. Let's head back and keep going.",
