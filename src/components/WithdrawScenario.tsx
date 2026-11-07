@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, Copy, Smartphone, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, CheckCircle2, Copy, HelpCircle, Smartphone, AlertTriangle, XCircle } from 'lucide-react';
 import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 
@@ -85,8 +85,39 @@ const MENTOR_MESSAGES: Record<string, string> = {
 
 const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
 const NUDGE_DURATION_MS = 1250;
+const WRONG_ANSWER_MESSAGE = 'Not quite. Take another look at the choices and try again.';
 
-function useTypewriter(text: string, speed = 6) {
+const KNOWLEDGE_QUESTIONS = [
+  {
+    question: 'Why should you verify the receive address on your hardware wallet?',
+    options: [
+      { id: 'speed', label: 'To make the withdrawal process faster' },
+      { id: 'match', label: 'To make sure the address in the wallet software matches the address from the device' },
+      { id: 'fee', label: 'To avoid paying the network fee' },
+    ],
+    correctId: 'match',
+    correctLine: 'Exactly. Address verification helps make sure your Bitcoin is going to the wallet you intended.',
+  },
+  {
+    question: 'What is the network fee when you withdraw Bitcoin?',
+    options: [
+      { id: 'extra', label: 'A separate charge for processing the transaction' },
+      { id: 'balance', label: 'The amount removed from your hardware wallet balance' },
+      { id: 'exchange', label: 'A fee that replaces the Bitcoin being sent' },
+    ],
+    correctId: 'extra',
+    correctLine: 'Right. The network fee is shown separately from the amount you withdraw and helps process the transaction.',
+  },
+] as const;
+
+const KNOWLEDGE_CHECK_LINES = [
+  'Nice work. Before we wrap up, two quick questions about safely withdrawing Bitcoin.',
+  'Good job. One more question about the withdrawal details.',
+] as const;
+
+type KnowledgeFeedback = 'prompt' | 'wrong' | 'correct';
+
+function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
@@ -115,7 +146,7 @@ function useTypewriter(text: string, speed = 6) {
 
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [text, speed, resetKey]);
 
   const skip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -151,6 +182,13 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
+  const [knowledgeCheckActive, setKnowledgeCheckActive] = useState(false);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [checkedAnswer, setCheckedAnswer] = useState(false);
+  const [knowledgeFeedback, setKnowledgeFeedback] = useState<KnowledgeFeedback>('prompt');
+  const [wrongOptionId, setWrongOptionId] = useState<string | null>(null);
+  const [wrongAttempt, setWrongAttempt] = useState(0);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const [phoneVisible, setPhoneVisible] = useState(false);
   const portraitRef = useRef<HTMLDivElement>(null);
@@ -223,8 +261,15 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
           : 'wallet-receive-address'
         : `wallet-${walletPhase}`;
 
+  const currentQuizQuestion = KNOWLEDGE_QUESTIONS[quizIndex] ?? KNOWLEDGE_QUESTIONS[0];
   const mentorMessage = nudgeActive
     ? NUDGE_MESSAGE
+    : knowledgeCheckActive
+      ? knowledgeFeedback === 'wrong'
+        ? WRONG_ANSWER_MESSAGE
+        : knowledgeFeedback === 'correct'
+          ? currentQuizQuestion.correctLine
+          : KNOWLEDGE_CHECK_LINES[quizIndex] ?? KNOWLEDGE_CHECK_LINES[0]
     : isInIntro
       ? currentIntroMessage
       : receiveAddressStep !== null
@@ -243,12 +288,22 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
               ? EXCHANGE_PHASE_MESSAGES[exchangePhase][exchangePhase === 'enter-amount' ? amountGuidanceStep ?? 0 : 0]
             : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
 
-  const { displayed, done, skip } = useTypewriter(mentorMessage);
+  const mentorMessageKey = nudgeActive
+    ? 'nudge'
+    : knowledgeCheckActive
+      ? `knowledge-check-${quizIndex}-${knowledgeFeedback}-${wrongAttempt}`
+      : isInIntro
+        ? `intro-${introStep}`
+        : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${amountGuidanceStep}-${amountTooLow}-${addressMismatch}`;
+  const { displayed, done, skip } = useTypewriter(mentorMessage, 6, mentorMessageKey);
+  const knowledgeCheckCanAnswer = knowledgeCheckActive && !checkedAnswer && done;
 
   const canContinue = nudgeActive
     ? false
-    : isInIntro
-      ? introStep < HANDOVER_INDEX && done
+    : knowledgeCheckActive
+      ? false
+      : isInIntro
+        ? introStep < HANDOVER_INDEX && done
       : receiveAddressStep !== null
         ? receiveAddressStep < RECEIVE_ADDRESS_MESSAGES.length - 1 && done
         : exchangeIntroStep !== null
@@ -263,7 +318,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   // The wallet ignores input while Andy is still talking, and while the
   // continue button is the only expected action.
-  const deviceLocked = canContinue || (isInIntro && !done) || (receiveAddressStep !== null && !done) || (exchangeIntroStep !== null && !done);
+  const deviceLocked = knowledgeCheckActive || canContinue || (isInIntro && !done) || (receiveAddressStep !== null && !done) || (exchangeIntroStep !== null && !done);
 
   const copyButtonInstruction = "There's your receive address. Click the copy button next to it to copy it.";
   const renderMentorText = (text: string) => {
@@ -516,24 +571,61 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       setAmountGuidanceStep(1);
       return;
     }
+    if (knowledgeCheckActive) {
+      if (checkedAnswer) {
+        handleContinueFromCheck();
+      }
+      return;
+    }
     if (exchangeScreen === 'success') {
-      onComplete();
+      setKnowledgeCheckActive(true);
+      setQuizIndex(0);
+      setSelectedOption(null);
+      setCheckedAnswer(false);
+      setKnowledgeFeedback('prompt');
+      setWrongOptionId(null);
+      setWrongAttempt(0);
       return;
     }
   };
 
-  const bubbleKey = nudgeActive
-    ? 'nudge'
-    : isInIntro
-      ? `intro-${introStep}`
-      : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${amountGuidanceStep}-${amountTooLow}-${addressMismatch}`;
+  const handleOptionSelect = (optionId: string) => {
+    if (!knowledgeCheckCanAnswer) return;
+    setWrongOptionId(null);
+    if (optionId === currentQuizQuestion.correctId) {
+      setSelectedOption(optionId);
+      setKnowledgeFeedback('correct');
+      setCheckedAnswer(true);
+      return;
+    }
+    setSelectedOption(null);
+    setWrongOptionId(optionId);
+    setWrongAttempt((attempt) => attempt + 1);
+    setKnowledgeFeedback('wrong');
+  };
+
+  const handleContinueFromCheck = () => {
+    if (!checkedAnswer || !done) return;
+    if (quizIndex < KNOWLEDGE_QUESTIONS.length - 1) {
+      setQuizIndex((index) => index + 1);
+      setSelectedOption(null);
+      setCheckedAnswer(false);
+      setKnowledgeFeedback('prompt');
+      setWrongOptionId(null);
+      setWrongAttempt(0);
+      return;
+    }
+    onComplete();
+  };
+
+  const bubbleKey = mentorMessageKey;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Enter') return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      if (!canContinue && done) return;
+      if (!knowledgeCheckActive && !canContinue && done) return;
       e.preventDefault();
       handleContinue();
     };
@@ -557,9 +649,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   }, [isOnExchangeForm, exchangePhase, isAddressValid, isAmountValid, exchangeIntroStep]);
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
-      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
+        {knowledgeCheckActive && <div className="knowledge-check-kicker">Lesson check-in</div>}
+        {!knowledgeCheckActive && <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
           {showSwitchButton && isMobile && (
             <button
               className={`withdraw-switch-btn withdraw-switch-btn-enter${switchPulse ? ' withdraw-switch-btn-pulse' : ''}`}
@@ -816,7 +909,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
               </div>
             )}
           </div>
-        </div>
+        </div>}
 
         <div className="mentor-row">
           <div ref={portraitRef} className="mentor-portrait" aria-label="Andy, your mentor" role="img">
@@ -855,6 +948,43 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
             </button>
           </div>
         </div>
+        {knowledgeCheckActive && (
+          <div className="knowledge-check-card" role="group" aria-label="Quick knowledge check">
+            <div className="knowledge-check-header">
+              <HelpCircle size={16} strokeWidth={2.2} />
+              <span>Quick check</span>
+              <span className="knowledge-check-progress">Question {quizIndex + 1} of {KNOWLEDGE_QUESTIONS.length}</span>
+            </div>
+            <p className="knowledge-check-question">{currentQuizQuestion.question}</p>
+            <div className="knowledge-check-options">
+              {currentQuizQuestion.options.map((option) => {
+                const isSelected = selectedOption === option.id;
+                const isCorrect = checkedAnswer && option.id === currentQuizQuestion.correctId;
+                const isWrong = wrongOptionId === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`knowledge-check-option ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''} ${isWrong ? 'wrong' : ''}`}
+                    onClick={() => handleOptionSelect(option.id)}
+                    disabled={!knowledgeCheckCanAnswer}
+                  >
+                    {isCorrect ? <CheckCircle2 size={16} strokeWidth={2.2} /> : isWrong ? <XCircle size={16} strokeWidth={2.2} /> : null}
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              className="knowledge-check-submit"
+              type="button"
+              onClick={handleContinueFromCheck}
+              disabled={!checkedAnswer || !done}
+            >
+              {quizIndex === KNOWLEDGE_QUESTIONS.length - 1 ? 'Finish lesson' : 'Next question'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* <div className="character-footer">
