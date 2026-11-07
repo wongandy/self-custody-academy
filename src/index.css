@@ -3527,29 +3527,29 @@ html.theme-light {
   text-transform: uppercase;
 }
 
-.knowledge-check-mentor-row {
+.knowledge-check-layout .mentor-row {
   flex-direction: column;
   align-items: center;
   gap: 20px;
   max-width: 560px;
 }
 
-.knowledge-check-mentor-row .mentor-portrait {
+.knowledge-check-layout .mentor-row .mentor-portrait {
   width: 86px;
   height: 86px;
   border-color: rgba(241, 189, 105, 0.4);
 }
 
-.knowledge-check-mentor-row .mentor-portrait-glow {
+.knowledge-check-layout .mentor-row .mentor-portrait-glow {
   inset: -18px;
   background: radial-gradient(circle, rgba(241, 189, 105, 0.2), transparent 70%);
 }
 
-.knowledge-check-mentor-row .mentor-portrait-badge {
+.knowledge-check-layout .mentor-row .mentor-portrait-badge {
   opacity: 1;
 }
 
-.knowledge-check-mentor-row .mentor-bubble {
+.knowledge-check-layout .mentor-row .mentor-bubble {
   flex: none;
   width: 100%;
   max-width: 560px;
@@ -3558,7 +3558,7 @@ html.theme-light {
   background: rgba(241, 189, 105, 0.06);
 }
 
-.knowledge-check-mentor-row .mentor-bubble::before {
+.knowledge-check-layout .mentor-row .mentor-bubble::before {
   top: -7px;
   left: 50%;
   border-left: 1px solid rgba(241, 189, 105, 0.24);
@@ -3568,17 +3568,17 @@ html.theme-light {
   transform: translateX(-50%) rotate(45deg);
 }
 
-.knowledge-check-mentor-row .mentor-bubble-text-wrap {
+.knowledge-check-layout .mentor-row .mentor-bubble-text-wrap {
   min-height: 67px;
 }
 
-.knowledge-check-mentor-row .mentor-bubble-text,
-.knowledge-check-mentor-row .mentor-bubble-text-ghost {
+.knowledge-check-layout .mentor-row .mentor-bubble-text,
+.knowledge-check-layout .mentor-row .mentor-bubble-text-ghost {
   font-size: 14px;
   line-height: 1.65;
 }
 
-.knowledge-check-mentor-row .bubble-next {
+.knowledge-check-layout .mentor-row .bubble-next {
   display: none;
 }
 
@@ -3617,25 +3617,25 @@ html.theme-light {
     padding: 12px 0 16px;
   }
 
-  .knowledge-check-mentor-row {
+  .knowledge-check-layout .mentor-row {
     gap: 14px;
   }
 
-  .knowledge-check-mentor-row .mentor-portrait {
+  .knowledge-check-layout .mentor-row .mentor-portrait {
     width: 72px;
     height: 72px;
   }
 
-  .knowledge-check-mentor-row .mentor-bubble {
+  .knowledge-check-layout .mentor-row .mentor-bubble {
     padding: 13px 15px 15px;
   }
 
-  .knowledge-check-mentor-row .mentor-bubble-text-wrap {
+  .knowledge-check-layout .mentor-row .mentor-bubble-text-wrap {
     min-height: 58px;
   }
 
-  .knowledge-check-mentor-row .mentor-bubble-text,
-  .knowledge-check-mentor-row .mentor-bubble-text-ghost {
+  .knowledge-check-layout .mentor-row .mentor-bubble-text,
+  .knowledge-check-layout .mentor-row .mentor-bubble-text-ghost {
     font-size: 13px;
     line-height: 1.55;
   }
