@@ -92,7 +92,7 @@ const KNOWLEDGE_QUESTIONS = [
     question: 'Why should you verify the receive address on your hardware wallet?',
     options: [
       { id: 'speed', label: 'To make the withdrawal process faster' },
-      { id: 'match', label: 'To make sure the address in the wallet software matches the address from the device' },
+      { id: 'match', label: 'To make sure the address in the exchange matches the address from the device' },
       { id: 'fee', label: 'To avoid paying the network fee' },
     ],
     correctId: 'match',
