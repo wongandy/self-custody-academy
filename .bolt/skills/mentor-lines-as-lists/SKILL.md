@@ -32,6 +32,18 @@ Reasons this matters:
   reaching the *end* of the list, not on a fixed sentence number, so lines can
   never knock it out of step.
 
+## Where the lines live (translations)
+
+The site is translated (English and Thai), so mentor lines are not written in
+the component. They live in the locale dictionaries: `src/locales/en.ts` is the
+source and `src/locales/th.ts` must match its shape exactly (same keys, same
+number of entries in every list — `npm run typecheck` fails otherwise). Add or
+remove a line in **both** files. Components read them with
+`const { t } = useI18n()` (e.g. `t.lesson1.intro`), and take list lengths for
+step logic from `en` so they are the same in every language. The intro's
+handover line is stored as its own key right after the `intro` list, so its
+index is simply `en.lessonN.intro.length`.
+
 ## Wiring
 
 - Track the current line with a step index; the message shown is

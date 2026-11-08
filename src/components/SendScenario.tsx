@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction } from '@/components/HardwareWallet';
 import mariaPortrait from '@/components/Maria.webp';
+import en from '@/locales/en';
+import { fmt, useI18n } from '@/lib/i18n';
 
 type SendScenarioProps = {
   completed: boolean;
@@ -45,7 +47,6 @@ type SendStage =
 
 const CONTINUE_STAGES = new Set<SendStage>(['intro', 'explain-fees', 'finished']);
 
-const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the current step.";
 const NUDGE_DURATION_MS = 1250;
 const SEND_AMOUNT = '0.005';
 const MARIA_ADDRESS = RECEIVE_ADDRESS;
@@ -56,22 +57,8 @@ const FEE_OPTIONS: FeeOption[] = [
   { id: 'high', label: 'High', rate: '18 sats/vB', fee: '0.00001080' },
 ];
 
-const INTRO_LINES = [
-  "Let me teach you how to send Bitcoin from your hardware wallet. We'll use the wallet software to prepare the transaction, and your hardware wallet to sign and approve it.",
-  "I'll give you my wallet's receive address so you can send over 0.01 BTC. Let me show you how it works!",
-];
-
-const OPEN_SEND_MESSAGE = 'Open the Send tab in the wallet software to get started.';
-const ENTER_ADDRESS_MESSAGE = "In the Pay to field, paste the address of the person you're sending Bitcoin to. Here's my address below — go ahead and copy and paste it there.";
-const ADDRESS_WRONG_MESSAGE = "That address doesn't look right. One wrong character sends your Bitcoin to someone else permanently. Please double-check and paste my exact address from below.";
-const ENTER_LABEL_MESSAGE = "It's good practice to add a label to your transactions so you can remember what they were for later. Type a label in the Label field.";
-const ENTER_AMOUNT_MESSAGE = `Now in the Amount field, enter ${SEND_AMOUNT} BTC.`;
-const EXPLAIN_FEES_MESSAGE = 'Before you send, you need to choose a transaction fee. This fee pays the network to process your payment. Technically known as a miner fee, paying a higher rate can help your transaction confirm faster, but it costs more.';
-const SELECT_FEE_MESSAGE = "Choose the Medium fee option, then click 'Review transaction' to build the payment.";
-const REVIEW_TX_MESSAGE = 'Review the recipient, amount, and fee carefully. When everything matches, send the transaction to your hardware wallet for its own review.';
-const HARDWARE_REVIEW_MESSAGE = 'Now check each detail on the hardware wallet screen. Press the checkmark to move through the recipient, amount, and fee, then confirm the payment on the device.';
-const TX_SENT_MESSAGE = 'The payment has been broadcast to the network. Let us check your updated balance.';
-const FINISHED_MESSAGE = 'Excellent work! You verified the address, understood the network fee, and approved the payment on the hardware wallet. That is the complete sending habit to carry forward.';
+// Maria's lines live in the dictionary (`lesson6`); every locale has the same list lengths.
+const INTRO_COUNT = en.lesson6.intro.length;
 
 const WALLET_BALANCE = '0.04998';
 const SENT_BALANCE = '0.04497';
@@ -117,6 +104,8 @@ function useTypewriter(text: string, speed = 6) {
 }
 
 export default function SendScenario({ onComplete }: SendScenarioProps) {
+  const { t } = useI18n();
+  const l6 = t.lesson6;
   const [stage, setStage] = useState<SendStage>('intro');
   const [introStep, setIntroStep] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
@@ -145,30 +134,30 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   }, []);
 
   const message = nudgeActive
-    ? NUDGE_MESSAGE
+    ? t.common.nudgeLater
     : addressWrong && stage === 'enter-address'
-      ? ADDRESS_WRONG_MESSAGE
+      ? l6.addressWrong
       : stage === 'intro'
-        ? INTRO_LINES[introStep] ?? INTRO_LINES[0]
+        ? l6.intro[introStep] ?? l6.intro[0]
         : stage === 'open-send'
-          ? OPEN_SEND_MESSAGE
+          ? l6.openSend
           : stage === 'enter-address'
-            ? ENTER_ADDRESS_MESSAGE
+            ? l6.enterAddress
             : stage === 'enter-label'
-              ? ENTER_LABEL_MESSAGE
+              ? l6.enterLabel
               : stage === 'enter-amount'
-                ? ENTER_AMOUNT_MESSAGE
+                ? fmt(l6.enterAmount, { amount: SEND_AMOUNT })
                 : stage === 'explain-fees'
-                  ? EXPLAIN_FEES_MESSAGE
+                  ? l6.explainFees
                   : stage === 'select-fee'
-                    ? SELECT_FEE_MESSAGE
+                    ? l6.selectFee
                     : stage === 'review-tx'
-                      ? REVIEW_TX_MESSAGE
+                      ? l6.reviewTx
                       : stage === 'hardware-review'
-                        ? HARDWARE_REVIEW_MESSAGE
+                        ? l6.hardwareReview
                         : stage === 'tx-sent'
-                          ? TX_SENT_MESSAGE
-                          : FINISHED_MESSAGE;
+                          ? l6.txSent
+                          : l6.finished;
   const { displayed, done, skip } = useTypewriter(message);
 
   const spotlight = stage === 'intro';
@@ -262,7 +251,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     }
     if (nudgeActive || !canContinue) return;
     if (stage === 'intro') {
-      if (introStep < INTRO_LINES.length - 1) {
+      if (introStep < INTRO_COUNT - 1) {
         setIntroStep((current) => current + 1);
         return;
       }
@@ -607,7 +596,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                 </div>
               </div>
               {isMobile && cableEl}
-              <div className="device-caption">Wallet software</div>
+              <div className="device-caption">{t.common.captionWalletSoftware}</div>
             </div>
 
             {!isMobile && cableEl}
@@ -637,12 +626,12 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
             key="maria"
             ref={portraitRef}
             className="mentor-portrait mentor-portrait-enter"
-            aria-label="Maria, your mentor"
+            aria-label={fmt(t.common.mentorAria, { name: 'Maria' })}
             role="img"
           >
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={mariaPortrait} alt="Maria, your mentor" />
+              <img className="mentor-portrait-image" src={mariaPortrait} alt={fmt(t.common.mentorAria, { name: 'Maria' })} />
             </div>
             <div className="mentor-portrait-badge">Maria</div>
           </div>
@@ -667,7 +656,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                     className="mentor-chat-btn"
                     type="button"
                     onClick={handleCopyAddress}
-                    aria-label="Copy Maria's address"
+                    aria-label={l6.copyAddressAria}
                   >
                     {addressCopied ? <Check size={16} strokeWidth={2.4} /> : <Copy size={16} strokeWidth={2} />}
                   </button>
@@ -682,7 +671,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                   e.stopPropagation();
                   handleContinue();
                 }}
-                aria-label={stage === 'finished' ? 'Complete lesson' : 'Continue'}
+                aria-label={stage === 'finished' ? t.common.completeLesson : t.common.continue}
               >
                 {stage === 'finished' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
               </button>

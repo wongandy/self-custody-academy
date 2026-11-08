@@ -3,81 +3,34 @@ import { CheckCircle2, ChevronRight, HelpCircle, XCircle } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
+import en from '@/locales/en';
+import { fmt, useI18n } from '@/lib/i18n';
 
-const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
 const NUDGE_DURATION_MS = 1250;
 
 type ScenarioBriefingProps = {
   onComplete: () => void;
 };
 
-const POWER_ON_MESSAGE = "That's a neat hardware wallet you got there! Okay let's start by clicking the power button to turn it on.";
-
-// Andy reads these in order while the device is still hidden. The last entry is
-// always the power-button line: the wallet window and device appear on it, so
-// anything added above it plays first, in the spotlight.
-const INTRO_MESSAGES = [
-  "Okay let's start by learning how to setup your hardware wallet. In case you need a refresher, a hardware wallet is a physical device that allows you to store the private keys to your Bitcoin.",
-  "The private keys are what give you the ability to send and manage your Bitcoin. They are protected by a secure chip inside the device.",
-  POWER_ON_MESSAGE,
-];
-
-const POWER_ON_INDEX = (() => {
-  const index = INTRO_MESSAGES.indexOf(POWER_ON_MESSAGE);
-  return index === -1 ? INTRO_MESSAGES.length - 1 : index;
-})();
-
-const READY_MENU_MESSAGE =
-  "These options will be covered in the next scenarios, Let's wrap this up for now.";
-
-const FACTORY_RESET_MESSAGE =
-  "Resetting the device isn't part of this lesson, so we'll leave it as it is for now. Let's wrap this up instead.";
-
-// Andy delivers these one at a time while the 12 words are on screen: the
-// explanation first, then the warning. The continue button moves between them.
-const CREATE_WORDS_MESSAGES = [
-  "Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper — never take a photo or type it on a computer.",
-  "Remember to keep your copy somewhere safe and private. Whoever gets hold of your recovery phrase can instantly steal your Bitcoin.",
-];
-
-// Andy's wrap-up for the new wallet, delivered as two lines: what the device
-// is not, then what it actually holds. The continue button moves between them.
-const CREATE_DONE_MESSAGES = [
-  "Nice work! You have now created a wallet. Remember, your Bitcoin doesn't actually live inside this hardware device — it stays safely on the blockchain.",
-  "Your device simply holds the private keys that give you the ability to send and manage it!",
-];
+// Andy's lines live in the dictionary (`lesson1`). He reads `intro` in order
+// while the device is still hidden; the power-button line (`powerOn`) always
+// comes right after them, and the wallet window appears on it. Resolving the
+// handover by structure means lines added to `intro` play first, in the spotlight.
+const POWER_ON_INDEX = en.lesson1.intro.length;
+const CREATE_WORDS_COUNT = en.lesson1.createWords.length;
+const CREATE_DONE_COUNT = en.lesson1.createDone.length;
 
 type KnowledgeQuestion = {
   id: string;
-  question: string;
-  options: Array<{ id: string; label: string }>;
+  /** Position of this question's text in `lesson1.questions`. */
+  textIndex: number;
+  optionIds: string[];
   correctId: string;
-  correctLine: string;
 };
 
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
-  {
-    id: 'recovery-phrase',
-    question: 'Where should you keep your 12-word recovery phrase?',
-    options: [
-      { id: 'photo', label: "Take a photo of it — it's always in my pocket" },
-      { id: 'paper', label: 'Write it on paper and store it somewhere safe and private' },
-      { id: 'phone', label: 'Save it in a note on my phone' },
-    ],
-    correctId: 'paper',
-    correctLine: 'Exactly. Write it down and keep it private. Anyone who gets your recovery phrase can control your Bitcoin.',
-  },
-  {
-    id: 'keys-offline',
-    question: 'Your hardware wallet keeps your Bitcoin safe because…',
-    options: [
-      { id: 'offline', label: 'Your private keys never leave the device — even when you send Bitcoin' },
-      { id: 'app', label: 'It runs a security app that scans every transaction for threats' },
-      { id: 'backup', label: 'It automatically backs your Bitcoin up to the company that made it' },
-    ],
-    correctId: 'offline',
-    correctLine: 'Right. Your keys live on the secure chip and never leave the device, so your Bitcoin stays protected even on a compromised computer.',
-  },
+  { id: 'recovery-phrase', textIndex: 0, optionIds: ['photo', 'paper', 'phone'], correctId: 'paper' },
+  { id: 'keys-offline', textIndex: 1, optionIds: ['offline', 'app', 'backup'], correctId: 'offline' },
 ];
 
 function shuffled<T>(items: T[]): T[] {
@@ -89,50 +42,11 @@ function shuffled<T>(items: T[]): T[] {
   return copy;
 }
 
-const WRONG_ANSWER_MESSAGE = 'Not quite. Take another look at the choices and try again.';
-
-const KNOWLEDGE_CHECK_LINES = {
-  prompt: [
-    'Nice work. Before we wrap up, two quick questions to make sure the key ideas stick.',
-    'Good job. One more question about what makes a hardware wallet secure.',
-  ],
-} as const;
-
 type KnowledgeFeedback = 'prompt' | 'wrong' | 'correct';
 
 type QuizEntry = {
   question: KnowledgeQuestion;
-  options: Array<{ id: string; label: string }>;
-};
-
-const MENTOR_MESSAGES: Record<WalletPhase, string> = {
-  off: POWER_ON_MESSAGE,
-  booting: 'Great — the device is booting up. Hang tight for a moment.',
-  // menu: "You'll see 'Create wallet' highlighted. Press the checkmark button to select it.",
-   menu: "Next, you need to create a wallet. This is where your device will generate your private keys. Press the checkmark button to select it.",
-  // 'create-intro': "On the next screen your 12-word recovery phrase will be shown. Press the checkmark to continue.",
-  'create-intro': "Before your device can generate those private keys, it needs to create a 12-word recovery phrase first. Press the checkmark to continue.",
-  'create-words': CREATE_WORDS_MESSAGES[0],
-  'create-quiz':
-    "Okay now it's time to prove you made a copy of it. Pick the correct word for the position shown, then press the checkmark to confirm.",
-  'create-done': CREATE_DONE_MESSAGES[0],
-  'recover-intro': "We'll cover wallet recovery later. Select Create Wallet for now.",
-  'recover-quiz': '',
-  'recover-type': '',
-  'recover-done': '',
-  'receive-address': 'This is your receive address — press the copy button to copy it.',
-  'send-blocked': 'Sending from this wallet is not part of this lesson yet. Let us get your receive address first.',
-  settings: READY_MENU_MESSAGE,
-  'reset-warn': FACTORY_RESET_MESSAGE,
-  'reset-confirm': FACTORY_RESET_MESSAGE,
-  'reset-done': FACTORY_RESET_MESSAGE,
-  'ready-menu': READY_MENU_MESSAGE,
-  'connect-confirm': '',
-  'connect-done': '',
-  'verify-address': '',
-  'verify-done': '',
-  'send-review': '',
-  'send-confirmed': '',
+  optionIds: string[];
 };
 
 function useTypewriter(text: string, speed = 6, resetKey = '') {
@@ -176,6 +90,8 @@ function useTypewriter(text: string, speed = 6, resetKey = '') {
 }
 
 function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
+  const { t } = useI18n();
+  const l1 = t.lesson1;
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
@@ -183,7 +99,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [createWordsStep, setCreateWordsStep] = useState(0);
   const [createDoneStep, setCreateDoneStep] = useState(0);
   const [readyMenuSeen, setReadyMenuSeen] = useState(false);
-  const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
+  const [readyMenuHint, setReadyMenuHint] = useState(false);
   const [resetRefused, setResetRefused] = useState(false);
   const [knowledgeCheckActive, setKnowledgeCheckActive] = useState(false);
   const [quiz, setQuiz] = useState<QuizEntry[]>([]);
@@ -204,30 +120,53 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   // power-button line; that line is where the wallet window slides in.
   const walletVisible = introStep >= POWER_ON_INDEX;
   const spotlight = isInIntro && introStep < POWER_ON_INDEX;
-  const createWordsLastStep = createWordsStep >= CREATE_WORDS_MESSAGES.length - 1;
-  const createDoneLastStep = createDoneStep >= CREATE_DONE_MESSAGES.length - 1;
+  const createWordsLastStep = createWordsStep >= CREATE_WORDS_COUNT - 1;
+  const createDoneLastStep = createDoneStep >= CREATE_DONE_COUNT - 1;
   const currentQuizEntry = quiz[quizIndex] ?? quiz[0] ?? null;
-  const currentIntroMessage = INTRO_MESSAGES[introStep];
+  const currentQuizText = currentQuizEntry ? l1.questions[currentQuizEntry.question.textIndex] : null;
+  const quizOptionLabel = (optionId: string) =>
+    (currentQuizText?.options as Record<string, string> | undefined)?.[optionId] ?? optionId;
+  const introMessages = [...l1.intro, l1.powerOn];
+  const currentIntroMessage = introMessages[introStep];
+  const knowledgePrompt = l1.knowledgePrompts[quizIndex] ?? l1.knowledgePrompts[0];
+  // What Andy says for each device phase; phases without a line fall back to the power-on line.
+  const phaseMessages: Partial<Record<WalletPhase, string>> = {
+    off: l1.powerOn,
+    booting: l1.booting,
+    menu: l1.menu,
+    'create-intro': l1.createIntro,
+    'create-words': l1.createWords[0],
+    'create-quiz': l1.createQuiz,
+    'create-done': l1.createDone[0],
+    'recover-intro': l1.recoverLater,
+    'receive-address': l1.receiveAddress,
+    'send-blocked': l1.sendBlocked,
+    settings: l1.readyMenu,
+    'reset-warn': l1.factoryReset,
+    'reset-confirm': l1.factoryReset,
+    'reset-done': l1.factoryReset,
+    'ready-menu': l1.readyMenu,
+  };
   const baseMentorMessage = isInIntro
     ? currentIntroMessage
     : knowledgeCheckActive
       ? knowledgeFeedback === 'wrong'
-        ? WRONG_ANSWER_MESSAGE
+        ? t.common.wrongAnswer
         : knowledgeFeedback === 'correct'
-          ? currentQuizEntry?.question.correctLine ?? KNOWLEDGE_CHECK_LINES.prompt[quizIndex] ?? KNOWLEDGE_CHECK_LINES.prompt[0]
-          : KNOWLEDGE_CHECK_LINES.prompt[quizIndex] ?? KNOWLEDGE_CHECK_LINES.prompt[0]
+          ? currentQuizText?.correctLine ?? knowledgePrompt
+          : knowledgePrompt
       : resetRefused
-      ? FACTORY_RESET_MESSAGE
+      ? l1.factoryReset
       : walletPhase === 'menu' && menuSelection === 'recover-intro'
-      ? "We'll cover wallet recovery later. Select Create Wallet for now."
+      ? l1.recoverLater
       : walletPhase === 'ready-menu' && readyMenuHint
-        ? readyMenuHint
+        ? l1.readyMenu
         : walletPhase === 'create-words'
-          ? CREATE_WORDS_MESSAGES[createWordsStep] ?? CREATE_WORDS_MESSAGES[0]
+          ? l1.createWords[createWordsStep] ?? l1.createWords[0]
           : walletPhase === 'create-done'
-            ? CREATE_DONE_MESSAGES[createDoneStep] ?? CREATE_DONE_MESSAGES[0]
-            : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
-  const mentorMessage = nudgeActive ? NUDGE_MESSAGE : baseMentorMessage;
+            ? l1.createDone[createDoneStep] ?? l1.createDone[0]
+            : phaseMessages[walletPhase] || l1.powerOn;
+  const mentorMessage = nudgeActive ? t.common.nudge : baseMentorMessage;
   const mentorMessageKey = nudgeActive
     ? 'nudge'
     : knowledgeCheckActive
@@ -322,7 +261,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
         setCreateDoneStep((step) => step + 1);
         return;
       }
-      setQuiz(shuffled(KNOWLEDGE_QUESTIONS).map((question) => ({ question, options: shuffled(question.options) })));
+      setQuiz(shuffled(KNOWLEDGE_QUESTIONS).map((question) => ({ question, optionIds: shuffled(question.optionIds) })));
       setQuizIndex(0);
       setKnowledgeCheckActive(true);
       return;
@@ -361,12 +300,12 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       return;
     }
     setReadyMenuSeen(true);
-    setReadyMenuHint(null);
+    setReadyMenuHint(false);
     onComplete();
   };
 
   const handleFactoryResetAttempt = useCallback(() => {
-    setReadyMenuHint(null);
+    setReadyMenuHint(false);
     setResetRefused(true);
   }, []);
 
@@ -405,13 +344,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
           ? { type: 'confirm' }
           : { type: 'none' };
 
-  const handleReadyMenuSelect = useCallback((label: string) => {
+  const handleReadyMenuSelect = useCallback(() => {
     setResetRefused(false);
-    setReadyMenuHint(
-      label === 'Receive Bitcoin'
-        ? "These options will be covered in the next scenarios, Let's wrap this up for now."
-        : "These options will be covered in the next scenarios, Let's wrap this up for now.",
-    );
+    setReadyMenuHint(true);
   }, []);
 
   const bubbleKey = mentorMessageKey;
@@ -473,7 +408,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
-        {knowledgeCheckActive && <div className="knowledge-check-kicker">Lesson check-in</div>}
+        {knowledgeCheckActive && <div className="knowledge-check-kicker">{t.quiz.checkIn}</div>}
         {!knowledgeCheckActive && (
           <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
             <HardwareWallet
@@ -490,10 +425,10 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
           </div>
         )}
         <div className={`mentor-row ${knowledgeCheckActive ? 'knowledge-check-mentor-row' : ''}`}>
-          <div ref={portraitRef} className="mentor-portrait" aria-label="Andy, your mentor" role="img">
+          <div ref={portraitRef} className="mentor-portrait" aria-label={fmt(t.common.mentorAria, { name: 'Andy' })} role="img">
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
+              <img className="mentor-portrait-image" src={andyPortrait} alt={fmt(t.common.mentorAria, { name: 'Andy' })} />
             </div>
             <div className="mentor-portrait-badge">Andy</div>
           </div>
@@ -520,35 +455,35 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
                 handleContinue();
               }}
               disabled={!canContinue}
-              aria-label="Continue"
+              aria-label={t.common.continue}
             >
               <ChevronRight size={18} strokeWidth={2.5} />
             </button>
           </div>
         </div>
         {knowledgeCheckActive && (
-          <div className="knowledge-check-card" role="group" aria-label="Quick knowledge check">
+          <div className="knowledge-check-card" role="group" aria-label={t.quiz.groupAria}>
             <div className="knowledge-check-header">
               <HelpCircle size={16} strokeWidth={2.2} />
-              <span>Quick check</span>
-              <span className="knowledge-check-progress">Question {quizIndex + 1} of {quiz.length}</span>
+              <span>{t.quiz.quickCheck}</span>
+              <span className="knowledge-check-progress">{fmt(t.quiz.progress, { current: quizIndex + 1, total: quiz.length })}</span>
             </div>
-            <p className="knowledge-check-question">{currentQuizEntry?.question.question}</p>
+            <p className="knowledge-check-question">{currentQuizText?.question}</p>
             <div className="knowledge-check-options">
-              {(currentQuizEntry?.options ?? []).map((option) => {
-                const isSelected = selectedOption === option.id;
-                const isCorrect = checkedAnswer && option.id === currentQuizEntry.question.correctId;
-                const isWrong = wrongOptionId === option.id;
+              {(currentQuizEntry?.optionIds ?? []).map((optionId) => {
+                const isSelected = selectedOption === optionId;
+                const isCorrect = checkedAnswer && optionId === currentQuizEntry.question.correctId;
+                const isWrong = wrongOptionId === optionId;
                 return (
                   <button
-                    key={option.id}
+                    key={optionId}
                     type="button"
                     className={`knowledge-check-option ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''} ${isWrong ? 'wrong' : ''}`}
-                    onClick={() => handleOptionSelect(option.id)}
+                    onClick={() => handleOptionSelect(optionId)}
                     disabled={!knowledgeCheckCanAnswer}
                   >
                     {isCorrect ? <CheckCircle2 size={16} strokeWidth={2.2} /> : isWrong ? <XCircle size={16} strokeWidth={2.2} /> : null}
-                    <span>{option.label}</span>
+                    <span>{quizOptionLabel(optionId)}</span>
                   </button>
                 );
               })}
@@ -559,7 +494,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
               onClick={handleContinueFromCheck}
               disabled={!checkedAnswer || !done}
             >
-              {isLastQuizQuestion ? 'Finish lesson' : 'Next question'}
+              {isLastQuizQuestion ? t.quiz.finish : t.quiz.next}
             </button>
           </div>
         )}

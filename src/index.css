@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
   color: #f5f2ed;
   background: #17191b;
   font-synthesis: none;
@@ -49,6 +49,9 @@ a {
   --gold-light: #f1bd69;
   --green: #a7e843;
   --green-dark: #7dbb25;
+  --danger: #e87171;
+  --shadow-sm: 0 3px 10px rgba(0, 0, 0, 0.18);
+  --shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.22);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -61,26 +64,138 @@ a {
   transition: background-color 280ms ease, color 280ms ease;
 }
 
-.theme-light,
-.theme-light .app-shell {
-  --bg: #f3f0ea;
-  --bg-deep: #e8e4dc;
-  --panel: #e9e4db;
-  --panel-strong: #dcd6cb;
-  --text: #1b1d1d;
-  --muted: #626764;
-  --faint: #8a8d88;
-  --line: rgba(27, 29, 29, 0.13);
-  background:
-    radial-gradient(circle at 18% 46%, rgba(217, 148, 60, 0.11), transparent 27rem),
-    radial-gradient(circle at 84% 16%, rgba(99, 145, 28, 0.07), transparent 25rem),
-    var(--bg);
+/* ── Language switch ── */
+
+.locale-switcher {
+  position: relative;
+}
+
+.locale-toggle {
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.locale-toggle:hover,
+.locale-toggle[aria-expanded='true'] {
+  color: var(--gold-light);
+  border-color: rgba(241, 189, 105, 0.4);
+  background: var(--panel);
+}
+
+.locale-toggle:active {
+  transform: scale(0.96);
+}
+
+.locale-toggle:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+}
+
+.locale-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 168px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  animation: locale-menu-in 160ms ease;
+}
+
+.locale-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  color: var(--text);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.locale-option:hover,
+.locale-option:focus-visible {
+  background: var(--panel-strong);
+  outline: none;
+}
+
+.locale-option-code {
+  width: 20px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.locale-option-label {
+  flex: 1;
+}
+
+.locale-option.active .locale-option-label {
+  font-weight: 700;
+}
+
+.locale-option-check {
+  color: var(--gold-light);
+}
+
+@keyframes locale-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .locale-menu {
+    animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .locale-toggle {
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .locale-toggle {
+    width: 38px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .locale-toggle-code {
+    display: none;
+  }
 }
 
 /* ── Theme switch ── */
 
 html.theme-light {
-  background: #f3f0ea;
+  color: #1f1a14;
+  background: #faf7f2;
 }
 
 .theme-toggle {
@@ -232,7 +347,7 @@ html.theme-light {
 .illustration-caption,
 .site-footer,
 .trust-item {
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -434,7 +549,7 @@ html.theme-light {
 }
 
 .vault-face span {
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.19em;
   color: var(--gold-light);
@@ -642,7 +757,7 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: transparent;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -724,7 +839,7 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--panel-strong);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 8px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -749,7 +864,7 @@ html.theme-light {
 .character-role {
   margin: 6px 0 0;
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -794,7 +909,7 @@ html.theme-light {
   display: block;
   margin-bottom: 9px;
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1188,7 +1303,7 @@ html.theme-light {
 .roadmap-label {
   display: block;
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1197,7 +1312,7 @@ html.theme-light {
 
 .roadmap-path-status {
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1315,7 +1430,7 @@ html.theme-light {
   border-radius: 10px;
   background: var(--text);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(247, 147, 26, 0.1);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.1em;
@@ -1341,12 +1456,12 @@ html.theme-light {
 }
 
 .theme-light .roadmap-start-bubble {
-  color: #f7f4ee;
-  background: #23262a;
+  color: #fdf6ec;
+  background: #1f1a14;
 }
 
 .theme-light .roadmap-start-bubble::before {
-  background: #23262a;
+  background: #1f1a14;
 }
 
 @keyframes roadmap-start-float {
@@ -1632,7 +1747,7 @@ html.theme-light {
   padding: 14px 28px;
   border-bottom: 1px solid var(--line);
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1694,7 +1809,7 @@ html.theme-light {
 .scenario-note {
   margin: 14px 0 0;
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1711,10 +1826,6 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(0, 0, 0, 0.14);
-}
-
-.theme-light .scenario-character-stage {
-  background: rgba(0, 0, 0, 0.03);
 }
 
 .scenario-orbit {
@@ -1741,7 +1852,7 @@ html.theme-light {
   height: 96px;
   display: grid;
   place-items: center;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
   font-size: 40px;
   font-weight: 800;
   color: var(--gold-light);
@@ -1758,7 +1869,7 @@ html.theme-light {
   align-items: center;
   gap: 7px;
   color: var(--text);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1912,7 +2023,7 @@ html.theme-light {
   align-items: center;
   gap: 7px;
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1955,7 +2066,7 @@ html.theme-light {
   align-items: center;
   gap: 6px;
   color: var(--muted);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1972,7 +2083,7 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--panel-strong);
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
   font-size: 14px;
   outline: none;
   transition: border-color 180ms ease, box-shadow 180ms ease;
@@ -2019,7 +2130,7 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: transparent;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -2067,7 +2178,7 @@ html.theme-light {
   border: none;
   padding: 0;
   color: var(--gold-light);
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -2146,7 +2257,7 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -2285,13 +2396,6 @@ html.theme-light {
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-.theme-light .hw-wallet-device {
-  border-color: rgba(0, 0, 0, 0.12);
-  background: linear-gradient(160deg, #d8d4cc, #c4c0b8);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
 
 .hw-wallet-bezel {
   position: relative;
@@ -2305,9 +2409,6 @@ html.theme-light {
   overflow: hidden;
 }
 
-.theme-light .hw-wallet-bezel {
-  border-color: rgba(0, 0, 0, 0.1);
-}
 
 .hw-wallet-screen {
   flex: 1;
@@ -2326,15 +2427,12 @@ html.theme-light {
   justify-content: center;
   gap: 10px;
   color: rgba(167, 232, 67, 0.25);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.theme-light .hw-screen-off {
-  color: rgba(100, 120, 50, 0.3);
-}
 
 .hw-screen-boot {
   flex: 1;
@@ -2350,7 +2448,7 @@ html.theme-light {
   height: 56px;
   display: grid;
   place-items: center;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
   font-size: 28px;
   font-weight: 800;
   color: var(--green);
@@ -2366,7 +2464,7 @@ html.theme-light {
 
 .hw-boot-text {
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
 }
@@ -2396,7 +2494,7 @@ html.theme-light {
 
 .hw-screen-title {
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2413,7 +2511,7 @@ html.theme-light {
   border-radius: 8px;
   background: transparent;
   color: rgba(167, 232, 67, 0.5);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 12px;
   text-align: left;
   cursor: pointer;
@@ -2467,7 +2565,7 @@ html.theme-light {
 .hw-screen-body {
   margin: 0;
   color: rgba(167, 232, 67, 0.75);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   line-height: 1.65;
   letter-spacing: 0.01em;
@@ -2525,14 +2623,14 @@ html.theme-light {
 
 .hw-word-num {
   color: rgba(167, 232, 67, 0.4);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   min-width: 20px;
 }
 
 .hw-word-text {
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -2555,7 +2653,7 @@ html.theme-light {
   border-radius: 8px;
   background: rgba(167, 232, 67, 0.03);
   color: rgba(167, 232, 67, 0.6);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 11px;
   text-align: left;
   cursor: pointer;
@@ -2601,7 +2699,7 @@ html.theme-light {
 
 .hw-quiz-wrong {
   color: #e87171;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   text-align: center;
   animation: hw-shake 300ms ease;
@@ -2615,7 +2713,7 @@ html.theme-light {
 
 .hw-quiz-progress {
   color: rgba(167, 232, 67, 0.3);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 8px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2659,7 +2757,7 @@ html.theme-light {
 
 .hw-recover-info span {
   color: rgba(167, 232, 67, 0.6);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   line-height: 1.55;
 }
@@ -2698,7 +2796,7 @@ html.theme-light {
   padding: 0;
   margin: 0;
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.03em;
@@ -2793,7 +2891,7 @@ html.theme-light {
   border-radius: 6px;
   background: rgba(167, 232, 67, 0.03);
   color: rgba(167, 232, 67, 0.6);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 11px;
   text-align: left;
   transition: all 160ms ease;
@@ -2844,7 +2942,7 @@ html.theme-light {
 
 .hw-type-no-match {
   color: rgba(232, 113, 113, 0.7);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   text-align: center;
   padding: 8px 4px;
@@ -2888,11 +2986,6 @@ html.theme-light {
   -webkit-tap-highlight-color: transparent;
 }
 
-.theme-light .hw-btn {
-  border-color: rgba(0, 0, 0, 0.1);
-  background: linear-gradient(145deg, #c0bcb4, #aeaaa2);
-  color: #1b1d1d;
-}
 
 .hw-btn:hover {
   border-color: rgba(167, 232, 67, 0.4);
@@ -3152,7 +3245,7 @@ html.theme-light {
 
 .mentor-bubble-name {
   display: block;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -3219,7 +3312,7 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--panel-strong);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 8px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -3338,7 +3431,7 @@ html.theme-light {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -3380,9 +3473,6 @@ html.theme-light {
   transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
-.theme-light .knowledge-check-option {
-  background: rgba(255, 255, 255, 0.55);
-}
 
 .knowledge-check-option svg {
   flex-shrink: 0;
@@ -3521,7 +3611,7 @@ html.theme-light {
 
 .knowledge-check-kicker {
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -4151,7 +4241,7 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: transparent;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -4212,9 +4302,6 @@ html.theme-light {
   background: rgba(0, 0, 0, 0.08);
 }
 
-.theme-light .scenario-wallet-tip {
-  background: rgba(0, 0, 0, 0.02);
-}
 
 .scenario-wallet-tip svg {
   flex-shrink: 0;
@@ -4236,7 +4323,7 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--panel-strong);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -4340,7 +4427,7 @@ html.theme-light {
   border: 1px solid rgba(167, 232, 67, 0.3);
   border-radius: 999px;
   background: var(--panel-strong);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4375,11 +4462,6 @@ html.theme-light {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-.theme-light .tx-sim-panel {
-  border-color: rgba(0, 0, 0, 0.12);
-  background: linear-gradient(160deg, #d8d4cc, #c4c0b8);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
 
 .tx-sim-screen {
   flex: 1;
@@ -4394,7 +4476,7 @@ html.theme-light {
   align-items: center;
   gap: 10px;
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -4402,14 +4484,11 @@ html.theme-light {
   border-bottom: 1px solid rgba(167, 232, 67, 0.15);
 }
 
-.theme-light .tx-sim-header {
-  border-color: rgba(100, 120, 50, 0.2);
-}
 
 .tx-sim-balance {
   margin: 0;
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 14px;
   font-weight: 500;
 }
@@ -4429,7 +4508,7 @@ html.theme-light {
 
 .tx-sim-field label {
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4442,15 +4521,12 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.25);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 13px;
   outline: none;
   transition: border-color 180ms ease;
 }
 
-.theme-light .tx-sim-field input {
-  background: rgba(255, 255, 255, 0.5);
-}
 
 .tx-sim-field input:focus {
   border-color: rgba(167, 232, 67, 0.5);
@@ -4481,9 +4557,6 @@ html.theme-light {
   transition: all 160ms ease;
 }
 
-.theme-light .tx-fee-btn {
-  background: rgba(255, 255, 255, 0.4);
-}
 
 .tx-fee-btn span {
   font-size: 11px;
@@ -4491,7 +4564,7 @@ html.theme-light {
 }
 
 .tx-fee-btn small {
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 8px;
   color: var(--faint);
 }
@@ -4514,13 +4587,10 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.15);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 11px;
 }
 
-.theme-light .tx-sim-summary {
-  background: rgba(0, 0, 0, 0.04);
-}
 
 .tx-sim-summary span {
   color: var(--faint);
@@ -4590,7 +4660,7 @@ html.theme-light {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 12px;
 }
 
@@ -4655,14 +4725,14 @@ html.theme-light {
 
 .tx-sim-pending-text {
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 13px;
   font-weight: 500;
 }
 
 .tx-sim-pending-sub {
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.04em;
 }
@@ -4673,7 +4743,7 @@ html.theme-light {
   gap: 10px;
   padding: 10px 0;
   color: var(--muted);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 11px;
 }
 
@@ -4704,9 +4774,6 @@ html.theme-light {
   background: rgba(0, 0, 0, 0.12);
 }
 
-.theme-light .tx-sim-receipt {
-  background: rgba(0, 0, 0, 0.03);
-}
 
 .tx-confirmed {
   color: var(--green) !important;
@@ -4737,7 +4804,7 @@ html.theme-light {
 
 .tx-addr-label {
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4746,7 +4813,7 @@ html.theme-light {
 
 .tx-addr-value {
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 14px;
   font-weight: 500;
   flex: 1;
@@ -4765,7 +4832,7 @@ html.theme-light {
   border-radius: 8px;
   background: rgba(167, 232, 67, 0.08);
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 11px;
 }
 
@@ -4786,7 +4853,7 @@ html.theme-light {
 }
 
 .tx-qr-label {
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4806,7 +4873,7 @@ html.theme-light {
 .tx-addr-full {
   flex: 1;
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 12px;
   word-break: break-all;
 }
@@ -4820,7 +4887,7 @@ html.theme-light {
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   cursor: pointer;
   transition: all 160ms ease;
@@ -4855,7 +4922,7 @@ html.theme-light {
   align-items: center;
   gap: 7px;
   color: var(--muted);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -4884,7 +4951,7 @@ html.theme-light {
   margin: 0;
   max-width: min(360px, 92%);
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 11px;
   line-height: 1.6;
   text-align: center;
@@ -4939,7 +5006,7 @@ html.theme-light {
   border-radius: 10px;
   background: rgba(241, 189, 105, 0.08);
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -5113,11 +5180,6 @@ html.theme-light {
   overflow: hidden;
 }
 
-.theme-light .withdraw-phone {
-  border-color: #5a5d5f;
-  background: #c4c0b8;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), inset 0 0 0 2px rgba(255, 255, 255, 0.2);
-}
 
 .withdraw-phone-notch {
   position: absolute;
@@ -5131,9 +5193,6 @@ html.theme-light {
   z-index: 10;
 }
 
-.theme-light .withdraw-phone-notch {
-  background: #5a5d5f;
-}
 
 .withdraw-phone-screen {
   width: 100%;
@@ -5145,16 +5204,13 @@ html.theme-light {
   overflow: hidden;
 }
 
-.theme-light .withdraw-phone-screen {
-  background: linear-gradient(180deg, #e8e4dc, #d4d0c8);
-}
 
 .withdraw-phone-statusbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 4px 18px 2px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   color: var(--faint);
   flex-shrink: 0;
@@ -5218,7 +5274,7 @@ html.theme-light {
   align-items: center;
   gap: 6px;
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.03em;
@@ -5235,7 +5291,7 @@ html.theme-light {
 .withdraw-phone-section label,
 .withdraw-phone-label-row label {
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -5262,9 +5318,6 @@ html.theme-light {
   transition: border-color 180ms ease;
 }
 
-.theme-light .withdraw-asset-dropdown {
-  background: rgba(255, 255, 255, 0.4);
-}
 
 .withdraw-asset-dropdown:hover {
   border-color: rgba(241, 189, 105, 0.3);
@@ -5282,7 +5335,7 @@ html.theme-light {
 
 .withdraw-asset-btc {
   color: #fff;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   font-weight: 700;
 }
@@ -5313,9 +5366,6 @@ html.theme-light {
   animation: hw-fade-in 150ms ease;
 }
 
-.theme-light .withdraw-asset-menu {
-  background: rgba(255, 255, 255, 0.5);
-}
 
 .withdraw-asset-option {
   display: flex;
@@ -5349,15 +5399,12 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.25);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 13px;
   outline: none;
   transition: border-color 180ms ease;
 }
 
-.theme-light .withdraw-amount-input-wrap input {
-  background: rgba(255, 255, 255, 0.4);
-}
 
 .withdraw-amount-input-wrap input:focus {
   border-color: rgba(167, 232, 67, 0.5);
@@ -5376,7 +5423,7 @@ html.theme-light {
   position: absolute;
   right: 14px;
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 12px;
   font-weight: 500;
   pointer-events: none;
@@ -5388,7 +5435,7 @@ html.theme-light {
   border-radius: 6px;
   background: rgba(241, 189, 105, 0.08);
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -5426,15 +5473,12 @@ html.theme-light {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.25);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   outline: none;
   transition: border-color 180ms ease;
 }
 
-.theme-light .withdraw-addr-input {
-  background: rgba(255, 255, 255, 0.4);
-}
 
 .withdraw-addr-input:focus {
   border-color: rgba(167, 232, 67, 0.5);
@@ -5495,7 +5539,7 @@ html.theme-light {
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   cursor: pointer;
   transition: all 160ms ease;
@@ -5523,15 +5567,12 @@ html.theme-light {
   margin-top: 2px;
 }
 
-.theme-light .withdraw-phone-summary {
-  background: rgba(0, 0, 0, 0.04);
-}
 
 .withdraw-summary-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
 }
 
@@ -5570,7 +5611,7 @@ html.theme-light {
   flex: 1;
   min-width: 0;
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 11px;
   word-break: break-all;
   line-height: 1.5;
@@ -5694,7 +5735,7 @@ html.theme-light {
 
 .withdraw-confirm-receive-label {
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -5702,7 +5743,7 @@ html.theme-light {
 
 .withdraw-confirm-receive-value {
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 16px;
   font-weight: 600;
 }
@@ -5714,7 +5755,7 @@ html.theme-light {
   gap: 8px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--line);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
 }
 
@@ -5875,7 +5916,7 @@ html.theme-light {
   margin-top: 14px;
   font-size: 10px;
   color: var(--faint);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -5999,7 +6040,7 @@ html.theme-light {
   border: 0;
   border-radius: 10px;
   background: linear-gradient(160deg, var(--gold-light), #d9a84e);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -6839,240 +6880,391 @@ html.theme-light {
   to { transform: translate(-50%, 0) scale(1); }
 }
 
-/* ── Light theme contrast pass ── */
+/* ── Light theme: warm paper ── */
+/* Cream page, white cards, warm-black text, Bitcoin orange as the one accent.
+   Simulated devices (hardware wallet, phone, tx panel, laptop wallet) stay dark like real hardware. */
 
 .theme-light .app-shell {
-  --bg: #f8f9f7;
-  --bg-deep: #eef1ee;
+  --bg: #faf7f2;
+  --bg-deep: #f2ece3;
   --panel: #ffffff;
-  --panel-strong: #edf1ee;
-  --text: #12212b;
-  --muted: #3f515c;
-  --faint: #61717a;
-  --line: rgba(18, 33, 43, 0.18);
-  --gold: #b15f0b;
-  --gold-light: #b15f0b;
-  --green: #2f6b3d;
-  --green-dark: #245632;
+  --panel-strong: #f5f0e8;
+  --text: #1f1a14;
+  --muted: #5e554a;
+  --faint: #857a6d;
+  --line: rgba(60, 40, 20, 0.12);
+  --gold: #f7931a;
+  --gold-light: #b35f00;
+  --green: #2e7d32;
+  --green-dark: #1f5e24;
+  --danger: #c62828;
+  --shadow-sm: 0 2px 8px rgba(60, 40, 20, 0.06);
+  --shadow-lg: 0 24px 60px rgba(60, 40, 20, 0.1);
   background:
-    radial-gradient(circle at 12% 35%, rgba(237, 158, 63, 0.08), transparent 30rem),
-    radial-gradient(circle at 90% 10%, rgba(63, 126, 82, 0.06), transparent 28rem),
+    radial-gradient(circle at 14% 38%, rgba(247, 147, 26, 0.07), transparent 32rem),
+    radial-gradient(circle at 88% 8%, rgba(247, 147, 26, 0.04), transparent 26rem),
     var(--bg);
 }
 
+/* Devices keep their dark look: re-declare the dark tokens on each device root */
+.theme-light .app-shell :is(.hw-wallet-device, .tx-sim-panel, .withdraw-phone, .wallet-window) {
+  --bg: #17191b;
+  --bg-deep: #111314;
+  --panel: #202326;
+  --panel-strong: #292d30;
+  --text: #f4f1eb;
+  --muted: #a3a7a7;
+  --faint: #666d6f;
+  --line: rgba(255, 255, 255, 0.1);
+  --gold: #d9943c;
+  --gold-light: #f1bd69;
+  --green: #a7e843;
+  --green-dark: #7dbb25;
+  --danger: #e87171;
+  color: var(--text);
+}
+
+.theme-light .hw-wallet-device,
+.theme-light .tx-sim-panel,
+.theme-light .withdraw-phone,
+.theme-light .wallet-window {
+  box-shadow: 0 24px 60px rgba(60, 40, 20, 0.18), 0 2px 6px rgba(60, 40, 20, 0.08);
+}
+
+/* Header & footer */
 .theme-light .site-header,
 .theme-light .character-footer {
-  background: rgba(255, 255, 255, 0.94);
-  border-color: rgba(18, 33, 43, 0.14);
-}
-
-.theme-light .brand-name strong,
-.theme-light .character-role,
-.theme-light .character-dialog-label,
-.theme-light .roadmap-label,
-.theme-light .scenario-card-topline span:last-child,
-.theme-light .scenario-eyebrow,
-.theme-light .eyebrow {
-  color: #9a5004;
-}
-
-.theme-light .character-dialog {
-  border-color: rgba(177, 95, 11, 0.3);
-  background: #ffffff;
-  box-shadow: 0 16px 38px rgba(33, 50, 58, 0.09);
-}
-
-.theme-light .character-dialog::before {
-  border-color: rgba(177, 95, 11, 0.3);
-  background: #ffffff;
-}
-
-.theme-light .character-message p,
-.theme-light .scenario-copy p,
-.theme-light .scenario-lede,
-.theme-light .scenario-wallet-info .scenario-lede,
-.theme-light .scenario-wallet-tip span,
-.theme-light .tx-sim-body {
-  color: #263943;
-}
-
-.theme-light .bubble-next {
-  color: #52606a;
-  background: #fffdf8;
-  border-color: rgba(23, 33, 42, 0.2);
-}
-
-.theme-light .bubble-next.ready {
-  color: #2b1905;
-  border-color: #c97916;
-  background: #f5ad43;
-}
-
-.theme-light .character-proceed,
-.theme-light .primary-button {
-  color: #2b1905;
-}
-
-.theme-light .roadmap-path-status,
-.theme-light .scenario-card-topline,
-.theme-light .scenario-wallet-status,
-.theme-light .tx-sim-field label,
-.theme-light .withdraw-phone-section label,
-.theme-light .withdraw-phone-label-row label,
-.theme-light .withdraw-phone-statusbar {
-  color: #52636d;
-}
-
-.theme-light .roadmap-lesson-title-plate {
-  color: #1d303b;
-  background: #e7eeea;
-  box-shadow: 0 3px 10px rgba(24, 32, 38, 0.08);
-}
-
-.theme-light .roadmap-lesson.locked .roadmap-lesson-title-plate {
-  color: #5c6d76;
-  background: #dfe6e2;
-}
-
-.theme-light .roadmap-lesson-marker {
-  box-shadow: 0 0 0 4px rgba(246, 244, 239, 0.9), inset 0 0 0 1px rgba(16, 25, 28, 0.2), 0 5px 0 rgba(13, 21, 24, 0.14);
-}
-
-.theme-light .roadmap-lesson.locked .roadmap-lesson-marker {
-  color: #e7ecec;
-  background: linear-gradient(145deg, #65777c, #465a60);
-}
-
-.theme-light .scenario-card {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.95), transparent 50%),
-    linear-gradient(145deg, #ffffff, #edf1ee);
-  box-shadow: 0 24px 70px rgba(45, 38, 28, 0.12);
-}
-
-.theme-light .scenario-wallet-tip,
-.theme-light .scenario-wallet-status {
-  background: rgba(255, 255, 255, 0.82);
-}
-
-.theme-light .scenario-wallet-status.active,
-.theme-light .recover-status {
-  color: #37651c;
-  border-color: rgba(63, 112, 31, 0.35);
-}
-
-.theme-light .tx-sim-panel,
-.theme-light .hw-wallet-device {
-  border-color: rgba(23, 33, 42, 0.22);
-  box-shadow: 0 20px 60px rgba(45, 38, 28, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-
-.theme-light .tx-sim-header,
-.theme-light .withdraw-phone-app-header {
-  color: #37651c;
-  border-color: rgba(63, 112, 31, 0.3);
-}
-
-.theme-light .tx-sim-balance {
-  color: #945007;
-}
-
-.theme-light .tx-sim-field input,
-.theme-light .withdraw-asset-dropdown,
-.theme-light .withdraw-amount-input-wrap input,
-.theme-light .withdraw-addr-input {
-  color: #17212a;
-  border-color: rgba(23, 33, 42, 0.24);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.theme-light .tx-sim-field input::placeholder,
-.theme-light .withdraw-amount-input-wrap input::placeholder,
-.theme-light .withdraw-addr-input::placeholder {
-  color: #77828a;
-}
-
-.theme-light .withdraw-phone {
-  border-color: #687076;
-  background: #d3d0c8;
-}
-
-.theme-light .withdraw-phone-screen {
-  background: linear-gradient(180deg, #fbfaf7, #e9e6de);
-}
-
-.theme-light .withdraw-asset-name,
-.theme-light .withdraw-phone-section label,
-.theme-light .withdraw-phone-label-row label {
-  color: #40535e;
-}
-
-.theme-light .withdraw-asset-dropdown,
-.theme-light .withdraw-asset-menu {
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.theme-light .withdraw-phone-summary {
-  color: #4a5760;
-  background: rgba(255, 255, 255, 0.58);
-  border-color: rgba(23, 33, 42, 0.18);
+  background: rgba(250, 247, 242, 0.88);
+  border-color: var(--line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .theme-light .header-account,
 .theme-light .theme-toggle,
+.theme-light .locale-toggle,
 .theme-light .close-button,
-.theme-light .recover-close,
-.theme-light .hw-reset-btn {
-  color: #40535e;
-  border-color: rgba(23, 33, 42, 0.2);
+.theme-light .recover-close {
+  color: var(--muted);
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.theme-light .theme-toggle:hover,
+.theme-light .locale-toggle:hover,
+.theme-light .locale-toggle[aria-expanded='true'],
+.theme-light .close-button:hover {
+  color: var(--gold-light);
+  border-color: rgba(179, 95, 0, 0.35);
+  background: #fff8ee;
+}
+
+.theme-light .locale-menu {
+  background: var(--panel);
+  box-shadow: 0 14px 32px rgba(60, 40, 20, 0.12);
 }
 
 .theme-light .site-footer {
-  color: #61717a;
+  color: var(--faint);
+}
+
+/* Buttons */
+.theme-light .character-proceed,
+.theme-light .primary-button {
+  color: #2b1905;
+  box-shadow: 0 8px 22px rgba(247, 147, 26, 0.28), inset 0 -2px 0 rgba(150, 80, 0, 0.18);
+}
+
+.theme-light .character-proceed:disabled {
+  color: var(--faint);
+  background: #ece5da;
+  box-shadow: none;
+}
+
+.theme-light .profile-link {
+  color: var(--gold-light);
+  border-color: rgba(179, 95, 0, 0.28);
+  background: var(--panel);
+  box-shadow: 0 3px 0 rgba(60, 40, 20, 0.08);
+}
+
+.theme-light .profile-link:hover {
+  color: #8a4700;
+  border-color: rgba(179, 95, 0, 0.5);
+  background: #fff8ee;
+  box-shadow: 0 5px 0 rgba(60, 40, 20, 0.1);
+}
+
+.theme-light .bubble-next {
+  color: var(--faint);
+  background: var(--panel);
+  border-color: var(--line);
+}
+
+.theme-light .bubble-next.ready {
+  color: #2b1905;
+  border-color: #e08a1e;
+  background: #f7a531;
+}
+
+/* Cards & dialogs */
+.theme-light .character-dialog,
+.theme-light .mentor-bubble {
+  border-color: rgba(179, 95, 0, 0.22);
+  background: var(--panel);
+  box-shadow: 0 12px 32px rgba(60, 40, 20, 0.07);
+}
+
+.theme-light .character-dialog::before,
+.theme-light .mentor-bubble::before {
+  border-color: rgba(179, 95, 0, 0.22);
+  background: var(--panel);
+}
+
+.theme-light .scenario-card,
+.theme-light .auth-card,
+.theme-light .knowledge-check-card {
+  background: var(--panel);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Knowledge check */
+.theme-light .knowledge-check-card {
+  border-color: var(--line);
+}
+
+.theme-light .knowledge-check-layout .mentor-row .mentor-bubble {
+  border-color: var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-light .knowledge-check-layout .mentor-row .mentor-bubble::before {
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.theme-light .knowledge-check-option {
+  border-color: rgba(60, 40, 20, 0.14);
+  background: var(--panel);
+}
+
+.theme-light .knowledge-check-option:hover:not(:disabled) {
+  border-color: rgba(247, 147, 26, 0.55);
+  background: #fffaf3;
+}
+
+.theme-light .knowledge-check-option.selected {
+  border-color: #f7931a;
+  background: #fff6ea;
+  box-shadow: inset 0 0 0 1px rgba(247, 147, 26, 0.35);
+}
+
+.theme-light .knowledge-check-option.correct {
+  border-color: rgba(46, 125, 50, 0.5);
+  background: #f1f8f1;
+  box-shadow: inset 0 0 0 1px rgba(46, 125, 50, 0.2);
+}
+
+.theme-light .knowledge-check-option.wrong {
+  color: #8e1f1f;
+  border-color: rgba(198, 40, 40, 0.45);
+  background: #fdf2f1;
+  box-shadow: inset 0 0 0 1px rgba(198, 40, 40, 0.15);
+}
+
+.theme-light .knowledge-check-option.wrong svg,
+.theme-light .knowledge-check-feedback.wrong svg {
+  color: var(--danger);
+}
+
+.theme-light .knowledge-check-feedback.correct {
+  border-color: rgba(46, 125, 50, 0.3);
+  background: #f1f8f1;
+}
+
+.theme-light .knowledge-check-feedback.wrong {
+  border-color: rgba(198, 40, 40, 0.3);
+  background: #fdf2f1;
+}
+
+.theme-light .knowledge-check-submit {
+  color: #2b1905;
+  background: linear-gradient(145deg, #ffaa3d, #f7931a);
+  box-shadow: 0 6px 16px rgba(247, 147, 26, 0.25);
+}
+
+.theme-light .knowledge-check-submit:disabled {
+  opacity: 1;
+  color: #a39885;
+  background: #efe9df;
+  box-shadow: none;
+}
+
+.theme-light .scenario-wallet-tip,
+.theme-light .scenario-wallet-status {
+  background: var(--panel-strong);
+}
+
+.theme-light .scenario-wallet-status.active,
+.theme-light .recover-status {
+  color: var(--green);
+  border-color: rgba(46, 125, 50, 0.35);
 }
 
 .theme-light .scenario-character-stage {
-  background: #f0f4f1;
-  border-color: rgba(18, 33, 43, 0.16);
+  background: var(--panel-strong);
+  border-color: var(--line);
 }
 
 .theme-light .scenario-speech {
-  color: #31434d;
-  background: #ffffff;
-  border-color: rgba(18, 33, 43, 0.16);
-  box-shadow: 0 10px 24px rgba(33, 50, 58, 0.07);
-}
-
-.theme-light .scenario-speech strong {
-  color: #172c38;
-}
-
-.theme-light .auth-card {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.98), transparent 55%),
-    linear-gradient(145deg, #ffffff, #edf1ee);
-  box-shadow: 0 24px 70px rgba(33, 50, 58, 0.12);
-}
-
-.theme-light .auth-subtitle,
-.theme-light .auth-card label,
-.theme-light .auth-switch {
-  color: #40535e;
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
 }
 
 .theme-light .auth-field input {
-  color: #12212b;
-  background: #ffffff;
-  border-color: rgba(18, 33, 43, 0.2);
+  background: var(--panel);
+  border-color: rgba(60, 40, 20, 0.18);
 }
 
-.theme-light .auth-field input::placeholder {
-  color: #71808a;
+.theme-light .auth-field input:focus {
+  border-color: rgba(247, 147, 26, 0.6);
+  box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.14);
 }
 
+.theme-light .auth-error,
+.theme-light .roadmap-error {
+  color: var(--danger);
+  border-color: rgba(198, 40, 40, 0.25);
+  background: rgba(198, 40, 40, 0.05);
+}
+
+.theme-light .roadmap-error {
+  background: none;
+}
+
+/* Portraits & avatars: light rings instead of dark slabs */
+.theme-light .character-portrait-ring,
+.theme-light .auth-portrait-ring,
+.theme-light .auth-icon-badge,
+.theme-light .scenario-ben-face,
+.theme-light .mentor-portrait {
+  border-color: rgba(179, 95, 0, 0.3);
+  background: linear-gradient(145deg, #ffffff, #f3eadc);
+}
+
+.theme-light .character-portrait-glow,
+.theme-light .auth-portrait-glow {
+  opacity: 0.14;
+}
+
+.theme-light .character-portrait-badge {
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Hero illustration */
 .theme-light .illustration-card {
-  border-color: rgba(18, 33, 43, 0.16);
-  box-shadow: 0 24px 70px rgba(33, 50, 58, 0.16);
+  border-color: var(--line);
+  box-shadow: 0 24px 60px rgba(60, 40, 20, 0.14);
+}
+
+.theme-light .orbit {
+  border-color: rgba(60, 40, 20, 0.12);
+}
+
+.theme-light .floating-token {
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-light .illustration-caption {
+  color: var(--muted);
+}
+
+/* Roadmap */
+.theme-light .roadmap-lesson-title-plate {
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-light .roadmap-lesson.locked .roadmap-lesson-title-plate {
+  color: var(--faint);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.theme-light .roadmap-lesson-marker {
+  box-shadow: 0 0 0 4px var(--bg), inset 0 0 0 1px rgba(60, 40, 20, 0.15), 0 5px 0 rgba(60, 40, 20, 0.12);
+}
+
+.theme-light .roadmap-lesson.available .roadmap-lesson-marker,
+.theme-light .roadmap-lesson.complete .roadmap-lesson-marker {
+  box-shadow: 0 0 0 4px var(--bg), inset 0 0 0 1px rgba(61, 31, 4, 0.2), 0 0 14px rgba(247, 147, 26, 0.22), 0 5px 0 rgba(150, 80, 0, 0.22);
+}
+
+.theme-light .roadmap-lesson.locked .roadmap-lesson-marker {
+  color: #8a7f72;
+  border-color: rgba(60, 40, 20, 0.14);
+  background: linear-gradient(145deg, #ece5da, #ddd3c5);
+}
+
+.theme-light .roadmap-route-line.todo {
+  stroke: rgba(120, 100, 80, 0.2);
+}
+
+.theme-light .roadmap-route-line.done {
+  stroke: rgba(247, 147, 26, 0.85);
+}
+
+/* Path selector */
+.theme-light .path-card {
+  background: linear-gradient(160deg, #ffffff 40%, #fbf4e9);
+  box-shadow: var(--shadow-lg);
+}
+
+.theme-light .path-card::after {
+  opacity: 0.12;
+}
+
+.theme-light .path-card-fundamentals {
+  color: var(--gold-light);
+  border-color: rgba(247, 147, 26, 0.55);
+}
+
+.theme-light .path-card-fundamentals:hover {
+  border-color: #f7931a;
+  box-shadow: 0 28px 64px rgba(247, 147, 26, 0.18);
+}
+
+.theme-light .path-card-deeper {
+  color: #7d6f00;
+  border-color: rgba(125, 111, 0, 0.35);
+}
+
+.theme-light .path-card-deeper::after {
+  background: #d8c838;
+}
+
+.theme-light .path-card-number {
+  color: var(--faint);
+}
+
+.theme-light .path-card-symbol {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Lesson 6 */
+.theme-light .scenario-page-send {
+  background: none;
+}
+
+.theme-light .mentor-address-display {
+  color: var(--text);
+  background: var(--panel-strong);
+  border-color: var(--line);
 }
 
 
@@ -7487,7 +7679,7 @@ html.theme-light {
   display: block;
   margin-bottom: 18px;
   color: var(--gold-light);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -7595,14 +7787,14 @@ html.theme-light {
 
 .path-card-number {
   color: rgba(255, 255, 255, 0.28);
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
 }
 
 .path-card-status,
 .path-card-action {
-  font-family: 'DM Mono', monospace;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.1em;
@@ -7868,4 +8060,19 @@ html.theme-light {
   .path-card-fundamentals {
     transition: none;
   }
+}
+
+/* ── Thai locale ── */
+/* Wide tracking pulls Thai vowel and tone marks away from their consonants.
+   The simulated device screens stay in English, so they keep their tracking. */
+:lang(th) :not(.hw-wallet-screen *, .withdraw-phone-screen *, .wallet-window *, .locale-switcher *) {
+  letter-spacing: normal !important;
+}
+
+/* Thai stacks marks above and below the line, so mentor text needs more leading.
+   The ghost copy sizes the bubble, so it must match the visible text. */
+:lang(th) .mentor-bubble-text,
+:lang(th) .mentor-bubble-text-ghost,
+:lang(th) .character-message p {
+  line-height: 1.75;
 }

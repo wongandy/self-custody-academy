@@ -29,7 +29,13 @@ DROP POLICY IF EXISTS "Delete shared learning progress" ON learning_progress;
 -- Replace id column with user_id
 ALTER TABLE learning_progress DROP CONSTRAINT IF EXISTS learning_progress_pkey;
 ALTER TABLE learning_progress DROP COLUMN IF EXISTS id;
-ALTER TABLE learning_progress ADD COLUMN IF NOT EXISTS user_id uuid PRIMARY KEY DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE;
+
+DELETE FROM learning_progress;
+
+ALTER TABLE learning_progress
+ADD COLUMN user_id uuid PRIMARY KEY
+REFERENCES auth.users(id) ON DELETE CASCADE;
+
 ALTER TABLE learning_progress ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 
 -- Ensure completed_scenarios constraint still exists

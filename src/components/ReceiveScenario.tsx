@@ -14,32 +14,19 @@ import {
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import mariaPortrait from '@/components/Maria.webp';
+import en from '@/locales/en';
+import { fmt, useI18n } from '@/lib/i18n';
 
 type ReceiveScenarioProps = {
   onBack: () => void;
   onComplete: () => void;
 };
 
-const NUDGE_MESSAGE = "We'll get to that later! For now, let's stick to the current step.";
 const NUDGE_DURATION_MS = 1250;
 
-const INTRO_LINES = [
-  "Now let’s walk through receiving Bitcoin using your hardware wallet. Keep in mind: your Bitcoin lives on the blockchain, not inside the device.",
-  "Your hardware wallet's main job is just to hold your private keys so you can safely access and control those funds.",
-];
-const GO_RECEIVE_MESSAGE = "First, head over to the Receive tab in the Cairn wallet software — that's where you'll get your receive address.";
-const VERIFY_RULE_MESSAGE = "This is your receive address. But before copying it, let's prove it really came from your device — press 'Verify address on device' below the address.";
-const COMPARE_CHECK_MESSAGE = "Your device now shows the address. Compare it with the one here in the wallet software — if they match, press the checkmark button on the device to confirm it.";
-const COPY_NOW_MESSAGE = "Verified — the address genuinely came from your device. Now press 'Copy address' to copy it.";
-const HAND_OVER_MESSAGE = "Now paste the address you copied and send it to me, so I can send some Bitcoin to you. Sending Bitcoin is similar to sending an email — you need the other person's email address in order to send one.";
-const WARN_MESSAGE = "Wait — that doesn't match the address your device showed. The copied address changed somewhere along the way; that's exactly the attack this step catches. Re-copy it from the wallet and send it again.";
-const OPEN_TX_MESSAGE = "It's on its way. Open the Transactions tab in your wallet so we can watch for it.";
-const WAITING_MESSAGE = "Let's wait for it to arrive — it usually takes just a few seconds.";
-const FINISHED_MESSAGE = "And there it is — 0.1 BTC received. Share an address, verify it on your device, and watch the payment arrive. That's how receiving works! Lesson complete.";
-const SENDING_LINES = [
-  "That matches perfectly. Give me a moment — I'm opening my own Bitcoin wallet.",
-  "I've put your address in, entered 0.1 BTC, and I'm waiting for it to send…",
-];
+// Maria's lines live in the dictionary (`lesson5`); every locale has the same list lengths.
+const INTRO_COUNT = en.lesson5.intro.length;
+const SENDING_COUNT = en.lesson5.sending.length;
 
 type MentorStage =
   | 'intro'
@@ -153,6 +140,8 @@ function useTypewriter(text: string, speed = 6) {
 }
 
 function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
+  const { t } = useI18n();
+  const l5 = t.lesson5;
   const [stage, setStage] = useState<MentorStage>('intro');
   const [introStep, setIntroStep] = useState(0);
   const [sendingStep, setSendingStep] = useState(0);
@@ -180,26 +169,26 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   }, []);
 
   const message = nudgeActive
-    ? NUDGE_MESSAGE
+    ? t.common.nudgeLater
     : stage === 'intro'
-      ? INTRO_LINES[introStep] ?? INTRO_LINES[0]
+      ? l5.intro[introStep] ?? l5.intro[0]
       : stage === 'go-receive'
-        ? GO_RECEIVE_MESSAGE
+        ? l5.goReceive
         : stage === 'verify-rule'
-          ? VERIFY_RULE_MESSAGE
+          ? l5.verifyRule
           : stage === 'compare-check'
-            ? COMPARE_CHECK_MESSAGE
+            ? l5.compareCheck
             : stage === 'copy-now'
-              ? COPY_NOW_MESSAGE
+              ? l5.copyNow
               : stage === 'hand-over'
-                ? warned ? WARN_MESSAGE : HAND_OVER_MESSAGE
+                ? warned ? l5.warn : l5.handOver
                 : stage === 'sending'
-                  ? SENDING_LINES[sendingStep] ?? SENDING_LINES[0]
+                  ? l5.sending[sendingStep] ?? l5.sending[0]
                   : stage === 'open-tx'
-                    ? OPEN_TX_MESSAGE
+                    ? l5.openTx
                     : stage === 'waiting'
-                      ? WAITING_MESSAGE
-                      : FINISHED_MESSAGE;
+                      ? l5.waiting
+                      : l5.finished;
   const { displayed, done, skip } = useTypewriter(message);
 
   const spotlight = stage === 'intro';
@@ -324,7 +313,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     }
     if (nudgeActive || !CONTINUE_STAGES.has(stage)) return;
     if (stage === 'intro') {
-      if (introStep < INTRO_LINES.length - 1) {
+      if (introStep < INTRO_COUNT - 1) {
         setIntroStep((current) => current + 1);
         return;
       }
@@ -338,7 +327,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
       return;
     }
     if (stage === 'sending') {
-      if (sendingStep < SENDING_LINES.length - 1) {
+      if (sendingStep < SENDING_COUNT - 1) {
         setSendingStep((current) => current + 1);
       } else {
         setStage('open-tx');
@@ -576,7 +565,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
               </div>
 
               {isMobile && cableEl}
-              <div className="device-caption">Wallet software</div>
+              <div className="device-caption">{t.common.captionWalletSoftware}</div>
             </div>
 
             {!isMobile && cableEl}
@@ -604,12 +593,12 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
             key="maria"
             ref={portraitRef}
             className="mentor-portrait mentor-portrait-enter"
-            aria-label="Maria, your mentor"
+            aria-label={fmt(t.common.mentorAria, { name: 'Maria' })}
             role="img"
           >
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={mariaPortrait} alt="Maria, your mentor" />
+              <img className="mentor-portrait-image" src={mariaPortrait} alt={fmt(t.common.mentorAria, { name: 'Maria' })} />
             </div>
             <div className="mentor-portrait-badge">Maria</div>
           </div>
@@ -633,8 +622,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                     className="mentor-chat-input"
                     type="text"
                     value={chatInput}
-                    placeholder="Paste the receive address…"
-                    aria-label="Paste the receive address"
+                    placeholder={l5.chatPlaceholder}
+                    aria-label={l5.chatAria}
                     disabled={chatLocked}
                     onChange={(e) => {
                       setChatInput(e.target.value);
@@ -652,7 +641,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                     type="button"
                     onClick={handlePaste}
                     disabled={chatLocked}
-                    aria-label="Paste from clipboard"
+                    aria-label={l5.pasteAria}
                   >
                     <ClipboardPaste size={16} strokeWidth={2} />
                   </button>
@@ -661,7 +650,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                     type="button"
                     onClick={handleSubmitAddress}
                     disabled={chatLocked || !chatInput.trim()}
-                    aria-label="Send address to Maria"
+                    aria-label={l5.sendAria}
                   >
                     <SendHorizontal size={16} strokeWidth={2.2} />
                   </button>
@@ -676,7 +665,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                   e.stopPropagation();
                   handleContinue();
                 }}
-                aria-label={stage === 'finished' ? 'Finish lesson' : 'Continue'}
+                aria-label={stage === 'finished' ? t.common.finishLesson : t.common.continue}
               >
                 {stage === 'finished' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
               </button>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, LockKeyhole, Usb, WalletCards } from 'lucide-react';
+import { fmt, useI18n } from '@/lib/i18n';
 
 type RoadmapProps = {
   completedScenarios: number;
@@ -16,17 +17,17 @@ type CelebrationPhase = 'idle' | 'pre' | 'checkmark' | 'path' | 'pulse' | 'done'
 
 type Scenario = {
   number: number;
-  title: string;
   icon: typeof WalletCards;
 };
 
+// Titles come from the dictionary (`roadmap.titles`), in the same order.
 const scenarios: Scenario[] = [
-  { number: 1, title: 'Set up hardware wallet', icon: WalletCards },
-  { number: 2, title: 'Withdraw Bitcoin from exchange', icon: ArrowDownToLine },
-  { number: 3, title: 'Recover hardware wallet', icon: KeyRound },
-  { number: 4, title: 'Connect to wallet software', icon: Usb },
-  { number: 5, title: 'Receiving Bitcoin', icon: ArrowDownToLine },
-  { number: 6, title: 'Sending Bitcoin', icon: ArrowUpFromLine },
+  { number: 1, icon: WalletCards },
+  { number: 2, icon: ArrowDownToLine },
+  { number: 3, icon: KeyRound },
+  { number: 4, icon: Usb },
+  { number: 5, icon: ArrowDownToLine },
+  { number: 6, icon: ArrowUpFromLine },
 ];
 
 const nodePositions = [
@@ -66,6 +67,7 @@ function Roadmap({
   justCompletedScenario = null,
   onCelebrationDone,
 }: RoadmapProps) {
+  const { t } = useI18n();
   const [revealed, setRevealed] = useState(!animate);
   const [celebrationPhase, setCelebrationPhase] = useState<CelebrationPhase>('idle');
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -241,16 +243,16 @@ function Roadmap({
     >
       <section className="roadmap-board">
         <div className="roadmap-board-heading">
-          <span className="roadmap-label">Your learning path</span>
+          <span className="roadmap-label">{t.roadmap.label}</span>
           <span className="roadmap-path-status">
-            {completedScenarios === scenarios.length ? 'Path complete' : `${completedScenarios} of ${scenarios.length} lessons complete`}
+            {completedScenarios === scenarios.length ? t.roadmap.pathComplete : fmt(t.roadmap.progress, { completed: completedScenarios, total: scenarios.length })}
           </span>
         </div>
 
-        {errorMessage && <p className="roadmap-error">We couldn't refresh saved progress. Your current view is still available.</p>}
-        {isLoading && <p className="roadmap-loading">Loading your academy progress…</p>}
+        {errorMessage && <p className="roadmap-error">{t.roadmap.error}</p>}
+        {isLoading && <p className="roadmap-loading">{t.roadmap.loading}</p>}
 
-        <div className="roadmap-track-board" aria-label="Six-lesson learning path">
+        <div className="roadmap-track-board" aria-label={t.roadmap.boardAria}>
           <svg className="roadmap-route" viewBox="0 0 400 960" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
             {pathSegments.map((d, i) => {
               const segComplete = isSegComplete(i);
@@ -271,6 +273,7 @@ function Roadmap({
             const isAvailable = nodeState === 'available';
             const isLocked = nodeState === 'locked';
             const Icon = scenario.icon;
+            const title = t.roadmap.titles[index];
             const position = nodePositions[index];
             const nodeDelay = animate ? 200 + index * 500 : 0;
 
@@ -284,18 +287,18 @@ function Roadmap({
                 }}
                 disabled={isLocked || isLoading}
                 onClick={() => onSelectScenario(scenario.number)}
-                aria-label={`${scenario.title}${isLocked ? ', locked' : ''}`}
+                aria-label={isLocked ? fmt(t.roadmap.lockedAria, { title }) : title}
                 style={{ top: `${position.top}%`, left: `${position.left}%`, animationDelay: `${nodeDelay}ms` }}
               >
                 {isAvailable && !celebrating && (
                   <span className="roadmap-start-bubble" aria-hidden="true">
-                    START
+                    {t.roadmap.start}
                   </span>
                 )}
                 <span className="roadmap-lesson-marker">
                   {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
                 </span>
-                <span className={`roadmap-lesson-title-plate ${index % 2 === 0 ? 'side-right' : 'side-left'}`}>{scenario.title}</span>
+                <span className={`roadmap-lesson-title-plate ${index % 2 === 0 ? 'side-right' : 'side-left'}`}>{title}</span>
               </button>
             );
           })}

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { BIP39_WORDLIST, generateMnemonic } from '@/lib/bip39';
 import { setSessionMnemonic } from '@/lib/walletSession';
+import { useI18n } from '@/lib/i18n';
 
 export type WalletPhase =
   | 'off'
@@ -119,6 +120,8 @@ function buildTypeList(input: string): string[] {
 }
 
 export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onSendConfirm, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
+  // Screen text stays English like a real device; only the caption under it is translated.
+  const { t } = useI18n();
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
   const [bootStep, setBootStep] = useState(0);
   const [wiped, setWiped] = useState(false);
@@ -1174,7 +1177,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
           </div>
         </div>
       </div>
-      <div className="hw-device-label">Hardware wallet</div>
+      <div className="hw-device-label">{t.common.captionHardwareWallet}</div>
     </div>
   );
 }

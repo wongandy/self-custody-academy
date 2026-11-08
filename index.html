@@ -15,6 +15,12 @@
           /* storage blocked; keep the default */
         }
         document.documentElement.classList.add('theme-' + theme);
+        try {
+          var locale = window.localStorage.getItem('sca-locale');
+          if (locale === 'en' || locale === 'th') document.documentElement.lang = locale;
+        } catch (e) {
+          /* storage blocked; keep the default */
+        }
       })();
     </script>
     <!-- <meta property="og:image" content="https://bolt.new/static/og_default.png" /> -->

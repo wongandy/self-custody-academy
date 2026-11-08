@@ -1,0 +1,347 @@
+// Source dictionary. Every other locale must match this shape exactly
+// (same keys, same number of lines in every list) — see `Dictionary` below.
+//
+// Text shown on the simulated device screens (hardware wallet, exchange phone,
+// Cairn wallet window) is intentionally NOT translated and lives in those
+// components. When a mentor line names a button on one of those screens, keep
+// the button's English label in the translation so it matches what's on screen.
+//
+// `{name}` placeholders are filled with `fmt()`. `{icon}` marks where an inline
+// icon is drawn inside a mentor line.
+
+const en = {
+  common: {
+    nudge: "No need to do that now. Let's stick to the plan.",
+    nudgeLater: "We'll get to that later! For now, let's stick to the current step.",
+    wrongAnswer: 'Not quite. Take another look at the choices and try again.',
+    continue: 'Continue',
+    completeLesson: 'Complete lesson',
+    finishLesson: 'Finish lesson',
+    mentorAria: '{name}, your mentor',
+    academyMentorAria: 'Andy, your academy mentor',
+    captionPhone: 'Phone',
+    captionWalletSoftware: 'Wallet software',
+    captionHardwareWallet: 'Hardware wallet',
+  },
+  quiz: {
+    checkIn: 'Lesson check-in',
+    quickCheck: 'Quick check',
+    groupAria: 'Quick knowledge check',
+    progress: 'Question {current} of {total}',
+    next: 'Next question',
+    finish: 'Finish lesson',
+  },
+  header: {
+    homeAria: 'Self Custody Academy home',
+    backHome: 'Back to home',
+    backRoadmap: 'Back to roadmap',
+    toLight: 'Switch to light mode',
+    toDark: 'Switch to dark mode',
+    signOut: 'Sign out',
+    language: 'Language',
+  },
+  home: {
+    illustrationAria: 'Bitcoin self-custody illustration',
+    titleBefore: 'The most fun way to master ',
+    titleEm: 'self-custody',
+    titleAfter: ' and secure your Bitcoin.',
+    getStarted: 'Get started',
+    haveAccount: 'I already have an account',
+    footerMode: 'Learning mode: simulation only',
+    footerNoBtc: 'No real BTC involved',
+  },
+  andyIntro: {
+    lines: [
+      "Hey there! I'm Andy, and I will teach you how to self-custody your Bitcoin. Learning to secure it requires patience and some practice.",
+      'Everything here is simulated, so you can explore freely with zero risk. Choose the learning path that fits where you are, and build confidence one step at a time.',
+      "Feel free to dive straight into any lesson that catches your eye, or just follow along step-by-step — it's completely up to you.",
+    ],
+  },
+  pathSelector: {
+    kicker: 'Your learning journey',
+    title: 'Choose your path',
+    subtitle: 'Start with the essential skills, or explore what comes next as your confidence grows.',
+    pathsAria: 'Learning paths',
+    availableNow: 'Available now',
+    comingSoon: 'Coming soon',
+    fundamentals: 'Fundamentals',
+    fundamentalsDesc: 'The essential building blocks of self-custody.',
+    includesLabel: 'Includes:',
+    fundamentalsIncludes: 'hardware wallet setup, withdrawals, recovery, and more.',
+    startLearning: 'Start learning',
+    deeper: 'Going Deeper',
+    deeperDesc: 'Advanced security for protecting larger amounts.',
+    comingSoonLabel: 'Coming soon:',
+    deeperIncludes: 'passphrases, multisig setups, watch-only wallets, and more.',
+    inPreparation: 'In preparation',
+  },
+  roadmap: {
+    label: 'Your learning path',
+    pathComplete: 'Path complete',
+    progress: '{completed} of {total} lessons complete',
+    error: "We couldn't refresh saved progress. Your current view is still available.",
+    loading: 'Loading your academy progress…',
+    boardAria: 'Six-lesson learning path',
+    start: 'START',
+    lockedAria: '{title}, locked',
+    titles: [
+      'Set up hardware wallet',
+      'Withdraw Bitcoin from exchange',
+      'Recover hardware wallet',
+      'Connect to wallet software',
+      'Receiving Bitcoin',
+      'Sending Bitcoin',
+    ],
+  },
+  auth: {
+    registerTitle: 'Time to create an account',
+    loginTitle: 'Welcome back',
+    registerSubtitle: 'Create an account to save your progress.',
+    loginSubtitle: 'Pick up right where you left off.',
+    errEmailPassword: 'Please enter your email and password.',
+    errPasswordShort: 'Password must be at least 6 characters.',
+    errPasswordMismatch: 'Passwords do not match.',
+    errEmail: 'Please enter your email.',
+    resetTitle: 'Reset your password',
+    resetSentSubtitle: 'Check your email for a password reset link.',
+    resetSubtitle: "Enter your email and we'll send you a link to reset your password.",
+    resetSentBefore: "We've sent a password reset link to ",
+    resetSentAfter: '. Click the link in the email to set a new password.',
+    email: 'Email',
+    emailPlaceholder: 'you@example.com',
+    password: 'Password',
+    passwordPlaceholderNew: 'At least 6 characters',
+    passwordPlaceholder: 'Your password',
+    confirmPassword: 'Confirm password',
+    confirmPlaceholder: 'Re-enter your password',
+    pleaseWait: 'Please wait…',
+    sendReset: 'Send reset link',
+    backToSignIn: 'Back to sign in',
+    createAccount: 'Create account',
+    signIn: 'Sign in',
+    forgot: 'Forgot password?',
+    guest: 'Continue as guest',
+    haveAccount: 'Already have an account?',
+    newHere: 'New to the academy?',
+    createAccountLink: 'Create an account',
+  },
+
+  // Lesson 1 — Set up hardware wallet (Andy)
+  lesson1: {
+    intro: [
+      "Okay let's start by learning how to setup your hardware wallet. In case you need a refresher, a hardware wallet is a physical device that allows you to store the private keys to your Bitcoin.",
+      'The private keys are what give you the ability to send and manage your Bitcoin. They are protected by a secure chip inside the device.',
+    ],
+    powerOn: "That's a neat hardware wallet you got there! Okay let's start by clicking the power button to turn it on.",
+    readyMenu: "These options will be covered in the next scenarios, Let's wrap this up for now.",
+    factoryReset: "Resetting the device isn't part of this lesson, so we'll leave it as it is for now. Let's wrap this up instead.",
+    booting: 'Great — the device is booting up. Hang tight for a moment.',
+    menu: 'Next, you need to create a wallet. This is where your device will generate your private keys. Press the checkmark button to select it.',
+    createIntro: 'Before your device can generate those private keys, it needs to create a 12-word recovery phrase first. Press the checkmark to continue.',
+    createWords: [
+      'Here is your 12-word recovery phrase, which creates your private keys. You must write this down on paper — never take a photo or type it on a computer.',
+      'Remember to keep your copy somewhere safe and private. Whoever gets hold of your recovery phrase can instantly steal your Bitcoin.',
+    ],
+    createQuiz: "Okay now it's time to prove you made a copy of it. Pick the correct word for the position shown, then press the checkmark to confirm.",
+    createDone: [
+      "Nice work! You have now created a wallet. Remember, your Bitcoin doesn't actually live inside this hardware device — it stays safely on the blockchain.",
+      'Your device simply holds the private keys that give you the ability to send and manage it!',
+    ],
+    recoverLater: "We'll cover wallet recovery later. Select Create Wallet for now.",
+    receiveAddress: 'This is your receive address — press the copy button to copy it.',
+    sendBlocked: 'Sending from this wallet is not part of this lesson yet. Let us get your receive address first.',
+    knowledgePrompts: [
+      'Nice work. Before we wrap up, two quick questions to make sure the key ideas stick.',
+      'Good job. One more question about what makes a hardware wallet secure.',
+    ],
+    questions: [
+      {
+        question: 'Where should you keep your 12-word recovery phrase?',
+        options: {
+          photo: "Take a photo of it — it's always in my pocket",
+          paper: 'Write it on paper and store it somewhere safe and private',
+          phone: 'Save it in a note on my phone',
+        },
+        correctLine: 'Exactly. Write it down and keep it private. Anyone who gets your recovery phrase can control your Bitcoin.',
+      },
+      {
+        question: 'Your hardware wallet keeps your Bitcoin safe because…',
+        options: {
+          offline: 'Your private keys never leave the device — even when you send Bitcoin',
+          app: 'It runs a security app that scans every transaction for threats',
+          backup: 'It automatically backs your Bitcoin up to the company that made it',
+        },
+        correctLine: 'Right. Your keys live on the secure chip and never leave the device, so your Bitcoin stays protected even on a compromised computer.',
+      },
+    ],
+  },
+
+  // Lesson 2 — Withdraw from exchange (Andy)
+  lesson2: {
+    intro: [
+      'This time I will teach you how to withdraw your Bitcoin from the exchange to your hardware wallet. Having your Bitcoin in your own wallet means you take full ownership over it.',
+      'You are not relying anymore on any third-party to hold it for you. Your Bitcoin is now in your hands — giving you total financial sovereignty. This is what self-custody is all about.',
+    ],
+    handover: "Now that you've already set up your hardware wallet from earlier, it's time to select 'Receive Bitcoin' to generate a receive address.",
+    switchIntro: [
+      "Receive address copied! Now let's switch over to the exchange on your phone so we can paste it there.",
+      'Press "Switch to Exchange Wallet" at the top to head to the exchange on your phone.',
+    ],
+    exchangeIntro: [
+      'I see your BitExchange app open on your phone with 0.05 BTC in it. Let me show you how to withdraw that over to your hardware wallet.',
+      'Under Send to address field, paste the receive address you just copied from the hardware wallet. That is where your Bitcoin will be sent to.',
+    ],
+    enterAmount: [
+      'A small network fee is charged to process the Bitcoin transaction. The amount you enter stays the same, and the fee is shown separately below.',
+      'Good job. Now in the Withdraw amount field, type 0.05 to send your full balance, or simply tap the MAX button.',
+    ],
+    readyToWithdraw: 'Alright. Now click Withdraw to initiate the process of withdrawing your Bitcoin to your hardware wallet.',
+    amountCorrection: 'The amount to withdraw should be 0.05 BTC. Type 0.05 or click MAX to continue.',
+    receiveAddress: [
+      'A receive address is a unique string of text generated by your wallet. If you want someone to send you some Bitcoin, you must give that person this address.',
+      "There's your receive address. Click the copy button{icon} next to it to copy it.",
+    ],
+    panelExchange: 'Follow the instructions to withdraw your Bitcoin to your hardware wallet.',
+    panelWallet: "Select 'Receive Bitcoin' to get your receive address.",
+    walletBooting: 'The device is booting up. Hang tight for a moment.',
+    walletMenu: "Choose any option on the device. When you're ready, select 'Receive Bitcoin' to get your receive address.",
+    walletSettings: "You can explore the device settings. Return to the menu when you're ready to continue.",
+    walletMenuReceive: "Select 'Receive Bitcoin' to get your receive address.",
+    walletMenuSendBlocked: "You can explore the wallet options here. Select 'Receive Bitcoin' whenever you're ready to continue.",
+    walletReceiveCopied: 'If you have already copied the receive address, press the switch button above to go back to the exchange.',
+    walletReceiveCopiedDesktop: "Address copied. The exchange is now open next to your wallet — let's paste the address there.",
+    addressMismatch: "That address doesn't match the one your hardware wallet gave you. One wrong character sends your Bitcoin somewhere else — go back to your wallet and copy it again.",
+    exchangeConfirm: 'Review everything carefully. Make sure the address you provided on the exchange matches the address from your device. Once confirmed, the transaction cannot be cancelled.',
+    exchangeSuccess: "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
+    factoryResetBlocked: "Resetting your device to factory settings isn't part of this lesson. It would erase your wallet, so we'll leave it untouched. Let's head back and keep going.",
+    switchToWallet: 'Switch to Hardware Wallet',
+    switchToExchange: 'Switch to Exchange Wallet',
+    knowledgePrompts: [
+      'Nice work. Before we wrap up, two quick questions about safely withdrawing Bitcoin.',
+      'Good job. One more question about the withdrawal details.',
+    ],
+    questions: [
+      {
+        question: 'Why should you verify the receive address on your hardware wallet?',
+        options: {
+          speed: 'To make the withdrawal process faster',
+          match: 'To make sure the address in the exchange matches the address from the device',
+          fee: 'To avoid paying the network fee',
+        },
+        correctLine: 'Exactly. Address verification helps make sure your Bitcoin is going to the wallet you intended.',
+      },
+      {
+        question: 'What is the network fee when you withdraw Bitcoin?',
+        options: {
+          extra: 'A separate charge for processing the transaction',
+          balance: 'The amount removed from your hardware wallet balance',
+          exchange: 'A fee that replaces the Bitcoin being sent',
+        },
+        correctLine: 'Right. The network fee is shown separately from the amount you withdraw and helps process the transaction.',
+      },
+    ],
+  },
+
+  // Lesson 3 — Recover hardware wallet (Andy)
+  lesson3: {
+    intro: [
+      "Now let's talk about one of the most overlooked aspects of self-custody — recovering one's wallet. It is an important skill to have in case your hardware wallet ever gets lost, stolen or destroyed.",
+      "Your recovery phrase is universal, meaning it works on most hardware wallets. Now let's go back to your device and I'll show you how to do it.",
+    ],
+    handover: 'First we need to perform a factory reset in order to wipe the device clean. Proceed by going to Settings.',
+    recoverIntro: [
+      'On the next screen, you will be asked to input each word of your recovery phrase.',
+      "In case you lost your copy, don't worry — since this is just a simulation, you'll have an option to view it.",
+      'In real life, however, if you lose your recovery phrase, no one can help you. So make sure to always have a copy of it on paper.',
+      'To view your recovery phrase, just press the button with a paper symbol{icon} just below my portrait.',
+    ],
+    recoverType: 'You may type each word directly or use Up/Down to pick a letter or suggested word. Use X to backspace if you mistype.',
+    walletMenu: 'Select Settings to reset the device to factory settings.',
+    walletSettings: 'A factory reset clears everything — meaning the device will have no memory of your wallet. Only the recovery phrase you wrote down earlier can restore it.',
+    walletResetWarn: "Don't worry. As long as you have written down a copy of your recovery phrase, your Bitcoin is totally safe.",
+    walletResetConfirm: "Last warning. Be completely sure that your recovery phrase has been written down. I can't emphasize that enough.",
+    walletResetCancelled: "Nothing was erased. Your wallet is still on the device. We can head back into Settings whenever you're ready.",
+    walletResetDone: 'The device is wiping itself clean. Let it finish and restart.',
+    walletBooting: "It's coming back up as a fresh, empty device. One moment.",
+    walletWiped: "The device is blank now — just like a new one out of the box. Let's practice recovering your wallet. Select Recover wallet.",
+    walletRecoverDone: 'Your wallet is restored! As long as your recovery phrase is safe, your Bitcoin is never truly lost. You can recover your wallet on other compatible hardware devices as well.',
+    walletRecoverCelebrate: "Great job recovering your wallet! You just did something most Bitcoin owners never practice. Let's wrap this up!",
+    walletReceiveBlocked: "Receiving isn't part of this lesson. Stick with Settings so we can reset the device and practise recovering it.",
+    walletSendBlocked: "Sending isn't part of this lesson. Stick with Settings so we can reset the device and practise recovering it.",
+    words: 'Here are your 12 words: {words}',
+    wordsMissing: 'I could not find your simulation phrase. You may need to redo Lesson 1 to generate a new wallet.',
+    showPhrase: 'Show recovery phrase',
+    hidePhrase: 'Hide recovery phrase',
+  },
+
+  // Lesson 4 — Connect to wallet software (Andy hands over to Maria)
+  lesson4: {
+    andy: [
+      "Now, let’s connect your hardware wallet to a wallet software. Maria is our expert on this topic, so I'll let her take it from here!",
+    ],
+    maria: [
+      "Hi, I'm Maria! I'll help you safely connect your device to a wallet software — an app on your laptop used to view your Bitcoin wallet's balance, history, and payments.",
+      "We'll be using one you already have installed on your laptop called Cairn. Let's open it and take a look inside.",
+    ],
+    walletWaiting: "Let's wait for it to finish initializing.",
+    walletIntro: "This is the Transactions tab. This is where you can view your wallet's Bitcoin balance, along with all the sending and receiving transactions it is involved with.",
+    deviceArrival: "Currently we have not yet connected our hardware wallet into the laptop and paired it with Cairn so let's do that now.",
+    connectDevice: 'Your hardware wallet is now connected to the laptop. Click the CONNECT HARDWARE WALLET button on the app to send the pairing request.',
+    devicePrompt: 'Now confirm the pairing request on your hardware wallet by pressing the checkmark button.',
+    connected: 'Good job! Your hardware wallet is now paired with Cairn. The 0.04998 BTC in the transaction history came from the Bitcoin withdrawal we made from the exchange earlier.',
+    switchToSoftware: 'Switch to wallet software',
+    switchToDevice: 'Switch to hardware wallet',
+  },
+
+  // Lesson 5 — Receiving Bitcoin (Maria)
+  lesson5: {
+    intro: [
+      'Now let’s walk through receiving Bitcoin using your hardware wallet. Keep in mind: your Bitcoin lives on the blockchain, not inside the device.',
+      "Your hardware wallet's main job is just to hold your private keys so you can safely access and control those funds.",
+    ],
+    goReceive: "First, head over to the Receive tab in the Cairn wallet software — that's where you'll get your receive address.",
+    verifyRule: "This is your receive address. But before copying it, let's prove it really came from your device — press 'Verify address on device' below the address.",
+    compareCheck: 'Your device now shows the address. Compare it with the one here in the wallet software — if they match, press the checkmark button on the device to confirm it.',
+    copyNow: "Verified — the address genuinely came from your device. Now press 'Copy address' to copy it.",
+    handOver: "Now paste the address you copied and send it to me, so I can send some Bitcoin to you. Sending Bitcoin is similar to sending an email — you need the other person's email address in order to send one.",
+    warn: "Wait — that doesn't match the address your device showed. The copied address changed somewhere along the way; that's exactly the attack this step catches. Re-copy it from the wallet and send it again.",
+    openTx: "It's on its way. Open the Transactions tab in your wallet so we can watch for it.",
+    waiting: "Let's wait for it to arrive — it usually takes just a few seconds.",
+    finished: "And there it is — 0.1 BTC received. Share an address, verify it on your device, and watch the payment arrive. That's how receiving works! Lesson complete.",
+    sending: [
+      "That matches perfectly. Give me a moment — I'm opening my own Bitcoin wallet.",
+      "I've put your address in, entered 0.1 BTC, and I'm waiting for it to send…",
+    ],
+    chatPlaceholder: 'Paste the receive address…',
+    chatAria: 'Paste the receive address',
+    pasteAria: 'Paste from clipboard',
+    sendAria: 'Send address to Maria',
+  },
+
+  // Lesson 6 — Sending Bitcoin (Maria)
+  lesson6: {
+    intro: [
+      "Let me teach you how to send Bitcoin from your hardware wallet. We'll use the wallet software to prepare the transaction, and your hardware wallet to sign and approve it.",
+      "I'll give you my wallet's receive address so you can send over 0.01 BTC. Let me show you how it works!",
+    ],
+    openSend: 'Open the Send tab in the wallet software to get started.',
+    enterAddress: "In the Pay to field, paste the address of the person you're sending Bitcoin to. Here's my address below — go ahead and copy and paste it there.",
+    addressWrong: "That address doesn't look right. One wrong character sends your Bitcoin to someone else permanently. Please double-check and paste my exact address from below.",
+    enterLabel: "It's good practice to add a label to your transactions so you can remember what they were for later. Type a label in the Label field.",
+    enterAmount: 'Now in the Amount field, enter {amount} BTC.',
+    explainFees: 'Before you send, you need to choose a transaction fee. This fee pays the network to process your payment. Technically known as a miner fee, paying a higher rate can help your transaction confirm faster, but it costs more.',
+    selectFee: "Choose the Medium fee option, then click 'Review transaction' to build the payment.",
+    reviewTx: 'Review the recipient, amount, and fee carefully. When everything matches, send the transaction to your hardware wallet for its own review.',
+    hardwareReview: 'Now check each detail on the hardware wallet screen. Press the checkmark to move through the recipient, amount, and fee, then confirm the payment on the device.',
+    txSent: 'The payment has been broadcast to the network. Let us check your updated balance.',
+    finished: 'Excellent work! You verified the address, understood the network fee, and approved the payment on the hardware wallet. That is the complete sending habit to carry forward.',
+    copyAddressAria: "Copy Maria's address",
+  },
+} as const;
+
+type Widen<T> = T extends string ? string : { readonly [K in keyof T]: Widen<T[K]> };
+
+/** The shape every locale must provide: same keys and list lengths as English, any text. */
+export type Dictionary = Widen<typeof en>;
+
+export default en as Dictionary;
