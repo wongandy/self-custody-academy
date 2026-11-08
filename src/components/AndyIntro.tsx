@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
+import { useI18n } from '@/lib/i18n';
 
 type Props = {
   onProceed: () => void;
 };
-
-const ANDY_MESSAGES = [
-  "Hey there! I'm Andy, and I will teach you how to self-custody your Bitcoin. Learning to store your own Bitcoin takes practice.",
-  "Everything here is simulated, so you can explore freely with zero risk. We'll practice the basics until you feel totally in control.",
-  "Your learning path has six missions. Each one unlocks the next. Let's take a look at your roadmap.",
-];
 
 function useTypewriter(text: string, speed = 6) {
   const [displayed, setDisplayed] = useState('');
@@ -52,6 +47,8 @@ function useTypewriter(text: string, speed = 6) {
 }
 
 function AndyIntro({ onProceed }: Props) {
+  const { t } = useI18n();
+  const ANDY_MESSAGES = t.andyIntro.lines;
   const [messageIndex, setMessageIndex] = useState(0);
   const currentMessage = ANDY_MESSAGES[messageIndex];
   const { displayed, done, skip } = useTypewriter(currentMessage);
@@ -86,10 +83,10 @@ function AndyIntro({ onProceed }: Props) {
   return (
     <main className="character-section">
       <div className="character-lesson">
-        <div className="character-portrait" aria-label="Andy, your academy mentor" role="img">
+        <div className="character-portrait" aria-label={t.common.academyMentorAria} role="img">
           <div className="character-portrait-glow" />
           <div className="character-portrait-ring">
-            <img className="character-portrait-image" src={andyPortrait} alt="Andy, your academy mentor" />
+            <img className="character-portrait-image" src={andyPortrait} alt={t.common.academyMentorAria} />
           </div>
           <div className="character-portrait-badge">
             <span>Andy</span>
@@ -112,7 +109,7 @@ function AndyIntro({ onProceed }: Props) {
               handleContinue();
             }}
             disabled={!done}
-            aria-label="Continue"
+            aria-label={t.common.continue}
           >
             <ChevronRight size={18} strokeWidth={2.5} />
           </button>

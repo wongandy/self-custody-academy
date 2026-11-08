@@ -47,7 +47,7 @@ export function clearSessionMnemonic(): void {
 
 /**
  * Persist the mnemonic to the database (logged-in) and/or localStorage (guest).
- * Call this after Mission 1 generates a new wallet.
+ * Call this after Lesson 1 generates a new wallet.
  */
 export async function persistMnemonic(words: string[]): Promise<void> {
   sessionMnemonic = words;
@@ -67,7 +67,7 @@ export async function persistMnemonic(words: string[]): Promise<void> {
 
 /**
  * Load the mnemonic from the database if logged in, falling back to localStorage.
- * Use this when Mission 3 starts to ensure we have the phrase even after a refresh.
+ * Use this when Lesson 3 starts to ensure we have the phrase even after a refresh.
  */
 export async function loadMnemonic(): Promise<string[] | null> {
   if (sessionMnemonic) return sessionMnemonic;

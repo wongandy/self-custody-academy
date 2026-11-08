@@ -1,53 +1,55 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { CheckCircle2, ChevronRight, HelpCircle, XCircle } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
+import en from '@/locales/en';
+import { fmt, useI18n } from '@/lib/i18n';
 
-const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
 const NUDGE_DURATION_MS = 1250;
 
 type ScenarioBriefingProps = {
   onComplete: () => void;
 };
 
-const INTRO_MESSAGES = [
-  "Let me teach you how to setup your hardware wallet. Don't worry, we'll walk through it together.",
-  "Start by clicking the power button to turn it on.",
-];
+// Andy's lines live in the dictionary (`lesson1`). He reads `intro` in order
+// while the device is still hidden; the power-button line (`powerOn`) always
+// comes right after them, and the wallet window appears on it. Resolving the
+// handover by structure means lines added to `intro` play first, in the spotlight.
+const POWER_ON_INDEX = en.lesson1.intro.length;
+const CREATE_WORDS_COUNT = en.lesson1.createWords.length;
+const CREATE_DONE_COUNT = en.lesson1.createDone.length;
 
-const READY_MENU_MESSAGE =
-  "These options will be covered in the next scenarios, Let's wrap this up for now.";
-
-const FACTORY_RESET_MESSAGE =
-  "Resetting the device isn't part of this scenario, so we'll leave it as it is for now. Let's wrap this up instead.";
-
-const MENTOR_MESSAGES: Record<WalletPhase, string> = {
-  off: "Start by clicking the power button to turn it on.",
-  booting: 'Great — the device is booting up. Hang tight for a moment.',
-  menu: "You'll see 'Create wallet' highlighted. Press the checkmark button to select it.",
-  'create-intro': "On the next screen your 12-word recovery phrase will be shown. Press the checkmark to continue.",
-  'create-words':
-    "Here's your 12-word recovery phrase. In real life you'd write these down on paper — NEVER on a screen. When you're done, press the checkmark.",
-  'create-quiz':
-    "Time to prove you saved your words. Pick the correct word for the position shown, then press the checkmark to confirm.",
-  'create-done': "Nice work! You have now created a wallet. You can now use this to receive or send Bitcoin.",
-  'recover-intro': "We'll cover wallet recovery later. Select Create Wallet for now.",
-  'recover-quiz': '',
-  'recover-type': '',
-  'recover-done': '',
-  'receive-address': 'This is your receive address — press the copy button to copy it.',
-  'send-blocked': 'Sending from this wallet is not part of this mission yet. Let us get your receive address first.',
-  settings: READY_MENU_MESSAGE,
-  'reset-warn': FACTORY_RESET_MESSAGE,
-  'reset-confirm': FACTORY_RESET_MESSAGE,
-  'reset-done': FACTORY_RESET_MESSAGE,
-  'ready-menu': READY_MENU_MESSAGE,
-  'connect-confirm': '',
-  'connect-done': '',
+type KnowledgeQuestion = {
+  id: string;
+  /** Position of this question's text in `lesson1.questions`. */
+  textIndex: number;
+  optionIds: string[];
+  correctId: string;
 };
 
-function useTypewriter(text: string, speed = 6) {
+const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
+  { id: 'recovery-phrase', textIndex: 0, optionIds: ['photo', 'paper', 'phone'], correctId: 'paper' },
+  { id: 'keys-offline', textIndex: 1, optionIds: ['offline', 'app', 'backup'], correctId: 'offline' },
+];
+
+function shuffled<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+type KnowledgeFeedback = 'prompt' | 'wrong' | 'correct';
+
+type QuizEntry = {
+  question: KnowledgeQuestion;
+  optionIds: string[];
+};
+
+function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
@@ -76,7 +78,7 @@ function useTypewriter(text: string, speed = 6) {
 
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [text, speed, resetKey]);
 
   const skip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -88,14 +90,25 @@ function useTypewriter(text: string, speed = 6) {
 }
 
 function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
+  const { t } = useI18n();
+  const l1 = t.lesson1;
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
   const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('create-intro');
-  const [walletVisible, setWalletVisible] = useState(false);
+  const [createWordsStep, setCreateWordsStep] = useState(0);
+  const [createDoneStep, setCreateDoneStep] = useState(0);
   const [readyMenuSeen, setReadyMenuSeen] = useState(false);
-  const [readyMenuHint, setReadyMenuHint] = useState<string | null>(null);
+  const [readyMenuHint, setReadyMenuHint] = useState(false);
   const [resetRefused, setResetRefused] = useState(false);
+  const [knowledgeCheckActive, setKnowledgeCheckActive] = useState(false);
+  const [quiz, setQuiz] = useState<QuizEntry[]>([]);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [checkedAnswer, setCheckedAnswer] = useState(false);
+  const [knowledgeFeedback, setKnowledgeFeedback] = useState<KnowledgeFeedback>('prompt');
+  const [wrongOptionId, setWrongOptionId] = useState<string | null>(null);
+  const [wrongAttempt, setWrongAttempt] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
@@ -103,25 +116,90 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   const isInIntro = !introDone;
-  const spotlight = isInIntro && introStep === 0;
-  const currentIntroMessage = INTRO_MESSAGES[introStep];
+  // The device stays hidden, and Andy stays in the spotlight, until his
+  // power-button line; that line is where the wallet window slides in.
+  const walletVisible = introStep >= POWER_ON_INDEX;
+  const spotlight = isInIntro && introStep < POWER_ON_INDEX;
+  const createWordsLastStep = createWordsStep >= CREATE_WORDS_COUNT - 1;
+  const createDoneLastStep = createDoneStep >= CREATE_DONE_COUNT - 1;
+  const currentQuizEntry = quiz[quizIndex] ?? quiz[0] ?? null;
+  const currentQuizText = currentQuizEntry ? l1.questions[currentQuizEntry.question.textIndex] : null;
+  const quizOptionLabel = (optionId: string) =>
+    (currentQuizText?.options as Record<string, string> | undefined)?.[optionId] ?? optionId;
+  const introMessages = [...l1.intro, l1.powerOn];
+  const currentIntroMessage = introMessages[introStep];
+  const knowledgePrompt = l1.knowledgePrompts[quizIndex] ?? l1.knowledgePrompts[0];
+  // What Andy says for each device phase; phases without a line fall back to the power-on line.
+  const phaseMessages: Partial<Record<WalletPhase, string>> = {
+    off: l1.powerOn,
+    booting: l1.booting,
+    menu: l1.menu,
+    'create-intro': l1.createIntro,
+    'create-words': l1.createWords[0],
+    'create-quiz': l1.createQuiz,
+    'create-done': l1.createDone[0],
+    'recover-intro': l1.recoverLater,
+    'receive-address': l1.receiveAddress,
+    'send-blocked': l1.sendBlocked,
+    settings: l1.readyMenu,
+    'reset-warn': l1.factoryReset,
+    'reset-confirm': l1.factoryReset,
+    'reset-done': l1.factoryReset,
+    'ready-menu': l1.readyMenu,
+  };
   const baseMentorMessage = isInIntro
     ? currentIntroMessage
-    : resetRefused
-      ? FACTORY_RESET_MESSAGE
+    : knowledgeCheckActive
+      ? knowledgeFeedback === 'wrong'
+        ? t.common.wrongAnswer
+        : knowledgeFeedback === 'correct'
+          ? currentQuizText?.correctLine ?? knowledgePrompt
+          : knowledgePrompt
+      : resetRefused
+      ? l1.factoryReset
       : walletPhase === 'menu' && menuSelection === 'recover-intro'
-      ? "We'll cover wallet recovery later. Select Create Wallet for now."
+      ? l1.recoverLater
       : walletPhase === 'ready-menu' && readyMenuHint
-        ? readyMenuHint
-        : MENTOR_MESSAGES[walletPhase] || MENTOR_MESSAGES.off;
-  const mentorMessage = nudgeActive ? NUDGE_MESSAGE : baseMentorMessage;
-  const { displayed, done, skip } = useTypewriter(mentorMessage);
+        ? l1.readyMenu
+        : walletPhase === 'create-words'
+          ? l1.createWords[createWordsStep] ?? l1.createWords[0]
+          : walletPhase === 'create-done'
+            ? l1.createDone[createDoneStep] ?? l1.createDone[0]
+            : phaseMessages[walletPhase] || l1.powerOn;
+  const mentorMessage = nudgeActive ? t.common.nudge : baseMentorMessage;
+  const mentorMessageKey = nudgeActive
+    ? 'nudge'
+    : knowledgeCheckActive
+      ? `knowledge-check-${quizIndex}-${knowledgeFeedback}-${wrongAttempt}`
+      : isInIntro
+      ? `intro-${introStep}`
+      : walletPhase === 'create-words'
+        ? `create-words-${createWordsStep}`
+        : walletPhase === 'create-done'
+          ? `create-done-${createDoneStep}`
+          : `${walletPhase}-${resetRefused}`;
+  const { displayed, done, skip } = useTypewriter(mentorMessage, 6, mentorMessageKey);
+  const knowledgeCheckCanAnswer = knowledgeCheckActive && !checkedAnswer && done;
 
   const canContinue = nudgeActive
     ? false
     : isInIntro
-      ? introStep === 0 && done
-      : walletPhase === 'create-done' || walletPhase === 'ready-menu';
+      ? introStep < POWER_ON_INDEX && done
+      : knowledgeCheckActive
+        ? false
+        : walletPhase === 'create-words'
+          ? !createWordsLastStep && done
+        : walletPhase === 'create-done'
+          ? done
+          : walletPhase === 'ready-menu' && !knowledgeCheckActive;
+
+  // The device ignores input while Andy is still talking — in the intro, while
+  // he reads the recovery-phrase lines, and while he wraps up the new wallet.
+  const deviceLocked =
+    canContinue ||
+    knowledgeCheckActive ||
+    (isInIntro && !done) ||
+    ((walletPhase === 'create-words' || walletPhase === 'create-done') && !done);
 
   useEffect(() => {
     if (walletPhase !== 'off' && !introDone) {
@@ -136,7 +214,14 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   }, [walletPhase]);
 
   useEffect(() => {
+    if (walletPhase === 'create-done') {
+      setCreateDoneStep(0);
+    }
+  }, [walletPhase]);
+
+  useEffect(() => {
     if (walletPhase !== 'create-words') return;
+    setCreateWordsStep(0);
     const words = getSessionMnemonic();
     if (words && words.length === 12) {
       persistMnemonic(words);
@@ -148,20 +233,37 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       skip();
       return;
     }
-    if (isInIntro && introStep === 0) {
-      if (portraitRef.current && bubbleRef.current) {
+    if (knowledgeCheckActive) {
+      if (checkedAnswer) {
+        handleContinueFromCheck();
+      }
+      return;
+    }
+    if (isInIntro && introStep < POWER_ON_INDEX) {
+      const nextStep = introStep + 1;
+      if (nextStep === POWER_ON_INDEX && portraitRef.current && bubbleRef.current) {
         flipRects.current = {
           portrait: portraitRef.current.getBoundingClientRect(),
           bubble: bubbleRef.current.getBoundingClientRect(),
         };
       }
-      setWalletVisible(true);
-      setIntroStep(1);
+      setIntroStep(nextStep);
+      return;
+    }
+    if (walletPhase === 'create-words') {
+      if (!createWordsLastStep) {
+        setCreateWordsStep((step) => step + 1);
+      }
       return;
     }
     if (walletPhase === 'create-done') {
-      setReadyMenuSeen(true);
-      setReadyMenuHint(null);
+      if (!createDoneLastStep) {
+        setCreateDoneStep((step) => step + 1);
+        return;
+      }
+      setQuiz(shuffled(KNOWLEDGE_QUESTIONS).map((question) => ({ question, optionIds: shuffled(question.optionIds) })));
+      setQuizIndex(0);
+      setKnowledgeCheckActive(true);
       return;
     }
     if (walletPhase === 'ready-menu') {
@@ -169,8 +271,41 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     }
   };
 
+  const handleOptionSelect = (optionId: string) => {
+    if (!knowledgeCheckCanAnswer || !currentQuizEntry) return;
+    setWrongOptionId(null);
+    if (optionId === currentQuizEntry.question.correctId) {
+      setSelectedOption(optionId);
+      setKnowledgeFeedback('correct');
+      setCheckedAnswer(true);
+      return;
+    }
+    setSelectedOption(null);
+    setWrongOptionId(optionId);
+    setWrongAttempt((attempt) => attempt + 1);
+    setKnowledgeFeedback('wrong');
+  };
+
+  const isLastQuizQuestion = quizIndex >= quiz.length - 1;
+
+  const handleContinueFromCheck = () => {
+    if (!checkedAnswer || !done) return;
+    if (!isLastQuizQuestion) {
+      setQuizIndex((index) => index + 1);
+      setSelectedOption(null);
+      setCheckedAnswer(false);
+      setKnowledgeFeedback('prompt');
+      setWrongOptionId(null);
+      setWrongAttempt(0);
+      return;
+    }
+    setReadyMenuSeen(true);
+    setReadyMenuHint(false);
+    onComplete();
+  };
+
   const handleFactoryResetAttempt = useCallback(() => {
-    setReadyMenuHint(null);
+    setReadyMenuHint(false);
     setResetRefused(true);
   }, []);
 
@@ -209,16 +344,12 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
           ? { type: 'confirm' }
           : { type: 'none' };
 
-  const handleReadyMenuSelect = useCallback((label: string) => {
+  const handleReadyMenuSelect = useCallback(() => {
     setResetRefused(false);
-    setReadyMenuHint(
-      label === 'Receive Bitcoin'
-        ? "These options will be covered in the next scenarios, Let's wrap this up for now."
-        : "These options will be covered in the next scenarios, Let's wrap this up for now.",
-    );
+    setReadyMenuHint(true);
   }, []);
 
-  const bubbleKey = nudgeActive ? 'nudge' : isInIntro ? `intro-${introStep}` : `${walletPhase}-${resetRefused}`;
+  const bubbleKey = mentorMessageKey;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -275,26 +406,29 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   }, [spotlight]);
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
-      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
-          <HardwareWallet
-            onComplete={() => {}}
-            onPhaseChange={setWalletPhase}
-            onMenuSelectionChange={setMenuSelection}
-            onReadyMenuSelect={handleReadyMenuSelect}
-            onFactoryResetAttempt={handleFactoryResetAttempt}
-            onUnexpectedAction={handleUnexpectedAction}
-            advanceToReadyMenu={readyMenuSeen}
-            expectedAction={expectedAction}
-            locked={canContinue}
-          />
-        </div>
-        <div className="mentor-row">
-          <div ref={portraitRef} className="mentor-portrait" aria-label="Andy, your mentor" role="img">
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
+        {knowledgeCheckActive && <div className="knowledge-check-kicker">{t.quiz.checkIn}</div>}
+        {!knowledgeCheckActive && (
+          <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
+            <HardwareWallet
+              onComplete={() => {}}
+              onPhaseChange={setWalletPhase}
+              onMenuSelectionChange={setMenuSelection}
+              onReadyMenuSelect={handleReadyMenuSelect}
+              onFactoryResetAttempt={handleFactoryResetAttempt}
+              onUnexpectedAction={handleUnexpectedAction}
+              advanceToReadyMenu={readyMenuSeen}
+              expectedAction={expectedAction}
+              locked={deviceLocked}
+            />
+          </div>
+        )}
+        <div className={`mentor-row ${knowledgeCheckActive ? 'knowledge-check-mentor-row' : ''}`}>
+          <div ref={portraitRef} className="mentor-portrait" aria-label={fmt(t.common.mentorAria, { name: 'Andy' })} role="img">
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
+              <img className="mentor-portrait-image" src={andyPortrait} alt={fmt(t.common.mentorAria, { name: 'Andy' })} />
             </div>
             <div className="mentor-portrait-badge">Andy</div>
           </div>
@@ -321,12 +455,49 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
                 handleContinue();
               }}
               disabled={!canContinue}
-              aria-label="Continue"
+              aria-label={t.common.continue}
             >
               <ChevronRight size={18} strokeWidth={2.5} />
             </button>
           </div>
         </div>
+        {knowledgeCheckActive && (
+          <div className="knowledge-check-card" role="group" aria-label={t.quiz.groupAria}>
+            <div className="knowledge-check-header">
+              <HelpCircle size={16} strokeWidth={2.2} />
+              <span>{t.quiz.quickCheck}</span>
+              <span className="knowledge-check-progress">{fmt(t.quiz.progress, { current: quizIndex + 1, total: quiz.length })}</span>
+            </div>
+            <p className="knowledge-check-question">{currentQuizText?.question}</p>
+            <div className="knowledge-check-options">
+              {(currentQuizEntry?.optionIds ?? []).map((optionId) => {
+                const isSelected = selectedOption === optionId;
+                const isCorrect = checkedAnswer && optionId === currentQuizEntry.question.correctId;
+                const isWrong = wrongOptionId === optionId;
+                return (
+                  <button
+                    key={optionId}
+                    type="button"
+                    className={`knowledge-check-option ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''} ${isWrong ? 'wrong' : ''}`}
+                    onClick={() => handleOptionSelect(optionId)}
+                    disabled={!knowledgeCheckCanAnswer}
+                  >
+                    {isCorrect ? <CheckCircle2 size={16} strokeWidth={2.2} /> : isWrong ? <XCircle size={16} strokeWidth={2.2} /> : null}
+                    <span>{quizOptionLabel(optionId)}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              className="knowledge-check-submit"
+              type="button"
+              onClick={handleContinueFromCheck}
+              disabled={!checkedAnswer || !done}
+            >
+              {isLastQuizQuestion ? t.quiz.finish : t.quiz.next}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* <div className="character-footer">

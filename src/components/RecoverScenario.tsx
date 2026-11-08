@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronRight, FileText, X } from 'lucide-react';
+import { ChevronRight, FileText } from 'lucide-react';
 import HardwareWallet, { type WalletPhase, type ExpectedAction } from '@/components/HardwareWallet';
 import { loadMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
+import en from '@/locales/en';
+import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
 
 type RecoverScenarioProps = {
   completed: boolean;
@@ -13,49 +15,14 @@ type RecoverScenarioProps = {
 
 type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked';
 
-const INTRO_MESSAGES = [
-  "Now let's talk about one of the most overlooked aspect of self-custody — recovering one's wallet.",
-  'Wallet recovery is a straightforward process and is essential if your hardware wallet ever gets lost, stolen or destroyed.',
-  "Let's head back to your hardware wallet and I'll teach you how to do it.",
-];
+// Andy's lines live in the dictionary (`lesson3`). He reads `intro` in order
+// while the wallet is still hidden; the hand-over line (`handover`) always comes
+// right after them and the wallet window appears on it, so lines added to
+// `intro` play first, in the spotlight.
+const HANDOVER_INDEX = en.lesson3.intro.length;
+const RECOVER_INTRO_COUNT = en.lesson3.recoverIntro.length;
 
-const RECOVER_INTRO_MESSAGES = [
-  'On the next screen, you will be asked to input each word of your recovery phrase.',
-  "In case you lost your copy, don't worry — since this is just a simulation, you'll have an option to view it on the next screen.",
-  'But in real life though, if you lose your recovery phrase, no one can help you so make sure to back them up in paper.',
-  'To view your recovery phrase, just press the button with a paper symbol just below my portrait.',
-];
-
-const RECOVER_TYPE_MESSAGE =
-  "You may type each word directly or use Up/Down to pick a letter or suggested word. Use X to backspace if you mistype.";
-
-const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
 const NUDGE_DURATION_MS = 1250;
-
-const MENTOR_MESSAGES: Record<string, string> = {
-  'wallet-menu': "Select Settings to reset the device to factory settings.",
-  'wallet-settings':
-    "A factory reset clears everything — only the recovery phrase you wrote down can restore your wallet.",
-  'wallet-reset-warn':
-    "Don't worry. As long as your recovery phrase is backed up offline, your Bitcoin is safe.",
-  'wallet-reset-confirm':
-    "Last warning. Be completely sure that your recovery phrase has been written down. There's no going back after this.",
-  'wallet-reset-cancelled':
-    "Nothing was erased. Your wallet is still on the device. We can head back into Settings whenever you're ready.",
-  'wallet-reset-done':
-    'The device is wiping itself clean. Let it finish and restart.',
-  'wallet-booting': "It's coming back up as a fresh, empty device. One moment.",
-  'wallet-wiped':
-    "The device is blank now — just like a new one out of the box. Let's practice recovering your wallet. Select Recover wallet.",
-  'wallet-recover-done':
-    "Your wallet is back. This is the power of self-custody — as long as your recovery phrase is safe, your Bitcoin is never truly lost.",
-  'wallet-recover-celebrate':
-    "Great job on recovering your wallet! You just did something most Bitcoin owners never practice. Let's wrap this up!",
-  'wallet-receive-blocked':
-    "Receiving isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
-  'wallet-send-blocked':
-    "Sending isn't part of this mission. Stick with Settings so we can reset the device and practise recovering it.",
-};
 
 function useTypewriter(text: string, speed = 6) {
   const [displayed, setDisplayed] = useState('');
@@ -97,7 +64,24 @@ function useTypewriter(text: string, speed = 6) {
   return { displayed, done, skip };
 }
 
-export default function RecoverScenario({ completed, onClose, onComplete, onBack }: RecoverScenarioProps) {
+export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioProps) {
+  const { t } = useI18n();
+  const l3 = t.lesson3;
+  const INTRO_MESSAGES = [...l3.intro, l3.handover];
+  const MENTOR_MESSAGES: Record<string, string> = {
+    'wallet-menu': l3.walletMenu,
+    'wallet-settings': l3.walletSettings,
+    'wallet-reset-warn': l3.walletResetWarn,
+    'wallet-reset-confirm': l3.walletResetConfirm,
+    'wallet-reset-cancelled': l3.walletResetCancelled,
+    'wallet-reset-done': l3.walletResetDone,
+    'wallet-booting': l3.walletBooting,
+    'wallet-wiped': l3.walletWiped,
+    'wallet-recover-done': l3.walletRecoverDone,
+    'wallet-recover-celebrate': l3.walletRecoverCelebrate,
+    'wallet-receive-blocked': l3.walletReceiveBlocked,
+    'wallet-send-blocked': l3.walletSendBlocked,
+  };
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('menu');
@@ -123,18 +107,14 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     });
   }, []);
 
-  const spotlight = !introDone;
+  // The wallet stays hidden, and Andy stays in the spotlight, until his
+  // hand-over line; that line is where the wallet window slides in.
+  const walletVisible = introDone || introStep >= HANDOVER_INDEX;
+  const spotlight = !introDone && introStep < HANDOVER_INDEX;
   const isInRecoverIntro = introDone && walletPhase === 'recover-intro';
   const isInRecoverType = introDone && walletPhase === 'recover-type';
-  const recoverIntroFinal = RECOVER_INTRO_MESSAGES.length - 1;
+  const recoverIntroFinal = RECOVER_INTRO_COUNT - 1;
 
-  const canContinue = nudgeActive
-    ? false
-    : !introDone
-      || recoveryDone
-      || isInRecoverIntro;
-
-  const finalStep = INTRO_MESSAGES.length - 1;
   const postResetMenu = wiped && walletPhase === 'menu';
   const walletStateKey = recoveryDone
     ? (recoveryDoneStep === 1 ? 'wallet-recover-celebrate' : 'wallet-recover-done')
@@ -145,31 +125,51 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
         : walletPhase === 'menu'
           ? menuSelection === 'idle'
             ? 'wallet-menu'
-            : `wallet-menu-${menuSelection}`
+            : menuSelection === 'send-blocked'
+              ? 'wallet-send-blocked'
+              : menuSelection === 'receive-address'
+                ? 'wallet-receive-blocked'
+                : `wallet-menu-${menuSelection}`
           : walletPhase === 'settings'
             ? 'wallet-settings'
             : `wallet-${walletPhase}`;
 
-  const recoverIntroMessage = RECOVER_INTRO_MESSAGES[recoverIntroStep] ?? '';
+  const recoverIntroMessage = l3.recoverIntro[recoverIntroStep] ?? '';
+  // The recovery words themselves are never translated.
   const wordsMessage = expectedMnemonic
-    ? `Here are your 12 words: ${expectedMnemonic.map((w, i) => `${i + 1}. ${w}`).join('  ')}`
-    : 'I could not find your simulation phrase. You may need to redo Mission 1 to generate a new wallet.';
+    ? fmt(l3.words, { words: expectedMnemonic.map((w, i) => `${i + 1}. ${w}`).join('  ') })
+    : l3.wordsMissing;
 
   const baseMentorMessage = introDone
     ? (MENTOR_MESSAGES[walletStateKey] ?? MENTOR_MESSAGES['wallet-menu'])
     : INTRO_MESSAGES[introStep];
 
-  const mentorMessage = nudgeActive
-    ? NUDGE_MESSAGE
+  const mentorMessage = withIconMark(nudgeActive
+    ? t.common.nudge
     : showingWords
       ? wordsMessage
       : isInRecoverIntro
         ? recoverIntroMessage
         : isInRecoverType
-          ? RECOVER_TYPE_MESSAGE
-          : baseMentorMessage;
+          ? l3.recoverType
+          : baseMentorMessage);
 
   const { displayed, done, skip } = useTypewriter(mentorMessage);
+
+  // The paper-button line marks where the icon goes with `{icon}`; it appears once typing reaches it.
+  const renderMentorText = (text: string) =>
+    renderWithIcon(
+      text,
+      <span className="mentor-copy-button-indicator paper" aria-hidden="true">
+        <FileText size={12} strokeWidth={2.2} />
+      </span>,
+    );
+
+  const canContinue = nudgeActive
+    ? false
+    : !introDone
+      ? introStep < HANDOVER_INDEX && done
+      : recoveryDone || isInRecoverIntro;
 
   const handleUnexpectedAction = useCallback(() => {
     setNudgeActive(true);
@@ -188,8 +188,17 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
   }, []);
 
+  // The intro ends as soon as the learner touches the wallet, so the mentor
+  // never lingers on the hand-over line after control has been handed over.
+  useEffect(() => {
+    if (introDone) return;
+    if (walletPhase !== 'menu') {
+      setIntroDone(true);
+    }
+  }, [walletPhase, introDone]);
+
   const expectedAction: ExpectedAction =
-    !introDone
+    !walletVisible
       ? { type: 'none' }
     : walletPhase === 'menu' && !wiped
       ? { type: 'confirm-menu-item', label: 'Settings' }
@@ -295,18 +304,18 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
       return;
     }
     if (!introDone) {
-      if (introStep < finalStep) {
+      if (introStep < HANDOVER_INDEX) {
+        if (introStep === HANDOVER_INDEX - 1 && portraitRef.current && bubbleRef.current) {
+          flipRects.current = {
+            portrait: portraitRef.current.getBoundingClientRect(),
+            bubble: bubbleRef.current.getBoundingClientRect(),
+          };
+        }
         setIntroStep(introStep + 1);
-        return;
       }
-      if (portraitRef.current && bubbleRef.current) {
-        flipRects.current = {
-          portrait: portraitRef.current.getBoundingClientRect(),
-          bubble: bubbleRef.current.getBoundingClientRect(),
-        };
-      }
-      setIntroDone(true);
-    } else if (isInRecoverIntro) {
+      return;
+    }
+    if (isInRecoverIntro) {
       if (recoverIntroStep < recoverIntroFinal) {
         setRecoverIntroStep(recoverIntroStep + 1);
       } else {
@@ -321,7 +330,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
         onBack();
       }
     }
-  }, [done, skip, introDone, introStep, finalStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, onBack, onComplete]);
+  }, [done, skip, introDone, introStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, onBack, onComplete]);
 
   const [advanceFromIntro, setAdvanceFromIntro] = useState(false);
 
@@ -330,7 +339,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
       if (e.key !== 'Enter') return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      if (!canContinue) return;
+      if (!canContinue && done) return;
       e.preventDefault();
       handleContinue();
     };
@@ -338,25 +347,33 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
+  // The paper button must not compete with the continue arrow: while the
+  // continue button is active, the reveal stays inert.
+  const paperEnabled = !canContinue;
+
   const handlePaperClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!paperEnabled) return;
     setShowingWords((prev) => !prev);
-  }, []);
+  }, [paperEnabled]);
 
   const showPaperButton = isInRecoverType || (isInRecoverIntro && recoverIntroStep === recoverIntroFinal);
   const walletLocked = (isInRecoverIntro || recoveryDone) && !nudgeActive;
+  // The wallet ignores input while Andy is still talking, and while the
+  // continue button is the only expected action.
+  const deviceLocked = walletLocked || (!introDone && !done);
 
   return (
     <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        {!spotlight && (
+        {walletVisible && (
           <div className="recover-device-area">
             <div className="recover-device-enter">
               <HardwareWallet
                 mode="withdraw"
                 initialPhase="menu"
                 explicitReset
-                locked={walletLocked}
+                locked={deviceLocked}
                 advanceFromRecoverIntro={advanceFromIntro}
                 expectedMnemonic={expectedMnemonic ?? undefined}
                 expectedAction={expectedAction}
@@ -370,19 +387,20 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
         )}
 
         <div className="mentor-row">
-          <div ref={portraitRef} className="mentor-portrait" aria-label="Andy, your mentor" role="img">
+          <div ref={portraitRef} className="mentor-portrait" aria-label={fmt(t.common.mentorAria, { name: 'Andy' })} role="img">
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
+              <img className="mentor-portrait-image" src={andyPortrait} alt={fmt(t.common.mentorAria, { name: 'Andy' })} />
             </div>
             <div className="mentor-portrait-badge">Andy</div>
             {showPaperButton && (
               <button
                 className={`paper-reveal-btn paper-reveal-pop ${showingWords ? 'active' : 'paper-reveal-pulse'}`}
                 type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={handlePaperClick}
-                aria-label={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
-                title={showingWords ? 'Hide recovery phrase' : 'Show recovery phrase'}
+                aria-label={showingWords ? l3.hidePhrase : l3.showPhrase}
+                title={showingWords ? l3.hidePhrase : l3.showPhrase}
               >
                 <FileText size={18} strokeWidth={2.2} />
               </button>
@@ -396,9 +414,9 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
             <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : showingWords ? 'words' : introDone ? `${walletStateKey}-${recoverIntroStep}` : `intro-${introStep}`}>
               <span className="mentor-bubble-name">Andy</span>
               <div className="mentor-bubble-text-wrap">
-                <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
+                <p className="mentor-bubble-text-ghost">{renderMentorText(mentorMessage)}</p>
                 <p className="mentor-bubble-text">
-                  {displayed}
+                  {renderMentorText(displayed)}
                   {!done && <span className="typewriter-cursor" />}
                 </p>
               </div>
@@ -411,7 +429,7 @@ export default function RecoverScenario({ completed, onClose, onComplete, onBack
                 handleContinue();
               }}
               disabled={!canContinue}
-              aria-label="Continue"
+              aria-label={t.common.continue}
             >
               <ChevronRight size={18} strokeWidth={2.5} />
             </button>

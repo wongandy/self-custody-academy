@@ -8,7 +8,7 @@
 
 ## Key features
 
-* **Interactive Hardware & Software Simulations:** Hands-on guided scenarios simulating hardware signers, mobile exchanges, and desktop coordinators.
+* **Interactive Hardware & Software Simulations:** Hands-on guided lessons simulating hardware signers, mobile exchanges, and desktop coordinators.
 * **Guided Character-Led Learning:** Step-by-step interactive walk-throughs led by character guides.
 * **Self-Custody Workflows:** Practice withdrawing from exchanges, address verification, etc in a risk-free sandbox environment.
 * **Dark-Mode Minimalist Aesthetic:** Clean, distraction-free UI tailored for desktop and mobile devices.

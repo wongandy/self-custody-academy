@@ -5,6 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Self Custody Academy — Learn Bitcoin Self-Custody</title>
+    <script>
+      (function () {
+        var theme = 'dark';
+        try {
+          var stored = window.localStorage.getItem('sca-theme');
+          if (stored === 'light' || stored === 'dark') theme = stored;
+        } catch (e) {
+          /* storage blocked; keep the default */
+        }
+        document.documentElement.classList.add('theme-' + theme);
+        try {
+          var locale = window.localStorage.getItem('sca-locale');
+          if (locale === 'en' || locale === 'th') document.documentElement.lang = locale;
+        } catch (e) {
+          /* storage blocked; keep the default */
+        }
+      })();
+    </script>
     <!-- <meta property="og:image" content="https://bolt.new/static/og_default.png" /> -->
     <meta name="twitter:card" content="summary_large_image" />
     <!-- <meta name="twitter:image" content="https://bolt.new/static/og_default.png" /> -->
