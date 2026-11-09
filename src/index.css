@@ -877,9 +877,12 @@ html.theme-light {
   margin-top: 36px;
   padding: 18px 20px 20px;
   text-align: left;
-  border: 1px solid rgba(241, 189, 105, 0.24);
+  --bubble-border: rgba(241, 189, 105, 0.24);
+  --bubble-fill: rgba(241, 189, 105, 0.06);
+  border: 1px solid transparent;
   border-radius: 18px;
-  background: rgba(241, 189, 105, 0.06);
+  background: var(--bubble-fill);
+  background-clip: padding-box;
 }
 
 .character-dialog.is-ready {
@@ -888,21 +891,48 @@ html.theme-light {
 
 @media (hover: hover) and (pointer: fine) {
   .character-dialog.is-ready:hover {
-    border-color: rgba(241, 189, 105, 0.45);
+    --bubble-border: rgba(241, 189, 105, 0.45);
   }
 }
 
-.character-dialog::before {
+/* Speech bubbles with a top caret (fill may be translucent).
+   - The bubble's fill is clipped to the padding box; its border is drawn on ::after
+     with a 20px gap masked out under the caret.
+   - ::before is a flat 20x10 triangle sitting exactly in that gap: two 45° gradients
+     paint the slanted 1px strokes plus the fill, so the outline reads as one shape
+     and nothing overlaps (no double-tinted areas, no seam).
+   Each bubble defines --bubble-border and --bubble-fill. */
+.character-dialog::before,
+.scenario-mentor-layout.spotlight .mentor-bubble::before,
+.knowledge-check-layout .mentor-row .mentor-bubble::before {
   content: '';
   position: absolute;
-  top: -7px;
+  top: -10px;
   left: 50%;
-  width: 12px;
-  height: 12px;
-  border-top: 1px solid rgba(241, 189, 105, 0.24);
-  border-left: 1px solid rgba(241, 189, 105, 0.24);
-  background: var(--panel-strong);
-  transform: translateX(-50%) rotate(45deg);
+  width: 20px;
+  height: 10px;
+  border: 0;
+  background:
+    linear-gradient(to bottom right, transparent 50%, var(--bubble-border) 50%, var(--bubble-border) calc(50% + 1px), var(--bubble-fill) calc(50% + 1px)) left / 50% 100% no-repeat,
+    linear-gradient(to bottom left, transparent 50%, var(--bubble-border) 50%, var(--bubble-border) calc(50% + 1px), var(--bubble-fill) calc(50% + 1px)) right / 50% 100% no-repeat;
+  transform: translateX(-50%);
+}
+
+.character-dialog::after,
+.scenario-mentor-layout.spotlight .mentor-bubble::after,
+.knowledge-check-layout .mentor-row .mentor-bubble::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--bubble-border);
+  border-radius: inherit;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) bottom / 100% calc(100% - 1px) no-repeat,
+    linear-gradient(to right, #000 calc(50% - 10px), transparent 0 calc(50% + 10px), #000 0) top / 100% 1px no-repeat;
+  mask:
+    linear-gradient(#000 0 0) bottom / 100% calc(100% - 1px) no-repeat,
+    linear-gradient(to right, #000 calc(50% - 10px), transparent 0 calc(50% + 10px), #000 0) top / 100% 1px no-repeat;
 }
 
 .character-dialog-label {
@@ -3226,7 +3256,8 @@ html.theme-light {
 
 @media (hover: hover) and (pointer: fine) {
   .mentor-bubble.is-ready:hover {
-    border-color: rgba(241, 189, 105, 0.45);
+    --bubble-border: rgba(241, 189, 105, 0.45);
+    border-color: var(--bubble-border);
   }
 }
 
@@ -3361,20 +3392,13 @@ html.theme-light {
   width: 100%;
   max-width: 480px;
   padding: 18px 20px 20px;
-  border: 1px solid rgba(241, 189, 105, 0.24);
+  --bubble-border: rgba(241, 189, 105, 0.24);
+  --bubble-fill: rgba(241, 189, 105, 0.06);
+  border: 1px solid transparent;
   border-radius: 18px;
-  background: rgba(241, 189, 105, 0.06);
+  background: var(--bubble-fill);
+  background-clip: padding-box;
   text-align: left;
-}
-
-.scenario-mentor-layout.spotlight .mentor-bubble::before {
-  top: -7px;
-  left: 50%;
-  border-left: 1px solid rgba(241, 189, 105, 0.24);
-  border-bottom: 0;
-  border-top: 1px solid rgba(241, 189, 105, 0.24);
-  background: var(--panel-strong);
-  transform: translateX(-50%) rotate(45deg);
 }
 
 .scenario-mentor-layout.spotlight .mentor-bubble-name {
@@ -3644,18 +3668,11 @@ html.theme-light {
   width: 100%;
   max-width: 560px;
   padding: 16px 20px 18px;
-  border-color: rgba(241, 189, 105, 0.24);
-  background: rgba(241, 189, 105, 0.06);
-}
-
-.knowledge-check-layout .mentor-row .mentor-bubble::before {
-  top: -7px;
-  left: 50%;
-  border-left: 1px solid rgba(241, 189, 105, 0.24);
-  border-bottom: 0;
-  border-top: 1px solid rgba(241, 189, 105, 0.24);
-  background: var(--panel-strong);
-  transform: translateX(-50%) rotate(45deg);
+  --bubble-border: rgba(241, 189, 105, 0.24);
+  --bubble-fill: rgba(241, 189, 105, 0.06);
+  border-color: transparent;
+  background: var(--bubble-fill);
+  background-clip: padding-box;
 }
 
 .knowledge-check-layout .mentor-row .mentor-bubble-text-wrap {
@@ -7010,12 +7027,17 @@ html.theme-light {
 /* Cards & dialogs */
 .theme-light .character-dialog,
 .theme-light .mentor-bubble {
-  border-color: rgba(179, 95, 0, 0.22);
-  background: var(--panel);
+  --bubble-border: rgba(179, 95, 0, 0.22);
+  --bubble-fill: var(--panel);
+  border-color: var(--bubble-border);
+  background-color: var(--bubble-fill);
   box-shadow: 0 12px 32px rgba(60, 40, 20, 0.07);
 }
 
-.theme-light .character-dialog::before,
+.theme-light .character-dialog {
+  border-color: transparent;
+}
+
 .theme-light .mentor-bubble::before {
   border-color: rgba(179, 95, 0, 0.22);
   background: var(--panel);
@@ -7034,14 +7056,10 @@ html.theme-light {
 }
 
 .theme-light .knowledge-check-layout .mentor-row .mentor-bubble {
-  border-color: var(--line);
-  background: var(--panel);
+  --bubble-border: var(--line);
+  --bubble-fill: var(--panel);
+  background-color: var(--bubble-fill);
   box-shadow: var(--shadow-sm);
-}
-
-.theme-light .knowledge-check-layout .mentor-row .mentor-bubble::before {
-  border-color: var(--line);
-  background: var(--panel);
 }
 
 .theme-light .knowledge-check-option {
