@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, Copy, Smartphone, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, CheckCircle2, Copy, HelpCircle, Smartphone, AlertTriangle, XCircle } from 'lucide-react';
 import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
+import en from '@/locales/en';
+import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
 
 type WithdrawScenarioProps = {
   completed: boolean;
@@ -12,45 +14,30 @@ type WithdrawScenarioProps = {
 const AVAILABLE_BALANCE = 0.05;
 const NETWORK_FEE = 0.00002;
 
-const INTRO_MESSAGES = [
-  "This time I will teach you how to withdraw your Bitcoin from the exchange to your hardware wallet.",
-  "Now that you've already set up your hardware wallet, it's time to select 'Receive Bitcoin' to generate a receive address.",
-];
-
-const SWITCH_INTRO_MESSAGES = [
-  "Receive address copied! Now let's switch over to the exchange on your phone.",
-  'Press "Switch to Exchange Wallet" at the top to head to the exchange on your phone.',
-];
+// Andy's lines live in the dictionary (`lesson2`). He reads `intro` in order
+// while the wallet is still hidden; the hand-over line (`handover`) always comes
+// right after them and the wallet window appears on it, so lines added to
+// `intro` play first, in the spotlight.
+const HANDOVER_INDEX = en.lesson2.intro.length;
+const SWITCH_INTRO_COUNT = en.lesson2.switchIntro.length;
+// The last exchange-intro line is the paste instruction, so the address field
+// stays locked until the learner steps through to it.
+const EXCHANGE_INTRO_COUNT = en.lesson2.exchangeIntro.length;
+// The last receive-address line asks the learner to copy, so the device unlocks on it.
+const RECEIVE_ADDRESS_COUNT = en.lesson2.receiveAddress.length;
 
 type ExchangePhase = 'enter-address' | 'enter-amount' | 'ready-to-withdraw';
 
-const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, string> = {
-  'enter-address': 'Under SEND TO ADDRESS field, paste the receive address you copied earlier. That is where your Bitcoin will be withdrawn to.',
-  'enter-amount': 'Good job. Now under WITHDRAW AMOUNT you may type the amount of Bitcoin you wish to withdraw or just press the MAX button.',
-  'ready-to-withdraw': 'Alright. Now click Withdraw to initiate the process of withdrawing your Bitcoin to your hardware wallet.',
-};
-
-const MENTOR_MESSAGES: Record<string, string> = {
-  'panel-exchange': 'Follow the instructions to withdraw your Bitcoin to your hardware wallet.',
-  'panel-wallet': "Select 'Receive Bitcoin' to get your receive address.",
-  'wallet-booting': 'The device is booting up. Hang tight for a moment.',
-  'wallet-menu': "Choose any option on the device. When you're ready, select 'Receive Bitcoin' to get your receive address.",
-  'wallet-settings': "You can explore the device settings. Return to the menu when you're ready to continue.",
-  'wallet-menu-receive-address': "Select 'Receive Bitcoin' to get your receive address.",
-  'wallet-menu-send-blocked': "You can explore the wallet options here. Select 'Receive Bitcoin' whenever you're ready to continue.",
-  'wallet-receive-address': "There's your receive address. Click the copy button next to it to copy it.",
-  'wallet-receive-copied': 'If you have already copied the receive address, press the switch button above to go back to the exchange.',
-  'exchange-address-mismatch': "That address doesn't match the one your hardware wallet gave you. One wrong character sends your Bitcoin somewhere else — go back to your wallet and copy it again.",
-  'exchange-confirm': 'Review the withdrawal details carefully. Once you confirm, the transaction cannot be cancelled.',
-  'exchange-success': "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
-  'factory-reset-blocked':
-    "Resetting your device to factory settings isn't part of this scenario. It would erase your wallet, so we'll leave it untouched. Let's head back and keep going.",
-};
-
-const NUDGE_MESSAGE = "No need to do that now. Let's stick to the plan.";
 const NUDGE_DURATION_MS = 1250;
 
-function useTypewriter(text: string, speed = 6) {
+const KNOWLEDGE_QUESTIONS = [
+  { textIndex: 0, optionIds: ['speed', 'match', 'fee'], correctId: 'match' },
+  { textIndex: 1, optionIds: ['extra', 'balance', 'exchange'], correctId: 'extra' },
+] as const;
+
+type KnowledgeFeedback = 'prompt' | 'wrong' | 'correct';
+
+function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
@@ -79,7 +66,7 @@ function useTypewriter(text: string, speed = 6) {
 
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [text, speed, resetKey]);
 
   const skip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -91,6 +78,29 @@ function useTypewriter(text: string, speed = 6) {
 }
 
 export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) {
+  const { t } = useI18n();
+  const l2 = t.lesson2;
+  const INTRO_MESSAGES = [...l2.intro, l2.handover];
+  const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, readonly string[]> = {
+    'enter-address': [l2.exchangeIntro[EXCHANGE_INTRO_COUNT - 1]],
+    'enter-amount': l2.enterAmount,
+    'ready-to-withdraw': [l2.readyToWithdraw],
+  };
+  const MENTOR_MESSAGES: Record<string, string> = {
+    'panel-exchange': l2.panelExchange,
+    'panel-wallet': l2.panelWallet,
+    'wallet-booting': l2.walletBooting,
+    'wallet-menu': l2.walletMenu,
+    'wallet-settings': l2.walletSettings,
+    'wallet-menu-receive-address': l2.walletMenuReceive,
+    'wallet-menu-send-blocked': l2.walletMenuSendBlocked,
+    'wallet-receive-copied': l2.walletReceiveCopied,
+    'wallet-receive-copied-desktop': l2.walletReceiveCopiedDesktop,
+    'exchange-address-mismatch': l2.addressMismatch,
+    'exchange-confirm': l2.exchangeConfirm,
+    'exchange-success': l2.exchangeSuccess,
+    'factory-reset-blocked': l2.factoryResetBlocked,
+  };
   const [activePanel, setActivePanel] = useState<'exchange' | 'wallet'>('wallet');
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
@@ -101,8 +111,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [amountError, setAmountError] = useState('');
   const [hasRetrievedAddress, setHasRetrievedAddress] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
+  const [receiveAddressStep, setReceiveAddressStep] = useState<number | null>(null);
+  const [exchangeIntroStep, setExchangeIntroStep] = useState<number | null>(null);
+  const exchangeIntroPlayed = useRef(false);
   const [switchIntroStep, setSwitchIntroStep] = useState<number | null>(null);
   const [exchangePhase, setExchangePhase] = useState<ExchangePhase>('enter-address');
+  const [amountGuidanceStep, setAmountGuidanceStep] = useState<number | null>(null);
   const [switchPulse, setSwitchPulse] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'withdraw-slide-left' | 'withdraw-slide-right' | null>(null);
   const usedSwitchPrompt = useRef(false);
@@ -111,96 +125,162 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const [exchangeScreen, setExchangeScreen] = useState<'form' | 'confirm' | 'success'>('form');
-  const [walletEntered, setWalletEntered] = useState(false);
+  const [knowledgeCheckActive, setKnowledgeCheckActive] = useState(false);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [checkedAnswer, setCheckedAnswer] = useState(false);
+  const [knowledgeFeedback, setKnowledgeFeedback] = useState<KnowledgeFeedback>('prompt');
+  const [wrongOptionId, setWrongOptionId] = useState<string | null>(null);
+  const [wrongAttempt, setWrongAttempt] = useState(0);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
+  const [phoneVisible, setPhoneVisible] = useState(false);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 600px)');
+    const onChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
   const isInIntro = !introDone;
-  const spotlight = isInIntro && introStep === 0;
-  const isOnExchangeForm = activePanel === 'exchange' && exchangeScreen === 'form';
-  const canContinue = nudgeActive
-    ? false
-    : isInIntro
-      ? introStep !== 1
-    : switchIntroStep !== null
-      ? switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1
-      : isOnExchangeForm
-        ? false
-        : exchangeScreen === 'success';
-  const addressLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
-  const amountLocked = isOnExchangeForm && exchangePhase === 'enter-address';
+  // The wallet stays hidden, and Andy stays in the spotlight, until his
+  // hand-over line; that line is where the wallet window slides in.
+  const walletVisible = introStep >= HANDOVER_INDEX;
+  const spotlight = isInIntro && introStep < HANDOVER_INDEX;
+  const isOnExchangeForm = (isMobile ? activePanel === 'exchange' : phoneVisible) && exchangeScreen === 'form';
+  const exchangeIntroLocking = exchangeIntroStep !== null && exchangeIntroStep < EXCHANGE_INTRO_COUNT - 1;
+  const addressLocked = isOnExchangeForm && (exchangeIntroLocking || exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
+  const amountGuidanceLocked = isOnExchangeForm && exchangePhase === 'enter-amount' && amountGuidanceStep === 0;
+  const amountLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || amountGuidanceLocked);
   const amountNudgeLocked = isOnExchangeForm && exchangePhase === 'ready-to-withdraw';
-  const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'ready-to-withdraw');
+  const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || amountGuidanceLocked || exchangePhase === 'ready-to-withdraw');
   const withdrawBtnLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'enter-amount');
   const switchNudgeLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
-const switchLocked = activePanel === 'exchange' && canContinue;
   const expectedAction: ExpectedAction =
     activePanel === 'wallet' && walletPhase === 'menu' && !hasRetrievedAddress
       ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
-      : activePanel === 'wallet' && walletPhase === 'receive-address' && !addressCopied
+      : activePanel === 'wallet' && walletPhase === 'receive-address'
         ? { type: 'copy-address' }
-        : activePanel === 'wallet' && walletPhase === 'receive-address' && addressCopied
-          ? { type: 'external' }
-          : { type: 'none' };
+        : { type: 'none' };
 
   const showSwitchButton = !isInIntro && (
-    switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1 : addressCopied || activePanel === 'exchange'
+    switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_COUNT - 1 : addressCopied || activePanel === 'exchange'
   );
   const currentIntroMessage = INTRO_MESSAGES[introStep];
 
   const trimmedAddress = sendAddress.trim();
   const matchesReceiveAddress = trimmedAddress.length > 0 && trimmedAddress.toLowerCase() === RECEIVE_ADDRESS.toLowerCase();
-  const looksLikeFullAddress = trimmedAddress.length >= RECEIVE_ADDRESS.length;
+  const looksLikeFullAddress = trimmedAddress.length >= 10;
   const addressMismatch = trimmedAddress.length > 0 && !matchesReceiveAddress && looksLikeFullAddress;
+  const parsedAmount = Number.parseFloat(amount);
+  const numericAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
+  // While the learner types toward 0.05 ("0", "0.", "0.0", "0.05" mid-edit),
+  // the value is a prefix of the target and shouldn't trigger the correction.
+  const amountTooLow =
+    amount.trim() !== '' &&
+    Number.isFinite(parsedAmount) &&
+    parsedAmount < AVAILABLE_BALANCE &&
+    !isPrefixOfAvailableBalance(amount.trim());
 
-  const walletStateKey = activePanel === 'wallet'
-    ? walletPhase === 'menu'
-      ? `wallet-menu-${menuSelection}`
-      : walletPhase === 'receive-address'
-        ? addressCopied
-          ? 'wallet-receive-copied'
-          : 'wallet-receive-address'
-        : `wallet-${walletPhase}`
-    : exchangeScreen === 'confirm'
+  function isPrefixOfAvailableBalance(val: string): boolean {
+    return AVAILABLE_BALANCE.toFixed(8).replace(/0+$/, '').startsWith(val.replace(/0+$/, ''));
+  }
+
+  const isExchangePanelActive = isMobile ? activePanel === 'exchange' : phoneVisible;
+  const walletStateKey = isExchangePanelActive
+    ? exchangeScreen === 'confirm'
       ? 'exchange-confirm'
       : exchangeScreen === 'success'
         ? 'exchange-success'
-        : `panel-${activePanel}`;
+        : 'panel-exchange'
+    : walletPhase === 'menu'
+      ? `wallet-menu-${menuSelection}`
+      : walletPhase === 'receive-address'
+        ? addressCopied
+          ? isMobile ? 'wallet-receive-copied' : 'wallet-receive-copied-desktop'
+          : 'wallet-receive-address'
+        : `wallet-${walletPhase}`;
 
-  const mentorMessage = nudgeActive
-    ? NUDGE_MESSAGE
+  const currentQuizQuestion = KNOWLEDGE_QUESTIONS[quizIndex] ?? KNOWLEDGE_QUESTIONS[0];
+  const currentQuizText = l2.questions[currentQuizQuestion.textIndex];
+  const quizOptionLabel = (optionId: string) => (currentQuizText.options as Record<string, string>)[optionId] ?? optionId;
+  const mentorMessage = withIconMark(nudgeActive
+    ? t.common.nudge
+    : knowledgeCheckActive
+      ? knowledgeFeedback === 'wrong'
+        ? t.common.wrongAnswer
+        : knowledgeFeedback === 'correct'
+          ? currentQuizText.correctLine
+          : l2.knowledgePrompts[quizIndex] ?? l2.knowledgePrompts[0]
     : isInIntro
       ? currentIntroMessage
-    : resetBlockedMsg && activePanel === 'wallet'
+      : receiveAddressStep !== null
+        ? l2.receiveAddress[receiveAddressStep]
+        : exchangeIntroStep !== null
+          ? l2.exchangeIntro[exchangeIntroStep]
+          : resetBlockedMsg && activePanel === 'wallet'
         ? MENTOR_MESSAGES['factory-reset-blocked']
         : switchIntroStep !== null
-        ? SWITCH_INTRO_MESSAGES[switchIntroStep]
+        ? l2.switchIntro[switchIntroStep]
         : addressMismatch && isOnExchangeForm
           ? MENTOR_MESSAGES['exchange-address-mismatch']
+          : amountTooLow && isOnExchangeForm
+            ? l2.amountCorrection
+            : isOnExchangeForm
+              ? EXCHANGE_PHASE_MESSAGES[exchangePhase][exchangePhase === 'enter-amount' ? amountGuidanceStep ?? 0 : 0]
+            : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange']);
+
+  const mentorMessageKey = nudgeActive
+    ? 'nudge'
+    : knowledgeCheckActive
+      ? `knowledge-check-${quizIndex}-${knowledgeFeedback}-${wrongAttempt}`
+      : isInIntro
+        ? `intro-${introStep}`
+        : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${amountGuidanceStep}-${amountTooLow}-${addressMismatch}`;
+  const { displayed, done, skip } = useTypewriter(mentorMessage, 6, mentorMessageKey);
+  const knowledgeCheckCanAnswer = knowledgeCheckActive && !checkedAnswer && done;
+
+  const canContinue = nudgeActive
+    ? false
+    : knowledgeCheckActive
+      ? false
+      : isInIntro
+        ? introStep < HANDOVER_INDEX && done
+      : receiveAddressStep !== null
+        ? receiveAddressStep < RECEIVE_ADDRESS_COUNT - 1 && done
+        : exchangeIntroStep !== null
+          ? exchangeIntroStep < EXCHANGE_INTRO_COUNT - 1 && done
+          : switchIntroStep !== null
+          ? switchIntroStep < SWITCH_INTRO_COUNT - 1
           : isOnExchangeForm
-            ? EXCHANGE_PHASE_MESSAGES[exchangePhase]
-            : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange'];
+            ? exchangePhase === 'enter-amount' && amountGuidanceStep === 0 && done
+            : exchangeScreen === 'success';
 
-  const { displayed, done, skip } = useTypewriter(mentorMessage);
-  const copyButtonInstruction = "There's your receive address. Click the copy button next to it to copy it.";
-  const renderMentorText = (text: string) => {
-    if (mentorMessage !== copyButtonInstruction || !text.includes('copy button')) {
-      return text;
-    }
+  const switchLocked = activePanel === 'exchange' && canContinue;
 
-    const marker = 'copy button';
-    const markerEnd = text.indexOf(marker) + marker.length;
-    return (
-      <>
-        {text.slice(0, markerEnd)}
-        <span className="mentor-copy-button-indicator" aria-hidden="true">
-          <Copy size={12} strokeWidth={2.2} />
-        </span>
-        {text.slice(markerEnd)}
-      </>
+  // The wallet ignores input while Andy is still talking, and while the
+  // continue button is the only expected action.
+  const deviceLocked = knowledgeCheckActive || canContinue || (isInIntro && !done) || (receiveAddressStep !== null && !done) || (exchangeIntroStep !== null && !done);
+
+  // The copy-button line marks where the icon goes with `{icon}`; it appears once typing reaches it.
+  const renderMentorText = (text: string) =>
+    renderWithIcon(
+      text,
+      <span className="mentor-copy-button-indicator" aria-hidden="true">
+        <Copy size={12} strokeWidth={2.2} />
+      </span>,
     );
-  };
+
+  useEffect(() => {
+    if (walletPhase === 'receive-address' && !addressCopied) {
+      setReceiveAddressStep(0);
+    } else {
+      setReceiveAddressStep(null);
+    }
+  }, [walletPhase, addressCopied]);
 
   useEffect(() => {
     if (walletPhase === 'receive-address') {
@@ -222,7 +302,7 @@ const switchLocked = activePanel === 'exchange' && canContinue;
   }, [walletPhase]);
 
   useEffect(() => {
-    if (switchIntroStep === SWITCH_INTRO_MESSAGES.length - 1) {
+    if (switchIntroStep === SWITCH_INTRO_COUNT - 1) {
       setSwitchPulse(true);
       return;
     }
@@ -311,18 +391,28 @@ const switchLocked = activePanel === 'exchange' && canContinue;
     setAddressCopied(true);
     if (!usedSwitchPrompt.current) {
       usedSwitchPrompt.current = true;
-      setSwitchIntroStep(0);
+      if (isMobile) {
+        setSwitchIntroStep(0);
+      } else {
+        setPhoneVisible(true);
+        exchangeIntroPlayed.current = true;
+        setExchangeIntroStep(0);
+      }
     }
-  }, []);
+  }, [isMobile]);
 
   const handleSwitchPanel = useCallback(() => {
-    if (switchLocked) return;
+    if (!isMobile || switchLocked) return;
     if (switchNudgeLocked) {
       handleUnexpectedAction();
       return;
     }
     if (switchIntroStep !== null) {
       setSwitchIntroStep(null);
+    }
+    if (activePanel === 'wallet' && !exchangeIntroPlayed.current) {
+      exchangeIntroPlayed.current = true;
+      setExchangeIntroStep(0);
     }
     setSlideDirection(activePanel === 'wallet' ? 'withdraw-slide-right' : 'withdraw-slide-left');
     setActivePanel((panel) => (panel === 'exchange' ? 'wallet' : 'exchange'));
@@ -348,16 +438,18 @@ const switchLocked = activePanel === 'exchange' && canContinue;
 
   const handleMax = useCallback(() => {
     if (maxLocked) return;
-    const maxAmount = AVAILABLE_BALANCE - NETWORK_FEE;
-    setAmount(maxAmount.toFixed(8));
+    setAmount(AVAILABLE_BALANCE.toFixed(8));
     setAmountError('');
   }, [maxLocked]);
 
-  const numericAmount = parseFloat(amount) || 0;
   const receivedAmount = numericAmount > 0 ? Math.max(numericAmount - NETWORK_FEE, 0) : 0;
-  const isAmountValid = numericAmount > 0 && numericAmount <= AVAILABLE_BALANCE && amountError === '';
+  const isAmountValid = numericAmount === AVAILABLE_BALANCE && amountError === '';
   const isAddressValid = matchesReceiveAddress;
   const canWithdraw = hasRetrievedAddress && isAmountValid && isAddressValid;
+  const displayAddress = sendAddress || RECEIVE_ADDRESS;
+  const addressBreakIndex = Math.ceil(displayAddress.length / 2);
+  const addressFirstLine = displayAddress.slice(0, addressBreakIndex);
+  const addressSecondLine = displayAddress.slice(addressBreakIndex);
 
   const handleWithdraw = () => {
     if (withdrawBtnLocked) return;
@@ -380,41 +472,95 @@ const switchLocked = activePanel === 'exchange' && canContinue;
       skip();
       return;
     }
-    if (isInIntro && introStep === 0) {
-      if (portraitRef.current && bubbleRef.current) {
+    if (isInIntro && introStep < HANDOVER_INDEX) {
+      if (introStep === HANDOVER_INDEX - 1 && portraitRef.current && bubbleRef.current) {
         flipRects.current = {
           portrait: portraitRef.current.getBoundingClientRect(),
           bubble: bubbleRef.current.getBoundingClientRect(),
         };
       }
-      setWalletEntered(true);
-      setIntroStep(1);
+      setIntroStep(introStep + 1);
+      return;
+    }
+    if (receiveAddressStep !== null) {
+      if (receiveAddressStep < RECEIVE_ADDRESS_COUNT - 1) {
+        setReceiveAddressStep(receiveAddressStep + 1);
+      }
+      return;
+    }
+    if (exchangeIntroStep !== null) {
+      if (exchangeIntroStep < EXCHANGE_INTRO_COUNT - 1) {
+        setExchangeIntroStep(exchangeIntroStep + 1);
+      } else {
+        setExchangeIntroStep(null);
+      }
       return;
     }
     if (switchIntroStep !== null) {
-      if (switchIntroStep < SWITCH_INTRO_MESSAGES.length - 1) {
+      if (switchIntroStep < SWITCH_INTRO_COUNT - 1) {
         setSwitchIntroStep(switchIntroStep + 1);
       }
       return;
     }
+    if (isOnExchangeForm && exchangePhase === 'enter-amount' && amountGuidanceStep === 0) {
+      setAmountGuidanceStep(1);
+      return;
+    }
+    if (knowledgeCheckActive) {
+      if (checkedAnswer) {
+        handleContinueFromCheck();
+      }
+      return;
+    }
     if (exchangeScreen === 'success') {
-      onComplete();
+      setKnowledgeCheckActive(true);
+      setQuizIndex(0);
+      setSelectedOption(null);
+      setCheckedAnswer(false);
+      setKnowledgeFeedback('prompt');
+      setWrongOptionId(null);
+      setWrongAttempt(0);
       return;
     }
   };
 
-  const bubbleKey = nudgeActive
-    ? 'nudge'
-    : isInIntro
-      ? `intro-${introStep}`
-      : `${walletStateKey}-${resetBlockedMsg}-${switchIntroStep}-${exchangePhase}-${addressMismatch}`;
+  const handleOptionSelect = (optionId: string) => {
+    if (!knowledgeCheckCanAnswer) return;
+    setWrongOptionId(null);
+    if (optionId === currentQuizQuestion.correctId) {
+      setSelectedOption(optionId);
+      setKnowledgeFeedback('correct');
+      setCheckedAnswer(true);
+      return;
+    }
+    setSelectedOption(null);
+    setWrongOptionId(optionId);
+    setWrongAttempt((attempt) => attempt + 1);
+    setKnowledgeFeedback('wrong');
+  };
+
+  const handleContinueFromCheck = () => {
+    if (!checkedAnswer || !done) return;
+    if (quizIndex < KNOWLEDGE_QUESTIONS.length - 1) {
+      setQuizIndex((index) => index + 1);
+      setSelectedOption(null);
+      setCheckedAnswer(false);
+      setKnowledgeFeedback('prompt');
+      setWrongOptionId(null);
+      setWrongAttempt(0);
+      return;
+    }
+    onComplete();
+  };
+
+  const bubbleKey = mentorMessageKey;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Enter') return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      if (!canContinue) return;
+      if (!knowledgeCheckActive && !canContinue && done) return;
       e.preventDefault();
       handleContinue();
     };
@@ -426,18 +572,23 @@ const switchLocked = activePanel === 'exchange' && canContinue;
     if (!isOnExchangeForm) return;
     if (exchangePhase === 'enter-address' && isAddressValid) {
       setExchangePhase('enter-amount');
+      setAmountGuidanceStep(0);
+      if (exchangeIntroStep !== null) setExchangeIntroStep(null);
     } else if (exchangePhase === 'enter-amount' && isAmountValid && isAddressValid) {
       setExchangePhase('ready-to-withdraw');
+      setAmountGuidanceStep(null);
     } else if (exchangePhase === 'ready-to-withdraw' && !isAmountValid) {
       setExchangePhase('enter-amount');
+      setAmountGuidanceStep(1);
     }
-  }, [isOnExchangeForm, exchangePhase, isAddressValid, isAmountValid]);
+  }, [isOnExchangeForm, exchangePhase, isAddressValid, isAmountValid, exchangeIntroStep]);
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
-      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
-          {showSwitchButton && (
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
+        {knowledgeCheckActive && <div className="knowledge-check-kicker">{t.quiz.checkIn}</div>}
+        {!knowledgeCheckActive && <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
+          {showSwitchButton && isMobile && (
             <button
               className={`withdraw-switch-btn withdraw-switch-btn-enter${switchPulse ? ' withdraw-switch-btn-pulse' : ''}`}
               type="button"
@@ -446,14 +597,14 @@ const switchLocked = activePanel === 'exchange' && canContinue;
             >
               <ArrowLeftRight size={14} strokeWidth={2.2} />
               <span key={activePanel} className="withdraw-switch-label">
-                {activePanel === 'exchange' ? 'Switch to Hardware Wallet' : 'Switch to Exchange Wallet'}
+                {activePanel === 'exchange' ? l2.switchToWallet : l2.switchToExchange}
               </span>
             </button>
           )}
 
           <div className="withdraw-panels-wrap">
             {/* ── Smartphone exchange panel ── */}
-            <div className={`withdraw-phone-wrap ${activePanel === 'exchange' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
+            <div className={`withdraw-phone-wrap ${!isMobile ? (phoneVisible ? 'withdraw-phone-desktop-enter' : 'withdraw-panel-hidden') : activePanel === 'exchange' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
               <div className="withdraw-phone">
                 <div className="withdraw-phone-notch" />
                 <div className="withdraw-phone-screen">
@@ -592,9 +743,12 @@ const switchLocked = activePanel === 'exchange' && canContinue;
                             <span>Network</span>
                             <strong>Bitcoin</strong>
                           </div>
-                          <div className="withdraw-confirm-detail">
+                          <div className="withdraw-confirm-detail withdraw-confirm-address-detail">
                             <span>Address</span>
-                            <strong className="withdraw-confirm-addr">{sendAddress || RECEIVE_ADDRESS}</strong>
+                            <strong className="withdraw-confirm-addr" aria-label={displayAddress} title={displayAddress}>
+                              <span>{addressFirstLine}</span>
+                              <span>{addressSecondLine}</span>
+                            </strong>
                           </div>
                           <div className="withdraw-confirm-detail">
                             <span>Withdrawal amount</span>
@@ -603,10 +757,6 @@ const switchLocked = activePanel === 'exchange' && canContinue;
                           <div className="withdraw-confirm-detail">
                             <span>Network fee</span>
                             <strong>{NETWORK_FEE.toFixed(5)} BTC</strong>
-                          </div>
-                          <div className="withdraw-confirm-detail">
-                            <span>Wallet label</span>
-                            <strong>HW Wallet 1</strong>
                           </div>
                         </div>
 
@@ -652,9 +802,12 @@ const switchLocked = activePanel === 'exchange' && canContinue;
                               <span>Received</span>
                               <strong className="withdraw-success-received">{receivedAmount.toFixed(8)} BTC</strong>
                             </div>
-                            <div className="withdraw-confirm-detail">
+                            <div className="withdraw-confirm-detail withdraw-confirm-address-detail">
                               <span>Address</span>
-                              <strong className="withdraw-confirm-addr">{sendAddress || RECEIVE_ADDRESS}</strong>
+                              <strong className="withdraw-confirm-addr" aria-label={displayAddress} title={displayAddress}>
+                                <span>{addressFirstLine}</span>
+                                <span>{addressSecondLine}</span>
+                              </strong>
                             </div>
                           </div>
 
@@ -668,16 +821,17 @@ const switchLocked = activePanel === 'exchange' && canContinue;
                   </div>
                 </div>
               </div>
+              <div className="device-caption">{t.common.captionPhone}</div>
             </div>
 
             {/* ── Hardware wallet panel ── */}
-            {walletEntered && (
-              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${activePanel === 'wallet' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
+            {walletVisible && (
+              <div className={`withdraw-wallet-wrap withdraw-wallet-slide-in ${isMobile ? (activePanel === 'wallet' ? slideDirection ?? '' : 'withdraw-panel-hidden') : phoneVisible ? 'withdraw-wallet-desktop-shift' : ''}`}>
                 <div className="hw-wallet-slot">
                   <HardwareWallet
                     mode="withdraw"
                     startAtMenu
-                    locked={canContinue}
+                    locked={deviceLocked}
                     onComplete={() => {}}
                     onPhaseChange={setWalletPhase}
                     onMenuSelectionChange={handleMenuSelectionChange}
@@ -690,13 +844,13 @@ const switchLocked = activePanel === 'exchange' && canContinue;
               </div>
             )}
           </div>
-        </div>
+        </div>}
 
         <div className="mentor-row">
-          <div ref={portraitRef} className="mentor-portrait" aria-label="Andy, your mentor" role="img">
+          <div ref={portraitRef} className="mentor-portrait" aria-label={fmt(t.common.mentorAria, { name: 'Andy' })} role="img">
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={andyPortrait} alt="Andy, your mentor" />
+              <img className="mentor-portrait-image" src={andyPortrait} alt={fmt(t.common.mentorAria, { name: 'Andy' })} />
             </div>
             <div className="mentor-portrait-badge">Andy</div>
           </div>
@@ -723,12 +877,49 @@ const switchLocked = activePanel === 'exchange' && canContinue;
                 handleContinue();
               }}
               disabled={!canContinue}
-              aria-label="Continue"
+              aria-label={t.common.continue}
             >
               <ChevronRight size={18} strokeWidth={2.5} />
             </button>
           </div>
         </div>
+        {knowledgeCheckActive && (
+          <div className="knowledge-check-card" role="group" aria-label={t.quiz.groupAria}>
+            <div className="knowledge-check-header">
+              <HelpCircle size={16} strokeWidth={2.2} />
+              <span>{t.quiz.quickCheck}</span>
+              <span className="knowledge-check-progress">{fmt(t.quiz.progress, { current: quizIndex + 1, total: KNOWLEDGE_QUESTIONS.length })}</span>
+            </div>
+            <p className="knowledge-check-question">{currentQuizText.question}</p>
+            <div className="knowledge-check-options">
+              {currentQuizQuestion.optionIds.map((optionId) => {
+                const isSelected = selectedOption === optionId;
+                const isCorrect = checkedAnswer && optionId === currentQuizQuestion.correctId;
+                const isWrong = wrongOptionId === optionId;
+                return (
+                  <button
+                    key={optionId}
+                    type="button"
+                    className={`knowledge-check-option ${isSelected ? 'selected' : ''} ${isCorrect ? 'correct' : ''} ${isWrong ? 'wrong' : ''}`}
+                    onClick={() => handleOptionSelect(optionId)}
+                    disabled={!knowledgeCheckCanAnswer}
+                  >
+                    {isCorrect ? <CheckCircle2 size={16} strokeWidth={2.2} /> : isWrong ? <XCircle size={16} strokeWidth={2.2} /> : null}
+                    <span>{quizOptionLabel(optionId)}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              className="knowledge-check-submit"
+              type="button"
+              onClick={handleContinueFromCheck}
+              disabled={!checkedAnswer || !done}
+            >
+              {quizIndex === KNOWLEDGE_QUESTIONS.length - 1 ? t.quiz.finish : t.quiz.next}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* <div className="character-footer">

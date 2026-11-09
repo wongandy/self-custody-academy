@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight, Layers, Link2 } from 'lucide-react';
-import HardwareWallet from '@/components/HardwareWallet';
+import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
+import en, { type Dictionary } from '@/locales/en';
+import { fmt, useI18n } from '@/lib/i18n';
 
 type ConnectScenarioProps = {
   completed: boolean;
@@ -37,40 +39,16 @@ const CONNECTION_DELAYS: Record<ConnectionPhase, number> = {
   linked: SEAT_MS,
 };
 
-const HANDOFF_MESSAGES = [
-  "Now let's connect your hardware wallet to a wallet software. But before we do that I'd like to introduce you to a colleague of mine.",
-  "She'll be the one to teach you all about the connecting part — I'll let her take it from here.",
-];
+const NUDGE_DURATION_MS = 1250;
 
-const MARIA_MESSAGES = [
-  "Hi, I'm Maria! I run this academy together with Andy, and I specialise in helping people move their Bitcoin safely.",
-  "A wallet software is simply an app that lets you view and manage your Bitcoin — your balance, your history, your payments.",
-  "We'll be using one you already have installed on your laptop called Cairn. Let's open it and take a look inside.",
-];
-
-const WALLET_WAITING_MESSAGE = "Let's wait for it to finish initializing.";
-
-const WALLET_INTRO_MESSAGE =
-  'This is the Transactions tab. Every sending or receiving transaction your wallet is involved will show up here.';
-
-const DEVICE_ARRIVAL_MESSAGE =
-  "But first we need to plug our hardware wallet into the laptop and pair it with the app in order to see your wallet's transaction history. Let's do that.";
-
-const BLOCKED_MESSAGE = "We'll cover sending and receiving Bitcoin in the upcoming missions — for now, let's finish connecting your device.";
-
-const CONNECT_DEVICE_MESSAGE =
-  'Your hardware wallet is now connected to the laptop. Click the Connect hardware wallet button on the app to send the pairing request.';
-
-const DEVICE_PROMPT_MESSAGE = "Now confirm the pairing request on your hardware wallet by pressing the checkmark button.";
-
-const WALLET_CONNECTED_MESSAGE = "Good job! You have successfully paired your hardware wallet with the Cairn wallet software.";
-
+// One speaking turn per line, in order: Andy hands over (`lesson4.andy`), then
+// Maria takes it (`lesson4.maria`). Deriving the turns from the dictionary's
+// lists means adding or removing a line can never leave a turn without a line
+// or shift the lines out of step. Every locale has the same list lengths.
+const HANDOFF_COUNT = en.lesson4.andy.length;
 const STEPS: Step[] = [
-  { kind: 'mentor', mentor: 'andy' },
-  { kind: 'mentor', mentor: 'andy' },
-  { kind: 'mentor', mentor: 'maria' },
-  { kind: 'mentor', mentor: 'maria' },
-  { kind: 'mentor', mentor: 'maria' },
+  ...en.lesson4.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
+  ...en.lesson4.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
   { kind: 'wallet-intro' },
   { kind: 'device-arrival' },
   { kind: 'connect-request' },
@@ -126,37 +104,41 @@ function useTypewriter(text: string, speed = 6) {
   return { displayed, done, skip };
 }
 
-function stepMessage(step: Step, stepIndex: number): string {
+function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): string {
   switch (step.kind) {
     case 'mentor':
-      if (step.mentor === 'andy') return HANDOFF_MESSAGES[stepIndex];
-      return MARIA_MESSAGES[stepIndex - HANDOFF_MESSAGES.length];
+      if (step.mentor === 'andy') return l4.andy[stepIndex] ?? '';
+      return l4.maria[stepIndex - HANDOFF_COUNT] ?? '';
     case 'wallet-intro':
-      return WALLET_INTRO_MESSAGE;
+      return l4.walletIntro;
     case 'device-arrival':
-      return DEVICE_ARRIVAL_MESSAGE;
+      return l4.deviceArrival;
     case 'connect-request':
-      return CONNECT_DEVICE_MESSAGE;
+      return l4.connectDevice;
     case 'device-prompt':
-      return DEVICE_PROMPT_MESSAGE;
+      return l4.devicePrompt;
     case 'connected':
-      return WALLET_CONNECTED_MESSAGE;
+      return l4.connected;
   }
 }
 
 export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
+  const { t } = useI18n();
+  const l4 = t.lesson4;
   const [stepIndex, setStepIndex] = useState(0);
   const [connectRequested, setConnectRequested] = useState(false);
   const [connected, setConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [blocked, setBlocked] = useState(false);
   const [connection, setConnection] = useState<ConnectionPhase>('idle');
+  const [arrivalRequested, setArrivalRequested] = useState(false);
   const [arrivalStarted, setArrivalStarted] = useState(false);
   const [bootPhase, setBootPhase] = useState<BootPhase>('pending');
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const [mobilePanel, setMobilePanel] = useState<'software' | 'device'>('software');
   const [mobileDeviceEntered, setMobileDeviceEntered] = useState(false);
+  const [nudgeActive, setNudgeActive] = useState(false);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 600px)');
@@ -173,11 +155,11 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // Maria asks the learner to wait until Cairn has finished starting up, then
   // explains the Transactions tab once the app is on screen.
   const walletBooting = step.kind === 'wallet-intro' && bootPhase !== 'ready';
-  const message = blocked
-    ? BLOCKED_MESSAGE
+  const message = nudgeActive
+    ? t.common.nudgeLater
     : walletBooting
-      ? WALLET_WAITING_MESSAGE
-      : stepMessage(step, stepIndex);
+      ? l4.walletWaiting
+      : stepMessage(l4, step, stepIndex);
   const { displayed, done, skip } = useTypewriter(message);
 
   const walletVisible = stepIndex >= WALLET_INTRO_INDEX;
@@ -185,22 +167,40 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const mobileCableHalf = isMobile && walletVisible && step.kind === 'device-arrival' && arrivalStarted && !mobileDeviceEntered;
   const showCable = mobileCableHalf || connection === 'plugging' || connection === 'seating' || connection === 'linked';
   const showMobileSwitch = isMobile && walletVisible && arrivalStarted;
+  const arrivalWaiting = step.kind === 'device-arrival' && !arrivalRequested;
+  const arrivalAnimating = step.kind === 'device-arrival' && arrivalRequested && !arrivalStarted;
   const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
-  const sliding = step.kind === 'device-arrival' && !arrivalStarted;
+  const sliding = arrivalAnimating;
 
   // Nothing on the laptop, device or phone responds until the mentor has finished talking
   // and Cairn has finished starting up.
-  const interactionLocked = !done || connecting || walletBooting;
+  const interactionLocked = !done || walletBooting || arrivalWaiting || arrivalAnimating || connecting;
+  const usbConnectionComplete = connection === 'linked';
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
   const confirmPending = step.kind === 'device-prompt' && (!connected || syncing);
   const devicePending = requestPending || confirmPending;
 
-  const canContinue = done && !walletBooting && !sliding && (blocked || (!devicePending && !connecting));
+  const canContinue = nudgeActive
+    ? false
+    : arrivalWaiting
+      ? done && !walletBooting
+      : done && !walletBooting && !sliding && (!devicePending && !connecting);
+  const softwareLocked = interactionLocked || (canContinue && !nudgeActive);
+  const deviceLocked = interactionLocked || (canContinue && !nudgeActive);
+  const connectButtonEnabled = step.kind === 'connect-request' && usbConnectionComplete && done && !nudgeActive;
+
+  const expectedAction: ExpectedAction =
+    step.kind === 'connect-request'
+      ? { type: 'external' }
+      : step.kind === 'device-prompt'
+        ? { type: 'confirm' }
+        : { type: 'none' };
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
+  const laptopCaptionRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
@@ -229,14 +229,11 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => clearTimeout(timer);
   }, [step.kind, connection, arrivalStarted, isMobile]);
 
-  // While Maria introduces the app the wallet window is held at screen center
-  // by a position offset; the layout beneath is already the final side-by-side
-  // one, so the window's size never changes. When Maria finishes the plug-in
-  // line the offset animates to zero: a pure position slide, no resize or reflow.
-  // The offset lives on the window (not the animated laptop wrapper) so the
-  // entrance animation's fill mode can never override it.
+  // While Maria introduces the app the wallet window and its caption are held at
+  // screen center. When the plug-in line finishes, both return to the final layout.
   useLayoutEffect(() => {
     const windowEl = laptopRef.current;
+    const captionEl = laptopCaptionRef.current;
     if (!windowEl || !walletVisible || arrivalStarted) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -244,7 +241,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       windowEl.style.transform = 'none';
       const rect = windowEl.getBoundingClientRect();
       const dx = window.innerWidth / 2 - (rect.left + rect.width / 2);
-      windowEl.style.transform = `translateX(${dx}px)`;
+      const transform = `translateX(${dx}px)`;
+      windowEl.style.transform = transform;
+      if (captionEl) captionEl.style.transform = transform;
     };
     apply();
     window.addEventListener('resize', apply);
@@ -254,9 +253,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // Maria finishes the plug-in line: slide the window from center to its final
   // spot, then start the device and cord sequence once the slide has settled.
   useEffect(() => {
-    if (step.kind !== 'device-arrival' || !done || arrivalStarted) return;
+    if (step.kind !== 'device-arrival' || !done || !arrivalRequested || arrivalStarted) return;
 
     const windowEl = laptopRef.current;
+    const captionEl = laptopCaptionRef.current;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (windowEl && !reduce) {
       const from = windowEl.style.transform || 'translateX(0)';
@@ -268,11 +268,22 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
         ],
         { duration: SLIDE_SETTLE_MS, fill: 'forwards' },
       );
+      if (captionEl) {
+        const captionFrom = captionEl.style.transform || from;
+        captionEl.style.transform = '';
+        captionEl.animate(
+          [
+            { transform: captionFrom, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+            { transform: 'translateX(0)', easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          ],
+          { duration: SLIDE_SETTLE_MS, fill: 'forwards' },
+        );
+      }
     }
 
     const timer = setTimeout(() => setArrivalStarted(true), reduce ? 0 : SLIDE_SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [step.kind, done, arrivalStarted]);
+  }, [step.kind, done, arrivalRequested, arrivalStarted]);
 
   // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
   // On phones the linked cord stays visible for a beat before the view returns to the app.
@@ -304,7 +315,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   }, [step.kind, connected, syncing]);
 
   // The app boots once the wallet window is on screen: brand mark, a short load,
-  // then the tabs and history fade in. Leaving the mission unmounts this component,
+  // then the tabs and history fade in. Leaving the lesson unmounts this component,
   // so the sequence replays on every visit.
   useEffect(() => {
     if (!walletVisible) return;
@@ -336,15 +347,15 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       skip();
       return;
     }
+    // A nudge replaces the mentor's line for a beat; while it is on screen the
+    // learner can still fast-forward it, but must not be able to advance the lesson.
+    if (nudgeActive) return;
     if (walletBooting) return;
-    if (blocked) {
-      setBlocked(false);
+    if (step.kind === 'device-arrival' && !arrivalRequested) {
+      setArrivalRequested(true);
       return;
     }
-    if (step.kind === 'device-arrival' && !arrivalStarted) {
-      return;
-    }
-    if (devicePending || connecting) return;
+    if (devicePending || connecting || arrivalAnimating) return;
     if (step.kind === 'connected') {
       onComplete();
       return;
@@ -356,10 +367,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, walletBooting, blocked, step, stepIndex, arrivalStarted, devicePending, connecting, onComplete]);
+  }, [done, skip, nudgeActive, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
 
   const handleRequestConnect = () => {
-    if (interactionLocked || connectRequested) return;
+    if (!connectButtonEnabled || connectRequested) return;
     setConnectRequested(true);
     setStepIndex((current) => (STEPS[current].kind === 'connect-request' ? current + 1 : current));
   };
@@ -373,6 +384,23 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     }
     setMobilePanel((current) => (current === 'device' ? 'software' : 'device'));
   };
+
+  const handleUnexpectedAction = useCallback(() => {
+    setNudgeActive(true);
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+  }, []);
+
+  useEffect(() => {
+    if (nudgeActive) {
+      setNudgeActive(false);
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    }
+  }, [stepIndex, connection]);
+
+  useEffect(() => () => {
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+  }, []);
 
   const handleDeviceConfirm = () => {
     setConnected(true);
@@ -506,7 +534,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               >
                 <ArrowLeftRight size={14} strokeWidth={2.2} />
                 <span key={mobilePanel} className="withdraw-switch-label">
-                  {mobilePanel === 'device' ? 'Switch to wallet software' : 'Switch to hardware wallet'}
+                  {mobilePanel === 'device' ? l4.switchToSoftware : l4.switchToDevice}
                 </span>
               </button>
             )}
@@ -543,8 +571,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item active"
-                      onClick={() => setBlocked(false)}
-                      disabled={interactionLocked}
+                      onClick={() => {}}
+                      disabled={softwareLocked}
                       aria-pressed="true"
                     >
                       <ArrowLeftRight strokeWidth={2.2} />
@@ -553,8 +581,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item"
-                      onClick={() => setBlocked(true)}
-                      disabled={interactionLocked}
+                      onClick={handleUnexpectedAction}
+                      disabled={softwareLocked}
                       aria-pressed="false"
                     >
                       <ArrowUpRight strokeWidth={2.2} />
@@ -563,8 +591,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     <button
                       type="button"
                       className="wallet-nav-item"
-                      onClick={() => setBlocked(true)}
-                      disabled={interactionLocked}
+                      onClick={handleUnexpectedAction}
+                      disabled={softwareLocked}
                       aria-pressed="false"
                     >
                       <ArrowDownLeft strokeWidth={2.2} />
@@ -610,7 +638,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                                       type="button"
                                       className={requestPending ? 'wallet-connect-btn attention' : 'wallet-connect-btn'}
                                       onClick={handleRequestConnect}
-                                      disabled={interactionLocked || step.kind !== 'connect-request'}
+                                      disabled={!connectButtonEnabled}
                                     >
                                       <Link2 size={14} strokeWidth={2.2} />
                                       <span>Connect hardware wallet</span>
@@ -635,6 +663,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               </div>
 
               {isMobile && (mobileCableHalf || showCable) && cableEl}
+              <div ref={laptopCaptionRef} className="device-caption">{t.common.captionWalletSoftware}</div>
             </div>
 
             {!isMobile && cableEl}
@@ -648,8 +677,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                   <HardwareWallet
                     mode="withdraw"
                     initialPhase="ready-menu"
-                    locked={interactionLocked}
+                    locked={deviceLocked}
                     connectRequest={connectRequested}
+                    expectedAction={expectedAction}
+                    onUnexpectedAction={handleUnexpectedAction}
                     onConnectConfirm={handleDeviceConfirm}
                     onComplete={() => {}}
                   />
@@ -664,12 +695,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             key={mentorName}
             ref={portraitRef}
             className="mentor-portrait mentor-portrait-enter"
-            aria-label={`${mentorName}, your mentor`}
+            aria-label={fmt(t.common.mentorAria, { name: mentorName })}
             role="img"
           >
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={portrait} alt={`${mentorName}, your mentor`} />
+              <img className="mentor-portrait-image" src={portrait} alt={fmt(t.common.mentorAria, { name: mentorName })} />
             </div>
             <div className="mentor-portrait-badge">{mentorName}</div>
           </div>
@@ -678,7 +709,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={`${mentorName}-${stepIndex}-${message}`}>
+            <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : `${mentorName}-${stepIndex}-${message}`}>
               <span className="mentor-bubble-name">{mentorName}</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
@@ -696,7 +727,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 handleContinue();
               }}
               disabled={!canContinue}
-              aria-label={step.kind === 'connected' ? 'Complete mission' : 'Continue'}
+              aria-label={step.kind === 'connected' ? t.common.completeLesson : t.common.continue}
             >
               {step.kind === 'connected' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
             </button>

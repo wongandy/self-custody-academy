@@ -37,6 +37,25 @@ const handleUp = useCallback(() => {
 
 Apply the `if (locked) return;` guard to **every** button handler the device exposes: power, up, down, enter/confirm, cancel/back, copy, and any custom action buttons.
 
+### 1b. Power is also inert while the device is booting
+
+The lock isn't just for the mentor's continue button — the power button must be inert whenever the device is mid-boot. Boot is an automatic, uninterruptible sequence (logo + progress bar leading to the menu), so no input means anything during it, and cutting power mid-boot would let the learner skip or reset the sequence the scenario depends on.
+
+Guard the power handler against the booting phase in addition to the mentor lock:
+
+```tsx
+const handlePower = useCallback(() => {
+  if (locked || isBooting) return; // no input during boot
+  if (phase === 'off') {
+    startBoot();
+    return;
+  }
+  // ... normal behavior
+}, [locked, isBooting, phase, startBoot, ...]);
+```
+
+Apply the same `isBooting` check to any other handler that could disrupt the boot sequence (enter/confirm, cancel, navigation), not just power. The other buttons are usually already disabled via `disabled={!isOn || isBooting}` — power is the one most often missed because it must stay clickable when the device is off (that's how the learner turns it on).
+
 ### 2. Only lock at terminal states, not during every instruction
 
 The `canContinue` flag may be `true` at moments where the learner still needs to interact with the device (e.g. during an intro step before the device is revealed, or during a sub-instruction sequence). Locking at those moments would prevent the learner from using the device when they need to.
@@ -78,5 +97,6 @@ This lets the learner freely navigate the wallet menu during all instruction pha
 
 - **Locking too early**: If the learner can't scroll the wallet menu during an intro step, the lock is too aggressive. Narrow the condition to only terminal states.
 - **Forgetting a handler**: Every button handler needs the `if (locked) return;` guard. Missing one means that button still works when it shouldn't.
+- **Letting power interrupt a boot**: Power needs a phase check, not just the mentor lock — `if (locked || isBooting) return;`. It's easy to miss because power must stay live when the device is off.
 - **Locking only one device**: If both a wallet and a phone are visible, both need the `locked` prop. A learner clicking through the exchange form while the mentor says "click continue" is the same problem.
 - **Using `disabled` on the DOM button instead of a handler guard**: The `locked` prop is a concept the component understands. Inside the component, guard the handlers with `if (locked) return;`. You may also set `disabled` on the DOM element for visual feedback, but the handler guard is what actually prevents the action.

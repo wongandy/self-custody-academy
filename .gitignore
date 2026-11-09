@@ -26,3 +26,4 @@ dist-ssr
 installation.txt
 supabase/.gitignore
 supabase/config.toml
+thai-translation-review.csv
