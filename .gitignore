@@ -21,3 +21,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+
+installation.txt
+supabase/.gitignore
+supabase/config.toml
