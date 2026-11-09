@@ -40,7 +40,7 @@ Before installing the project, make sure you have:
 - A Bolt Database project for authentication and saved progress
 
 ---
-## Quick start (local only)
+## Quick start (local only  test)
 ```bash
 git clone https://github.com/wongandy/self-custody-academy.git
 cd self-custody-academy
