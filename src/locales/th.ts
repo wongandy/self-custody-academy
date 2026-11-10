@@ -45,6 +45,7 @@ const th: Dictionary = {
     haveAccount: 'ฉันมีบัญชีอยู่แล้ว',
     footerMode: 'โหมดการเรียน: จำลองเท่านั้น',
     footerNoBtc: 'ไม่มีการใช้ BTC จริง',
+    footerSupportedBy: 'สนับสนุนโดย',
   },
   andyIntro: {
     lines: [

@@ -49,6 +49,7 @@ const en = {
     haveAccount: 'I already have an account',
     footerMode: 'Learning mode: simulation only',
     footerNoBtc: 'No real BTC involved',
+    footerSupportedBy: 'Supported by',
   },
   andyIntro: {
     lines: [
