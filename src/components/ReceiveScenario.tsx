@@ -18,6 +18,7 @@ import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
+import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 
 type ReceiveScenarioProps = {
   onBack: () => void;
@@ -43,6 +44,12 @@ type MentorStage =
   | 'finished';
 
 const CONTINUE_STAGES = new Set<MentorStage>(['intro', 'sending', 'finished']);
+
+// Answer key for the check-in; the wording is `lesson5.questions`, in this order.
+const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
+  { optionIds: ['match', 'faster', 'fee'], correctId: 'match' },
+  { optionIds: ['address', 'phrase', 'pin'], correctId: 'address' },
+];
 
 type TransactionRow = {
   date: string;
@@ -101,7 +108,7 @@ function ReceiveQrCode() {
   );
 }
 
-function useTypewriter(text: string, speed = 6) {
+function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
@@ -130,7 +137,7 @@ function useTypewriter(text: string, speed = 6) {
 
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [text, speed, resetKey]);
 
   const skip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -165,6 +172,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopBodyRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
+  const check = useKnowledgeCheck(KNOWLEDGE_QUESTIONS, l5, onFinish);
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 600px)');
@@ -175,6 +183,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
 
   const message = nudgeActive
     ? t.common.nudgeLater
+    : check.active
+      ? check.mentorLine
     : stage === 'intro'
       ? l5.intro[introStep] ?? l5.intro[0]
       : stage === 'go-receive'
@@ -194,12 +204,23 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                     : stage === 'waiting'
                       ? l5.waiting
                       : l5.finished;
-  const { displayed, done, skip } = useTypewriter(message);
+  const bubbleKey = nudgeActive
+    ? 'nudge'
+    : check.active
+      ? check.mentorKey
+      : stage === 'intro'
+        ? `intro-${introStep}`
+        : stage === 'hand-over'
+          ? `hand-over-${warned}`
+          : stage === 'sending'
+            ? `sending-${sendingStep}`
+            : stage;
+  const { displayed, done, skip } = useTypewriter(message, 6, bubbleKey);
 
   const spotlight = stage === 'intro';
   useLaptopCableAlign(laptopBodyRef, !spotlight);
   const interactionLocked = !done;
-  const canContinue = done && !nudgeActive && CONTINUE_STAGES.has(stage);
+  const canContinue = done && !nudgeActive && !check.active && CONTINUE_STAGES.has(stage);
   // While Maria is mid-line the devices freeze; once she finishes, the learner
   // may press device buttons — every press is gently nudged back on track.
   const deviceLocked = interactionLocked;
@@ -317,6 +338,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
       skip();
       return;
     }
+    if (check.active) {
+      if (check.answered) check.advance();
+      return;
+    }
     if (nudgeActive || !CONTINUE_STAGES.has(stage)) return;
     if (stage === 'intro') {
       if (introStep < INTRO_COUNT - 1) {
@@ -340,8 +365,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
       }
       return;
     }
-    onFinish();
-  }, [done, skip, nudgeActive, stage, introStep, sendingStep, onFinish]);
+    check.start();
+  }, [done, skip, check, nudgeActive, stage, introStep, sendingStep]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -439,20 +464,11 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     </div>
   );
 
-  const bubbleKey = nudgeActive
-    ? 'nudge'
-    : stage === 'intro'
-      ? `intro-${introStep}`
-      : stage === 'hand-over'
-        ? `hand-over-${warned}`
-        : stage === 'sending'
-          ? `sending-${sendingStep}`
-          : stage;
-
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
-      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        {!spotlight && (
+    <main className={`scenario-page scenario-page-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
+        {check.active && <KnowledgeCheckKicker />}
+        {!spotlight && !check.active && (
           <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
             <div className="wallet-laptop laptop-enter">
               <div ref={laptopBodyRef} className="wallet-laptop-body">
@@ -690,13 +706,14 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                   e.stopPropagation();
                   handleContinue();
                 }}
-                aria-label={stage === 'finished' ? t.common.finishLesson : t.common.continue}
+                aria-label={t.common.continue}
               >
-                {stage === 'finished' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
+                <ChevronRight size={18} strokeWidth={2.5} />
               </button>
             )}
           </div>
         </div>
+        {check.active && <KnowledgeCheckCard check={check} ready={done} />}
       </div>
     </main>
   );
