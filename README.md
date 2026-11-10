@@ -45,7 +45,7 @@ Before installing the project, make sure you have:
 ## Quick start (local only)
 1. Clone the repository and navigate into the project directory:
     ```bash
-    git clone [https://github.com/wongandy/self-custody-academy.git](https://github.com/wongandy/self-custody-academy.git)
+    git clone https://github.com/wongandy/self-custody-academy.git
     cd self-custody-academy
     ```
 
@@ -75,8 +75,9 @@ Before installing the project, make sure you have:
     ```
 
 7. Create your environment file and configure your keys:
-   Create a `.env` file in your root directory and assign the value of the **Publishable** field from the status output to your `VITE_SUPABASE_ANON_KEY`:
+   Create a `.env` file in your root directory and assign the value of the **Publishable** field from the status output to your `VITE_SUPABASE_ANON_KEY` and also put the value of the supabase url:
     ```env
+    VITE_SUPABASE_URL=your_supabase_url_here
     VITE_SUPABASE_ANON_KEY=your_publishable_key_here
     ```
 

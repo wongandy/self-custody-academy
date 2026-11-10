@@ -4,29 +4,49 @@ import { useAuth } from '@/lib/auth';
 import andyPortrait from '@/components/Andy.webp';
 import { useI18n } from '@/lib/i18n';
 
-type AuthMode = 'register' | 'login';
+type AuthMode = 'register' | 'login' | 'recovery';
 
 type AuthScreenProps = {
   mode: AuthMode;
   onBack: () => void;
   onSuccess: () => void;
-  onSwitchMode: (mode: AuthMode) => void;
+  onSwitchMode: (mode: 'register' | 'login') => void;
   onSkip?: () => void;
   title?: string;
   subtitle?: string;
 };
 
 function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: AuthScreenProps) {
-  const { signUp, signIn, resetPassword } = useAuth();
+  const { signUp, signIn, resetPassword, updatePassword, linkError, clearLinkError } = useAuth();
   const { t } = useI18n();
   const a = t.auth;
+  const errorText = (code: string) => {
+    const messages: Record<string, string> = {
+      invalid_credentials: a.errInvalidCredentials,
+      user_already_exists: a.errUserExists,
+      email_exists: a.errUserExists,
+      email_not_confirmed: a.errEmailNotConfirmed,
+      weak_password: a.errPasswordShort,
+      same_password: a.errSamePassword,
+      email_address_invalid: a.errEmailInvalid,
+      validation_failed: a.errEmailInvalid,
+      over_email_send_rate_limit: a.errRateLimit,
+      over_request_rate_limit: a.errRateLimit,
+      otp_expired: a.errLinkExpired,
+      access_denied: a.errLinkExpired,
+      session_not_found: a.errLinkExpired,
+      session_expired: a.errLinkExpired,
+    };
+    return messages[code] ?? a.errGeneric;
+  };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [view, setView] = useState<'auth' | 'forgot'>('auth');
+  const [view, setView] = useState<'auth' | 'forgot'>(linkError ? 'forgot' : 'auth');
   const [resetSent, setResetSent] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const isRegister = mode === 'register';
 
@@ -54,11 +74,48 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
     }
 
     setIsSubmitting(true);
-    const result = isRegister ? await signUp(email.trim(), password) : await signIn(email.trim(), password);
+    if (isRegister) {
+      const result = await signUp(email.trim(), password);
+      setIsSubmitting(false);
+      if (result.error) {
+        setError(errorText(result.error));
+        return;
+      }
+      if (result.needsConfirmation) {
+        setConfirmationSent(true);
+        return;
+      }
+    } else {
+      const result = await signIn(email.trim(), password);
+      setIsSubmitting(false);
+      if (result.error) {
+        setError(errorText(result.error));
+        return;
+      }
+    }
+
+    onSuccess();
+  };
+
+  const handleNewPasswordSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (password.length < 6) {
+      setError(a.errPasswordShort);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(a.errPasswordMismatch);
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await updatePassword(password);
     setIsSubmitting(false);
 
     if (result.error) {
-      setError(result.error);
+      setError(errorText(result.error));
       return;
     }
 
@@ -79,12 +136,97 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
     setIsSubmitting(false);
 
     if (result.error) {
-      setError(result.error);
+      setError(errorText(result.error));
       return;
     }
+    clearLinkError();
 
     setResetSent(true);
   };
+
+  if (mode === 'recovery') {
+    return (
+      <main className="auth-page">
+        <div className="auth-card">
+          <div className="auth-icon-row">
+            <div className="auth-icon-badge">
+              <LockKeyhole size={28} strokeWidth={1.8} />
+            </div>
+          </div>
+
+          <h1>{a.newPasswordTitle}</h1>
+          <p className="auth-subtitle">{a.newPasswordSubtitle}</p>
+
+          <form className="auth-form" onSubmit={handleNewPasswordSubmit}>
+            <label className="auth-field">
+              <span className="auth-field-label"><LockKeyhole size={13} /> {a.newPassword}</span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                placeholder={a.passwordPlaceholderNew}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </label>
+
+            <label className="auth-field">
+              <span className="auth-field-label"><ShieldCheck size={13} /> {a.confirmPassword}</span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                placeholder={a.confirmPlaceholder}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </label>
+
+            {error && <p className="auth-error">{error}</p>}
+
+            <button className="character-proceed auth-submit" type="submit" disabled={isSubmitting}>
+              <span>{isSubmitting ? a.pleaseWait : a.saveNewPassword}</span>
+              {!isSubmitting && <ArrowRight size={18} strokeWidth={2.5} />}
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
+  if (confirmationSent) {
+    return (
+      <main className="auth-page">
+        <div className="auth-card">
+          <div className="auth-icon-row">
+            <div className="auth-icon-badge">
+              <Mail size={28} strokeWidth={1.8} />
+            </div>
+          </div>
+
+          <h1>{a.confirmTitle}</h1>
+          <div className="auth-success">
+            <p>{a.confirmSentBefore}<strong>{email.trim()}</strong>{a.confirmSentAfter}</p>
+          </div>
+
+          <div className="auth-switch">
+            <button
+              type="button"
+              className="auth-back-link"
+              onClick={() => {
+                setConfirmationSent(false);
+                setPassword('');
+                setConfirmPassword('');
+                onSwitchMode('login');
+              }}
+            >
+              <ArrowLeft size={14} strokeWidth={2.2} /> {a.backToSignIn}
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (view === 'forgot') {
     return (
@@ -100,6 +242,8 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
           <p className="auth-subtitle">
             {resetSent ? a.resetSentSubtitle : a.resetSubtitle}
           </p>
+
+          {linkError && !resetSent && <p className="auth-error">{errorText(linkError)}</p>}
 
           {resetSent ? (
             <div className="auth-success">
@@ -136,6 +280,7 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
                 setView('auth');
                 setResetSent(false);
                 setError(null);
+                clearLinkError();
               }}
             >
               <ArrowLeft size={14} strokeWidth={2.2} /> {a.backToSignIn}
