@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, CheckCircle2, Copy, HelpCircle, Smartphone, AlertTriangle, XCircle } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, CheckCircle2, Copy, HelpCircle, Smartphone, AlertTriangle, Wifi, XCircle } from 'lucide-react';
 import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
@@ -36,6 +36,30 @@ const KNOWLEDGE_QUESTIONS = [
 ] as const;
 
 type KnowledgeFeedback = 'prompt' | 'wrong' | 'correct';
+
+function formatPhoneTime(date: Date) {
+  return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function PhoneClock() {
+  const [time, setTime] = useState(() => formatPhoneTime(new Date()));
+
+  useEffect(() => {
+    let intervalId: number | undefined;
+    const tick = () => setTime(formatPhoneTime(new Date()));
+    // Align updates to the start of each minute.
+    const timeoutId = window.setTimeout(() => {
+      tick();
+      intervalId = window.setInterval(tick, 60_000);
+    }, 60_000 - (Date.now() % 60_000));
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (intervalId !== undefined) window.clearInterval(intervalId);
+    };
+  }, []);
+
+  return <span>{time}</span>;
+}
 
 function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
@@ -609,9 +633,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                 <div className="withdraw-phone-notch" />
                 <div className="withdraw-phone-screen">
                   <div className="withdraw-phone-statusbar">
-                    <span>9:41</span>
+                    <PhoneClock />
                     <span className="withdraw-phone-statusbar-icons">
-                      <span className="withdraw-phone-signal" />
+                      <Wifi className="withdraw-phone-signal" size={11} strokeWidth={2.5} aria-hidden="true" />
                       <span className="withdraw-phone-battery" />
                     </span>
                   </div>

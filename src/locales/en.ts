@@ -291,6 +291,30 @@ const en = {
     wordsMissing: 'I could not find your simulation phrase. You may need to redo Lesson 1 to generate a new wallet.',
     showPhrase: 'Show recovery phrase',
     hidePhrase: 'Hide recovery phrase',
+    knowledgePrompts: [
+      'Great job. Before we wrap up, two quick questions about recovering your wallet.',
+      'Nice. One more question about what happens if you lose your device.',
+    ],
+    questions: [
+      {
+        question: 'What do you need to restore your wallet after a factory reset?',
+        options: {
+          phrase: 'Your 12-word recovery phrase',
+          pin: 'Just the device PIN',
+          support: "A call to the hardware wallet company's support team",
+        },
+        correctLine: 'Exactly. Your recovery phrase is the only thing that can bring your wallet back, so keep it safe.',
+      },
+      {
+        question: 'If your hardware wallet is lost or broken, what happens to your Bitcoin?',
+        options: {
+          safe: 'It stays safe on the blockchain, and you can restore it on a new device with your recovery phrase',
+          gone: "It's gone forever along with the device",
+          company: 'The manufacturer can send it back to you',
+        },
+        correctLine: 'Right. Your Bitcoin never lived on the device. With your recovery phrase, you can recover it on any compatible device.',
+      },
+    ],
   },
 
   // Lesson 4 — Connect to wallet software (Andy hands over to Maria)
@@ -309,9 +333,34 @@ const en = {
     deviceArrival: "Under Keystores, Cairn asks where this wallet's keys come from. Ours live on the hardware wallet, so let's plug it into the laptop first.",
     connectDevice: 'Your hardware wallet is now connected to the laptop. Click CONNECT HARDWARE WALLET under Keystores to send the pairing request.',
     devicePrompt: 'Now confirm the pairing request on your hardware wallet by pressing the checkmark button.',
+    keystoreDetails: "Paired! Cairn filled in Keystore 1 from your device. The master fingerprint identifies your hardware wallet, the derivation path tells Cairn where your addresses live, and the xpub lets it see your balance and create addresses, but never spend. Your private keys stay on the device.",
     connected: "Good job! Your hardware wallet is now paired with Cairn, and you're on the Transactions tab, where you can see your wallet's balance and every payment it sends or receives. The 0.04998 BTC here came from the Bitcoin withdrawal we made from the exchange earlier.",
     switchToSoftware: 'Switch to wallet software',
     switchToDevice: 'Switch to hardware wallet',
+    knowledgePrompts: [
+      'Nice work. Before we wrap up, two quick questions about connecting your wallet.',
+      'Good job. One more question about where your keys live.',
+    ],
+    questions: [
+      {
+        question: 'What can the wallet software do with your xpub?',
+        options: {
+          view: 'See your balance and create receive addresses',
+          spend: 'Spend your Bitcoin without the hardware wallet',
+          recover: 'Restore your wallet, just like a recovery phrase',
+        },
+        correctLine: 'Exactly. The xpub lets the software watch your wallet and create addresses, but it can never spend. Spending still needs your hardware wallet.',
+      },
+      {
+        question: 'Once your hardware wallet is connected to the wallet software, where are your private keys?',
+        options: {
+          device: 'Still on the hardware wallet',
+          laptop: 'Copied onto the laptop',
+          cloud: "Uploaded to the wallet software's servers",
+        },
+        correctLine: 'Right. Your private keys never leave the device. The software only ever receives public information.',
+      },
+    ],
   },
 
   // Lesson 5 — Receiving Bitcoin (Maria)
@@ -337,6 +386,30 @@ const en = {
     chatAria: 'Paste the receive address',
     pasteAria: 'Paste from clipboard',
     sendAria: 'Send address to Maria',
+    knowledgePrompts: [
+      'Nice work. Before we wrap up, two quick questions about receiving Bitcoin.',
+      "Good job. One more question about what's safe to share.",
+    ],
+    questions: [
+      {
+        question: 'Why verify the receive address on your hardware wallet before sharing it?',
+        options: {
+          match: "To confirm the address really came from your device and wasn't swapped",
+          faster: 'To make the payment arrive faster',
+          fee: 'To lower the network fee',
+        },
+        correctLine: "Exactly. Malware on a computer can swap an address. Checking it on your device's screen catches that.",
+      },
+      {
+        question: 'To receive Bitcoin from someone, what do you give them?',
+        options: {
+          address: 'Your receive address',
+          phrase: 'Your 12-word recovery phrase',
+          pin: 'Your device PIN',
+        },
+        correctLine: 'Right. A receive address is safe to share. Never give anyone your recovery phrase.',
+      },
+    ],
   },
 
   // Lesson 6 — Sending Bitcoin (Maria)
@@ -357,6 +430,30 @@ const en = {
     txSent: 'The payment has been broadcast to the network. Let us check your updated balance.',
     finished: 'Excellent work! You verified the address, understood the network fee, and approved the payment on the hardware wallet. That is the complete sending habit to carry forward.',
     copyAddressAria: "Copy Maria's address",
+    knowledgePrompts: [
+      'Excellent. Before we wrap up, two quick questions about sending Bitcoin.',
+      'Good job. One more question about approving a payment.',
+    ],
+    questions: [
+      {
+        question: 'What does choosing a higher fee usually do?',
+        options: {
+          faster: 'Helps your transaction confirm faster, but costs more',
+          more: 'Sends more Bitcoin to the recipient',
+          refund: 'Lets you cancel the payment later',
+        },
+        correctLine: 'Exactly. A higher fee rate gets miners to include your payment sooner. The recipient still receives the same amount.',
+      },
+      {
+        question: "Why approve the payment on your hardware wallet's screen?",
+        options: {
+          verify: 'To check the real recipient, amount and fee before signing',
+          backup: 'To back up the transaction to the device',
+          speed: 'To make the transaction broadcast faster',
+        },
+        correctLine: "Right. The hardware wallet's screen is the one you can trust. If the details there don't match, don't confirm.",
+      },
+    ],
   },
 } as const;
 
