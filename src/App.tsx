@@ -11,6 +11,7 @@ import ReceiveScenario from '@/components/ReceiveScenario';
 import RecoverScenario from '@/components/RecoverScenario';
 import AuthScreen from '@/components/AuthScreen';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
+import { AboutPage, CODE_ORANGE_URL, ContactPage } from '@/components/InfoPages';
 import heroImage from '@/components/hero.webp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -30,7 +31,7 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth';
+type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth' | 'about' | 'contact';
 
 const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6'];
 
@@ -184,6 +185,7 @@ function App() {
   }, [signOut]);
 
   const isInScenario = SCENARIO_SCREENS.includes(screen);
+  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact';
 
   return (
     <div className={`app-shell theme-${theme}`}>
@@ -369,29 +371,57 @@ function App() {
         />
       )}
 
-      {screen === 'home' && (
+      {screen === 'about' && <AboutPage onBack={() => setScreen('home')} />}
+
+      {screen === 'contact' && <ContactPage onBack={() => setScreen('home')} />}
+
+      {showFooter && (
         <footer className="site-footer">
-          <span>{t.home.footerMode}</span>
-          <span className="footer-separator">•</span>
-          <span>{t.home.footerNoBtc}</span>
-          <a
-            className="footer-backer"
-            href="https://codeorange.dev/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span className="footer-backer-label">{t.home.footerSupportedBy}</span>
-            <img
-              className="footer-backer-logo footer-backer-logo--light"
-              src="/code-orange-logo-light.png"
-              alt="Code Orange dev school"
-            />
-            <img
-              className="footer-backer-logo footer-backer-logo--dark"
-              src="/code-orange-logo-dark.png"
-              alt="Code Orange dev school"
-            />
-          </a>
+          <div className="footer-note">
+            <span>{t.home.footerMode}</span>
+            <span className="footer-separator">•</span>
+            <span>{t.home.footerNoBtc}</span>
+          </div>
+          <div className="footer-end">
+            <nav className="footer-links" aria-label={t.home.footerNavAria}>
+              <button
+                type="button"
+                className={`footer-link${screen === 'about' ? ' is-active' : ''}`}
+                aria-current={screen === 'about' ? 'page' : undefined}
+                onClick={() => setScreen('about')}
+              >
+                {t.home.footerAbout}
+              </button>
+              <span className="footer-separator" aria-hidden="true">•</span>
+              <button
+                type="button"
+                className={`footer-link${screen === 'contact' ? ' is-active' : ''}`}
+                aria-current={screen === 'contact' ? 'page' : undefined}
+                onClick={() => setScreen('contact')}
+              >
+                {t.home.footerContact}
+              </button>
+            </nav>
+            <span className="footer-divider" aria-hidden="true" />
+            <a
+              className="footer-backer"
+              href={CODE_ORANGE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="footer-backer-label">{t.home.footerSupportedBy}</span>
+              <img
+                className="footer-backer-logo footer-backer-logo--light"
+                src="/code-orange-logo-light.png"
+                alt="Code Orange dev school"
+              />
+              <img
+                className="footer-backer-logo footer-backer-logo--dark"
+                src="/code-orange-logo-dark.png"
+                alt="Code Orange dev school"
+              />
+            </a>
+          </div>
         </footer>
       )}
     </div>
