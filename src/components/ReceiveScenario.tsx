@@ -9,13 +9,15 @@ import {
   ClipboardPaste,
   Copy,
   Eye,
-  QrCode,
   SendHorizontal,
+  Settings,
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import mariaPortrait from '@/components/Maria.webp';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
+import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 
 type ReceiveScenarioProps = {
   onBack: () => void;
@@ -141,6 +143,8 @@ function useTypewriter(text: string, speed = 6) {
 
 function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const { t } = useI18n();
+  // Same title bar as lesson 4: the wallet name the learner chose there
+  const [windowTitle] = useState(() => walletWindowTitle('Cairn', getWalletName()));
   const l5 = t.lesson5;
   const [stage, setStage] = useState<MentorStage>('intro');
   const [introStep, setIntroStep] = useState(0);
@@ -159,6 +163,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const laptopBodyRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   useEffect(() => {
@@ -192,6 +197,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const { displayed, done, skip } = useTypewriter(message);
 
   const spotlight = stage === 'intro';
+  useLaptopCableAlign(laptopBodyRef, !spotlight);
   const interactionLocked = !done;
   const canContinue = done && !nudgeActive && CONTINUE_STAGES.has(stage);
   // While Maria is mid-line the devices freeze; once she finishes, the learner
@@ -408,8 +414,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
           viewBox="0 0 100 40"
           preserveAspectRatio="none"
         >
-          <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-          <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+          <path className="cable-line" d="M0 20 L 20 20 C 36 20, 36 31, 50 31 C 64 31, 64 20, 80 20 L 100 20" pathLength={100} />
+          <path className="cable-pulse" d="M0 20 L 20 20 C 36 20, 36 31, 50 31 C 64 31, 64 20, 80 20 L 100 20" pathLength={100} />
         </svg>
         <svg
           className="connect-cable-wire connect-cable-wire-v"
@@ -449,118 +455,137 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
         {!spotlight && (
           <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
             <div className="wallet-laptop laptop-enter">
-              <div className="wallet-window">
-                <div className="wallet-window-titlebar">
-                  <span className="tl-dot red" />
-                  <span className="tl-dot yellow" />
-                  <span className="tl-dot green" />
-                </div>
-                <div className="wallet-window-body">
-                  <div className="wallet-app">
-                    <aside className="wallet-sidebar">
-                      <button
-                        type="button"
-                        className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}`}
-                        onClick={handleTransactionsTab}
-                        disabled={softwareLocked}
-                        aria-pressed={walletTab === 'transactions'}
-                      >
-                        <ArrowLeftRight strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Transactions</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="wallet-nav-item"
-                        onClick={handleUnexpectedAction}
-                        disabled={softwareLocked}
-                        aria-pressed="false"
-                      >
-                        <ArrowUpRight strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Send</span>
-                      </button>
-                      <button
-                        type="button"
-                        className={`wallet-nav-item${walletTab === 'receive' ? ' active' : ''}`}
-                        onClick={handleReceiveTab}
-                        disabled={softwareLocked}
-                        aria-pressed={walletTab === 'receive'}
-                      >
-                        <ArrowDownLeft strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Receive</span>
-                      </button>
-                    </aside>
-                    <div className="wallet-canvas">
-                      {walletTab === 'receive' ? (
-                        <div className="rx-panel">
-                          <div className="rx-panel-heading">
-                            <QrCode size={14} strokeWidth={2} />
-                            <span>Receive address</span>
-                          </div>
-                          <div className="rx-qr-frame" aria-hidden="true">
-                            <ReceiveQrCode />
-                          </div>
-                          <p className="rx-addr">{RECEIVE_ADDRESS}</p>
-                          <button
-                            className="tx-sim-btn primary rx-btn"
-                            type="button"
-                            onClick={handleCopyAddress}
-                          >
-                            {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
-                            <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
-                          </button>
-                          {addrVerified ? (
-                            <div className="tx-addr-verified">
-                              <CheckCircle2 size={16} />
-                              <span>Address verified on device</span>
+              <div ref={laptopBodyRef} className="wallet-laptop-body">
+                <div className="wallet-window">
+                  <div className="wallet-window-titlebar">
+                    <span className="tl-dot red" />
+                    <span className="tl-dot yellow" />
+                    <span className="tl-dot green" />
+                    <span className="wallet-window-title">{windowTitle}</span>
+                  </div>
+                  <div className="wallet-window-body">
+                    <div className="wallet-app">
+                      <aside className="wallet-sidebar">
+                        <button
+                          type="button"
+                          className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}`}
+                          onClick={handleTransactionsTab}
+                          disabled={softwareLocked}
+                          aria-pressed={walletTab === 'transactions'}
+                        >
+                          <ArrowLeftRight strokeWidth={2.2} />
+                          <span className="wallet-nav-label">Transactions</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="wallet-nav-item"
+                          onClick={handleUnexpectedAction}
+                          disabled={softwareLocked}
+                          aria-pressed="false"
+                        >
+                          <ArrowUpRight strokeWidth={2.2} />
+                          <span className="wallet-nav-label">Send</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`wallet-nav-item${walletTab === 'receive' ? ' active' : ''}`}
+                          onClick={handleReceiveTab}
+                          disabled={softwareLocked}
+                          aria-pressed={walletTab === 'receive'}
+                        >
+                          <ArrowDownLeft strokeWidth={2.2} />
+                          <span className="wallet-nav-label">Receive</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="wallet-nav-item"
+                          onClick={handleUnexpectedAction}
+                          disabled={softwareLocked}
+                          aria-pressed="false"
+                        >
+                          <Settings strokeWidth={2.2} />
+                          <span className="wallet-nav-label">Settings</span>
+                        </button>
+                      </aside>
+                      <div className="wallet-canvas">
+                        {walletTab === 'receive' ? (
+                          <div className="rx-panel">
+                            <div className="wallet-tab-heading">
+                              <div className="wallet-tab-title"><ArrowDownLeft strokeWidth={2} /><span>Receive Bitcoin</span></div>
                             </div>
-                          ) : (
+                            <div className="rx-qr-frame" aria-hidden="true">
+                              <ReceiveQrCode />
+                            </div>
+                            <span className="wallet-field-label">Receive address</span>
+                            <p className="rx-addr">{RECEIVE_ADDRESS}</p>
                             <button
-                              className="tx-sim-btn ghost rx-btn"
+                              className="tx-sim-btn primary rx-btn"
                               type="button"
-                              onClick={handleVerifyAddress}
-                              disabled={verifyingAddr || stage === 'go-receive'}
+                              onClick={handleCopyAddress}
                             >
-                              <Eye size={14} strokeWidth={2} />
-                              <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>
+                              {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
+                              <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
                             </button>
-                          )}
-                        </div>
-                      ) : (
-                      <div className="wallet-transactions">
-                        <div className="wallet-tx-summary">
-                          <div className="wallet-tx-summary-item">
-                            <span className="wallet-tx-summary-label">Balance</span>
-                            <span className="wallet-tx-summary-value">{balance} BTC</span>
+                            {addrVerified ? (
+                              <div className="tx-addr-verified">
+                                <CheckCircle2 size={16} />
+                                <span>Address verified on device</span>
+                              </div>
+                            ) : (
+                              <button
+                                className="tx-sim-btn ghost rx-btn"
+                                type="button"
+                                onClick={handleVerifyAddress}
+                                disabled={verifyingAddr || stage === 'go-receive'}
+                              >
+                                <Eye size={14} strokeWidth={2} />
+                                <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>
+                              </button>
+                            )}
                           </div>
-                          <div className="wallet-tx-summary-item">
-                            <span className="wallet-tx-summary-label">Transactions</span>
-                            <span className="wallet-tx-summary-value">{transactions.length}</span>
+                        ) : (
+                        <div className="wallet-transactions">
+                          <div className="wallet-tab-heading">
+                            <div className="wallet-tab-title"><ArrowLeftRight strokeWidth={2} /><span>Transactions</span></div>
                           </div>
-                        </div>
-                        <div className="wallet-tx-table-wrap">
-                          <table className="wallet-tx-table">
-                            <thead>
-                              <tr>
-                                <th>Date</th>
-                                <th>Value</th>
-                                <th>Balance</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {transactions.map((tx) => (
-                                <tr key={tx.date} className={tx.fresh ? 'fresh' : undefined}>
-                                  <td>{tx.date}</td>
-                                  <td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td>
-                                  <td>{tx.balance}</td>
+                          <div className="wallet-tx-summary">
+                            <div className="wallet-tx-summary-item">
+                              <span className="wallet-tx-summary-label">Balance</span>
+                              <span className="wallet-tx-summary-value">{balance} BTC</span>
+                            </div>
+                            <div className="wallet-tx-summary-item">
+                              <span className="wallet-tx-summary-label">Transactions</span>
+                              <span className="wallet-tx-summary-value">{transactions.length}</span>
+                            </div>
+                          </div>
+                          <div className="wallet-tx-table-wrap">
+                            <table className="wallet-tx-table">
+                              <thead>
+                                <tr>
+                                  <th>Date</th>
+                                  <th>Value</th>
+                                  <th>Balance</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {transactions.map((tx) => (
+                                  <tr key={tx.date} className={tx.fresh ? 'fresh' : undefined}>
+                                    <td>{tx.date}</td>
+                                    <td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td>
+                                    <td>{tx.balance}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
+                        )}
                       </div>
-                      )}
                     </div>
                   </div>
+                </div>
+                <div className="wallet-laptop-base" aria-hidden="true">
+                  <span className="wallet-laptop-notch" />
                 </div>
               </div>
 

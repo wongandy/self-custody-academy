@@ -3787,6 +3787,11 @@ html.theme-light {
   margin-top: 36px;
 }
 
+/* Caption sits 8px under the laptop base, matching the hardware wallet's label gap */
+.wallet-laptop-body + .device-caption {
+  margin-top: -12px;
+}
+
 .laptop-enter {
   animation: laptop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -3803,6 +3808,54 @@ html.theme-light {
   border-radius: 16px;
   background: var(--panel-strong);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+/* Screen + base: a slim laptop deck (front view) under the wallet window so it
+   reads as a computer, and gives the USB cord something physical to plug into. */
+
+.wallet-laptop-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.wallet-laptop-base {
+  --laptop-overhang: 18px;
+  position: relative;
+  flex-shrink: 0;
+  width: calc(100% + var(--laptop-overhang) * 2);
+  height: 12px;
+  margin-top: -1px;
+  border-radius: 2px 2px 14px 14px;
+  background: linear-gradient(180deg, #4a5057 0%, #33383e 45%, #1e2226 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 10px 22px rgba(0, 0, 0, 0.32);
+}
+
+.wallet-laptop-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 64px;
+  height: 4px;
+  border-radius: 0 0 6px 6px;
+  background: rgba(0, 0, 0, 0.38);
+  transform: translateX(-50%);
+}
+
+/* Phones: keep the overhang inside the 16px page gutter */
+@media (max-width: 600px) {
+  .wallet-laptop-base {
+    --laptop-overhang: 8px;
+    height: 9px;
+  }
+
+  .wallet-laptop-notch {
+    width: 48px;
+    height: 3px;
+  }
 }
 
 .wallet-window-titlebar {
@@ -4934,21 +4987,6 @@ html.theme-light {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.rx-panel-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--muted);
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.rx-panel-heading svg {
-  color: var(--gold-light);
-}
-
 .rx-qr-frame {
   width: min(168px, 55vw);
   padding: 10px;
@@ -6004,6 +6042,18 @@ html.theme-light {
   flex-direction: column;
 }
 
+.scenario-page-connect .wallet-laptop-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* The window shares the body with the base, so it flexes instead of taking 100% */
+.scenario-page-connect .wallet-laptop-body .wallet-window {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
 .scenario-page-connect .wallet-window-body {
   flex: 1;
   min-height: 0;
@@ -6031,76 +6081,376 @@ html.theme-light {
   flex-shrink: 0;
 }
 
-/* ── Scenario 4: Transactions tab and hardware-wallet connect ── */
+/* ── Scenario 4: wallet creation, Settings tab and hardware-wallet connect ── */
 
-.wallet-tx-empty-cell {
-  white-space: normal !important;
+.wallet-window-title {
+  flex: 1;
+  min-width: 0;
+  /* Right margin balances the traffic lights so the title sits centered; the
+     negative block margins keep the bar at the dots' height without clipping descenders. */
+  margin: -3px 57px -3px 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.wallet-tx-empty {
+/* Welcome screen: no wallet open yet */
+
+.wallet-welcome {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 24px;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.02), transparent 55%),
+    rgba(0, 0, 0, 0.12);
+}
+
+.wallet-welcome-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 18px 14px;
-  color: var(--muted);
-  font-size: 12px;
-  text-align: center;
+  gap: 16px;
+  width: min(100%, 420px);
+  padding: 28px 24px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  animation: wallet-placeholder-in 260ms ease;
 }
 
-.wallet-connect-btn {
+.wallet-welcome-lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.wallet-welcome-options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-welcome-or {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.wallet-welcome-option {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
-  color: #16130c;
-  border: 0;
-  border-radius: 10px;
-  background: linear-gradient(160deg, var(--gold-light), #d9a84e);
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 11px;
+  width: 128px;
+  padding: 16px 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(241, 189, 105, 0.25);
-  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
-.wallet-connect-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 8px 22px rgba(241, 189, 105, 0.32);
+.wallet-welcome-option svg {
+  width: 20px;
+  height: 20px;
+  color: var(--gold-light);
 }
 
-.wallet-connect-btn:active {
-  transform: translateY(0) scale(0.98);
+.wallet-welcome-option:hover {
+  border-color: rgba(241, 189, 105, 0.4);
+  background: rgba(241, 189, 105, 0.08);
 }
 
-.wallet-connect-btn:focus-visible {
+.wallet-welcome-option:active {
+  transform: scale(0.98);
+}
+
+.wallet-welcome-option:focus-visible {
   outline: 2px solid var(--gold-light);
   outline-offset: 2px;
 }
 
-.wallet-connect-btn.attention {
+.wallet-welcome-option.attention {
+  border-color: rgba(241, 189, 105, 0.5);
   animation: wallet-nav-pulse 1400ms ease-in-out infinite;
 }
 
-.wallet-connect-btn:disabled {
-  color: #aeb4b5;
-  background: #4b5051;
-  border: 1px solid #606667;
-  cursor: not-allowed;
-  opacity: 0.72;
-  box-shadow: none;
-  animation: none;
+.wallet-welcome-option:disabled {
+  cursor: default;
 }
 
-.wallet-connect-btn:disabled:hover,
-.wallet-connect-btn:disabled:active {
-  transform: none;
-  filter: none;
-  box-shadow: none;
+.wallet-welcome-option:disabled:hover {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Wallet name dialog */
+
+.wallet-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 10, 10, 0.5);
+  animation: wallet-dialog-fade 200ms ease both;
+}
+
+.wallet-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 380px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: var(--panel-strong);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  animation: wallet-dialog-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.wallet-dialog-title {
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.wallet-dialog-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.wallet-dialog-icon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  color: var(--gold-light);
+}
+
+.wallet-dialog-input {
+  margin: 0 16px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+/* The field is a contenteditable div (see ConnectScenario), styled as a one-line input */
+.wallet-dialog-input {
+  min-height: 39px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: left;
+  cursor: text;
+  caret-color: var(--gold-light);
+}
+
+.wallet-dialog-input:empty::before {
+  content: attr(data-placeholder);
+  color: var(--faint);
+  pointer-events: none;
+}
+
+.wallet-dialog-input[aria-disabled='true'] {
+  cursor: default;
+}
+
+.wallet-dialog-input:focus {
+  border-color: var(--gold-light);
+  box-shadow: 0 0 0 3px rgba(241, 189, 105, 0.18);
+}
+
+.wallet-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px;
+}
+
+.wallet-dialog-btn {
+  padding: 10px 16px;
+}
+
+@keyframes wallet-dialog-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes wallet-dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Settings tab */
+
+/* The tab fills the canvas height and the keystore area takes whatever is left,
+   so the Connect Hardware Wallet button is always visible without scrolling,
+   even when the laptop window is at its shortest (~220px of canvas). */
+.wallet-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  align-self: stretch;
+  min-height: 0;
+  animation: wallet-placeholder-in 260ms ease;
+}
+
+.wallet-settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wallet-settings-keystores {
+  flex: 1;
+  min-height: 0;
+}
+
+.wallet-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text);
+}
+
+.wallet-select span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallet-select svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+
+.wallet-keystore {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.wallet-keystore-tabs {
+  display: flex;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.wallet-keystore-tab {
+  margin-bottom: -1px;
+  padding: 6px 12px;
+  color: var(--gold-light);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  border-bottom-color: transparent;
+  border-radius: 7px 7px 0 0;
+  background: #1f2224;
+}
+
+.wallet-keystore-body {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 8px 16px;
+}
+
+/* Looks like every Cairn primary button (.tx-sim-btn.primary); only sizing here */
+.wallet-keystore-option {
+  flex-shrink: 0;
+  min-width: 240px;
+}
+
+.wallet-keystore-option.attention {
+  animation: wallet-keystore-pulse 1400ms ease-in-out infinite;
+}
+
+@keyframes wallet-keystore-pulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(167, 232, 67, 0.15), 0 0 0 0 rgba(167, 232, 67, 0); }
+  50% { box-shadow: 0 8px 24px rgba(167, 232, 67, 0.15), 0 0 0 5px rgba(167, 232, 67, 0.22); }
+}
+
+@media (max-width: 600px) {
+  .wallet-welcome {
+    padding: 16px;
+  }
+
+  .wallet-welcome-box {
+    padding: 22px 14px;
+  }
+
+  .wallet-welcome-options {
+    gap: 8px;
+  }
+
+  .wallet-welcome-option {
+    width: 108px;
+    padding: 14px 8px;
+    font-size: 12px;
+  }
+
+  .wallet-settings {
+    gap: 12px;
+  }
+
+  .wallet-keystore-body {
+    padding: 8px 12px;
+  }
+
+  .wallet-keystore-option {
+    min-width: 0;
+    width: 100%;
+    padding: 10px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-welcome-box,
+  .wallet-dialog-backdrop,
+  .wallet-dialog,
+  .wallet-settings,
+  .wallet-welcome-option.attention,
+  .wallet-keystore-option.attention {
+    animation: none;
+  }
 }
 
 .wallet-sync-overlay {
@@ -6202,6 +6552,24 @@ html.theme-light {
   display: none;
 }
 
+/* Each cord end stops under the middle of its plug's rubber boot, so no bare
+   wire or round line cap pokes out beside the metal tip. Plugs sit 6–7px in
+   from the edge and are 20px long, so 14px lands inside the boot. */
+.connect-cable-wire-h {
+  left: 14px;
+  width: calc(100% - 28px);
+}
+
+.connect-cable-wire-v {
+  top: 14px;
+  height: calc(100% - 28px);
+}
+
+.connect-cable-wire-under {
+  top: 14px;
+  height: calc(100% - 14px);
+}
+
 /* Phone-only cord shapes: bottom-exit lead and device underside lead */
 
 .connect-cable-wire-under,
@@ -6211,13 +6579,15 @@ html.theme-light {
 
 .cable-line {
   fill: none;
-  stroke: #8b9096;
-  stroke-width: 3.4;
+  stroke: #c4c9ce;
+  stroke-width: 3.6;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
-  stroke-dasharray: 100;
+  /* The gap is longer than the path so the hidden cord leaves no zero-length
+     dash at its end (the round cap would draw it as a stray dot) */
+  stroke-dasharray: 100 110;
   stroke-dashoffset: 100;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
   transition: stroke-dashoffset 780ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -6232,7 +6602,7 @@ html.theme-light {
 .cable-pulse {
   fill: none;
   stroke: var(--gold-light);
-  stroke-width: 3.4;
+  stroke-width: 3.6;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
   stroke-dasharray: 16 84;
@@ -6249,10 +6619,56 @@ html.theme-light {
   position: absolute;
   left: 50%;
   opacity: 0;
-  background: linear-gradient(180deg, #d5d8db, #7f858b);
-  border: 1px solid rgba(0, 0, 0, 0.4);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  background: linear-gradient(90deg, #262a2f, #4a5057 45%, #262a2f);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.3);
   transition: opacity 260ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* USB-C plug, built from three parts: the element is the rubber boot, ::after
+   is the slim rounded metal shell poking out toward the port, and ::before is
+   the narrow strain-relief neck where the cord enters. Vertical plugs by
+   default: plug-start points up, plug-end points down. */
+
+.connect-cable-plug::before,
+.connect-cable-plug::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.connect-cable-plug::after {
+  width: 5px;
+  height: 7px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #858b92, #eef0f2 50%, #858b92);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
+}
+
+.connect-cable-plug::before {
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+  background: #2b3035;
+}
+
+.connect-cable .plug-start::after {
+  top: -7px;
+}
+
+.connect-cable .plug-start::before {
+  bottom: -3px;
+}
+
+.connect-cable .plug-end::after {
+  bottom: -7px;
+}
+
+.connect-cable .plug-end::before {
+  top: -3px;
 }
 
 /* The near plug locks into the laptop as the cord starts drawing across */
@@ -6295,19 +6711,21 @@ html.theme-light {
   to { transform: translate(-50%, 0) scale(1); }
 }
 
+/* Long, slim boots (~2.5:1) are what make the plugs read as USB-C; each boot
+   tapers wider toward the cord end */
 .connect-cable .plug-start {
-  top: -5px;
-  width: 11px;
-  height: 16px;
-  border-radius: 3px 3px 2px 2px;
+  top: 6px;
+  width: 8px;
+  height: 20px;
+  border-radius: 2px 2px 4px 4px;
   transform: translateX(-50%);
 }
 
 .connect-cable .plug-end {
-  bottom: -5px;
-  width: 11px;
-  height: 16px;
-  border-radius: 2px 2px 3px 3px;
+  bottom: 6px;
+  width: 8px;
+  height: 20px;
+  border-radius: 4px 4px 2px 2px;
   transform: translateX(-50%);
 }
 
@@ -6356,12 +6774,21 @@ html.theme-light {
 
 @media (min-width: 1181px) {
   .connect-cable {
-    width: 92px;
+    width: 112px;
     height: 64px;
   }
 
   .connect-cable-wire-h {
     display: block;
+  }
+
+  /* The cord leaves from the side of the laptop base: it clears the base's
+     overhang and sits at the base's height (--cable-y, set by useLaptopCableAlign) */
+  .scenario-page-connect .connect-duo.is-wide > .connect-cable {
+    align-self: flex-start;
+    width: 94px;
+    margin-top: calc(var(--cable-y, 240px) - 32px);
+    margin-left: 18px;
   }
 
   .connect-cable-wire-v {
@@ -6370,14 +6797,17 @@ html.theme-light {
 
   .connect-cable-plug {
     left: auto;
+    background: linear-gradient(180deg, #4a5057, #262a2f);
   }
 
+  /* Horizontal USB-C plugs: the shell points left into the laptop base and
+     right into the device; the strain relief points back along the cord */
   .connect-cable .plug-start {
     top: 50%;
-    left: -5px;
-    width: 16px;
-    height: 11px;
-    border-radius: 3px 2px 2px 3px;
+    left: 6px;
+    width: 20px;
+    height: 8px;
+    border-radius: 2px 4px 4px 2px;
     transform: translateY(-50%);
   }
 
@@ -6385,11 +6815,42 @@ html.theme-light {
     top: 50%;
     bottom: auto;
     left: auto;
-    right: -5px;
-    width: 16px;
-    height: 11px;
-    border-radius: 2px 3px 3px 2px;
+    right: 6px;
+    width: 20px;
+    height: 8px;
+    border-radius: 4px 2px 2px 4px;
     transform: translateY(-50%);
+  }
+
+  .connect-cable .connect-cable-plug::before,
+  .connect-cable .connect-cable-plug::after {
+    top: 50%;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    transform: translateY(-50%);
+  }
+
+  .connect-cable .connect-cable-plug::after {
+    width: 7px;
+    height: 5px;
+    background: linear-gradient(180deg, #858b92, #eef0f2 50%, #858b92);
+  }
+
+  .connect-cable .plug-start::after {
+    left: -6px;
+  }
+
+  .connect-cable .plug-start::before {
+    right: -3px;
+  }
+
+  .connect-cable .plug-end::after {
+    right: -6px;
+  }
+
+  .connect-cable .plug-end::before {
+    left: -3px;
   }
 
   .connect-cable.is-plugging .plug-start,
@@ -6421,7 +6882,7 @@ html.theme-light {
 /* The far plug glides along the wire from the laptop side into the device's port */
 
 @keyframes cable-plug-ride-x {
-  from { opacity: 1; transform: translate(-80px, -50%); }
+  from { opacity: 1; transform: translate(-100px, -50%); }
   to { opacity: 1; transform: translate(0, -50%); }
 }
 
@@ -6750,12 +7211,15 @@ html.theme-light {
      center and runs right until it's cut off at the screen edge. Once plugged
      in it stays visible whenever this panel is on screen. */
 
+  /* The cord plugs up into the underside of the laptop base (--cable-y is the
+     base's center, set by useLaptopCableAlign; +4.5px reaches its bottom edge),
+     toward the right so it clears the centered caption, then runs off-screen right */
   .scenario-page-connect .connect-cable.cable-under-wallet {
     position: absolute;
-    top: 100%;
-    left: 50%;
+    top: calc(var(--cable-y, 100%) + 4.5px);
+    left: 86%;
     z-index: 4;
-    width: calc(50vw + 40px);
+    width: 96px;
     height: 48px;
     margin: 0;
     transform: translateX(calc(-20 / 240 * 100%));
@@ -6772,11 +7236,10 @@ html.theme-light {
   }
 
   .scenario-page-connect .connect-cable.cable-under-wallet .plug-start {
-    top: -5px;
+    top: 6px;
     left: calc(20 / 240 * 100%);
-    width: 12px;
-    height: 16px;
-    border-radius: 3px 3px 2px 2px;
+    width: 8px;
+    height: 20px;
     transform: translateX(-50%);
     opacity: 1;
     animation: cable-plug-in-x 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -6801,12 +7264,16 @@ html.theme-light {
     justify-content: center;
   }
 
+  /* The cord plugs up into the device's underside, not into its caption: the
+     scaled device's visible bottom sits 28px above the row's bottom (8px gap +
+     18px label). The plug lands 34px in from the device's left edge (device is
+     239px wide, centered), left of the centered caption. */
   .connect-device-row .connect-cable.cable-device-panel {
     position: absolute;
-    top: 100%;
+    top: calc(100% - 28px);
     left: 0;
     z-index: 4;
-    width: 50%;
+    width: calc(50% - 86px);
     height: 48px;
     margin: 0;
   }
@@ -6826,14 +7293,25 @@ html.theme-light {
   }
 
   .connect-device-row .connect-cable.cable-device-panel .plug-end {
-    top: -5px;
+    top: 6px;
     bottom: auto;
     left: 100%;
-    width: 12px;
-    height: 16px;
-    border-radius: 3px 3px 2px 2px;
+    width: 8px;
+    height: 20px;
+    border-radius: 2px 2px 4px 4px;
     opacity: 0;
     transform: translate(-50%, 0);
+  }
+
+  /* This plug points up into the device's underside: shell on top, neck below */
+  .connect-device-row .connect-cable.cable-device-panel .plug-end::before {
+    top: auto;
+    bottom: -3px;
+  }
+
+  .connect-device-row .connect-cable.cable-device-panel .plug-end::after {
+    top: -7px;
+    bottom: auto;
   }
 
   /* The cord slides in fully formed, so its line must be drawn from the first
@@ -6946,6 +7424,21 @@ html.theme-light {
 .theme-light .withdraw-phone,
 .theme-light .wallet-window {
   box-shadow: 0 24px 60px rgba(60, 40, 20, 0.18), 0 2px 6px rgba(60, 40, 20, 0.08);
+}
+
+.theme-light .wallet-laptop-base {
+  background: linear-gradient(180deg, #e4e1db 0%, #cbc6be 50%, #a9a39a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 10px 22px rgba(60, 40, 20, 0.18);
+}
+
+.theme-light .cable-line {
+  stroke: #3b4046;
+}
+
+.theme-light .wallet-laptop-notch {
+  background: rgba(60, 40, 20, 0.22);
 }
 
 /* Header & footer */
@@ -7269,9 +7762,17 @@ html.theme-light {
   color: var(--faint);
 }
 
-.theme-light .path-card-symbol {
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: var(--shadow-sm);
+.theme-light .path-card-art {
+  filter: none;
+}
+
+.theme-light .path-card-deeper {
+  background: linear-gradient(160deg, #fbfbf7 40%, #f6f3e2);
+  box-shadow: none;
+}
+
+.theme-light .path-card-deeper {
+  border-color: rgba(125, 111, 0, 0.22);
 }
 
 /* Lesson 6 */
@@ -7357,19 +7858,6 @@ html.theme-light {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-}
-
-.send-form-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 650;
-  color: #eaf3ee;
-}
-
-.send-form-title svg {
-  color: #46c48a;
 }
 
 .send-form-balance,
@@ -7526,6 +8014,154 @@ html.theme-light {
 
 .send-success-screen {
   align-items: flex-start;
+}
+
+/* ── Wallet software: one fixed screen size for every tab and lesson ──
+   The window's height used to follow its content, so the laptop base (and the
+   USB cord plugged into it) jumped between tabs. Now the screen is always the
+   same height: 404px puts the base beside the straight part of the 450px
+   hardware wallet's side, above its 28px corner radius. Short viewports shrink
+   it, and the content below is laid out to use the width instead of growing
+   taller. Phones keep their own full-height panel layout. */
+
+@media (min-width: 601px) {
+  .scenario-page-connect .wallet-laptop {
+    min-height: 0;
+  }
+
+  .scenario-page-connect .wallet-laptop-body {
+    flex: none;
+  }
+
+  .scenario-page-connect .wallet-laptop-body .wallet-window {
+    flex: none;
+    height: clamp(300px, calc(100dvh - 380px), 404px);
+  }
+
+  /* Every view fills the screen, so short content (a one-row history) still
+     uses the whole canvas instead of leaving the bottom half empty */
+  .scenario-page-connect .wallet-canvas {
+    align-items: stretch;
+    padding: 20px 24px;
+  }
+
+  .scenario-page-connect .wallet-transactions {
+    min-height: 0;
+  }
+
+  /* Receive: QR on the left, address and actions on the right */
+  .scenario-page-connect .rx-panel {
+    width: 100%;
+    height: auto;
+    display: grid;
+    grid-template-columns: 168px minmax(0, 1fr);
+    grid-auto-rows: auto;
+    align-content: center;
+    justify-items: start;
+    column-gap: 28px;
+    row-gap: 12px;
+    padding: 0 8px;
+  }
+
+  .scenario-page-connect .rx-qr-frame {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    align-self: center;
+    width: 168px;
+  }
+
+  .scenario-page-connect .rx-panel > :not(.rx-qr-frame) {
+    grid-column: 2;
+  }
+
+  .scenario-page-connect .rx-addr {
+    max-width: none;
+    text-align: left;
+  }
+
+  .scenario-page-connect .rx-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Send form: fields on the left, fee + review button on the right */
+  .scenario-page-connect .send-form-screen {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    align-content: start;
+    column-gap: 20px;
+    row-gap: 14px;
+  }
+
+  .scenario-page-connect .send-form-screen > .send-form-heading {
+    grid-column: 1 / -1;
+  }
+
+  .scenario-page-connect .send-form-screen > .send-form-fields {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+  }
+
+  .scenario-page-connect .send-form-screen > .send-fee-section {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .scenario-page-connect .send-form-screen > .tx-sim-btn {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: start;
+  }
+
+  .scenario-page-connect .send-fee-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .scenario-page-connect .send-fee-explanation {
+    text-align: left;
+  }
+
+  .scenario-page-connect .send-review-screen,
+  .scenario-page-connect .send-success-screen {
+    width: 100%;
+  }
+
+}
+
+/* Keep fee rates and the button label on one line wherever the 720px laptop fits */
+@media (min-width: 761px) {
+  .scenario-page-connect .send-form-screen .tx-fee-btn small,
+  .scenario-page-connect .send-form-screen > .tx-sim-btn {
+    white-space: nowrap;
+  }
+}
+
+/* Small tablets: the canvas is only ~430px wide, so tighten the gutters */
+@media (min-width: 601px) and (max-width: 760px) {
+  .scenario-page-connect .wallet-canvas {
+    padding: 16px;
+  }
+
+  .scenario-page-connect .send-form-screen {
+    column-gap: 14px;
+  }
+
+  .scenario-page-connect .send-fee-section {
+    padding: 10px;
+  }
+}
+
+/* Stacked layout: give the laptop the same 720px width as side-by-side when
+   the viewport has room, so the two-column views aren't squeezed */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .scenario-page-connect .connect-duo.is-wide .wallet-laptop {
+    width: min(100%, 720px);
+    max-width: 720px;
+  }
 }
 
 .send-completion-status {
@@ -7804,10 +8440,11 @@ html.theme-light {
 }
 
 .path-card-number {
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.38);
   font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .path-card-status,
@@ -7832,26 +8469,79 @@ html.theme-light {
   margin: 10px 0 10px;
 }
 
-.path-card-symbol {
-  display: grid;
-  place-items: center;
-  border: 1px solid currentColor;
-  background: rgba(0, 0, 0, 0.13);
-  box-shadow: 0 0 28px rgba(255, 190, 92, 0.1);
+.path-card-art {
+  width: min(100%, 240px);
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 18px rgba(255, 190, 92, 0.18));
 }
 
-.path-card-symbol-large {
-  width: 112px;
-  height: 112px;
-  border-radius: 22px;
+.path-art-back {
+  opacity: 0.45;
+  transition: transform 320ms ease, opacity 320ms ease;
 }
 
-.path-card-symbol-small {
-  width: 88px;
-  height: 70px;
-  margin: 28px 0 0 -10px;
-  border-radius: 22px;
-  transform: rotate(-4deg);
+.path-art-front {
+  transition: transform 320ms ease;
+}
+
+.path-card-fundamentals:hover .path-art-back {
+  opacity: 0.7;
+  transform: translate(-6px, 2px);
+}
+
+.path-card-fundamentals:hover .path-art-front {
+  transform: translate(4px, -4px);
+}
+
+.path-card-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 0 currentColor;
+  animation: path-dot-pulse 2.4s ease-out infinite;
+}
+
+@keyframes path-dot-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 190, 92, 0.55); }
+  70%, 100% { box-shadow: 0 0 0 7px rgba(255, 190, 92, 0); }
+}
+
+.path-card-footer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+
+.path-card-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  position: relative;
+  z-index: 1;
+}
+
+.path-card-topics li {
+  padding: 5px 11px;
+  color: var(--muted);
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
 }
 
 .path-card h2 {
@@ -7888,8 +8578,74 @@ html.theme-light {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: auto;
-  padding-top: 22px;
+}
+
+/* Mirrors .primary-button so the main action looks the same site-wide */
+.path-card-fundamentals .path-card-action {
+  gap: 14px;
+  padding: 14px 18px;
+  color: #2a1606;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #ffaa3d, #f7931a);
+  box-shadow: 0 10px 28px rgba(247, 147, 26, 0.2);
+  font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.path-card-fundamentals:hover .path-card-action {
+  background: linear-gradient(145deg, #ffb84d, #ff9e2c);
+  box-shadow: 0 14px 34px rgba(247, 147, 26, 0.3);
+}
+
+.path-card-andy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-strong);
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.path-card-andy img {
+  width: 26px;
+  height: 26px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 50%;
+  background: #f4efe6;
+}
+
+/* Coming-soon card: present but quieter so the live path leads */
+.path-card-deeper {
+  border-color: rgba(192, 184, 40, 0.35);
+  background: linear-gradient(145deg, rgba(48, 51, 53, 0.7), rgba(29, 32, 34, 0.85));
+  box-shadow: none;
+}
+
+.path-card-deeper::after {
+  opacity: 0.08;
+}
+
+.path-card-deeper .path-card-art {
+  opacity: 0.55;
+  filter: none;
+}
+
+.path-card-deeper h2 {
+  opacity: 0.8;
+}
+
+.path-card-deeper .path-card-action {
+  color: var(--muted);
 }
 
 .path-card-action svg {
@@ -7951,27 +8707,44 @@ html.theme-light {
     margin: 7px 0 9px;
   }
 
-  .path-card-symbol-large {
-    width: 68px;
-    height: 68px;
-    border-radius: 15px;
+  .path-card-art {
+    width: min(100%, 130px);
   }
 
-  .path-card-symbol-large svg {
-    width: 26px;
-    height: 26px;
+  .path-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-top: 12px;
   }
 
-  .path-card-symbol-small {
-    width: 54px;
-    height: 43px;
-    margin: 17px 0 0 -7px;
-    border-radius: 14px;
+
+  .path-card-topics {
+    gap: 4px;
+    margin-top: 9px;
   }
 
-  .path-card-symbol-small svg {
-    width: 21px;
-    height: 21px;
+  .path-card-topics li {
+    padding: 3px 7px;
+    font-size: 9px;
+  }
+
+  .path-card-fundamentals .path-card-action {
+    gap: 6px;
+    padding: 8px 10px;
+    font-size: 8px;
+    letter-spacing: 0.07em;
+  }
+
+  .path-card-andy {
+    gap: 5px;
+    padding: 2px 8px 2px 2px;
+    font-size: 7px;
+  }
+
+  .path-card-andy img {
+    width: 18px;
+    height: 18px;
   }
 
   .path-card h2 {
@@ -8000,7 +8773,7 @@ html.theme-light {
 
   .path-card-action {
     gap: 5px;
-    padding-top: 12px;
+    padding-top: 0;
   }
 
   .path-card-action svg {
@@ -8051,14 +8824,8 @@ html.theme-light {
     min-height: 58px;
   }
 
-  .path-card-symbol-large {
-    width: 56px;
-    height: 56px;
-  }
-
-  .path-card-symbol-small {
-    width: 46px;
-    height: 36px;
+  .path-card-art {
+    width: min(100%, 104px);
   }
 
   .path-card-description {
@@ -8069,7 +8836,7 @@ html.theme-light {
     margin-top: 7px;
   }
 
-  .path-card-action {
+  .path-card-footer {
     padding-top: 9px;
   }
 }
@@ -8093,4 +8860,234 @@ html.theme-light {
 :lang(th) .mentor-bubble-text-ghost,
 :lang(th) .character-message p {
   line-height: 1.75;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .path-card-dot { animation: none; }
+  .path-art-back, .path-art-front { transition: none; }
+}
+
+.path-art-solid { fill: #33373a; }
+.theme-light .path-art-solid { fill: #fffaf2; }
+
+/* ── Cairn wallet software: one look for every tab (lessons 4–6) ──
+   Each tab opens with the same heading (sidebar icon + bold title), uses the
+   same small grey field labels above 38px controls, the same green primary
+   button, and starts at the top of the canvas. */
+
+.wallet-tab-heading {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 26px;
+}
+
+.wallet-tab-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.wallet-tab-title svg {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: var(--gold-light);
+}
+
+.wallet-window .send-form-balance {
+  color: var(--muted);
+  border-color: var(--line);
+}
+
+/* Field labels and column headers */
+.wallet-field-label,
+.wallet-window .tx-sim-field > span,
+.wallet-window .wallet-tx-summary-label,
+.wallet-window .wallet-tx-table th {
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Section headings inside a tab (Keystores, Fee) */
+.wallet-section-heading,
+.wallet-window .send-fee-heading > span:first-child {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.wallet-window .send-fee-explanation,
+.wallet-window .send-amount-field span {
+  color: var(--muted);
+}
+
+/* Controls: one height and box for inputs and dropdowns */
+.wallet-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wallet-window .tx-sim-field input,
+.wallet-select {
+  box-sizing: border-box;
+  height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.wallet-settings-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Every tab starts at the top with the same spacing */
+.wallet-window .wallet-transactions {
+  gap: 14px;
+}
+
+.wallet-window .rx-panel {
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.wallet-window .rx-panel > .wallet-tab-heading {
+  align-self: stretch;
+}
+
+@media (min-width: 601px) {
+  .scenario-page-connect .rx-panel {
+    align-content: start;
+    padding: 0;
+  }
+
+  .scenario-page-connect .rx-panel > .wallet-tab-heading {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .scenario-page-connect .rx-qr-frame {
+    grid-row: 2 / span 5;
+    align-self: start;
+  }
+}
+
+@media (max-width: 600px) {
+  .wallet-settings-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+/* Short laptop windows (~220px of canvas): tighten Settings so the keystore
+   button stays inside its box */
+@media (min-width: 601px) and (max-height: 720px) {
+  .wallet-settings {
+    gap: 10px;
+  }
+
+  .wallet-settings-section {
+    gap: 6px;
+  }
+
+  .wallet-keystore-tabs {
+    padding-top: 4px;
+  }
+
+  .wallet-keystore-tab {
+    padding: 4px 10px;
+  }
+
+  .wallet-keystore-body {
+    padding: 6px 16px;
+  }
+
+  .wallet-keystore-option {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+}
+
+/* Phones: a smaller QR keeps the heading, address and both buttons on screen */
+@media (max-width: 600px) {
+  .wallet-window .rx-panel {
+    gap: 10px;
+  }
+
+  .wallet-window .rx-qr-frame {
+    width: 132px;
+    padding: 8px;
+  }
+}
+
+/* Short phones (e.g. 375×667): the laptop window is only ~340px tall, so the
+   Receive tab puts a small QR beside the address and the buttons below,
+   keeping everything on screen without scrolling */
+@media (max-width: 600px) and (max-height: 760px) {
+  .scenario-page-connect .wallet-canvas {
+    padding: 14px 16px;
+  }
+
+  .wallet-window .rx-panel {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    align-content: start;
+    column-gap: 12px;
+    row-gap: 6px;
+    width: 100%;
+    height: auto;
+  }
+
+  .wallet-window .rx-panel > * {
+    grid-column: 1 / -1;
+  }
+
+  .wallet-window .rx-panel > .rx-qr-frame {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+    width: 80px;
+    padding: 5px;
+    border-radius: 10px;
+  }
+
+  .wallet-window .rx-panel > .wallet-field-label {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+  }
+
+  .wallet-window .rx-panel > .rx-addr {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: start;
+    max-width: none;
+    text-align: left;
+  }
+
+  .wallet-window .rx-panel > .rx-btn,
+  .wallet-window .rx-panel > .tx-addr-verified {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .wallet-window .rx-panel > .rx-btn {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
 }

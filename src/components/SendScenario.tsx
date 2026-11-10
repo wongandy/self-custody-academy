@@ -9,13 +9,15 @@ import {
   ChevronRight,
   Copy,
   ReceiptText,
-  Send,
+  Settings,
   ShieldCheck,
 } from 'lucide-react';
 import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction } from '@/components/HardwareWallet';
 import mariaPortrait from '@/components/Maria.webp';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
+import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 
 type SendScenarioProps = {
   completed: boolean;
@@ -105,6 +107,8 @@ function useTypewriter(text: string, speed = 6) {
 
 export default function SendScenario({ onComplete }: SendScenarioProps) {
   const { t } = useI18n();
+  // Same title bar as lesson 4: the wallet name the learner chose there
+  const [windowTitle] = useState(() => walletWindowTitle('Cairn', getWalletName()));
   const l6 = t.lesson6;
   const [stage, setStage] = useState<SendStage>('intro');
   const [introStep, setIntroStep] = useState(0);
@@ -124,6 +128,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const laptopBodyRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   useEffect(() => {
@@ -161,6 +166,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const { displayed, done, skip } = useTypewriter(message);
 
   const spotlight = stage === 'intro';
+  useLaptopCableAlign(laptopBodyRef, !spotlight);
   const interactionLocked = !done;
   const canContinue = done && !nudgeActive && !addressWrong && CONTINUE_STAGES.has(stage);
   const softwareLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review' || stage === 'tx-sent';
@@ -383,8 +389,8 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     <div className={`connect-cable is-linked${isMobile ? ' cable-under-wallet' : ''}`} aria-hidden="true">
       <span className="plug-end-track">
         <svg className="connect-cable-wire connect-cable-wire-h" viewBox="0 0 100 40" preserveAspectRatio="none">
-          <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-          <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+          <path className="cable-line" d="M0 20 L 20 20 C 36 20, 36 31, 50 31 C 64 31, 64 20, 80 20 L 100 20" pathLength={100} />
+          <path className="cable-pulse" d="M0 20 L 20 20 C 36 20, 36 31, 50 31 C 64 31, 64 20, 80 20 L 100 20" pathLength={100} />
         </svg>
         <svg className="connect-cable-wire connect-cable-wire-v" viewBox="0 0 40 100" preserveAspectRatio="none">
           <path className="cable-line" d="M20 0 C 20 24, 32 28, 32 50 S 20 76, 20 100" pathLength={100} />
@@ -420,179 +426,198 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
         {!spotlight && (
           <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
             <div className="wallet-laptop laptop-enter">
-              <div className="wallet-window">
-                <div className="wallet-window-titlebar">
-                  <span className="tl-dot red" />
-                  <span className="tl-dot yellow" />
-                  <span className="tl-dot green" />
-                </div>
-                <div className="wallet-window-body">
-                  <div className="wallet-app">
-                    <aside className="wallet-sidebar">
-                      <button
-                        type="button"
-                        className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}`}
-                        onClick={handleTransactionsTab}
-                        disabled={softwareLocked}
-                        aria-pressed={walletTab === 'transactions'}
-                      >
-                        <ArrowLeftRight strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Transactions</span>
-                      </button>
-                      <button
-                        type="button"
-                        className={`wallet-nav-item${walletTab === 'send' ? ' active' : ''}`}
-                        onClick={handleSendTab}
-                        disabled={softwareLocked}
-                        aria-pressed={walletTab === 'send'}
-                      >
-                        <ArrowUpRight strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Send</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="wallet-nav-item"
-                        onClick={handleUnexpectedAction}
-                        disabled={softwareLocked}
-                        aria-pressed="false"
-                      >
-                        <ArrowDownLeft strokeWidth={2.2} />
-                        <span className="wallet-nav-label">Receive</span>
-                      </button>
-                    </aside>
-                    <div className="wallet-canvas">
-                      {walletTab === 'transactions' && (
-                        <div className="wallet-transactions">
-                          <div className="wallet-tx-summary">
-                            <div className="wallet-tx-summary-item">
-                              <span className="wallet-tx-summary-label">Balance</span>
-                              <span className="wallet-tx-summary-value">{sent ? `${SENT_BALANCE} BTC` : `${WALLET_BALANCE} BTC`}</span>
+              <div ref={laptopBodyRef} className="wallet-laptop-body">
+                <div className="wallet-window">
+                  <div className="wallet-window-titlebar">
+                    <span className="tl-dot red" />
+                    <span className="tl-dot yellow" />
+                    <span className="tl-dot green" />
+                    <span className="wallet-window-title">{windowTitle}</span>
+                  </div>
+                  <div className="wallet-window-body">
+                    <div className="wallet-app">
+                      <aside className="wallet-sidebar">
+                        <button
+                          type="button"
+                          className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}`}
+                          onClick={handleTransactionsTab}
+                          disabled={softwareLocked}
+                          aria-pressed={walletTab === 'transactions'}
+                        >
+                          <ArrowLeftRight strokeWidth={2.2} />
+                          <span className="wallet-nav-label">Transactions</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`wallet-nav-item${walletTab === 'send' ? ' active' : ''}`}
+                          onClick={handleSendTab}
+                          disabled={softwareLocked}
+                          aria-pressed={walletTab === 'send'}
+                        >
+                          <ArrowUpRight strokeWidth={2.2} />
+                          <span className="wallet-nav-label">Send</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="wallet-nav-item"
+                          onClick={handleUnexpectedAction}
+                          disabled={softwareLocked}
+                          aria-pressed="false"
+                        >
+                          <ArrowDownLeft strokeWidth={2.2} />
+                          <span className="wallet-nav-label">Receive</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="wallet-nav-item"
+                          onClick={handleUnexpectedAction}
+                          disabled={softwareLocked}
+                          aria-pressed="false"
+                        >
+                          <Settings strokeWidth={2.2} />
+                          <span className="wallet-nav-label">Settings</span>
+                        </button>
+                      </aside>
+                      <div className="wallet-canvas">
+                        {walletTab === 'transactions' && (
+                          <div className="wallet-transactions">
+                            <div className="wallet-tab-heading">
+                              <div className="wallet-tab-title"><ArrowLeftRight strokeWidth={2} /><span>Transactions</span></div>
                             </div>
-                            <div className="wallet-tx-summary-item">
-                              <span className="wallet-tx-summary-label">Transactions</span>
-                              <span className="wallet-tx-summary-value">{sent ? 2 : 1}</span>
-                            </div>
-                          </div>
-                          <div className="wallet-tx-table-wrap">
-                            <table className="wallet-tx-table">
-                              <thead>
-                                <tr><th>Date</th><th>Value</th><th>Balance</th></tr>
-                              </thead>
-                              <tbody>
-                                {sent && (
-                                  <tr className="fresh"><td>2026-11-04 10:24</td><td className="out">-0.00500 BTC</td><td>{SENT_BALANCE} BTC</td></tr>
-                                )}
-                                <tr><td>2026-09-21 09:48</td><td className="in">+0.04998 BTC</td><td>{WALLET_BALANCE} BTC</td></tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-
-                      {walletTab === 'send' && !transactionBuilt && !sent && (
-                        <div className="send-form-screen">
-                          <div className="send-form-heading">
-                            <div className="send-form-title"><Send size={18} strokeWidth={2} /><span>Send Bitcoin</span></div>
-                            <span className="send-form-balance">Balance {WALLET_BALANCE} BTC</span>
-                          </div>
-                          <div className="send-form-fields">
-                            <label className="tx-sim-field">
-                              <span>Pay to</span>
-                              <input
-                                className={`tx-sim-addr${addressWrong ? ' error' : ''}`}
-                                value={recipient}
-                                onChange={(e) => {
-                                  setRecipient(e.target.value);
-                                  setAddressWrong(false);
-                                }}
-                                placeholder="bc1…"
-                                disabled={!addressFieldEnabled}
-                              />
-                            </label>
-                            <label className="tx-sim-field">
-                              <span>Label</span>
-                              <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Add a label…" disabled={!labelFieldEnabled} />
-                            </label>
-                            <label className="tx-sim-field">
-                              <span>Amount</span>
-                              <div className="send-amount-field">
-                                <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.005" disabled={!amountFieldEnabled} />
-                                <span>BTC</span>
+                            <div className="wallet-tx-summary">
+                              <div className="wallet-tx-summary-item">
+                                <span className="wallet-tx-summary-label">Balance</span>
+                                <span className="wallet-tx-summary-value">{sent ? `${SENT_BALANCE} BTC` : `${WALLET_BALANCE} BTC`}</span>
                               </div>
-                            </label>
-                          </div>
-                          <div className="send-fee-section">
-                            <div className="send-fee-heading">
-                              <span>Fee</span>
-                              <span className="send-fee-explanation">Pays the network to process your payment.</span>
+                              <div className="wallet-tx-summary-item">
+                                <span className="wallet-tx-summary-label">Transactions</span>
+                                <span className="wallet-tx-summary-value">{sent ? 2 : 1}</span>
+                              </div>
                             </div>
-                            <div className="send-fee-options">
-                              {FEE_OPTIONS.map((option) => (
-                                <button
-                                  key={option.id}
-                                  type="button"
-                                  className={`tx-fee-btn${feeLevel === option.id ? ' active' : ''}`}
-                                  onClick={() => handleFeeSelect(option.id)}
-                                  disabled={!feeButtonsEnabled}
-                                >
-                                  <span>{option.label}</span>
-                                  <small>{option.rate}</small>
-                                </button>
-                              ))}
-                            </div>
-                            <div className="send-fee-total">
-                              <span>Estimated fee</span>
-                              <strong>{selectedFee.fee} BTC</strong>
+                            <div className="wallet-tx-table-wrap">
+                              <table className="wallet-tx-table">
+                                <thead>
+                                  <tr><th>Date</th><th>Value</th><th>Balance</th></tr>
+                                </thead>
+                                <tbody>
+                                  {sent && (
+                                    <tr className="fresh"><td>2026-11-04 10:24</td><td className="out">-0.00500 BTC</td><td>{SENT_BALANCE} BTC</td></tr>
+                                  )}
+                                  <tr><td>2026-09-21 09:48</td><td className="in">+0.04998 BTC</td><td>{WALLET_BALANCE} BTC</td></tr>
+                                </tbody>
+                              </table>
                             </div>
                           </div>
-                          {stage === 'select-fee' && (
-                            <button className="tx-sim-btn primary" type="button" onClick={handleBuildTransaction} disabled={softwareLocked || !formValid}>
-                              <span>Review transaction</span><ArrowRight size={16} strokeWidth={2.4} />
+                        )}
+
+                        {walletTab === 'send' && !transactionBuilt && !sent && (
+                          <div className="send-form-screen">
+                            <div className="send-form-heading wallet-tab-heading">
+                              <div className="wallet-tab-title"><ArrowUpRight strokeWidth={2} /><span>Send Bitcoin</span></div>
+                              <span className="send-form-balance">Balance {WALLET_BALANCE} BTC</span>
+                            </div>
+                            <div className="send-form-fields">
+                              <label className="tx-sim-field">
+                                <span>Pay to</span>
+                                <input
+                                  className={`tx-sim-addr${addressWrong ? ' error' : ''}`}
+                                  value={recipient}
+                                  onChange={(e) => {
+                                    setRecipient(e.target.value);
+                                    setAddressWrong(false);
+                                  }}
+                                  placeholder="bc1…"
+                                  disabled={!addressFieldEnabled}
+                                />
+                              </label>
+                              <label className="tx-sim-field">
+                                <span>Label</span>
+                                <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Add a label…" disabled={!labelFieldEnabled} />
+                              </label>
+                              <label className="tx-sim-field">
+                                <span>Amount</span>
+                                <div className="send-amount-field">
+                                  <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.005" disabled={!amountFieldEnabled} />
+                                  <span>BTC</span>
+                                </div>
+                              </label>
+                            </div>
+                            <div className="send-fee-section">
+                              <div className="send-fee-heading">
+                                <span>Fee</span>
+                                <span className="send-fee-explanation">Pays the network to process your payment.</span>
+                              </div>
+                              <div className="send-fee-options">
+                                {FEE_OPTIONS.map((option) => (
+                                  <button
+                                    key={option.id}
+                                    type="button"
+                                    className={`tx-fee-btn${feeLevel === option.id ? ' active' : ''}`}
+                                    onClick={() => handleFeeSelect(option.id)}
+                                    disabled={!feeButtonsEnabled}
+                                  >
+                                    <span>{option.label}</span>
+                                    <small>{option.rate}</small>
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="send-fee-total">
+                                <span>Estimated fee</span>
+                                <strong>{selectedFee.fee} BTC</strong>
+                              </div>
+                            </div>
+                            {stage === 'select-fee' && (
+                              <button className="tx-sim-btn primary" type="button" onClick={handleBuildTransaction} disabled={softwareLocked || !formValid}>
+                                <span>Review transaction</span><ArrowRight size={16} strokeWidth={2.4} />
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {walletTab === 'send' && transactionBuilt && !sent && (
+                          <div className="send-review-screen">
+                            <div className="send-form-heading wallet-tab-heading">
+                              <div className="wallet-tab-title"><ReceiptText strokeWidth={2} /><span>Review transaction</span></div>
+                              <span className="send-review-status">Ready to sign</span>
+                            </div>
+                            <div className="tx-sim-confirm-box">
+                              <div className="tx-confirm-row">
+                                <span>Recipient</span>
+                                <strong className="tx-confirm-addr">{MARIA_ADDRESS.slice(0, 12)}…{MARIA_ADDRESS.slice(-8)}</strong>
+                              </div>
+                              <div className="tx-confirm-row"><span>Amount</span><strong>{SEND_AMOUNT} BTC</strong></div>
+                              <div className="tx-confirm-row"><span>Network fee</span><strong>{selectedFee.fee} BTC</strong></div>
+                              <div className="tx-confirm-row total">
+                                <span>Total</span>
+                                <strong>{(Number(SEND_AMOUNT) + Number(selectedFee.fee)).toFixed(8)} BTC</strong>
+                              </div>
+                            </div>
+                            <p className="tx-sim-body">The hardware wallet must review and approve this transaction before it can be broadcast.</p>
+                            <button
+                              className="tx-sim-btn primary"
+                              type="button"
+                              onClick={handleSendToHardware}
+                              disabled={softwareLocked || stage !== 'review-tx'}
+                            >
+                              <ShieldCheck size={16} strokeWidth={2.2} />
+                              <span>Review on hardware wallet</span>
                             </button>
-                          )}
-                        </div>
-                      )}
-
-                      {walletTab === 'send' && transactionBuilt && !sent && (
-                        <div className="send-review-screen">
-                          <div className="send-form-heading">
-                            <div className="send-form-title"><ReceiptText size={18} strokeWidth={2} /><span>Review transaction</span></div>
-                            <span className="send-review-status">Ready to sign</span>
                           </div>
-                          <div className="tx-sim-confirm-box">
-                            <div className="tx-confirm-row">
-                              <span>Recipient</span>
-                              <strong className="tx-confirm-addr">{MARIA_ADDRESS.slice(0, 12)}…{MARIA_ADDRESS.slice(-8)}</strong>
-                            </div>
-                            <div className="tx-confirm-row"><span>Amount</span><strong>{SEND_AMOUNT} BTC</strong></div>
-                            <div className="tx-confirm-row"><span>Network fee</span><strong>{selectedFee.fee} BTC</strong></div>
-                            <div className="tx-confirm-row total">
-                              <span>Total</span>
-                              <strong>{(Number(SEND_AMOUNT) + Number(selectedFee.fee)).toFixed(8)} BTC</strong>
-                            </div>
-                          </div>
-                          <p className="tx-sim-body">The hardware wallet must review and approve this transaction before it can be broadcast.</p>
-                          <button
-                            className="tx-sim-btn primary"
-                            type="button"
-                            onClick={handleSendToHardware}
-                            disabled={softwareLocked || stage !== 'review-tx'}
-                          >
-                            <ShieldCheck size={16} strokeWidth={2.2} />
-                            <span>Review on hardware wallet</span>
-                          </button>
-                        </div>
-                      )}
+                        )}
 
-                      {walletTab === 'send' && sent && (
-                        <div className="tx-sim-screen tx-sim-success-screen send-success-screen">
-                          <CheckCircle2 size={38} strokeWidth={1.6} />
-                          <span className="tx-sim-success-title">Payment sent</span>
-                          <p className="tx-sim-success-body">{SEND_AMOUNT} BTC was approved by the hardware wallet and broadcast to Maria's address.</p>
-                        </div>
-                      )}
+                        {walletTab === 'send' && sent && (
+                          <div className="tx-sim-screen tx-sim-success-screen send-success-screen">
+                            <CheckCircle2 size={38} strokeWidth={1.6} />
+                            <span className="tx-sim-success-title">Payment sent</span>
+                            <p className="tx-sim-success-body">{SEND_AMOUNT} BTC was approved by the hardware wallet and broadcast to Maria's address.</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
+                </div>
+                <div className="wallet-laptop-base" aria-hidden="true">
+                  <span className="wallet-laptop-notch" />
                 </div>
               </div>
               {isMobile && cableEl}

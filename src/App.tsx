@@ -35,14 +35,16 @@ type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1'
 const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6'];
 
 function App() {
-  const { user, isReady, signOut } = useAuth();
+  const { user, isReady, isRecovering, linkError, signOut } = useAuth();
   const { t } = useI18n();
 
-  const [screen, setScreen] = useState<Screen>('home');
+  // Arriving from a password-reset email: show the "set a new password" form.
+  // Arriving from an expired/invalid auth link: show the login screen (it opens the reset form).
+  const [screen, setScreen] = useState<Screen>(isRecovering || linkError ? 'auth' : 'home');
   const [completedScenarios, setCompletedScenarios] = useState(0);
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
-  const [authMode, setAuthMode] = useState<'register' | 'login'>('register');
+  const [authMode, setAuthMode] = useState<'register' | 'login'>(linkError ? 'login' : 'register');
   const [authReturnScreen, setAuthReturnScreen] = useState<Screen>('roadmap');
   const [, setActiveScenario] = useState(1);
   const [roadmapAnimate, setRoadmapAnimate] = useState(false);
@@ -109,6 +111,13 @@ function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [screen]);
+
+  useEffect(() => {
+    if (isRecovering) {
+      setAuthReturnScreen('roadmap');
+      setScreen('auth');
+    }
+  }, [isRecovering]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -351,7 +360,8 @@ function App() {
 
       {screen === 'auth' && (
         <AuthScreen
-          mode={authMode}
+          key={isRecovering ? 'recovery' : 'auth'}
+          mode={isRecovering ? 'recovery' : authMode}
           onBack={() => setScreen(authReturnScreen)}
           onSuccess={handleAuthSuccess}
           onSwitchMode={setAuthMode}

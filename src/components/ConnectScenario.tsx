@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronRight, Layers, Link2 } from 'lucide-react';
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronDown, ChevronRight, Download, Layers, Plus, Settings, Usb, Wallet } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
 import en, { type Dictionary } from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
+import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { setWalletName as saveWalletName, walletWindowTitle } from '@/lib/walletName';
 
 type ConnectScenarioProps = {
   completed: boolean;
@@ -14,6 +16,8 @@ type ConnectScenarioProps = {
 type Step =
   | { kind: 'mentor'; mentor: 'andy' | 'maria' }
   | { kind: 'wallet-intro' }
+  | { kind: 'wallet-name' }
+  | { kind: 'wallet-settings' }
   | { kind: 'device-arrival' }
   | { kind: 'connect-request' }
   | { kind: 'device-prompt' }
@@ -50,6 +54,8 @@ const STEPS: Step[] = [
   ...en.lesson4.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
   ...en.lesson4.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
   { kind: 'wallet-intro' },
+  { kind: 'wallet-name' },
+  { kind: 'wallet-settings' },
   { kind: 'device-arrival' },
   { kind: 'connect-request' },
   { kind: 'device-prompt' },
@@ -57,6 +63,8 @@ const STEPS: Step[] = [
 ];
 
 const WALLET_INTRO_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-intro');
+const WALLET_NAME_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-name');
+const WALLET_NAME_MAX = 24;
 
 const WALLET_BALANCE = '0.04998';
 const WALLET_APP_NAME = 'Cairn';
@@ -111,6 +119,10 @@ function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): 
       return l4.maria[stepIndex - HANDOFF_COUNT] ?? '';
     case 'wallet-intro':
       return l4.walletIntro;
+    case 'wallet-name':
+      return l4.walletName;
+    case 'wallet-settings':
+      return l4.walletSettings;
     case 'device-arrival':
       return l4.deviceArrival;
     case 'connect-request':
@@ -137,6 +149,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [mobilePanel, setMobilePanel] = useState<'software' | 'device'>('software');
   const [mobileDeviceEntered, setMobileDeviceEntered] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false);
+  const [walletName, setWalletName] = useState('');
+  const walletNameInputRef = useRef<HTMLDivElement>(null);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -153,7 +167,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
   const portrait = mentorName === 'Andy' ? andyPortrait : mariaPortrait;
   // Maria asks the learner to wait until Cairn has finished starting up, then
-  // explains the Transactions tab once the app is on screen.
+  // walks the learner through creating a wallet once the app is on screen.
   const walletBooting = step.kind === 'wallet-intro' && bootPhase !== 'ready';
   const message = nudgeActive
     ? t.common.nudgeLater
@@ -179,7 +193,14 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
   const confirmPending = step.kind === 'device-prompt' && (!connected || syncing);
-  const devicePending = requestPending || confirmPending;
+  // Creating the wallet happens in the app itself: New Wallet, then the name dialog.
+  const appPending = step.kind === 'wallet-intro' || step.kind === 'wallet-name';
+  const devicePending = requestPending || confirmPending || appPending;
+  // No wallet exists until the name dialog is confirmed. The Settings tab shows
+  // until the pairing is confirmed, then the app moves to the Transactions tab.
+  const walletCreated = stepIndex > WALLET_NAME_INDEX;
+  const activeTab: 'settings' | 'transactions' = connected ? 'transactions' : 'settings';
+  const trimmedWalletName = walletName.trim();
 
   const canContinue = nudgeActive
     ? false
@@ -201,6 +222,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
   const laptopCaptionRef = useRef<HTMLDivElement>(null);
+  useLaptopCableAlign(laptopRef, walletVisible);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
@@ -369,6 +391,46 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
   }, [done, skip, nudgeActive, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
 
+  const handleNewWallet = () => {
+    if (step.kind !== 'wallet-intro' || softwareLocked) return;
+    setStepIndex((current) => (STEPS[current].kind === 'wallet-intro' ? current + 1 : current));
+  };
+
+  const handleCreateWallet = () => {
+    if (step.kind !== 'wallet-name' || softwareLocked || !trimmedWalletName) return;
+    setWalletName(trimmedWalletName);
+    saveWalletName(trimmedWalletName);
+    setStepIndex((current) => (STEPS[current].kind === 'wallet-name' ? current + 1 : current));
+  };
+
+  // The name field is an uncontrolled contenteditable: read its text, cap the
+  // length, and clear the stray <br> browsers leave so the placeholder returns.
+  const handleWalletNameInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    let text = el.textContent ?? '';
+    if (text.length > WALLET_NAME_MAX) {
+      text = text.slice(0, WALLET_NAME_MAX);
+      el.textContent = text;
+      const selection = window.getSelection();
+      selection?.selectAllChildren(el);
+      selection?.collapseToEnd();
+    }
+    if (!text) el.innerHTML = '';
+    // Browsers type non-breaking spaces into contenteditable; store plain ones
+    setWalletName(text.replace(/ /g, ' '));
+  };
+
+  const handleWalletNamePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain').replace(/\s+/g, ' ');
+    document.execCommand('insertText', false, text);
+  };
+
+  // The name field takes focus as soon as Maria has finished asking for a name.
+  useEffect(() => {
+    if (step.kind === 'wallet-name' && !softwareLocked) walletNameInputRef.current?.focus();
+  }, [step.kind, softwareLocked]);
+
   const handleRequestConnect = () => {
     if (!connectButtonEnabled || connectRequested) return;
     setConnectRequested(true);
@@ -488,8 +550,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
           viewBox="0 0 100 40"
           preserveAspectRatio="none"
         >
-          <path className="cable-line" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
-          <path className="cable-pulse" d="M0 20 C 24 20, 28 32, 50 32 S 76 20, 100 20" pathLength={100} />
+          <path className="cable-line" d="M0 20 L 20 20 C 36 20, 36 31, 50 31 C 64 31, 64 20, 80 20 L 100 20" pathLength={100} />
+          <path className="cable-pulse" d="M0 20 L 20 20 C 36 20, 36 31, 50 31 C 64 31, 64 20, 80 20 L 100 20" pathLength={100} />
         </svg>
         <svg
           className="connect-cable-wire connect-cable-wire-v"
@@ -540,125 +602,258 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             )}
 
             <div className={`wallet-laptop laptop-enter${isMobile && mobilePanel === 'device' ? ' mobile-hidden' : ''}`}>
-              <div ref={laptopRef} className="wallet-window">
-                <div className="wallet-window-titlebar">
-                  <span className="tl-dot red" />
-                  <span className="tl-dot yellow" />
-                  <span className="tl-dot green" />
-                </div>
-                <div className="wallet-window-body">
-                  {bootPhase !== 'ready' && (
-                    <div
-                      className={`wallet-splash${bootPhase === 'leaving' ? ' is-leaving' : ''}`}
-                      aria-live="polite"
-                      aria-label={`${WALLET_APP_NAME} is starting up`}
-                    >
-                      <div className="wallet-splash-brand">
-                        <span className="wallet-splash-mark">
-                          <Layers strokeWidth={2} />
-                        </span>
-                        <span className="wallet-splash-name">{WALLET_APP_NAME}</span>
-                      </div>
-                      <div className={`wallet-splash-loader${bootPhase === 'loading' ? ' is-loading' : ''}`}>
-                        <span />
-                        <span />
-                        <span />
-                      </div>
-                    </div>
-                  )}
-                  <div className={`wallet-app${bootPhase === 'leaving' ? ' is-entering' : ''}`} aria-hidden={bootPhase !== 'ready'}>
-                    <aside className="wallet-sidebar">
-                    <button
-                      type="button"
-                      className="wallet-nav-item active"
-                      onClick={() => {}}
-                      disabled={softwareLocked}
-                      aria-pressed="true"
-                    >
-                      <ArrowLeftRight strokeWidth={2.2} />
-                      <span className="wallet-nav-label">Transactions</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="wallet-nav-item"
-                      onClick={handleUnexpectedAction}
-                      disabled={softwareLocked}
-                      aria-pressed="false"
-                    >
-                      <ArrowUpRight strokeWidth={2.2} />
-                      <span className="wallet-nav-label">Send</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="wallet-nav-item"
-                      onClick={handleUnexpectedAction}
-                      disabled={softwareLocked}
-                      aria-pressed="false"
-                    >
-                      <ArrowDownLeft strokeWidth={2.2} />
-                      <span className="wallet-nav-label">Receive</span>
-                    </button>
-                  </aside>
-                  <div className="wallet-canvas">
-                    <div className="wallet-transactions">
-                      <div className="wallet-tx-summary">
-                        <div className="wallet-tx-summary-item">
-                          <span className="wallet-tx-summary-label">Balance</span>
-                          <span className="wallet-tx-summary-value">{connected ? `${WALLET_BALANCE} BTC` : '—'}</span>
+              <div ref={laptopRef} className="wallet-laptop-body">
+                <div className="wallet-window">
+                  <div className="wallet-window-titlebar">
+                    <span className="tl-dot red" />
+                    <span className="tl-dot yellow" />
+                    <span className="tl-dot green" />
+                    {walletCreated && (
+                      <span className="wallet-window-title">{walletWindowTitle(WALLET_APP_NAME, walletName)}</span>
+                    )}
+                  </div>
+                  <div className="wallet-window-body">
+                    {bootPhase !== 'ready' && (
+                      <div
+                        className={`wallet-splash${bootPhase === 'leaving' ? ' is-leaving' : ''}`}
+                        aria-live="polite"
+                        aria-label={`${WALLET_APP_NAME} is starting up`}
+                      >
+                        <div className="wallet-splash-brand">
+                          <span className="wallet-splash-mark">
+                            <Layers strokeWidth={2} />
+                          </span>
+                          <span className="wallet-splash-name">{WALLET_APP_NAME}</span>
                         </div>
-                        <div className="wallet-tx-summary-item">
-                          <span className="wallet-tx-summary-label">Transactions</span>
-                          <span className="wallet-tx-summary-value">{connected ? TRANSACTIONS.length : 0}</span>
+                        <div className={`wallet-splash-loader${bootPhase === 'loading' ? ' is-loading' : ''}`}>
+                          <span />
+                          <span />
+                          <span />
                         </div>
                       </div>
-                      <div className="wallet-tx-table-wrap">
-                        <table className="wallet-tx-table">
-                          <thead>
-                            <tr>
-                              <th>Date</th>
-                              <th>Value</th>
-                              <th>Balance</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {connected ? (
-                              TRANSACTIONS.map((tx) => (
+                    )}
+                    <div className={`wallet-app${bootPhase === 'leaving' ? ' is-entering' : ''}`} aria-hidden={bootPhase !== 'ready'}>
+                      {!walletCreated ? (
+                        <div className="wallet-welcome">
+                          <div className="wallet-welcome-box">
+                            <p className="wallet-welcome-lead">No wallet open yet</p>
+                            <div className="wallet-welcome-options">
+                              <button
+                                type="button"
+                                className={`wallet-welcome-option${step.kind === 'wallet-intro' && !softwareLocked ? ' attention' : ''}`}
+                                onClick={handleNewWallet}
+                                disabled={softwareLocked}
+                              >
+                                <Plus strokeWidth={2.2} />
+                                <span>New Wallet</span>
+                              </button>
+                              <span className="wallet-welcome-or">or</span>
+                              <button
+                                type="button"
+                                className="wallet-welcome-option"
+                                onClick={handleUnexpectedAction}
+                                disabled={softwareLocked}
+                              >
+                                <Download strokeWidth={2.2} />
+                                <span>Import Wallet</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {step.kind === 'wallet-name' && (
+                            <div className="wallet-dialog-backdrop">
+                              <form
+                                className="wallet-dialog"
+                                role="dialog"
+                                aria-label="Wallet Name"
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  handleCreateWallet();
+                                }}
+                              >
+                                <div className="wallet-dialog-title">Wallet Name</div>
+                                <div className="wallet-dialog-body">
+                                  <span id="connect-wallet-name-label">Enter a name for this wallet:</span>
+                                  <Wallet className="wallet-dialog-icon" strokeWidth={1.8} />
+                                </div>
+                                {/* An editable div, not an <input>: password managers (Bitwarden,
+                                    1Password…) attach their autofill menus to text inputs and
+                                    ignore opt-out attributes, but never touch contenteditable. */}
+                                <div
+                                  ref={walletNameInputRef}
+                                  className="wallet-dialog-input"
+                                  role="textbox"
+                                  aria-labelledby="connect-wallet-name-label"
+                                  aria-disabled={softwareLocked}
+                                  contentEditable={!softwareLocked}
+                                  spellCheck={false}
+                                  data-placeholder="My Wallet"
+                                  onInput={handleWalletNameInput}
+                                  onPaste={handleWalletNamePaste}
+                                  onKeyDown={(e) => {
+                                    if (e.key !== 'Enter') return;
+                                    e.preventDefault();
+                                    handleCreateWallet();
+                                  }}
+                                />
+                                <div className="wallet-dialog-actions">
+                                  <button
+                                    type="submit"
+                                    className="tx-sim-btn primary wallet-dialog-btn"
+                                    disabled={softwareLocked || !trimmedWalletName}
+                                  >
+                                    Create Wallet
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="tx-sim-btn ghost wallet-dialog-btn"
+                                    onClick={handleUnexpectedAction}
+                                    disabled={softwareLocked}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                      <>
+                      <aside className="wallet-sidebar">
+                      <button
+                        type="button"
+                        className={`wallet-nav-item${activeTab === 'transactions' ? ' active' : ''}`}
+                        onClick={activeTab === 'transactions' ? () => {} : handleUnexpectedAction}
+                        disabled={softwareLocked}
+                        aria-pressed={activeTab === 'transactions'}
+                      >
+                        <ArrowLeftRight strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Transactions</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="wallet-nav-item"
+                        onClick={handleUnexpectedAction}
+                        disabled={softwareLocked}
+                        aria-pressed="false"
+                      >
+                        <ArrowUpRight strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Send</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="wallet-nav-item"
+                        onClick={handleUnexpectedAction}
+                        disabled={softwareLocked}
+                        aria-pressed="false"
+                      >
+                        <ArrowDownLeft strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Receive</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`wallet-nav-item${activeTab === 'settings' ? ' active' : ''}`}
+                        onClick={activeTab === 'settings' ? () => {} : handleUnexpectedAction}
+                        disabled={softwareLocked}
+                        aria-pressed={activeTab === 'settings'}
+                      >
+                        <Settings strokeWidth={2.2} />
+                        <span className="wallet-nav-label">Settings</span>
+                      </button>
+                    </aside>
+                    <div className="wallet-canvas">
+                      {activeTab === 'settings' ? (
+                        <div className="wallet-settings">
+                          <div className="wallet-tab-heading">
+                            <div className="wallet-tab-title"><Settings strokeWidth={2} /><span>Settings</span></div>
+                          </div>
+                          <div className="wallet-settings-fields">
+                            <div className="wallet-field">
+                              <span className="wallet-field-label">Wallet Type</span>
+                              <span className="wallet-select">
+                                <span>Single Signature</span>
+                                <ChevronDown strokeWidth={2.2} />
+                              </span>
+                            </div>
+                            <div className="wallet-field">
+                              <span className="wallet-field-label">Address Type</span>
+                              <span className="wallet-select">
+                                <span>Native SegWit</span>
+                                <ChevronDown strokeWidth={2.2} />
+                              </span>
+                            </div>
+                          </div>
+                          <section className="wallet-settings-section wallet-settings-keystores">
+                            <h4 className="wallet-section-heading">Keystores</h4>
+                            <div className="wallet-keystore">
+                              <div className="wallet-keystore-tabs">
+                                <span className="wallet-keystore-tab">Keystore 1</span>
+                              </div>
+                              <div className="wallet-keystore-body">
+                                <button
+                                  type="button"
+                                  className={`tx-sim-btn primary wallet-keystore-option${requestPending && connectButtonEnabled ? ' attention' : ''}`}
+                                  onClick={handleRequestConnect}
+                                  disabled={!connectButtonEnabled}
+                                >
+                                  <Usb size={14} strokeWidth={2} />
+                                  <span>Connect Hardware Wallet</span>
+                                </button>
+                              </div>
+                            </div>
+                          </section>
+                        </div>
+                      ) : (
+                      <div className="wallet-transactions">
+                        <div className="wallet-tab-heading">
+                          <div className="wallet-tab-title"><ArrowLeftRight strokeWidth={2} /><span>Transactions</span></div>
+                        </div>
+                        <div className="wallet-tx-summary">
+                          <div className="wallet-tx-summary-item">
+                            <span className="wallet-tx-summary-label">Balance</span>
+                            <span className="wallet-tx-summary-value">{`${WALLET_BALANCE} BTC`}</span>
+                          </div>
+                          <div className="wallet-tx-summary-item">
+                            <span className="wallet-tx-summary-label">Transactions</span>
+                            <span className="wallet-tx-summary-value">{TRANSACTIONS.length}</span>
+                          </div>
+                        </div>
+                        <div className="wallet-tx-table-wrap">
+                          <table className="wallet-tx-table">
+                            <thead>
+                              <tr>
+                                <th>Date</th>
+                                <th>Value</th>
+                                <th>Balance</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {TRANSACTIONS.map((tx) => (
                                 <tr key={tx.date}>
                                   <td>{tx.date}</td>
                                   <td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td>
                                   <td>{tx.balance}</td>
                                 </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={3} className="wallet-tx-empty-cell">
-                                  <div className="wallet-tx-empty">
-                                    <span>Connect your hardware wallet to see your history</span>
-                                    <button
-                                      type="button"
-                                      className={requestPending ? 'wallet-connect-btn attention' : 'wallet-connect-btn'}
-                                      onClick={handleRequestConnect}
-                                      disabled={!connectButtonEnabled}
-                                    >
-                                      <Link2 size={14} strokeWidth={2.2} />
-                                      <span>Connect hardware wallet</span>
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                        {syncing && (
-                          <div className="wallet-sync-overlay">
-                            <div className="tx-spinner sm" />
-                            <span>Syncing with device…</span>
-                          </div>
-                        )}
+                              ))}
+                            </tbody>
+                          </table>
+                          {syncing && (
+                            <div className="wallet-sync-overlay">
+                              <div className="tx-spinner sm" />
+                              <span>Syncing with device…</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
+                      )}
+                    </div>
+                      </>
+                      )}
                     </div>
                   </div>
-                  </div>
+                </div>
+                <div className="wallet-laptop-base" aria-hidden="true">
+                  <span className="wallet-laptop-notch" />
                 </div>
               </div>
 
