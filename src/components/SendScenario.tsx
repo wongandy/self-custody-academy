@@ -18,6 +18,7 @@ import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
+import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 
 type SendScenarioProps = {
   completed: boolean;
@@ -49,6 +50,12 @@ type SendStage =
 
 const CONTINUE_STAGES = new Set<SendStage>(['intro', 'explain-fees', 'finished']);
 
+// Answer key for the check-in; the wording is `lesson6.questions`, in this order.
+const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
+  { optionIds: ['faster', 'more', 'refund'], correctId: 'faster' },
+  { optionIds: ['verify', 'backup', 'speed'], correctId: 'verify' },
+];
+
 const NUDGE_DURATION_MS = 1250;
 const SEND_AMOUNT = '0.005';
 const MARIA_ADDRESS = RECEIVE_ADDRESS;
@@ -65,7 +72,7 @@ const INTRO_COUNT = en.lesson6.intro.length;
 const WALLET_BALANCE = '0.04998';
 const SENT_BALANCE = '0.04497';
 
-function useTypewriter(text: string, speed = 6) {
+function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
@@ -94,7 +101,7 @@ function useTypewriter(text: string, speed = 6) {
 
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [text, speed, resetKey]);
 
   const skip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -130,6 +137,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopBodyRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
+  const check = useKnowledgeCheck(KNOWLEDGE_QUESTIONS, l6, onComplete);
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 600px)');
@@ -140,6 +148,8 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
 
   const message = nudgeActive
     ? t.common.nudgeLater
+    : check.active
+      ? check.mentorLine
     : addressWrong && stage === 'enter-address'
       ? l6.addressWrong
       : stage === 'intro'
@@ -163,12 +173,21 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                         : stage === 'tx-sent'
                           ? l6.txSent
                           : l6.finished;
-  const { displayed, done, skip } = useTypewriter(message);
+  const bubbleKey = nudgeActive
+    ? 'nudge'
+    : check.active
+      ? check.mentorKey
+      : addressWrong && stage === 'enter-address'
+        ? 'address-wrong'
+        : stage === 'intro'
+          ? `intro-${introStep}`
+          : stage;
+  const { displayed, done, skip } = useTypewriter(message, 6, bubbleKey);
 
   const spotlight = stage === 'intro';
   useLaptopCableAlign(laptopBodyRef, !spotlight);
   const interactionLocked = !done;
-  const canContinue = done && !nudgeActive && !addressWrong && CONTINUE_STAGES.has(stage);
+  const canContinue = done && !nudgeActive && !addressWrong && !check.active && CONTINUE_STAGES.has(stage);
   const softwareLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review' || stage === 'tx-sent';
   const deviceLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'tx-sent';
 
@@ -255,6 +274,10 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
       skip();
       return;
     }
+    if (check.active) {
+      if (check.answered) check.advance();
+      return;
+    }
     if (nudgeActive || !canContinue) return;
     if (stage === 'intro') {
       if (introStep < INTRO_COUNT - 1) {
@@ -275,10 +298,10 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
       return;
     }
     if (stage === 'finished') {
-      onComplete();
+      check.start();
       return;
     }
-  }, [done, skip, nudgeActive, canContinue, addressWrong, stage, introStep, onComplete]);
+  }, [done, skip, check, nudgeActive, canContinue, stage, introStep]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -406,14 +429,6 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     </div>
   );
 
-  const bubbleKey = nudgeActive
-    ? 'nudge'
-    : addressWrong && stage === 'enter-address'
-      ? 'address-wrong'
-      : stage === 'intro'
-        ? `intro-${introStep}`
-        : stage;
-
   const addressFieldEnabled = !softwareLocked && stage === 'enter-address';
   const labelFieldEnabled = !softwareLocked && stage === 'enter-label';
   const amountFieldEnabled = !softwareLocked && stage === 'enter-amount';
@@ -421,9 +436,10 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const showAddressInBubble = stage === 'enter-address' && !nudgeActive;
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
-      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        {!spotlight && (
+    <main className={`scenario-page scenario-page-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
+        {check.active && <KnowledgeCheckKicker />}
+        {!spotlight && !check.active && (
           <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
             <div className="wallet-laptop laptop-enter">
               <div ref={laptopBodyRef} className="wallet-laptop-body">
@@ -696,13 +712,14 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                   e.stopPropagation();
                   handleContinue();
                 }}
-                aria-label={stage === 'finished' ? t.common.completeLesson : t.common.continue}
+                aria-label={t.common.continue}
               >
-                {stage === 'finished' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
+                <ChevronRight size={18} strokeWidth={2.5} />
               </button>
             )}
           </div>
         </div>
+        {check.active && <KnowledgeCheckCard check={check} ready={done} />}
       </div>
     </main>
   );

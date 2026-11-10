@@ -5,6 +5,7 @@ import { loadMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
 import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
+import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 
 type RecoverScenarioProps = {
   completed: boolean;
@@ -24,7 +25,13 @@ const RECOVER_INTRO_COUNT = en.lesson3.recoverIntro.length;
 
 const NUDGE_DURATION_MS = 1250;
 
-function useTypewriter(text: string, speed = 6) {
+// Answer key for the check-in; the wording is `lesson3.questions`, in this order.
+const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
+  { optionIds: ['phrase', 'pin', 'support'], correctId: 'phrase' },
+  { optionIds: ['safe', 'gone', 'company'], correctId: 'safe' },
+];
+
+function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
@@ -53,7 +60,7 @@ function useTypewriter(text: string, speed = 6) {
 
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [text, speed, resetKey]);
 
   const skip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -96,6 +103,10 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
   const [nudgeActive, setNudgeActive] = useState(false);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevPhase = useRef<WalletPhase>('menu');
+  const check = useKnowledgeCheck(KNOWLEDGE_QUESTIONS, l3, () => {
+    onComplete();
+    onBack();
+  });
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -146,6 +157,8 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
 
   const mentorMessage = withIconMark(nudgeActive
     ? t.common.nudge
+    : check.active
+      ? check.mentorLine
     : showingWords
       ? wordsMessage
       : isInRecoverIntro
@@ -154,7 +167,16 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
           ? l3.recoverType
           : baseMentorMessage);
 
-  const { displayed, done, skip } = useTypewriter(mentorMessage);
+  const bubbleKey = nudgeActive
+    ? 'nudge'
+    : check.active
+      ? check.mentorKey
+      : showingWords
+        ? 'words'
+        : introDone
+          ? `${walletStateKey}-${recoverIntroStep}`
+          : `intro-${introStep}`;
+  const { displayed, done, skip } = useTypewriter(mentorMessage, 6, bubbleKey);
 
   // The paper-button line marks where the icon goes with `{icon}`; it appears once typing reaches it.
   const renderMentorText = (text: string) =>
@@ -165,7 +187,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
       </span>,
     );
 
-  const canContinue = nudgeActive
+  const canContinue = nudgeActive || check.active
     ? false
     : !introDone
       ? introStep < HANDOVER_INDEX && done
@@ -303,6 +325,10 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
       skip();
       return;
     }
+    if (check.active) {
+      if (check.answered) check.advance();
+      return;
+    }
     if (!introDone) {
       if (introStep < HANDOVER_INDEX) {
         if (introStep === HANDOVER_INDEX - 1 && portraitRef.current && bubbleRef.current) {
@@ -326,11 +352,10 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
       if (recoveryDoneStep === 0) {
         setRecoveryDoneStep(1);
       } else {
-        onComplete();
-        onBack();
+        check.start();
       }
     }
-  }, [done, skip, introDone, introStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, onBack, onComplete]);
+  }, [done, skip, introDone, introStep, isInRecoverIntro, recoverIntroStep, recoverIntroFinal, recoveryDone, recoveryDoneStep, check]);
 
   const [advanceFromIntro, setAdvanceFromIntro] = useState(false);
 
@@ -339,7 +364,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
       if (e.key !== 'Enter') return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      if (!canContinue && done) return;
+      if (!canContinue && !check.active && done) return;
       e.preventDefault();
       handleContinue();
     };
@@ -357,16 +382,17 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
     setShowingWords((prev) => !prev);
   }, [paperEnabled]);
 
-  const showPaperButton = isInRecoverType || (isInRecoverIntro && recoverIntroStep === recoverIntroFinal);
+  const showPaperButton = !check.active && (isInRecoverType || (isInRecoverIntro && recoverIntroStep === recoverIntroFinal));
   const walletLocked = (isInRecoverIntro || recoveryDone) && !nudgeActive;
   // The wallet ignores input while Andy is still talking, and while the
   // continue button is the only expected action.
   const deviceLocked = walletLocked || (!introDone && !done);
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''}`}>
-      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        {walletVisible && (
+    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${check.active ? 'knowledge-check-scene' : ''}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
+        {check.active && <KnowledgeCheckKicker />}
+        {walletVisible && !check.active && (
           <div className="recover-device-area">
             <div className="recover-device-enter">
               <HardwareWallet
@@ -411,7 +437,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : showingWords ? 'words' : introDone ? `${walletStateKey}-${recoverIntroStep}` : `intro-${introStep}`}>
+            <div className="mentor-bubble-content" key={bubbleKey}>
               <span className="mentor-bubble-name">Andy</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{renderMentorText(mentorMessage)}</p>
@@ -435,6 +461,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
             </button>
           </div>
         </div>
+        {check.active && <KnowledgeCheckCard check={check} ready={done} />}
       </div>
     </main>
   );

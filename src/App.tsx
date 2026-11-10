@@ -374,6 +374,24 @@ function App() {
           <span>{t.home.footerMode}</span>
           <span className="footer-separator">•</span>
           <span>{t.home.footerNoBtc}</span>
+          <a
+            className="footer-backer"
+            href="https://codeorange.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="footer-backer-label">{t.home.footerSupportedBy}</span>
+            <img
+              className="footer-backer-logo footer-backer-logo--light"
+              src="/code-orange-logo-light.png"
+              alt="Code Orange dev school"
+            />
+            <img
+              className="footer-backer-logo footer-backer-logo--dark"
+              src="/code-orange-logo-dark.png"
+              alt="Code Orange dev school"
+            />
+          </a>
         </footer>
       )}
     </div>

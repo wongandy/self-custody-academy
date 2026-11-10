@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronDown, ChevronRight, Download, Layers, Plus, Settings, Usb, Wallet } from 'lucide-react';
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronDown, ChevronRight, Download, Layers, Plus, Settings, Usb, Wallet } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
 import en, { type Dictionary } from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 import { setWalletName as saveWalletName, walletWindowTitle } from '@/lib/walletName';
 
 type ConnectScenarioProps = {
@@ -21,6 +22,7 @@ type Step =
   | { kind: 'device-arrival' }
   | { kind: 'connect-request' }
   | { kind: 'device-prompt' }
+  | { kind: 'keystore-details' }
   | { kind: 'connected' };
 
 type ConnectionPhase = 'idle' | 'arriving' | 'plugging' | 'seating' | 'linked';
@@ -45,6 +47,12 @@ const CONNECTION_DELAYS: Record<ConnectionPhase, number> = {
 
 const NUDGE_DURATION_MS = 1250;
 
+// Answer key for the check-in; the wording is `lesson4.questions`, in this order.
+const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
+  { optionIds: ['view', 'spend', 'recover'], correctId: 'view' },
+  { optionIds: ['device', 'laptop', 'cloud'], correctId: 'device' },
+];
+
 // One speaking turn per line, in order: Andy hands over (`lesson4.andy`), then
 // Maria takes it (`lesson4.maria`). Deriving the turns from the dictionary's
 // lists means adding or removing a line can never leave a turn without a line
@@ -59,11 +67,21 @@ const STEPS: Step[] = [
   { kind: 'device-arrival' },
   { kind: 'connect-request' },
   { kind: 'device-prompt' },
+  { kind: 'keystore-details' },
   { kind: 'connected' },
 ];
 
 const WALLET_INTRO_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-intro');
 const WALLET_NAME_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-name');
+const CONNECTED_INDEX = STEPS.findIndex((s) => s.kind === 'connected');
+
+// What Cairn reads from the paired device into Keystore 1. The xpub is the
+// public BIP32 test-vector key, so nothing here belongs to a real wallet.
+const KEYSTORE = {
+  fingerprint: '3442193e',
+  derivation: "m/84'/0'/0'",
+  xpub: 'xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz',
+};
 const WALLET_NAME_MAX = 24;
 
 const WALLET_BALANCE = '0.04998';
@@ -72,7 +90,7 @@ const TRANSACTIONS = [
   { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
 ];
 
-function useTypewriter(text: string, speed = 6) {
+function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
@@ -101,7 +119,7 @@ function useTypewriter(text: string, speed = 6) {
 
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [text, speed, resetKey]);
 
   const skip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -129,6 +147,8 @@ function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): 
       return l4.connectDevice;
     case 'device-prompt':
       return l4.devicePrompt;
+    case 'keystore-details':
+      return l4.keystoreDetails;
     case 'connected':
       return l4.connected;
   }
@@ -153,6 +173,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const walletNameInputRef = useRef<HTMLDivElement>(null);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const check = useKnowledgeCheck(KNOWLEDGE_QUESTIONS, l4, onComplete);
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 600px)');
@@ -171,10 +192,13 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const walletBooting = step.kind === 'wallet-intro' && bootPhase !== 'ready';
   const message = nudgeActive
     ? t.common.nudgeLater
+    : check.active
+      ? check.mentorLine
     : walletBooting
       ? l4.walletWaiting
       : stepMessage(l4, step, stepIndex);
-  const { displayed, done, skip } = useTypewriter(message);
+  const bubbleKey = nudgeActive ? 'nudge' : check.active ? check.mentorKey : `${mentorName}-${stepIndex}-${message}`;
+  const { displayed, done, skip } = useTypewriter(message, 6, bubbleKey);
 
   const walletVisible = stepIndex >= WALLET_INTRO_INDEX;
   const spotlight = !walletVisible;
@@ -192,17 +216,21 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const usbConnectionComplete = connection === 'linked';
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
-  const confirmPending = step.kind === 'device-prompt' && (!connected || syncing);
+  const confirmPending = step.kind === 'device-prompt' && !connected;
+  // The history loads when the app moves to Transactions; finishing waits for it.
+  const syncPending = step.kind === 'connected' && syncing;
   // Creating the wallet happens in the app itself: New Wallet, then the name dialog.
   const appPending = step.kind === 'wallet-intro' || step.kind === 'wallet-name';
-  const devicePending = requestPending || confirmPending || appPending;
+  const devicePending = requestPending || confirmPending || appPending || syncPending;
   // No wallet exists until the name dialog is confirmed. The Settings tab shows
   // until the pairing is confirmed, then the app moves to the Transactions tab.
   const walletCreated = stepIndex > WALLET_NAME_INDEX;
-  const activeTab: 'settings' | 'transactions' = connected ? 'transactions' : 'settings';
+  // After pairing, Settings shows the filled-in keystore; the app moves to
+  // Transactions only once Maria has explained it.
+  const activeTab: 'settings' | 'transactions' = stepIndex >= CONNECTED_INDEX ? 'transactions' : 'settings';
   const trimmedWalletName = walletName.trim();
 
-  const canContinue = nudgeActive
+  const canContinue = nudgeActive || check.active
     ? false
     : arrivalWaiting
       ? done && !walletBooting
@@ -325,16 +353,36 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       setMobilePanel('software');
       return;
     }
-    if (step.kind === 'connect-request' || step.kind === 'connected') setMobilePanel('software');
+    if (step.kind === 'connect-request' || step.kind === 'keystore-details' || step.kind === 'connected') setMobilePanel('software');
     else if (step.kind === 'device-prompt') setMobilePanel('device');
   }, [isMobile, mobileDeviceEntered, step.kind, syncing]);
+
+  // While the lesson is about the keystore (connect, confirm, details), keep
+  // the Keystores section in view. Short phone windows can't fit the whole
+  // Settings tab, so the canvas scrolls just enough; elsewhere nothing moves.
+  const keystoresRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (activeTab !== 'settings') return;
+    if (step.kind !== 'connect-request' && step.kind !== 'device-prompt' && step.kind !== 'keystore-details') return;
+    const section = keystoresRef.current;
+    const canvas = section?.closest<HTMLElement>('.wallet-canvas');
+    if (!section || !canvas) return;
+    const frame = requestAnimationFrame(() => {
+      const padding = parseFloat(getComputedStyle(canvas).paddingBottom) || 0;
+      const overflow = section.getBoundingClientRect().bottom + padding - canvas.getBoundingClientRect().bottom;
+      if (overflow <= 1) return;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      canvas.scrollBy({ top: overflow, behavior: reduce ? 'auto' : 'smooth' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [activeTab, step.kind, connected, mobilePanel]);
 
   // The device has confirmed the pairing and the sync animation has run its course:
   // the balance and history are on screen, so Maria moves to her connected line on her own.
   useEffect(() => {
-    if (step.kind !== 'device-prompt' || !connected || syncing) return;
+    if (step.kind !== 'device-prompt' || !connected) return;
     setStepIndex((current) => (STEPS[current].kind === 'device-prompt' ? current + 1 : current));
-  }, [step.kind, connected, syncing]);
+  }, [step.kind, connected]);
 
   // The app boots once the wallet window is on screen: brand mark, a short load,
   // then the tabs and history fade in. Leaving the lesson unmounts this component,
@@ -372,6 +420,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     // A nudge replaces the mentor's line for a beat; while it is on screen the
     // learner can still fast-forward it, but must not be able to advance the lesson.
     if (nudgeActive) return;
+    if (check.active) {
+      if (check.answered) check.advance();
+      return;
+    }
     if (walletBooting) return;
     if (step.kind === 'device-arrival' && !arrivalRequested) {
       setArrivalRequested(true);
@@ -379,8 +431,14 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     }
     if (devicePending || connecting || arrivalAnimating) return;
     if (step.kind === 'connected') {
-      onComplete();
+      check.start();
       return;
+    }
+    // Leaving the keystore explanation: switch to Transactions and load the history
+    if (step.kind === 'keystore-details') {
+      setSyncing(true);
+      if (syncTimer.current) clearTimeout(syncTimer.current);
+      syncTimer.current = setTimeout(() => setSyncing(false), 1800);
     }
     if (step.kind === 'mentor' && stepIndex === WALLET_INTRO_INDEX - 1 && portraitRef.current && bubbleRef.current) {
       flipRects.current = {
@@ -389,7 +447,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       };
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
-  }, [done, skip, nudgeActive, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting, onComplete]);
+  }, [done, skip, nudgeActive, check, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting]);
 
   const handleNewWallet = () => {
     if (step.kind !== 'wallet-intro' || softwareLocked) return;
@@ -466,9 +524,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   const handleDeviceConfirm = () => {
     setConnected(true);
-    setSyncing(true);
-    if (syncTimer.current) clearTimeout(syncTimer.current);
-    syncTimer.current = setTimeout(() => setSyncing(false), 1800);
   };
 
   useEffect(() => () => {
@@ -584,9 +639,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   );
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? '' : 'scenario-page-connect'}`}>
-      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''}`}>
-        {walletVisible && (
+    <main className={`scenario-page scenario-page-fit ${check.active ? 'knowledge-check-scene' : spotlight ? '' : 'scenario-page-connect'}`}>
+      <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
+        {check.active && <KnowledgeCheckKicker />}
+        {walletVisible && !check.active && (
           <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${mobileCableHalf ? ' mobile-half-cable' : ''}`}>
             {showMobileSwitch && (
               <button
@@ -783,23 +839,49 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                               </span>
                             </div>
                           </div>
-                          <section className="wallet-settings-section wallet-settings-keystores">
+                          <section ref={keystoresRef} className="wallet-settings-section wallet-settings-keystores">
                             <h4 className="wallet-section-heading">Keystores</h4>
                             <div className="wallet-keystore">
                               <div className="wallet-keystore-tabs">
                                 <span className="wallet-keystore-tab">Keystore 1</span>
                               </div>
-                              <div className="wallet-keystore-body">
-                                <button
-                                  type="button"
-                                  className={`tx-sim-btn primary wallet-keystore-option${requestPending && connectButtonEnabled ? ' attention' : ''}`}
-                                  onClick={handleRequestConnect}
-                                  disabled={!connectButtonEnabled}
-                                >
-                                  <Usb size={14} strokeWidth={2} />
-                                  <span>Connect Hardware Wallet</span>
-                                </button>
-                              </div>
+                              {connected ? (
+                                <div className="wallet-keystore-body is-filled">
+                                  {/* Two rows on laptops (Type · Fingerprint, Derivation · xpub);
+                                      the xpub is shortened in the middle, full key on hover */}
+                                  <dl className="wallet-keystore-details">
+                                    <dt className="wallet-field-label">Type</dt>
+                                    <dd className="wallet-keystore-type">
+                                      <Usb strokeWidth={2} />
+                                      <span>Connected Wallet</span>
+                                    </dd>
+                                    <dt className="wallet-field-label">Master fingerprint</dt>
+                                    <dd className="wallet-keystore-mono">{KEYSTORE.fingerprint}</dd>
+                                    <dt className="wallet-field-label">Derivation</dt>
+                                    <dd className="wallet-keystore-mono">{KEYSTORE.derivation}</dd>
+                                    <dt className="wallet-field-label">xpub</dt>
+                                    {/* Tall windows show the full key; shorter ones a shortened one */}
+                                    <dd className="wallet-keystore-mono wallet-keystore-xpub" title={KEYSTORE.xpub}>
+                                      <span className="wallet-keystore-xpub-full">{KEYSTORE.xpub}</span>
+                                      <span className="wallet-keystore-xpub-short" aria-hidden="true">
+                                        {`${KEYSTORE.xpub.slice(0, 10)}…${KEYSTORE.xpub.slice(-6)}`}
+                                      </span>
+                                    </dd>
+                                  </dl>
+                                </div>
+                              ) : (
+                                <div className="wallet-keystore-body">
+                                  <button
+                                    type="button"
+                                    className={`tx-sim-btn primary wallet-keystore-option${requestPending && connectButtonEnabled ? ' attention' : ''}`}
+                                    onClick={handleRequestConnect}
+                                    disabled={!connectButtonEnabled}
+                                  >
+                                    <Usb size={14} strokeWidth={2} />
+                                    <span>Connect Hardware Wallet</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </section>
                         </div>
@@ -904,7 +986,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={nudgeActive ? 'nudge' : `${mentorName}-${stepIndex}-${message}`}>
+            <div className="mentor-bubble-content" key={bubbleKey}>
               <span className="mentor-bubble-name">{mentorName}</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
@@ -922,12 +1004,13 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 handleContinue();
               }}
               disabled={!canContinue}
-              aria-label={step.kind === 'connected' ? t.common.completeLesson : t.common.continue}
+              aria-label={t.common.continue}
             >
-              {step.kind === 'connected' ? <Check size={18} strokeWidth={2.5} /> : <ChevronRight size={18} strokeWidth={2.5} />}
+              <ChevronRight size={18} strokeWidth={2.5} />
             </button>
           </div>
         </div>
+        {check.active && <KnowledgeCheckCard check={check} ready={done} />}
       </div>
     </main>
   );

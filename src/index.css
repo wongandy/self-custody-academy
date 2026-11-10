@@ -731,6 +731,41 @@ html.theme-light {
   color: var(--gold-light);
 }
 
+.footer-backer {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 4px;
+  opacity: 0.85;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.footer-backer:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.footer-backer:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+}
+
+.footer-backer-label {
+  white-space: nowrap;
+}
+
+.footer-backer-logo {
+  height: 30px;
+  width: auto;
+  display: block;
+}
+
+.theme-dark .footer-backer-logo--light,
+.theme-light .footer-backer-logo--dark {
+  display: none;
+}
+
 .character-section {
   width: min(100% - 64px, 720px);
   flex: 1;
@@ -1277,7 +1312,28 @@ html.theme-light {
   .site-footer {
     min-height: 50px;
     font-size: 8px;
-    padding: 0 20px;
+    padding: 16px 20px 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 7px;
+  }
+
+  /* Force the badge onto its own centered line below the disclaimer */
+  .site-footer::after {
+    content: '';
+    order: 1;
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  .footer-backer {
+    order: 2;
+    margin: 0 auto;
+    gap: 10px;
+  }
+
+  .footer-backer-logo {
+    height: 26px;
   }
 
   .character-section {
@@ -5278,22 +5334,8 @@ html.theme-light {
 }
 
 .withdraw-phone-signal {
-  width: 12px;
-  height: 8px;
-  border: 1px solid var(--faint);
-  border-radius: 2px;
-  position: relative;
-}
-
-.withdraw-phone-signal::after {
-  content: '';
-  position: absolute;
-  bottom: 1px;
-  left: 1px;
-  right: 1px;
-  height: 3px;
-  background: var(--faint);
-  border-radius: 1px;
+  color: var(--faint);
+  flex-shrink: 0;
 }
 
 .withdraw-phone-battery {
@@ -6791,6 +6833,13 @@ html.theme-light {
     margin-left: 18px;
   }
 
+  /* A taller laptop (over 404px) drops the base, and the cord with it; the
+     device moves down by the same amount so the cord still meets its straight
+     side rather than the rounded bottom corner. At 404px or less: no offset. */
+  .scenario-page-connect .connect-duo.is-wide > .connect-device-stage {
+    margin-top: max(0px, calc(var(--cable-y, 0px) - 410px));
+  }
+
   .connect-cable-wire-v {
     display: none;
   }
@@ -8019,10 +8068,12 @@ html.theme-light {
 /* ── Wallet software: one fixed screen size for every tab and lesson ──
    The window's height used to follow its content, so the laptop base (and the
    USB cord plugged into it) jumped between tabs. Now the screen is always the
-   same height: 404px puts the base beside the straight part of the 450px
-   hardware wallet's side, above its 28px corner radius. Short viewports shrink
-   it, and the content below is laid out to use the width instead of growing
-   taller. Phones keep their own full-height panel layout. */
+   same height: up to 460px on tall viewports, shrinking on short ones. Past
+   404px the base would drop below the straight part of the 450px hardware
+   wallet's side (into its 28px corner radius), so the side-by-side device
+   moves down with it (see .connect-device-stage under 1181px+). The content
+   below is laid out to use the width instead of growing taller. Phones keep
+   their own full-height panel layout. */
 
 @media (min-width: 601px) {
   .scenario-page-connect .wallet-laptop {
@@ -8035,7 +8086,7 @@ html.theme-light {
 
   .scenario-page-connect .wallet-laptop-body .wallet-window {
     flex: none;
-    height: clamp(300px, calc(100dvh - 380px), 404px);
+    height: clamp(300px, calc(100dvh - 380px), 460px);
   }
 
   /* Every view fills the screen, so short content (a one-row history) still
@@ -8224,7 +8275,8 @@ html.theme-light {
 @media (min-width: 601px) {
   .withdraw-panels-wrap {
     display: flex;
-    align-items: center;
+    /* Top-align so the taller phone doesn't nudge the wallet down when it appears */
+    align-items: flex-start;
     justify-content: center;
     gap: 48px;
     max-width: 960px;
@@ -8291,7 +8343,7 @@ html.theme-light {
   .withdraw-phone-wrap .device-caption {
     flex: 0 0 auto;
     width: 100%;
-    margin-top: 12px;
+    margin-top: 8px; /* match the hardware wallet's 8px label gap */
   }
 }
 
@@ -9089,5 +9141,129 @@ html.theme-light {
   .wallet-window .rx-panel > .rx-btn {
     padding-top: 8px;
     padding-bottom: 8px;
+  }
+}
+
+/* Lesson 4: Keystore 1 after pairing — what Cairn read from the device.
+   Laptops: two rows of label/value pairs so it fits where the Connect button
+   was. Narrow keystore boxes (phones, small tablets): one pair per row. */
+.wallet-keystore-body.is-filled {
+  container-type: inline-size;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 16px;
+}
+
+.wallet-keystore-details {
+  display: grid;
+  grid-template-columns: max-content max-content max-content minmax(0, 1fr); /* the xpub column takes the rest */
+  align-items: baseline;
+  gap: 8px 14px;
+  width: 100%;
+  margin: 0;
+  animation: wallet-placeholder-in 260ms ease;
+}
+
+@container (max-width: 440px) {
+  .wallet-keystore-details {
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 6px 14px;
+  }
+}
+
+.wallet-keystore-details dd {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallet-keystore-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.wallet-keystore-type svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--gold-light);
+}
+
+.wallet-keystore-mono {
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
+  font-size: 12px !important;
+}
+
+/* Phones: the wallet canvas scrolls inside the window (it used to run past the
+   window's bottom edge and get clipped), so the lesson can scroll it to Keystores */
+@media (max-width: 600px) {
+  .scenario-page-connect .wallet-app {
+    min-height: 0;
+  }
+
+  .scenario-page-connect .wallet-canvas {
+    min-height: 0;
+  }
+
+  /* Keep the keystore at its natural height (no squeezing); the canvas
+     scrolls to it instead */
+  .wallet-settings-keystores,
+  .wallet-keystore,
+  .wallet-keystore-body {
+    flex: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-keystore-details {
+    animation: none;
+  }
+}
+
+/* xpub: the shortened form by default (the full key stays available to screen
+   readers); tall laptop windows (460px at 840px+ viewport height) show the
+   keystore like Sparrow, one field per row with the full xpub wrapping.
+   800px+ viewport height = a window of 420px or more, enough room for it */
+.wallet-keystore-xpub {
+  position: relative;
+}
+
+.wallet-keystore-xpub-full {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 601px) and (min-height: 800px) {
+  .wallet-keystore-details {
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 8px 18px;
+  }
+
+  .wallet-keystore-details dd.wallet-keystore-xpub {
+    line-height: 1.5;
+    white-space: normal;
+  }
+
+  .wallet-keystore-xpub-full {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .wallet-keystore-xpub-short {
+    display: none;
   }
 }
