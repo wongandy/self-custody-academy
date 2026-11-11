@@ -1,9 +1,11 @@
-import { ArrowLeft, ArrowUpRight, GraduationCap, Mail, Mic, Users } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+import { CheckCircle2, GraduationCap, Mic, Send, Users } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
 import { useI18n } from '@/lib/i18n';
 
-// TODO: replace with the real contact address before going live.
-export const CONTACT_EMAIL = 'hello@example.com';
+// Web3Forms access key. Messages sent through the contact form are delivered
+// to the inbox this key was created for. The key is meant to be public.
+const WEB3FORMS_ACCESS_KEY = '0344cb22-30fb-4914-a79e-516bddc03e78';
 export const CODE_ORANGE_URL = 'https://codeorange.dev/';
 
 const ANDY_LINKS = [
@@ -27,29 +29,6 @@ const ANDY_LINKS = [
   },
 ];
 
-type Props = {
-  onBack: () => void;
-};
-
-function CodeOrangeLogo({ height }: { height: number }) {
-  return (
-    <>
-      <img
-        className="footer-backer-logo--light"
-        src="/code-orange-logo-light.png"
-        alt="Code Orange dev school"
-        style={{ height }}
-      />
-      <img
-        className="footer-backer-logo--dark"
-        src="/code-orange-logo-dark.png"
-        alt="Code Orange dev school"
-        style={{ height }}
-      />
-    </>
-  );
-}
-
 const DOING_ICONS = [GraduationCap, Mic, Users];
 
 // Turns each "Code Orange" mention into a link to the school's site.
@@ -67,17 +46,12 @@ function withCodeOrangeLink(text: string) {
   );
 }
 
-export function AboutPage({ onBack }: Props) {
+export function AboutPage() {
   const { t } = useI18n();
   const a = t.about;
 
   return (
     <main className="info-page about-page">
-      <button className="info-back" type="button" onClick={onBack}>
-        <ArrowLeft size={14} strokeWidth={2.4} />
-        {t.header.backHome}
-      </button>
-
       <header className="about-hero">
         <div className="about-avatar">
           <img src={andyPortrait} alt="" />
@@ -134,48 +108,90 @@ export function AboutPage({ onBack }: Props) {
   );
 }
 
-export function ContactPage({ onBack }: Props) {
+type SendStatus = 'idle' | 'sending' | 'sent' | 'error';
+
+export function ContactPage() {
   const { t } = useI18n();
   const c = t.contact;
+  const [status, setStatus] = useState<SendStatus>('idle');
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    setStatus('sending');
+
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject: `Self-Custody Academy: message from ${data.get('name')}`,
+          from_name: 'Self-Custody Academy',
+          name: data.get('name'),
+          email: data.get('email'),
+          message: data.get('message'),
+          botcheck: data.get('botcheck'),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message);
+      form.reset();
+      setStatus('sent');
+    } catch {
+      setStatus('error');
+    }
+  }
 
   return (
     <main className="info-page">
-      <button className="info-back" type="button" onClick={onBack}>
-        <ArrowLeft size={14} strokeWidth={2.4} />
-        {t.header.backHome}
-      </button>
-
       <p className="info-eyebrow">{c.eyebrow}</p>
       <h1 className="info-title">
         {c.titleBefore}<em>{c.titleEm}</em>{c.titleAfter}
       </h1>
       <p className="info-lead">{c.intro}</p>
 
-      <div className="info-grid info-grid--two">
-        <a className="info-card info-card--link" href={`mailto:${CONTACT_EMAIL}`}>
-          <span className="info-card-icon">
-            <Mail size={18} strokeWidth={2.1} />
-          </span>
-          <h2>{c.emailTitle}</h2>
-          <p>{c.emailBody}</p>
-          <span className="info-card-action">
-            {CONTACT_EMAIL}
-            <ArrowUpRight size={14} strokeWidth={2.4} />
-          </span>
-        </a>
+      {status === 'sent' ? (
+        <div className="contact-sent" role="status">
+          <CheckCircle2 size={22} strokeWidth={2.1} />
+          <div>
+            <h2>{c.sentTitle}</h2>
+            <p>{c.sentBody}</p>
+            <button type="button" className="contact-again" onClick={() => setStatus('idle')}>
+              {c.sendAnother}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form className="contact-form" onSubmit={handleSubmit}>
+          <div className="contact-row">
+            <label className="contact-field">
+              <span>{c.nameLabel}</span>
+              <input name="name" type="text" autoComplete="name" required maxLength={100} />
+            </label>
+            <label className="contact-field">
+              <span>{c.emailLabel}</span>
+              <input name="email" type="email" autoComplete="email" required maxLength={200} />
+            </label>
+          </div>
+          <label className="contact-field">
+            <span>{c.messageLabel}</span>
+            <textarea name="message" rows={6} required maxLength={5000} />
+          </label>
+          {/* Honeypot: hidden from people, bots fill it in and get dropped. */}
+          <input type="checkbox" name="botcheck" className="contact-honeypot" tabIndex={-1} autoComplete="off" />
 
-        <a className="info-card info-card--link" href={CODE_ORANGE_URL} target="_blank" rel="noopener noreferrer">
-          <span className="info-card-logo">
-            <CodeOrangeLogo height={34} />
-          </span>
-          <h2>{c.codeOrangeTitle}</h2>
-          <p>{c.codeOrangeBody}</p>
-          <span className="info-card-action">
-            codeorange.dev
-            <ArrowUpRight size={14} strokeWidth={2.4} />
-          </span>
-        </a>
-      </div>
+          {status === 'error' && (
+            <p className="contact-error" role="alert">{c.errorBody}</p>
+          )}
+
+          <button className="primary-button contact-submit" type="submit" disabled={status === 'sending'}>
+            {status === 'sending' ? c.sending : c.submit}
+            <Send size={15} strokeWidth={2.4} />
+          </button>
+        </form>
+      )}
 
       <p className="info-note">{c.note}</p>
     </main>
