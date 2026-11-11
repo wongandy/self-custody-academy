@@ -12,6 +12,7 @@ import RecoverScenario from '@/components/RecoverScenario';
 import AuthScreen from '@/components/AuthScreen';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
 import { AboutPage, CODE_ORANGE_URL, ContactPage } from '@/components/InfoPages';
+import { DonatePage } from '@/components/DonatePage';
 import heroImage from '@/components/hero.webp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -29,7 +30,7 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth' | 'about' | 'contact';
+type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth' | 'about' | 'contact' | 'donate';
 
 const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6'];
 
@@ -37,6 +38,7 @@ const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 's
 const SCREEN_PATHS: Partial<Record<Screen, string>> = {
   about: '/about',
   contact: '/contact-us',
+  donate: '/donate',
 };
 
 function screenFromPath(pathname: string): Screen | null {
@@ -199,7 +201,7 @@ function App() {
   }, [signOut]);
 
   const isInScenario = SCENARIO_SCREENS.includes(screen);
-  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact';
+  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact' || screen === 'donate';
 
   return (
     <div className={`app-shell theme-${theme}`}>
@@ -389,6 +391,8 @@ function App() {
 
       {screen === 'contact' && <ContactPage />}
 
+      {screen === 'donate' && <DonatePage />}
+
       {showFooter && (
         <footer className="site-footer">
           <div className="footer-note">
@@ -414,6 +418,15 @@ function App() {
                 onClick={() => setScreen('contact')}
               >
                 {t.home.footerContact}
+              </button>
+              <span className="footer-separator" aria-hidden="true">•</span>
+              <button
+                type="button"
+                className={`footer-link${screen === 'donate' ? ' is-active' : ''}`}
+                aria-current={screen === 'donate' ? 'page' : undefined}
+                onClick={() => setScreen('donate')}
+              >
+                {t.home.footerDonate}
               </button>
             </nav>
             <span className="footer-divider" aria-hidden="true" />
