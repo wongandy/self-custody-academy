@@ -1011,6 +1011,14 @@ html.theme-light {
   line-height: 1.65;
 }
 
+.about-bubble p {
+  margin: 0;
+}
+
+.about-bubble p + p {
+  margin-top: 12px;
+}
+
 .about-quote {
   margin: 56px 0;
   padding: 0;
@@ -1216,43 +1224,6 @@ html.theme-light {
   word-break: break-all;
 }
 
-.info-backer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin-top: 16px;
-  padding: 24px 28px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: linear-gradient(120deg, rgba(247, 147, 26, 0.09), transparent 65%), var(--panel);
-}
-
-.info-backer h2 {
-  margin: 0 0 6px;
-  color: var(--text);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.info-backer p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.65;
-}
-
-.info-backer-logo {
-  flex-shrink: 0;
-  transition: transform 200ms ease;
-}
-
-.info-backer-logo:hover {
-  transform: translateY(-2px);
-}
-
-.info-backer-logo img,
 .info-card-logo img {
   display: block;
   width: auto;
@@ -1293,12 +1264,6 @@ html.theme-light {
   }
 
   .info-card {
-    padding: 20px;
-  }
-
-  .info-backer {
-    flex-direction: column;
-    align-items: flex-start;
     padding: 20px;
   }
 }

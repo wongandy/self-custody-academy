@@ -83,7 +83,11 @@ export function AboutPage({ onBack }: Props) {
         </div>
       </header>
 
-      <p className="about-bubble">{a.intro}</p>
+      <div className="about-bubble">
+        {a.intro.map((para) => (
+          <p key={para}>{para}</p>
+        ))}
+      </div>
 
       <blockquote className="about-quote">{a.quote}</blockquote>
 
@@ -110,16 +114,6 @@ export function AboutPage({ onBack }: Props) {
       <section className="about-closing">
         <p className="about-closing-q">{a.closingQuestion}</p>
         <p>{a.closing}</p>
-      </section>
-
-      <section className="info-backer">
-        <div>
-          <h2>{a.backerTitle}</h2>
-          <p>{a.backerBody}</p>
-        </div>
-        <a className="info-backer-logo" href={CODE_ORANGE_URL} target="_blank" rel="noopener noreferrer">
-          <CodeOrangeLogo height={44} />
-        </a>
       </section>
     </main>
   );

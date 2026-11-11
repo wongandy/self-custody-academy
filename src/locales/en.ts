@@ -59,7 +59,10 @@ const en = {
     titleBefore: "Hi, I'm ",
     titleEm: "Andy",
     titleAfter: " 👋",
-    intro: "I'm a Bitcoiner who's a little obsessed with self-custody. I built this site so you can practice holding your own keys without risking a single sat.",
+    intro: [
+      "I'm a Bitcoiner who's a little obsessed with self-custody. I built this site so you can practice holding your own keys without risking a single sat.",
+      "Over the years I've met so many people who were afraid to take their Bitcoin into their own hands. Afraid of losing their seed phrase, sending to the wrong address, or making one mistake they can't undo. My mission is to bridge that gap: to replace that fear with confidence, so anyone can self-custody their Bitcoin.",
+    ],
     quote: "Bitcoin is freedom. Holding your own keys is how you keep it.",
     doingTitle: "What I'm up to",
     doing: [
@@ -69,8 +72,6 @@ const en = {
     ],
     closingQuestion: "\"What if I mess it up?\"",
     closing: "That's the question I hear most. So mess up here, for free, and do it for real when you're ready.",
-    backerTitle: "Supported by Code Orange",
-    backerBody: "Self-Custody Academy is supported by Code Orange dev school.",
   },
   contact: {
     eyebrow: 'Contact us',
