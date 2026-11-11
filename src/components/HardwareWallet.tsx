@@ -59,7 +59,11 @@ type HardwareWalletProps = {
   onFactoryResetAttempt?: () => void;
   onConnectConfirm?: () => void;
   onVerifyConfirm?: () => void;
+  /** X pressed while the device shows an address to verify (rejecting it). */
+  onVerifyReject?: () => void;
   onSendConfirm?: () => void;
+  /** X pressed on any send-review screen (rejecting the payment). */
+  onSendReject?: () => void;
   onUnexpectedAction?: () => void;
   connectRequest?: boolean;
   verifyRequest?: boolean;
@@ -80,6 +84,11 @@ type HardwareWalletProps = {
 };
 
 export const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+
+// Sending: recipient, amount and fee are reviewed one screen at a time; a final
+// "Approve transaction?" screen shows the total, and only its checkmark signs.
+const SEND_REVIEW_STEPS = 3;
+const btcToSats = (btc?: string) => Math.round(Number(btc ?? 0) * 100_000_000);
 
 const BOOT_STEPS = [
   'BOOTING...',
@@ -119,7 +128,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onSendConfirm, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onVerifyReject, onSendConfirm, onSendReject, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
   // Screen text stays English like a real device; only the caption under it is translated.
   const { t } = useI18n();
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));
@@ -150,6 +159,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [typeListIndex, setTypeListIndex] = useState(0);
   const [addrCopied, setAddrCopied] = useState(false);
   const [sendReviewStep, setSendReviewStep] = useState(0);
+  const sendTotal = ((btcToSats(sendAmount) + btcToSats(sendFee)) / 100_000_000).toFixed(8);
   const [acceptedWord, setAcceptedWord] = useState<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const acceptTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -560,7 +570,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       return;
     }
     if (phase === 'send-review') {
-      if (sendReviewStep < 2) {
+      if (sendReviewStep < SEND_REVIEW_STEPS) {
         setSendReviewStep((step) => step + 1);
       } else {
         updatePhase('send-confirmed');
@@ -696,6 +706,16 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
 
   const handleCancel = useCallback(() => {
     if (locked || isBootingPhase()) return;
+    // On a real device, X on the verify screen rejects the address. Lessons that
+    // listen for it explain that; others fall through to the usual nudge.
+    if (phase === 'verify-address' && onVerifyReject) {
+      onVerifyReject();
+      return;
+    }
+    if (phase === 'send-review' && onSendReject) {
+      onSendReject();
+      return;
+    }
     if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item') {
       if (phase === 'menu' || phase === 'ready-menu') {
         onUnexpectedAction?.();
@@ -756,7 +776,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     resetWalletState();
     updatePhase('menu');
     setMenuIndex(0);
-  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin, expectedAction, onUnexpectedAction, locked, isBootingPhase]);
+  }, [phase, typeInput, acceptedWord, resetWalletState, updatePhase, settingsOrigin, expectedAction, onUnexpectedAction, onVerifyReject, onSendReject, locked, isBootingPhase]);
 
   useEffect(() => {
     if (phase !== 'reset-done') return;
@@ -880,9 +900,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
               <div className="hw-screen-text hw-screen-success">
                 <CheckCircle2 size={28} strokeWidth={1.8} />
                 <span className="hw-screen-title">Wallet created!</span>
-                <p className="hw-screen-body">
-                  Your recovery phrase controls your keys. Store it safely — offline and secret.
-                </p>
               </div>
             )}
             {phase === 'recover-intro' && (
@@ -1099,37 +1116,24 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
             {phase === 'send-review' && (
               <div className="hw-screen-text hw-send-review-screen">
                 <span className="hw-screen-title">
-                  {sendReviewStep === 0 ? 'Review recipient' : sendReviewStep === 1 ? 'Review amount' : 'Review fee'}
+                  {sendReviewStep === 0 ? 'Review recipient' : sendReviewStep === 1 ? 'Review amount' : sendReviewStep === 2 ? 'Review fee' : 'Approve transaction?'}
                 </span>
+                {/* Real devices show the address in groups of four so it's easier to check. */}
                 {sendReviewStep === 0 && (
-                  <>
-                    <span className="hw-send-review-label">Send to</span>
-                    <span className="hw-send-review-value address">{sendAddress}</span>
-                    <p className="hw-screen-body">Check the full address, then press the checkmark.</p>
-                  </>
+                  <span className="hw-send-review-value address">{sendAddress?.match(/.{1,4}/g)?.join(' ')}</span>
                 )}
-                {sendReviewStep === 1 && (
-                  <>
-                    <span className="hw-send-review-label">Amount</span>
-                    <span className="hw-send-review-value">{sendAmount} BTC</span>
-                    <p className="hw-screen-body">Confirm the amount before continuing.</p>
-                  </>
+                {sendReviewStep === 1 && <span className="hw-send-review-value">{sendAmount} BTC</span>}
+                {sendReviewStep === 2 && <span className="hw-send-review-value">{sendFee} BTC</span>}
+                {sendReviewStep === SEND_REVIEW_STEPS && <span className="hw-send-review-value">{sendTotal} BTC</span>}
+                {sendReviewStep < SEND_REVIEW_STEPS && (
+                  <span className="hw-quiz-progress">Review {sendReviewStep + 1} of {SEND_REVIEW_STEPS}</span>
                 )}
-                {sendReviewStep === 2 && (
-                  <>
-                    <span className="hw-send-review-label">Network fee</span>
-                    <span className="hw-send-review-value">{sendFee} BTC</span>
-                    <p className="hw-screen-body">Press the checkmark to approve this transaction.</p>
-                  </>
-                )}
-                <span className="hw-quiz-progress">Review {sendReviewStep + 1} of 3</span>
               </div>
             )}
             {phase === 'send-confirmed' && (
               <div className="hw-screen-text hw-screen-success">
                 <CheckCircle2 size={28} strokeWidth={1.8} />
                 <span className="hw-screen-title">Transaction approved</span>
-                <p className="hw-screen-body">The wallet software can now broadcast this payment.</p>
               </div>
             )}
             {phase === 'connect-confirm' && (

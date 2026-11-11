@@ -12,7 +12,7 @@ import {
   Settings,
   ShieldCheck,
 } from 'lucide-react';
-import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction } from '@/components/HardwareWallet';
+import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import mariaPortrait from '@/components/Maria.webp';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
@@ -57,8 +57,14 @@ const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
 ];
 
 const NUDGE_DURATION_MS = 1250;
-const SEND_AMOUNT = '0.005';
-const MARIA_ADDRESS = RECEIVE_ADDRESS;
+// Lesson-specific nudges are full explanations, so they stay up long enough to read.
+const EXPLAIN_NUDGE_MS = 5000;
+// How long after opening Transactions the sent payment slides in.
+const TX_SHOW_DELAY_MS = 1200;
+type NudgeKind = 'generic' | 'max' | 'send-reject';
+const SEND_AMOUNT = '0.01';
+// Maria's own address (the BIP173 example address), not the learner's device address.
+const MARIA_ADDRESS = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
 
 const FEE_OPTIONS: FeeOption[] = [
   { id: 'low', label: 'Low', rate: '2 sats/vB', fee: '0.00000120' },
@@ -69,8 +75,17 @@ const FEE_OPTIONS: FeeOption[] = [
 // Maria's lines live in the dictionary (`lesson6`); every locale has the same list lengths.
 const INTRO_COUNT = en.lesson6.intro.length;
 
-const WALLET_BALANCE = '0.04998';
-const SENT_BALANCE = '0.04497';
+// The wallet as Lesson 5 left it: the Lesson 2 withdrawal plus Maria's 0.1 BTC.
+const WALLET_BALANCE = '0.14998';
+const STARTING_TRANSACTIONS = [
+  { date: '2026-10-20 14:32', value: '+0.10000 BTC', balance: '0.14998 BTC' },
+  { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC' },
+];
+
+// Amounts are worked out in satoshis so the fee isn't lost to floating-point rounding.
+const SATS_PER_BTC = 100_000_000;
+const toSats = (btc: string) => Math.round(Number(btc) * SATS_PER_BTC);
+const formatBtc = (sats: number) => (sats / SATS_PER_BTC).toFixed(8);
 
 function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
@@ -120,6 +135,8 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const [stage, setStage] = useState<SendStage>('intro');
   const [introStep, setIntroStep] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
+  const [nudgeKind, setNudgeKind] = useState<NudgeKind>('generic');
+  const [nudgeSeq, setNudgeSeq] = useState(0);
   const [walletTab, setWalletTab] = useState<'transactions' | 'send'>('transactions');
   const [recipient, setRecipient] = useState('');
   const [label, setLabel] = useState('');
@@ -128,6 +145,10 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const [transactionBuilt, setTransactionBuilt] = useState(false);
   const [sendRequest, setSendRequest] = useState(false);
   const [sent, setSent] = useState(false);
+  // The sent payment appears in Transactions a moment after the tab opens, so it
+  // slides in like the incoming payment in Lesson 5.
+  const [txShown, setTxShown] = useState(false);
+  const txShowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [addressCopied, setAddressCopied] = useState(false);
   const [addressWrong, setAddressWrong] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
@@ -147,13 +168,17 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   }, []);
 
   const message = nudgeActive
-    ? t.common.nudgeLater
+    ? nudgeKind === 'max'
+      ? fmt(l6.maxNudge, { amount: SEND_AMOUNT })
+      : nudgeKind === 'send-reject'
+        ? l6.sendReject
+        : t.common.nudgeLater
     : check.active
       ? check.mentorLine
     : addressWrong && stage === 'enter-address'
       ? l6.addressWrong
       : stage === 'intro'
-        ? l6.intro[introStep] ?? l6.intro[0]
+        ? fmt(l6.intro[introStep] ?? l6.intro[0], { amount: SEND_AMOUNT })
         : stage === 'open-send'
           ? l6.openSend
           : stage === 'enter-address'
@@ -174,7 +199,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                           ? l6.txSent
                           : l6.finished;
   const bubbleKey = nudgeActive
-    ? 'nudge'
+    ? `nudge-${nudgeKind}`
     : check.active
       ? check.mentorKey
       : addressWrong && stage === 'enter-address'
@@ -188,10 +213,13 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   useLaptopCableAlign(laptopBodyRef, !spotlight);
   const interactionLocked = !done;
   const canContinue = done && !nudgeActive && !addressWrong && !check.active && CONTINUE_STAGES.has(stage);
-  const softwareLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review' || stage === 'tx-sent';
+  const softwareLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review';
   const deviceLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'tx-sent';
 
   const selectedFee = FEE_OPTIONS.find((option) => option.id === feeLevel) ?? FEE_OPTIONS[1];
+  // What leaves the wallet is the amount plus the fee; the balance after uses the fee actually chosen.
+  const totalSentSats = toSats(SEND_AMOUNT) + toSats(selectedFee.fee);
+  const sentBalance = formatBtc(toSats(WALLET_BALANCE) - totalSentSats);
   const formValid = recipient.trim() === MARIA_ADDRESS && amount.trim() === SEND_AMOUNT;
 
   const expectedAction: ExpectedAction =
@@ -201,20 +229,22 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
         ? { type: 'external' }
         : { type: 'none' };
 
-  const handleUnexpectedAction = useCallback(() => {
+  const showNudge = useCallback((kind: NudgeKind) => {
+    setNudgeKind(kind);
+    setNudgeSeq((seq) => seq + 1);
     setNudgeActive(true);
-    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
-    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
   }, []);
+  const handleUnexpectedAction = useCallback(() => showNudge('generic'), [showNudge]);
 
   useEffect(() => {
     if (!nudgeActive) return;
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
-    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+    const duration = nudgeKind === 'generic' ? NUDGE_DURATION_MS : EXPLAIN_NUDGE_MS;
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), duration);
     return () => {
       if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
     };
-  }, [nudgeActive]);
+  }, [nudgeActive, nudgeKind, nudgeSeq]);
 
   useEffect(() => {
     if (nudgeActive) {
@@ -226,13 +256,8 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   useEffect(() => () => {
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
     if (copyTimer.current) clearTimeout(copyTimer.current);
+    if (txShowTimer.current) clearTimeout(txShowTimer.current);
   }, []);
-
-  useEffect(() => {
-    if (stage !== 'tx-sent') return;
-    const timer = setTimeout(() => setStage('finished'), 2500);
-    return () => clearTimeout(timer);
-  }, [stage]);
 
   // Auto-advance: correct address -> enter-label stage
   // Wrong address (10+ chars that don't match) -> show wrong-address warning
@@ -362,8 +387,30 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
 
   const handleTransactionsTab = useCallback(() => {
     if (softwareLocked) return;
+    // After approving, Maria asks the learner to open Transactions to watch the payment appear.
+    if (stage === 'tx-sent') {
+      if (walletTab === 'transactions') return;
+      setWalletTab('transactions');
+      if (txShowTimer.current) clearTimeout(txShowTimer.current);
+      txShowTimer.current = setTimeout(() => {
+        setTxShown(true);
+        setStage('finished');
+      }, TX_SHOW_DELAY_MS);
+      return;
+    }
+    if (walletTab === 'transactions') return;
     handleUnexpectedAction();
-  }, [softwareLocked, handleUnexpectedAction]);
+  }, [softwareLocked, stage, walletTab, handleUnexpectedAction]);
+
+  // MAX is there to teach, not to use: it fills in the whole balance minus the fee,
+  // and Maria explains what it's for and that she only needs the lesson amount.
+  const handleMax = useCallback(() => {
+    if (softwareLocked || stage !== 'enter-amount') return;
+    setAmount(formatBtc(toSats(WALLET_BALANCE) - toSats(selectedFee.fee)));
+    showNudge('max');
+  }, [softwareLocked, stage, selectedFee.fee, showNudge]);
+
+  const handleSendReject = useCallback(() => showNudge('send-reject'), [showNudge]);
 
   const handleCopyAddress = useCallback(() => {
     navigator.clipboard?.writeText(MARIA_ADDRESS).catch(() => {});
@@ -404,7 +451,6 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
 
   const handleHardwareConfirm = useCallback(() => {
     setSent(true);
-    setWalletTab('transactions');
     setStage('tx-sent');
   }, []);
 
@@ -503,11 +549,11 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                             <div className="wallet-tx-summary">
                               <div className="wallet-tx-summary-item">
                                 <span className="wallet-tx-summary-label">Balance</span>
-                                <span className="wallet-tx-summary-value">{sent ? `${SENT_BALANCE} BTC` : `${WALLET_BALANCE} BTC`}</span>
+                                <span className="wallet-tx-summary-value">{txShown ? `${sentBalance} BTC` : `${WALLET_BALANCE} BTC`}</span>
                               </div>
                               <div className="wallet-tx-summary-item">
                                 <span className="wallet-tx-summary-label">Transactions</span>
-                                <span className="wallet-tx-summary-value">{sent ? 2 : 1}</span>
+                                <span className="wallet-tx-summary-value">{txShown ? STARTING_TRANSACTIONS.length + 1 : STARTING_TRANSACTIONS.length}</span>
                               </div>
                             </div>
                             <div className="wallet-tx-table-wrap">
@@ -516,10 +562,12 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                                   <tr><th>Date</th><th>Value</th><th>Balance</th></tr>
                                 </thead>
                                 <tbody>
-                                  {sent && (
-                                    <tr className="fresh"><td>2026-11-04 10:24</td><td className="out">-0.00500 BTC</td><td>{SENT_BALANCE} BTC</td></tr>
+                                  {txShown && (
+                                    <tr className="fresh"><td>2026-11-04 10:24</td><td className="out">-{formatBtc(totalSentSats)} BTC</td><td>{sentBalance} BTC</td></tr>
                                   )}
-                                  <tr><td>2026-09-21 09:48</td><td className="in">+0.04998 BTC</td><td>{WALLET_BALANCE} BTC</td></tr>
+                                  {STARTING_TRANSACTIONS.map((tx) => (
+                                    <tr key={tx.date}><td>{tx.date}</td><td className="in">{tx.value}</td><td>{tx.balance}</td></tr>
+                                  ))}
                                 </tbody>
                               </table>
                             </div>
@@ -553,8 +601,9 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                               <label className="tx-sim-field">
                                 <span>Amount</span>
                                 <div className="send-amount-field">
-                                  <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.005" disabled={!amountFieldEnabled} />
+                                  <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" disabled={!amountFieldEnabled} />
                                   <span>BTC</span>
+                                  <button className="withdraw-max-btn" type="button" onClick={handleMax} disabled={!amountFieldEnabled}>MAX</button>
                                 </div>
                               </label>
                             </div>
@@ -597,18 +646,18 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                               <span className="send-review-status">Ready to sign</span>
                             </div>
                             <div className="tx-sim-confirm-box">
-                              <div className="tx-confirm-row">
+                              {/* Never shorten an address: show it in full, grouped in fours like the device screen */}
+                              <div className="tx-confirm-row tx-confirm-row-address">
                                 <span>Recipient</span>
-                                <strong className="tx-confirm-addr">{MARIA_ADDRESS.slice(0, 12)}…{MARIA_ADDRESS.slice(-8)}</strong>
+                                <strong className="tx-confirm-addr">{MARIA_ADDRESS.match(/.{1,4}/g)?.join(' ')}</strong>
                               </div>
                               <div className="tx-confirm-row"><span>Amount</span><strong>{SEND_AMOUNT} BTC</strong></div>
                               <div className="tx-confirm-row"><span>Network fee</span><strong>{selectedFee.fee} BTC</strong></div>
                               <div className="tx-confirm-row total">
                                 <span>Total</span>
-                                <strong>{(Number(SEND_AMOUNT) + Number(selectedFee.fee)).toFixed(8)} BTC</strong>
+                                <strong>{formatBtc(totalSentSats)} BTC</strong>
                               </div>
                             </div>
-                            <p className="tx-sim-body">The hardware wallet must review and approve this transaction before it can be broadcast.</p>
                             <button
                               className="tx-sim-btn primary"
                               type="button"
@@ -653,6 +702,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                   sendAddress={MARIA_ADDRESS}
                   sendAmount={SEND_AMOUNT}
                   sendFee={selectedFee.fee}
+                  onSendReject={handleSendReject}
                   onSendConfirm={handleHardwareConfirm}
                   onUnexpectedAction={handleUnexpectedAction}
                   onComplete={() => {}}

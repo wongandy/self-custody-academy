@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { CheckCircle2, HelpCircle, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { fmt, useI18n } from '@/lib/i18n';
 
 // The end-of-lesson check-in: the mentor asks a few questions, one at a time,
@@ -123,9 +123,7 @@ export function KnowledgeCheckCard({ check, ready }: { check: KnowledgeCheck; re
   return (
     <div className="knowledge-check-card" role="group" aria-label={t.quiz.groupAria}>
       <div className="knowledge-check-header">
-        <HelpCircle size={16} strokeWidth={2.2} />
-        <span>{t.quiz.quickCheck}</span>
-        <span className="knowledge-check-progress">{fmt(t.quiz.progress, { current: check.index + 1, total: check.total })}</span>
+        <span>{fmt(t.quiz.progress, { current: check.index + 1, total: check.total })}</span>
       </div>
       <p className="knowledge-check-question">{check.text.question}</p>
       <div className="knowledge-check-options">

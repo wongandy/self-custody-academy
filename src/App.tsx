@@ -15,12 +15,10 @@ import { AboutPage, CODE_ORANGE_URL, ContactPage } from '@/components/InfoPages'
 import heroImage from '@/components/hero.webp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-import { clearLocalProgress, getLocalProgress, setLocalProgress } from '@/lib/localProgress';
+import { clearLocalProgress, getLocalLessons, mergeLessons, normalizeLessons, setLocalLessons } from '@/lib/localProgress';
 import { applyTheme, getStoredTheme, type Theme } from '@/lib/theme';
 import { useI18n } from '@/lib/i18n';
 import { clearStoredMnemonic } from '@/lib/walletSession';
-
-const TOTAL_SCENARIOS = 6;
 
 function CustodyIllustration() {
   const { t } = useI18n();
@@ -56,7 +54,7 @@ function App() {
   const [screen, setScreen] = useState<Screen>(
     isRecovering || linkError ? 'auth' : screenFromPath(window.location.pathname) ?? 'home',
   );
-  const [completedScenarios, setCompletedScenarios] = useState(0);
+  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'register' | 'login'>(linkError ? 'login' : 'register');
@@ -75,7 +73,7 @@ function App() {
   }, []);
 
   const loadLocalProgress = useCallback(() => {
-    setCompletedScenarios(getLocalProgress());
+    setCompletedLessons(getLocalLessons());
   }, []);
 
   const loadRemoteProgress = useCallback(async () => {
@@ -84,7 +82,7 @@ function App() {
     setProgressError(null);
     const { data, error } = await supabase
       .from('learning_progress')
-      .select('completed_scenarios')
+      .select('completed_lessons')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -93,29 +91,16 @@ function App() {
       setProgressError('We could not load saved progress. You can still start fresh.');
       return;
     }
-    if (data) {
-      const remote = data.completed_scenarios as number;
-      const local = getLocalProgress();
-      const best = Math.max(remote, local);
-      setCompletedScenarios(best);
-      if (local > remote) {
-        await supabase
-          .from('learning_progress')
-          .upsert({ user_id: user.id, completed_scenarios: best, updated_at: new Date().toISOString() });
-      }
-      clearLocalProgress();
-    } else {
-      const local = getLocalProgress();
-      if (local > 0) {
-        setCompletedScenarios(local);
-        await supabase
-          .from('learning_progress')
-          .upsert({ user_id: user.id, completed_scenarios: local, updated_at: new Date().toISOString() });
-        clearLocalProgress();
-      } else {
-        setCompletedScenarios(0);
-      }
+    const remote = normalizeLessons(data?.completed_lessons);
+    const local = getLocalLessons();
+    const merged = mergeLessons(remote, local);
+    setCompletedLessons(merged);
+    if (merged.length > remote.length) {
+      await supabase
+        .from('learning_progress')
+        .upsert({ user_id: user.id, completed_lessons: merged, updated_at: new Date().toISOString() });
     }
+    clearLocalProgress();
   }, [user]);
 
   const goToRoadmap = useCallback(() => {
@@ -162,21 +147,21 @@ function App() {
 
   const completeScenario = useCallback(
     async (scenarioNumber: number) => {
-      const newCount = Math.min(scenarioNumber, TOTAL_SCENARIOS);
-      setCompletedScenarios(newCount);
+      const next = mergeLessons(completedLessons, [scenarioNumber]);
+      setCompletedLessons(next);
 
       if (user) {
         const { error } = await supabase
           .from('learning_progress')
-          .upsert({ user_id: user.id, completed_scenarios: newCount, updated_at: new Date().toISOString() });
+          .upsert({ user_id: user.id, completed_lessons: next, updated_at: new Date().toISOString() });
         if (error) {
           setProgressError('We could not save your progress. Your current session still works.');
         }
       } else {
-        setLocalProgress(newCount);
+        setLocalLessons(next);
       }
     },
-    [user],
+    [user, completedLessons],
   );
 
   const handleScenarioComplete = useCallback(
@@ -209,7 +194,7 @@ function App() {
     await signOut();
     clearLocalProgress();
     clearStoredMnemonic();
-    setCompletedScenarios(0);
+    setCompletedLessons([]);
     setScreen('home');
   }, [signOut]);
 
@@ -329,7 +314,7 @@ function App() {
 
       {screen === 'roadmap' && (
         <Roadmap
-          completedScenarios={completedScenarios}
+          completedLessons={completedLessons}
           isLoading={progressLoading}
           errorMessage={progressError}
           isLoggedIn={!!user}
@@ -352,7 +337,7 @@ function App() {
 
       {screen === 'scenario-2' && (
         <WithdrawScenario
-          completed={completedScenarios >= 2}
+          completed={completedLessons.includes(2)}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(2)}
         />
@@ -360,7 +345,7 @@ function App() {
 
       {screen === 'scenario-3' && (
         <RecoverScenario
-          completed={completedScenarios >= 3}
+          completed={completedLessons.includes(3)}
           onClose={goToRoadmap}
           onComplete={() => handleScenarioComplete(3)}
           onBack={goToRoadmap}
@@ -369,7 +354,7 @@ function App() {
 
       {screen === 'scenario-4' && (
         <ConnectScenario
-          completed={completedScenarios >= 4}
+          completed={completedLessons.includes(4)}
           onComplete={() => handleScenarioComplete(4)}
         />
       )}
@@ -383,7 +368,7 @@ function App() {
 
       {screen === 'scenario-6' && (
         <SendScenario
-          completed={completedScenarios >= 6}
+          completed={completedLessons.includes(6)}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(6)}
         />

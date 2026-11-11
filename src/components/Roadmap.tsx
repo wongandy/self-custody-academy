@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, LockKeyhole, Usb, WalletCards } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, Usb, WalletCards } from 'lucide-react';
 import { fmt, useI18n } from '@/lib/i18n';
 
 type RoadmapProps = {
-  completedScenarios: number;
+  completedLessons: number[];
   isLoading: boolean;
   errorMessage: string | null;
   isLoggedIn: boolean;
@@ -47,6 +47,12 @@ const pathSegments = [
   'M112 756.2C112 818.2 288 833 288 895',
 ];
 
+/** Lowest lesson not yet finished, or null when every lesson is done. */
+function firstUnfinished(done: ReadonlySet<number>): number | null {
+  const found = scenarios.find((s) => !done.has(s.number));
+  return found ? found.number : null;
+}
+
 function glideToLesson(el: HTMLButtonElement | null): boolean {
   if (!el) return false;
   const rect = el.getBoundingClientRect();
@@ -59,7 +65,7 @@ function glideToLesson(el: HTMLButtonElement | null): boolean {
 }
 
 function Roadmap({
-  completedScenarios,
+  completedLessons,
   isLoading,
   errorMessage,
   onSelectScenario,
@@ -116,7 +122,7 @@ function Roadmap({
   }, [animate, revealed, skipReveal]);
 
   useEffect(() => {
-    if (!justCompletedScenario || justCompletedScenario !== completedScenarios) {
+    if (!justCompletedScenario || !completedLessons.includes(justCompletedScenario)) {
       setCelebrationPhase('idle');
       doneRef.current = true;
       return;
@@ -138,7 +144,7 @@ function Roadmap({
     const runCelebration = () => {
       if (cancelled) return;
 
-      const next = Math.min(justCompletedScenario + 1, scenarios.length);
+      const next = firstUnfinished(new Set(completedLessons)) ?? justCompletedScenario;
       const gliding = glideToLesson(lessonRefs.current[next - 1] ?? null);
 
       if (prefersReduced) {
@@ -148,7 +154,7 @@ function Roadmap({
 
       setCelebrationPhase('pre');
       const lead = gliding ? 700 : 0;
-      const isLast = justCompletedScenario >= scenarios.length;
+      const isLast = completedLessons.length >= scenarios.length;
 
       timers.push(setTimeout(() => setCelebrationPhase('checkmark'), lead + 100));
 
@@ -170,45 +176,57 @@ function Roadmap({
         celebrationDoneRef.current?.();
       }
     };
-  }, [justCompletedScenario, completedScenarios]);
+  }, [justCompletedScenario, completedLessons]);
 
   const celebrating = celebrationPhase !== 'idle' && celebrationPhase !== 'done';
   const justCompleted = justCompletedScenario ?? 0;
 
-  const displayCompleted = celebrating && celebrationPhase === 'pre'
-    ? completedScenarios - 1
-    : completedScenarios;
+  const doneSet = new Set(completedLessons);
+  // Before the checkmark lands, show the board as it was before this lesson was finished.
+  const displayDone = new Set(doneSet);
+  if (celebrating && celebrationPhase === 'pre') displayDone.delete(justCompleted);
 
-  const availableScenario = Math.min(displayCompleted + 1, scenarios.length);
+  // The lesson we nudge toward ("Start" bubble): the lowest one not yet finished.
+  const suggestedScenario = firstUnfinished(displayDone);
+  // Where the celebration points next, once the just-finished lesson counts as done.
+  const nextAfterCelebration = firstUnfinished(doneSet);
 
   useEffect(() => {
     if (animate || isLoading || justCompletedScenario || arrivalScrolledRef.current) return;
     const timer = setTimeout(() => {
       arrivalScrolledRef.current = true;
-      glideToLesson(lessonRefs.current[availableScenario - 1] ?? null);
+      glideToLesson(lessonRefs.current[(suggestedScenario ?? scenarios.length) - 1] ?? null);
     }, 80);
     return () => clearTimeout(timer);
-  }, [animate, isLoading, justCompletedScenario, availableScenario]);
+  }, [animate, isLoading, justCompletedScenario, suggestedScenario]);
 
-  const getNodeState = (scenarioNumber: number): 'complete' | 'available' | 'locked' => {
-    if (celebrating && scenarioNumber === justCompleted + 1) {
-      if (celebrationPhase === 'pulse') return 'available';
-      return 'locked';
+  const getNodeState = (scenarioNumber: number): 'complete' | 'available' | 'open' => {
+    if (displayDone.has(scenarioNumber)) return 'complete';
+    if (celebrating) {
+      // The next lesson only lights up as "available" when the pulse reaches it.
+      return scenarioNumber === nextAfterCelebration && celebrationPhase === 'pulse' ? 'available' : 'open';
     }
-    if (scenarioNumber <= displayCompleted) return 'complete';
-    if (scenarioNumber === availableScenario) return 'available';
-    return 'locked';
+    return scenarioNumber === suggestedScenario ? 'available' : 'open';
   };
 
+  // Segment i joins lesson i+1 and lesson i+2; it is lit once both ends are done.
+  const segBothDone = (set: ReadonlySet<number>, segIndex: number) => set.has(segIndex + 1) && set.has(segIndex + 2);
+
+  // Segments that this completion just lit up (they get the draw animation).
+  const segJustLit = (segIndex: number) =>
+    celebrating
+    && (segIndex + 1 === justCompleted || segIndex + 2 === justCompleted)
+    && segBothDone(doneSet, segIndex);
+
   const isSegComplete = (segIndex: number) => {
-    if (celebrating && segIndex === justCompleted - 1) {
+    if (segJustLit(segIndex)) {
       return celebrationPhase === 'path' || celebrationPhase === 'pulse';
     }
-    return segIndex < displayCompleted;
+    return segBothDone(displayDone, segIndex);
   };
 
   const segCelebrationClass = (segIndex: number) => {
-    if (celebrating && segIndex === justCompleted - 1 && celebrationPhase === 'path') {
+    if (celebrationPhase === 'path' && segJustLit(segIndex)) {
       return 'celebration-seg-draw';
     }
     return '';
@@ -222,7 +240,7 @@ function Roadmap({
   };
 
   const nextNodeCelebrationClass = (scenarioNumber: number) => {
-    if (celebrating && scenarioNumber === justCompleted + 1 && celebrationPhase === 'pulse') {
+    if (celebrating && scenarioNumber === nextAfterCelebration && celebrationPhase === 'pulse') {
       return 'celebration-next-pulse';
     }
     return '';
@@ -245,7 +263,7 @@ function Roadmap({
         <div className="roadmap-board-heading">
           <span className="roadmap-label">{t.roadmap.label}</span>
           <span className="roadmap-path-status">
-            {completedScenarios === scenarios.length ? t.roadmap.pathComplete : fmt(t.roadmap.progress, { completed: completedScenarios, total: scenarios.length })}
+            {completedLessons.length === scenarios.length ? t.roadmap.pathComplete : fmt(t.roadmap.progress, { completed: completedLessons.length, total: scenarios.length })}
           </span>
         </div>
 
@@ -271,7 +289,7 @@ function Roadmap({
             const nodeState = getNodeState(scenario.number);
             const isComplete = nodeState === 'complete';
             const isAvailable = nodeState === 'available';
-            const isLocked = nodeState === 'locked';
+            const isOpen = nodeState === 'open';
             const Icon = scenario.icon;
             const title = t.roadmap.titles[index];
             const position = nodePositions[index];
@@ -279,15 +297,15 @@ function Roadmap({
 
             return (
               <button
-                className={`roadmap-lesson ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isLocked ? 'locked' : ''} ${animate ? 'roadmap-node-reveal' : ''} ${nodeCelebrationClass(scenario.number)} ${nextNodeCelebrationClass(scenario.number)}`}
+                className={`roadmap-lesson ${isComplete ? 'complete' : ''} ${isAvailable ? 'available' : ''} ${isOpen ? 'open' : ''} ${animate ? 'roadmap-node-reveal' : ''} ${nodeCelebrationClass(scenario.number)} ${nextNodeCelebrationClass(scenario.number)}`}
                 key={scenario.number}
                 type="button"
                 ref={(node) => {
                   lessonRefs.current[index] = node;
                 }}
-                disabled={isLocked || isLoading}
+                disabled={isLoading}
                 onClick={() => onSelectScenario(scenario.number)}
-                aria-label={isLocked ? fmt(t.roadmap.lockedAria, { title }) : title}
+                aria-label={title}
                 style={{ top: `${position.top}%`, left: `${position.left}%`, animationDelay: `${nodeDelay}ms` }}
               >
                 {isAvailable && !celebrating && (
@@ -296,7 +314,7 @@ function Roadmap({
                   </span>
                 )}
                 <span className="roadmap-lesson-marker">
-                  {isComplete ? <Check size={20} strokeWidth={3} /> : isLocked ? <LockKeyhole size={18} /> : <Icon size={20} strokeWidth={2.2} />}
+                  {isComplete ? <Check size={20} strokeWidth={3} /> : <Icon size={20} strokeWidth={2.2} />}
                 </span>
                 <span className={`roadmap-lesson-title-plate ${index % 2 === 0 ? 'side-right' : 'side-left'}`}>{title}</span>
               </button>

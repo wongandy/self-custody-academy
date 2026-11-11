@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronRight, FileText } from 'lucide-react';
 import HardwareWallet, { type WalletPhase, type ExpectedAction } from '@/components/HardwareWallet';
-import { loadMnemonic } from '@/lib/walletSession';
+import { loadMnemonic, persistMnemonic } from '@/lib/walletSession';
+import { generateMnemonic } from '@/lib/bip39';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
 import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
@@ -112,10 +113,27 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
   const closeRef = useRef<HTMLButtonElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
+  // True when Lesson 1 was skipped and we made a fresh practice phrase for this lesson.
+  const [practicePhrase, setPracticePhrase] = useState(false);
+
   useEffect(() => {
+    let cancelled = false;
     loadMnemonic().then((words) => {
-      if (words) setExpectedMnemonic(words);
+      if (cancelled) return;
+      if (words) {
+        setExpectedMnemonic(words);
+        return;
+      }
+      const fresh = generateMnemonic(12);
+      setExpectedMnemonic(fresh);
+      setPracticePhrase(true);
+      persistMnemonic(fresh).catch(() => {
+        // Saving is best-effort; the phrase still works for this session.
+      });
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // The wallet stays hidden, and Andy stays in the spotlight, until his
@@ -148,7 +166,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
   const recoverIntroMessage = l3.recoverIntro[recoverIntroStep] ?? '';
   // The recovery words themselves are never translated.
   const wordsMessage = expectedMnemonic
-    ? fmt(l3.words, { words: expectedMnemonic.map((w, i) => `${i + 1}. ${w}`).join('  ') })
+    ? fmt(practicePhrase ? l3.wordsPractice : l3.words, { words: expectedMnemonic.map((w, i) => `${i + 1}. ${w}`).join('  ') })
     : l3.wordsMissing;
 
   const baseMentorMessage = introDone
