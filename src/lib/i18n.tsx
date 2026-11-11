@@ -87,10 +87,17 @@ export function withIconMark(text: string): string {
 export function renderWithIcon(text: string, icon: ReactNode): ReactNode {
   const index = text.indexOf(ICON_MARK);
   if (index === -1) return text;
+  // Browsers may break a line before an inline-block, which would strand the
+  // icon at the start of the next line. Keep it glued to the word it follows.
+  const wordStart = text.slice(0, index).search(/\S+$/);
+  const splitAt = wordStart === -1 ? index : wordStart;
   return (
     <>
-      {text.slice(0, index)}
-      {icon}
+      {text.slice(0, splitAt)}
+      <span style={{ whiteSpace: 'nowrap' }}>
+        {text.slice(splitAt, index)}
+        {icon}
+      </span>
       {text.slice(index + ICON_MARK.length)}
     </>
   );

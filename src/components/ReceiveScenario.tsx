@@ -26,6 +26,11 @@ type ReceiveScenarioProps = {
 };
 
 const NUDGE_DURATION_MS = 1250;
+// Lesson-specific nudges are full explanations, so they stay up long enough to read.
+const EARLY_COPY_NUDGE_MS = 4500;
+const VERIFY_REJECT_NUDGE_MS = 5000;
+
+type NudgeKind = 'generic' | 'early-copy' | 'verify-reject';
 
 // Maria's lines live in the dictionary (`lesson5`); every locale has the same list lengths.
 const INTRO_COUNT = en.lesson5.intro.length;
@@ -59,7 +64,10 @@ type TransactionRow = {
   fresh?: boolean;
 };
 
-const RECEIVE_ADDRESS = 'bc1qq92v3345fkzdjsxwg9r7mvkgjatqqhahfpiuav99q5uw0kweaq3fuqo0';
+// A valid native SegWit address: the first receive address of the public BIP84
+// test wallet, so it belongs to no real person. It differs from the Lesson 2
+// address on purpose: a fresh address for every payment.
+const RECEIVE_ADDRESS = 'bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu';
 
 const QR_MODULES = 25;
 
@@ -157,6 +165,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const [introStep, setIntroStep] = useState(0);
   const [sendingStep, setSendingStep] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
+  const [nudgeKind, setNudgeKind] = useState<NudgeKind>('generic');
   const [walletTab, setWalletTab] = useState<'transactions' | 'receive'>('transactions');
   const [addrCopied, setAddrCopied] = useState(false);
   const [addrVerified, setAddrVerified] = useState(false);
@@ -164,6 +173,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const [verifyRequested, setVerifyRequested] = useState(false);
   const [warned, setWarned] = useState(false);
   const [chatInput, setChatInput] = useState('');
+  const [pasteFailed, setPasteFailed] = useState(false);
+  const chatInputRef = useRef<HTMLInputElement>(null);
   const [txArrived, setTxArrived] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -182,7 +193,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   }, []);
 
   const message = nudgeActive
-    ? t.common.nudgeLater
+    ? nudgeKind === 'early-copy' ? l5.copyTooEarly : nudgeKind === 'verify-reject' ? l5.verifyReject : t.common.nudgeLater
     : check.active
       ? check.mentorLine
     : stage === 'intro'
@@ -205,7 +216,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                       ? l5.waiting
                       : l5.finished;
   const bubbleKey = nudgeActive
-    ? 'nudge'
+    ? `nudge-${nudgeKind}`
     : check.active
       ? check.mentorKey
       : stage === 'intro'
@@ -229,11 +240,17 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
 
   const expectedAction: ExpectedAction = { type: 'external' };
 
-  const handleUnexpectedAction = useCallback(() => {
+  const showNudge = useCallback((kind: NudgeKind) => {
+    setNudgeKind(kind);
     setNudgeActive(true);
     if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
-    nudgeTimer.current = setTimeout(() => setNudgeActive(false), NUDGE_DURATION_MS);
+    const duration = kind === 'early-copy' ? EARLY_COPY_NUDGE_MS : kind === 'verify-reject' ? VERIFY_REJECT_NUDGE_MS : NUDGE_DURATION_MS;
+    nudgeTimer.current = setTimeout(() => setNudgeActive(false), duration);
   }, []);
+  const handleUnexpectedAction = useCallback(() => showNudge('generic'), [showNudge]);
+  // X on the device's verify screen: Maria explains what rejecting is for, and the
+  // address stays on the device so the learner can still confirm it.
+  const handleVerifyReject = useCallback(() => showNudge('verify-reject'), [showNudge]);
 
   const handleTransactionsTab = useCallback(() => {
     const allowed = stage === 'open-tx' || stage === 'waiting' || stage === 'finished';
@@ -261,8 +278,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   }, [stage, handleUnexpectedAction]);
 
   const handleCopyAddress = useCallback(() => {
+    // Copy stays clickable, as in a real wallet; copying before verifying is the
+    // mistake this lesson is about, so Maria explains why instead of a generic nudge.
     if (!addrVerified) {
-      handleUnexpectedAction();
+      showNudge('early-copy');
       return;
     }
     navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
@@ -272,7 +291,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     if (stage === 'copy-now') {
       setStage('hand-over');
     }
-  }, [addrVerified, stage, handleUnexpectedAction]);
+  }, [addrVerified, stage, showNudge]);
 
   const handleVerifyAddress = useCallback(() => {
     if (verifyingAddr || verifyRequested || addrVerified) return;
@@ -292,10 +311,15 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
       const text = await navigator.clipboard.readText();
       if (text) {
         setChatInput(text.trim());
+        setPasteFailed(false);
+        return;
       }
     } catch {
-      // Clipboard read refused — the learner can still paste into the field.
+      // Clipboard read refused or unsupported (e.g. Firefox) — fall through.
     }
+    // The button couldn't paste: put the cursor in the field and say how to paste by hand.
+    setPasteFailed(true);
+    chatInputRef.current?.focus();
   }, []);
 
   const handleSubmitAddress = useCallback(() => {
@@ -534,14 +558,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                             </div>
                             <span className="wallet-field-label">Receive address</span>
                             <p className="rx-addr">{RECEIVE_ADDRESS}</p>
-                            <button
-                              className="tx-sim-btn primary rx-btn"
-                              type="button"
-                              onClick={handleCopyAddress}
-                            >
-                              {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
-                              <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
-                            </button>
+                            {/* Top to bottom in the order the lesson teaches: verify, then copy.
+                                The highlighted (primary) button is always the next step. */}
                             {addrVerified ? (
                               <div className="tx-addr-verified">
                                 <CheckCircle2 size={16} />
@@ -549,7 +567,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                               </div>
                             ) : (
                               <button
-                                className="tx-sim-btn ghost rx-btn"
+                                className="tx-sim-btn primary rx-btn"
                                 type="button"
                                 onClick={handleVerifyAddress}
                                 disabled={verifyingAddr || stage === 'go-receive'}
@@ -558,6 +576,14 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                                 <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>
                               </button>
                             )}
+                            <button
+                              className={`tx-sim-btn ${addrVerified ? 'primary' : 'ghost'} rx-btn`}
+                              type="button"
+                              onClick={handleCopyAddress}
+                            >
+                              {addrCopied ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2} />}
+                              <span>{addrCopied ? 'Copied' : 'Copy address'}</span>
+                            </button>
                           </div>
                         ) : (
                         <div className="wallet-transactions">
@@ -622,6 +648,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                   verifyRequest={verifyRequested}
                   verifyAddress={RECEIVE_ADDRESS}
                   onVerifyConfirm={handleDeviceVerified}
+                  onVerifyReject={handleVerifyReject}
                   onComplete={() => {}}
                 />
               </div>
@@ -660,10 +687,11 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
               {stage === 'hand-over' && (
                 <div className="mentor-chat-input-row" onClick={(e) => e.stopPropagation()}>
                   <input
+                    ref={chatInputRef}
                     className="mentor-chat-input"
                     type="text"
                     value={chatInput}
-                    placeholder={l5.chatPlaceholder}
+                    placeholder={pasteFailed ? l5.pasteFallback : l5.chatPlaceholder}
                     aria-label={l5.chatAria}
                     disabled={chatLocked}
                     onChange={(e) => {

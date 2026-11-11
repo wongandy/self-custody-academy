@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, CheckCircle2, Copy, HelpCircle, Smartphone, AlertTriangle, Wifi, XCircle } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, CheckCircle2, Copy, Smartphone, AlertTriangle, Wifi, XCircle } from 'lucide-react';
 import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
@@ -910,9 +910,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         {knowledgeCheckActive && (
           <div className="knowledge-check-card" role="group" aria-label={t.quiz.groupAria}>
             <div className="knowledge-check-header">
-              <HelpCircle size={16} strokeWidth={2.2} />
-              <span>{t.quiz.quickCheck}</span>
-              <span className="knowledge-check-progress">{fmt(t.quiz.progress, { current: quizIndex + 1, total: KNOWLEDGE_QUESTIONS.length })}</span>
+              <span>{fmt(t.quiz.progress, { current: quizIndex + 1, total: KNOWLEDGE_QUESTIONS.length })}</span>
             </div>
             <p className="knowledge-check-question">{currentQuizText.question}</p>
             <div className="knowledge-check-options">

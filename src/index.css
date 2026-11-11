@@ -1596,10 +1596,16 @@ html.theme-light {
   box-shadow: 0 0 0 4px rgba(24, 32, 38, 0.55), inset 0 0 0 1px rgba(61, 31, 4, 0.28), 0 0 14px rgba(247, 147, 26, 0.25), 0 5px 0 rgba(110, 64, 5, 0.26);
 }
 
-.roadmap-lesson.locked .roadmap-lesson-marker {
-  color: #9fb3b8;
-  border-color: rgba(117, 139, 144, 0.45);
-  background: linear-gradient(145deg, #52666c, #3b4c53);
+.roadmap-lesson.open .roadmap-lesson-marker {
+  color: #d3e0e3;
+  border-color: rgba(117, 139, 144, 0.55);
+  background: linear-gradient(145deg, #586d73, #3b4c53);
+}
+
+.roadmap-lesson.open:hover:not(:disabled) .roadmap-lesson-marker,
+.roadmap-lesson.open:focus-visible .roadmap-lesson-marker {
+  color: #ffc380;
+  border-color: rgba(247, 147, 26, 0.6);
 }
 
 .roadmap-lesson-title-plate {
@@ -1626,10 +1632,6 @@ html.theme-light {
 .roadmap-lesson-title-plate.side-left {
   right: calc(100% + 2cqw);
   text-align: right;
-}
-
-.roadmap-lesson.locked .roadmap-lesson-title-plate {
-  color: var(--muted);
 }
 
 /* ── Roadmap entrance animation ── */
@@ -3367,15 +3369,20 @@ html.theme-light {
   overflow-wrap: anywhere;
 }
 
+/* Inline button chip in Andy's lines. Centred on the text: `middle` sits on the
+   x-height midpoint, nudged up 1px to the cap midpoint. 20px keeps the chip inside
+   the line's height so that line doesn't grow taller than the others. */
 .mentor-copy-button-indicator {
   display: inline-grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
-  margin: 0 5px;
-  vertical-align: -6px;
+  position: relative;
+  top: -1px;
+  width: 20px;
+  height: 20px;
+  margin: 0 2px 0 4px;
+  vertical-align: middle;
   border: 1px solid rgba(167, 232, 67, 0.3);
-  border-radius: 7px;
+  border-radius: 6px;
   background: rgba(167, 232, 67, 0.08);
   color: var(--green);
 }
@@ -3384,6 +3391,15 @@ html.theme-light {
   border-color: var(--gold-light);
   background: rgba(241, 189, 105, 0.12);
   color: var(--gold-light);
+}
+
+/* Mirrors a physical hardware-wallet button (.hw-btn) so the line points at the device.
+   The device stays dark in both themes, so the lime is fixed rather than `--green`,
+   which turns dark green in light mode and disappears on this background. */
+.mentor-copy-button-indicator.device {
+  border-color: rgba(167, 232, 67, 0.4);
+  background: linear-gradient(145deg, #333639, #222527);
+  color: #a7e843;
 }
 
 .mentor-portrait-badge {
@@ -3516,11 +3532,6 @@ html.theme-light {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--gold-light);
-}
-
-.knowledge-check-progress {
-  margin-left: auto;
-  color: var(--faint);
 }
 
 .knowledge-check-question {
@@ -4526,7 +4537,6 @@ html.theme-light {
   align-items: center;
   gap: 18px;
   width: 100%;
-  padding-top: 12px;
 }
 
 .recover-device-enter {
@@ -4811,6 +4821,19 @@ html.theme-light {
 .tx-confirm-addr {
   font-size: 11px !important;
   color: var(--green) !important;
+}
+
+/* The full recipient address gets its own line under the label, wrapping between groups */
+.tx-confirm-row-address {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.tx-confirm-row-address .tx-confirm-addr {
+  line-height: 1.6;
+  word-spacing: 0.15em;
+  overflow-wrap: anywhere;
 }
 
 .tx-sim-warn {
@@ -7750,11 +7773,6 @@ html.theme-light {
   box-shadow: var(--shadow-sm);
 }
 
-.theme-light .roadmap-lesson.locked .roadmap-lesson-title-plate {
-  color: var(--faint);
-  background: rgba(255, 255, 255, 0.6);
-}
-
 .theme-light .roadmap-lesson-marker {
   box-shadow: 0 0 0 4px var(--bg), inset 0 0 0 1px rgba(60, 40, 20, 0.15), 0 5px 0 rgba(60, 40, 20, 0.12);
 }
@@ -7764,10 +7782,16 @@ html.theme-light {
   box-shadow: 0 0 0 4px var(--bg), inset 0 0 0 1px rgba(61, 31, 4, 0.2), 0 0 14px rgba(247, 147, 26, 0.22), 0 5px 0 rgba(150, 80, 0, 0.22);
 }
 
-.theme-light .roadmap-lesson.locked .roadmap-lesson-marker {
-  color: #8a7f72;
-  border-color: rgba(60, 40, 20, 0.14);
-  background: linear-gradient(145deg, #ece5da, #ddd3c5);
+.theme-light .roadmap-lesson.open .roadmap-lesson-marker {
+  color: #5c5247;
+  border-color: rgba(60, 40, 20, 0.2);
+  background: linear-gradient(145deg, #f3ede4, #e2d9cc);
+}
+
+.theme-light .roadmap-lesson.open:hover:not(:disabled) .roadmap-lesson-marker,
+.theme-light .roadmap-lesson.open:focus-visible .roadmap-lesson-marker {
+  color: #b5650a;
+  border-color: rgba(247, 147, 26, 0.55);
 }
 
 .theme-light .roadmap-route-line.todo {
@@ -8223,14 +8247,6 @@ html.theme-light {
   gap: 6px;
 }
 
-.hw-send-review-label {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #9db4a8;
-  font-weight: 700;
-}
-
 .hw-send-review-value {
   display: block;
   font-family: 'SFMono-Regular', ui-monospace, monospace;
@@ -8240,9 +8256,10 @@ html.theme-light {
 }
 
 .hw-send-review-value.address {
-  font-size: 11px;
-  line-height: 1.45;
-  word-break: break-all;
+  font-size: 12px;
+  line-height: 1.6;
+  word-spacing: 0.15em;
+  overflow-wrap: anywhere;
   font-weight: 600;
 }
 
@@ -9267,3 +9284,4 @@ html.theme-light {
     display: none;
   }
 }
+

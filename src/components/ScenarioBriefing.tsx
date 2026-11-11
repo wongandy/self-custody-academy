@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CheckCircle2, ChevronRight, HelpCircle, XCircle } from 'lucide-react';
+import { Check, CheckCircle2, ChevronRight, Power, XCircle } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
-import { fmt, useI18n } from '@/lib/i18n';
+import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
 
 const NUDGE_DURATION_MS = 1250;
 
@@ -166,7 +166,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
           : walletPhase === 'create-done'
             ? l1.createDone[createDoneStep] ?? l1.createDone[0]
             : phaseMessages[walletPhase] || l1.powerOn;
-  const mentorMessage = nudgeActive ? t.common.nudge : baseMentorMessage;
+  const mentorMessage = withIconMark(nudgeActive ? t.common.nudge : baseMentorMessage);
   const mentorMessageKey = nudgeActive
     ? 'nudge'
     : knowledgeCheckActive
@@ -180,6 +180,22 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
           : `${walletPhase}-${resetRefused}`;
   const { displayed, done, skip } = useTypewriter(mentorMessage, 6, mentorMessageKey);
   const knowledgeCheckCanAnswer = knowledgeCheckActive && !checkedAnswer && done;
+
+  // Lines that name a device button mark it with `{icon}`; the chip mirrors that button.
+  // Only the power-on line uses the power button — every other `{icon}` line is the checkmark.
+  // After the menu line spells out "checkmark button", later lines show the chip alone,
+  // so there the chip carries a spoken label instead of being hidden from screen readers.
+  const iconOnlyLine = baseMentorMessage === l1.createIntro || baseMentorMessage === l1.createQuiz;
+  const renderMentorText = (text: string) =>
+    renderWithIcon(
+      text,
+      <span
+        className="mentor-copy-button-indicator device"
+        {...(iconOnlyLine ? { role: 'img', 'aria-label': t.common.checkmarkButton } : { 'aria-hidden': true })}
+      >
+        {baseMentorMessage === l1.powerOn ? <Power size={12} strokeWidth={2.4} /> : <Check size={12} strokeWidth={2.6} />}
+      </span>,
+    );
 
   const canContinue = nudgeActive
     ? false
@@ -440,9 +456,9 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
             <div className="mentor-bubble-content" key={bubbleKey}>
               <span className="mentor-bubble-name">Andy</span>
               <div className="mentor-bubble-text-wrap">
-                <p className="mentor-bubble-text-ghost">{mentorMessage}</p>
+                <p className="mentor-bubble-text-ghost">{renderMentorText(mentorMessage)}</p>
                 <p className="mentor-bubble-text">
-                  {displayed}
+                  {renderMentorText(displayed)}
                   {!done && <span className="typewriter-cursor" />}
                 </p>
               </div>
@@ -464,9 +480,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
         {knowledgeCheckActive && (
           <div className="knowledge-check-card" role="group" aria-label={t.quiz.groupAria}>
             <div className="knowledge-check-header">
-              <HelpCircle size={16} strokeWidth={2.2} />
-              <span>{t.quiz.quickCheck}</span>
-              <span className="knowledge-check-progress">{fmt(t.quiz.progress, { current: quizIndex + 1, total: quiz.length })}</span>
+              <span>{fmt(t.quiz.progress, { current: quizIndex + 1, total: quiz.length })}</span>
             </div>
             <p className="knowledge-check-question">{currentQuizText?.question}</p>
             <div className="knowledge-check-options">

@@ -23,6 +23,7 @@ type Step =
   | { kind: 'connect-request' }
   | { kind: 'device-prompt' }
   | { kind: 'keystore-details' }
+  | { kind: 'open-transactions' }
   | { kind: 'connected' };
 
 type ConnectionPhase = 'idle' | 'arriving' | 'plugging' | 'seating' | 'linked';
@@ -57,22 +58,26 @@ const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
 // Maria takes it (`lesson4.maria`). Deriving the turns from the dictionary's
 // lists means adding or removing a line can never leave a turn without a line
 // or shift the lines out of step. Every locale has the same list lengths.
+// The Settings and keystore explanations work the same way: one step per line.
 const HANDOFF_COUNT = en.lesson4.andy.length;
 const STEPS: Step[] = [
   ...en.lesson4.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
   ...en.lesson4.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
   { kind: 'wallet-intro' },
   { kind: 'wallet-name' },
-  { kind: 'wallet-settings' },
+  ...en.lesson4.walletSettings.map((): Step => ({ kind: 'wallet-settings' })),
   { kind: 'device-arrival' },
   { kind: 'connect-request' },
   { kind: 'device-prompt' },
-  { kind: 'keystore-details' },
+  ...en.lesson4.keystoreDetails.map((): Step => ({ kind: 'keystore-details' })),
+  { kind: 'open-transactions' },
   { kind: 'connected' },
 ];
 
 const WALLET_INTRO_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-intro');
 const WALLET_NAME_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-name');
+const WALLET_SETTINGS_INDEX = STEPS.findIndex((s) => s.kind === 'wallet-settings');
+const KEYSTORE_DETAILS_INDEX = STEPS.findIndex((s) => s.kind === 'keystore-details');
 const CONNECTED_INDEX = STEPS.findIndex((s) => s.kind === 'connected');
 
 // What Cairn reads from the paired device into Keystore 1. The xpub is the
@@ -140,7 +145,7 @@ function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): 
     case 'wallet-name':
       return l4.walletName;
     case 'wallet-settings':
-      return l4.walletSettings;
+      return l4.walletSettings[stepIndex - WALLET_SETTINGS_INDEX] ?? '';
     case 'device-arrival':
       return l4.deviceArrival;
     case 'connect-request':
@@ -148,7 +153,9 @@ function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): 
     case 'device-prompt':
       return l4.devicePrompt;
     case 'keystore-details':
-      return l4.keystoreDetails;
+      return l4.keystoreDetails[stepIndex - KEYSTORE_DETAILS_INDEX] ?? '';
+    case 'open-transactions':
+      return l4.openTransactions;
     case 'connected':
       return l4.connected;
   }
@@ -217,16 +224,18 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
   const confirmPending = step.kind === 'device-prompt' && !connected;
-  // The history loads when the app moves to Transactions; finishing waits for it.
+  // Maria asks the learner to open Transactions; the bubble can't be clicked past.
+  const tabPending = step.kind === 'open-transactions';
+  // The history loads when the learner opens Transactions; finishing waits for it.
   const syncPending = step.kind === 'connected' && syncing;
   // Creating the wallet happens in the app itself: New Wallet, then the name dialog.
   const appPending = step.kind === 'wallet-intro' || step.kind === 'wallet-name';
-  const devicePending = requestPending || confirmPending || appPending || syncPending;
+  const devicePending = requestPending || confirmPending || appPending || tabPending || syncPending;
   // No wallet exists until the name dialog is confirmed. The Settings tab shows
   // until the pairing is confirmed, then the app moves to the Transactions tab.
   const walletCreated = stepIndex > WALLET_NAME_INDEX;
   // After pairing, Settings shows the filled-in keystore; the app moves to
-  // Transactions only once Maria has explained it.
+  // Transactions once the learner clicks that tab.
   const activeTab: 'settings' | 'transactions' = stepIndex >= CONNECTED_INDEX ? 'transactions' : 'settings';
   const trimmedWalletName = walletName.trim();
 
@@ -353,7 +362,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       setMobilePanel('software');
       return;
     }
-    if (step.kind === 'connect-request' || step.kind === 'keystore-details' || step.kind === 'connected') setMobilePanel('software');
+    if (step.kind === 'connect-request' || step.kind === 'keystore-details' || step.kind === 'open-transactions' || step.kind === 'connected') setMobilePanel('software');
     else if (step.kind === 'device-prompt') setMobilePanel('device');
   }, [isMobile, mobileDeviceEntered, step.kind, syncing]);
 
@@ -434,12 +443,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       check.start();
       return;
     }
-    // Leaving the keystore explanation: switch to Transactions and load the history
-    if (step.kind === 'keystore-details') {
-      setSyncing(true);
-      if (syncTimer.current) clearTimeout(syncTimer.current);
-      syncTimer.current = setTimeout(() => setSyncing(false), 1800);
-    }
     if (step.kind === 'mentor' && stepIndex === WALLET_INTRO_INDEX - 1 && portraitRef.current && bubbleRef.current) {
       flipRects.current = {
         portrait: portraitRef.current.getBoundingClientRect(),
@@ -448,6 +451,16 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     }
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
   }, [done, skip, nudgeActive, check, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting]);
+
+  // Opening Transactions loads the wallet's history from the device, then Maria
+  // points out the withdrawal from Lesson 2.
+  const handleOpenTransactions = () => {
+    if (step.kind !== 'open-transactions' || softwareLocked) return;
+    setSyncing(true);
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => setSyncing(false), 1800);
+    setStepIndex((current) => (STEPS[current].kind === 'open-transactions' ? current + 1 : current));
+  };
 
   const handleNewWallet = () => {
     if (step.kind !== 'wallet-intro' || softwareLocked) return;
@@ -779,7 +792,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                       <button
                         type="button"
                         className={`wallet-nav-item${activeTab === 'transactions' ? ' active' : ''}`}
-                        onClick={activeTab === 'transactions' ? () => {} : handleUnexpectedAction}
+                        onClick={activeTab === 'transactions' ? () => {} : step.kind === 'open-transactions' ? handleOpenTransactions : handleUnexpectedAction}
                         disabled={softwareLocked}
                         aria-pressed={activeTab === 'transactions'}
                       >
@@ -893,11 +906,11 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                         <div className="wallet-tx-summary">
                           <div className="wallet-tx-summary-item">
                             <span className="wallet-tx-summary-label">Balance</span>
-                            <span className="wallet-tx-summary-value">{`${WALLET_BALANCE} BTC`}</span>
+                            <span className="wallet-tx-summary-value">{syncing ? '—' : `${WALLET_BALANCE} BTC`}</span>
                           </div>
                           <div className="wallet-tx-summary-item">
                             <span className="wallet-tx-summary-label">Transactions</span>
-                            <span className="wallet-tx-summary-value">{TRANSACTIONS.length}</span>
+                            <span className="wallet-tx-summary-value">{syncing ? '—' : TRANSACTIONS.length}</span>
                           </div>
                         </div>
                         <div className="wallet-tx-table-wrap">
@@ -910,8 +923,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                               </tr>
                             </thead>
                             <tbody>
-                              {TRANSACTIONS.map((tx) => (
-                                <tr key={tx.date}>
+                              {!syncing && TRANSACTIONS.map((tx) => (
+                                <tr key={tx.date} className="fresh">
                                   <td>{tx.date}</td>
                                   <td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td>
                                   <td>{tx.balance}</td>
