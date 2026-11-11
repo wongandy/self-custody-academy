@@ -52,6 +52,21 @@ function CodeOrangeLogo({ height }: { height: number }) {
 
 const DOING_ICONS = [GraduationCap, Mic, Users];
 
+// Turns each "Code Orange" mention into a link to the school's site.
+function withCodeOrangeLink(text: string) {
+  const parts = text.split('Code Orange');
+  return parts.flatMap((part, i) =>
+    i === 0
+      ? [part]
+      : [
+          <a key={i} href={CODE_ORANGE_URL} target="_blank" rel="noopener noreferrer">
+            Code Orange
+          </a>,
+          part,
+        ],
+  );
+}
+
 export function AboutPage({ onBack }: Props) {
   const { t } = useI18n();
   const a = t.about;
@@ -103,7 +118,7 @@ export function AboutPage({ onBack }: Props) {
                 </span>
                 <div>
                   <h3>{title}</h3>
-                  <p>{body}</p>
+                  <p>{withCodeOrangeLink(body)}</p>
                 </div>
               </li>
             );

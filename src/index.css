@@ -1099,6 +1099,16 @@ html.theme-light {
   font-weight: 700;
 }
 
+.about-doing p a {
+  color: var(--gold-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.about-doing p a:hover {
+  color: var(--gold);
+}
+
 .about-doing p {
   margin: 0;
   color: var(--muted);
