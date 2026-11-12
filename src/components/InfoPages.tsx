@@ -1,6 +1,9 @@
-import { useState, type FormEvent } from 'react';
-import { CheckCircle2, GraduationCap, Mic, Send, Users } from 'lucide-react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, MapPin, Mic, Send, Users, X } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
+import eventBitJakarta from '@/components/event-bit-jakarta.webp';
+import eventBitmelaPanel from '@/components/event-bitmela-panel.webp';
+import eventBitmelaAndy from '@/components/event-bitmela-andy.webp';
 import { useI18n } from '@/lib/i18n';
 
 // Web3Forms access key. Messages sent through the contact form are delivered
@@ -30,6 +33,121 @@ const ANDY_LINKS = [
 ];
 
 const DOING_ICONS = [GraduationCap, Mic, Users];
+
+// Photos for the "Out in the wild" wall, in the same order as `about.events` in the locales.
+const EVENT_PHOTOS = [
+  { src: eventBitJakarta, width: 1024, height: 768 },
+  { src: eventBitmelaPanel, width: 1280, height: 961, link: { text: 'Bitmela', href: 'https://thebitmela.com/' } },
+  { src: eventBitmelaAndy, width: 768, height: 1024 },
+];
+
+// Turns the first mention of `link.text` in a caption into a link.
+function captionWithLink(caption: string, link?: { text: string; href: string }): ReactNode {
+  if (!link || !caption.includes(link.text)) return caption;
+  const [before, ...rest] = caption.split(link.text);
+  return (
+    <>
+      {before}
+      <a href={link.href} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+        {link.text}
+      </a>
+      {rest.join(link.text)}
+    </>
+  );
+}
+
+function EventWall() {
+  const { t } = useI18n();
+  const a = t.about;
+  const [open, setOpen] = useState<number | null>(null);
+  const count = EVENT_PHOTOS.length;
+
+  useEffect(() => {
+    if (open === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(null);
+      if (e.key === 'ArrowRight') setOpen((i) => (i === null ? i : (i + 1) % count));
+      if (e.key === 'ArrowLeft') setOpen((i) => (i === null ? i : (i - 1 + count) % count));
+    };
+    window.addEventListener('keydown', onKey);
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [open, count]);
+
+  const current = open === null ? null : { photo: EVENT_PHOTOS[open], text: a.events[open] };
+
+  return (
+    <section className="about-events">
+      <h2>{a.eventsTitle}</h2>
+      <p className="about-events-intro">{a.eventsIntro}</p>
+
+      <div className="polaroid-wall">
+        {EVENT_PHOTOS.map((photo, i) => {
+          const text = a.events[i];
+          const portrait = photo.height > photo.width;
+          return (
+            <figure key={photo.src} className={`polaroid polaroid--${i + 1}${portrait ? ' polaroid--portrait' : ''}`}>
+              <button type="button" className="polaroid-photo" onClick={() => setOpen(i)} aria-label={`${a.eventsEnlarge}: ${text.alt}`}>
+                <img src={photo.src} alt={text.alt} width={photo.width} height={photo.height} loading="lazy" />
+              </button>
+              <figcaption>
+                <span className="polaroid-pin">
+                  <MapPin size={11} strokeWidth={2.4} />
+                  {text.place}
+                </span>
+                <span className="polaroid-caption">{captionWithLink(text.caption, photo.link)}</span>
+              </figcaption>
+            </figure>
+          );
+        })}
+      </div>
+
+      {current && open !== null && (
+        <div className="event-lightbox" role="dialog" aria-modal="true" aria-label={current.text.alt} onClick={() => setOpen(null)}>
+          <button type="button" className="event-lightbox-close" onClick={() => setOpen(null)} aria-label={a.eventsClose}>
+            <X size={22} strokeWidth={2.2} />
+          </button>
+          <button
+            type="button"
+            className="event-lightbox-nav event-lightbox-nav--prev"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen((open - 1 + count) % count);
+            }}
+            aria-label={a.eventsPrev}
+          >
+            <ChevronLeft size={26} strokeWidth={2.2} />
+          </button>
+          <figure className="event-lightbox-figure" onClick={(e) => e.stopPropagation()}>
+            <img src={current.photo.src} alt={current.text.alt} width={current.photo.width} height={current.photo.height} />
+            <figcaption>
+              <span className="polaroid-pin">
+                <MapPin size={11} strokeWidth={2.4} />
+                {current.text.place}
+              </span>
+              <span className="polaroid-caption">{captionWithLink(current.text.caption, current.photo.link)}</span>
+            </figcaption>
+          </figure>
+          <button
+            type="button"
+            className="event-lightbox-nav event-lightbox-nav--next"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen((open + 1) % count);
+            }}
+            aria-label={a.eventsNext}
+          >
+            <ChevronRight size={26} strokeWidth={2.2} />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
 
 // Turns each "Code Orange" mention into a link to the school's site.
 function withCodeOrangeLink(text: string) {
@@ -99,6 +217,8 @@ export function AboutPage() {
           })}
         </ol>
       </section>
+
+      <EventWall />
 
       <section className="about-closing">
         <p className="about-closing-q">{a.closingQuestion}</p>
