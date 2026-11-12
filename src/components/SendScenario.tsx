@@ -16,6 +16,7 @@ import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet
 import mariaPortrait from '@/components/Maria.webp';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
+import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
@@ -155,6 +156,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
+  const duoSlotRef = useFitScale(0.5);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopBodyRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -482,10 +484,11 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const showAddressInBubble = stage === 'enter-address' && !nudgeActive;
 
   return (
-    <main className={`scenario-page scenario-page-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
         {check.active && <KnowledgeCheckKicker />}
         {!spotlight && !check.active && (
+          <div ref={duoSlotRef} className="fit-slot fit-wrap">
           <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
             <div className="wallet-laptop laptop-enter">
               <div ref={laptopBodyRef} className="wallet-laptop-body">
@@ -709,6 +712,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                 />
               </div>
             </div>
+          </div>
           </div>
         )}
 

@@ -9,9 +9,11 @@ import ConnectScenario from '@/components/ConnectScenario';
 import SendScenario from '@/components/SendScenario';
 import ReceiveScenario from '@/components/ReceiveScenario';
 import RecoverScenario from '@/components/RecoverScenario';
+import DevicePlayground from '@/components/DevicePlayground'; // TEMPORARY: Lesson 7 playground
 import AuthScreen from '@/components/AuthScreen';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
 import { AboutPage, CODE_ORANGE_URL, ContactPage } from '@/components/InfoPages';
+import { DonatePage } from '@/components/DonatePage';
 import heroImage from '@/components/hero.webp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -29,14 +31,15 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth' | 'about' | 'contact';
+type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'scenario-7' | 'auth' | 'about' | 'contact' | 'donate';
 
-const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6'];
+const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6', 'scenario-7'];
 
 // Pages that have their own URL. Every other screen lives at "/".
 const SCREEN_PATHS: Partial<Record<Screen, string>> = {
   about: '/about',
   contact: '/contact-us',
+  donate: '/donate',
 };
 
 function screenFromPath(pathname: string): Screen | null {
@@ -199,7 +202,7 @@ function App() {
   }, [signOut]);
 
   const isInScenario = SCENARIO_SCREENS.includes(screen);
-  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact';
+  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact' || screen === 'donate';
 
   return (
     <div className={`app-shell theme-${theme}`}>
@@ -236,6 +239,8 @@ function App() {
         )}
 
         <div className="header-actions">
+          {/* TEMPORARY: Lesson 7 playground puts its dev controls here */}
+          {screen === 'scenario-7' && <div id="playground-header-slot" className="playground-header-slot" />}
           <LocaleSwitcher />
           <button
             className="theme-toggle"
@@ -374,6 +379,9 @@ function App() {
         />
       )}
 
+      {/* TEMPORARY: Lesson 7 device playground (not saved as progress) */}
+      {screen === 'scenario-7' && <DevicePlayground />}
+
       {screen === 'auth' && (
         <AuthScreen
           key={isRecovering ? 'recovery' : 'auth'}
@@ -388,6 +396,8 @@ function App() {
       {screen === 'about' && <AboutPage />}
 
       {screen === 'contact' && <ContactPage />}
+
+      {screen === 'donate' && <DonatePage />}
 
       {showFooter && (
         <footer className="site-footer">
@@ -414,6 +424,15 @@ function App() {
                 onClick={() => setScreen('contact')}
               >
                 {t.home.footerContact}
+              </button>
+              <span className="footer-separator" aria-hidden="true">•</span>
+              <button
+                type="button"
+                className={`footer-link${screen === 'donate' ? ' is-active' : ''}`}
+                aria-current={screen === 'donate' ? 'page' : undefined}
+                onClick={() => setScreen('donate')}
+              >
+                {t.home.footerDonate}
               </button>
             </nav>
             <span className="footer-divider" aria-hidden="true" />

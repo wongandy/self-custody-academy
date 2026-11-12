@@ -6,6 +6,7 @@ import { generateMnemonic } from '@/lib/bip39';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
 import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
+import { useFitScale } from '@/lib/useFitScale';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 
 type RecoverScenarioProps = {
@@ -109,6 +110,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
     onBack();
   });
   const portraitRef = useRef<HTMLDivElement>(null);
+  const deviceAreaRef = useFitScale();
   const bubbleRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -407,11 +409,11 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
   const deviceLocked = walletLocked || (!introDone && !done);
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${check.active ? 'knowledge-check-scene' : ''}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${check.active ? 'knowledge-check-scene' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
         {check.active && <KnowledgeCheckKicker />}
         {walletVisible && !check.active && (
-          <div className="recover-device-area">
+          <div ref={deviceAreaRef} className="recover-device-area fit-slot">
             <div className="recover-device-enter">
               <HardwareWallet
                 mode="withdraw"

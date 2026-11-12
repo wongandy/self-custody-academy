@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, Usb, WalletCards } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, MonitorSmartphone, Usb, WalletCards } from 'lucide-react';
 import { fmt, useI18n } from '@/lib/i18n';
 
 type RoadmapProps = {
@@ -321,6 +321,17 @@ function Roadmap({
             );
           })}
         </div>
+
+        {/* TEMPORARY: Lesson 7 device playground, outside the path and progress count */}
+        <button
+          type="button"
+          className="roadmap-playground-link"
+          onClick={() => onSelectScenario(7)}
+          disabled={isLoading}
+        >
+          <MonitorSmartphone size={16} strokeWidth={2.2} />
+          <span>Lesson 7 · Device playground</span>
+        </button>
       </section>
     </main>
   );
