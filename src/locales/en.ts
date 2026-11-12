@@ -164,7 +164,6 @@ const en = {
     title: 'Choose your path',
     subtitle: 'Start with the essential skills, or explore what comes next as your confidence grows.',
     pathsAria: 'Learning paths',
-    availableNow: 'Available now',
     comingSoon: 'Coming soon',
     fundamentals: 'Fundamentals',
     fundamentalsDesc: 'The essential building blocks of self-custody.',
@@ -178,7 +177,6 @@ const en = {
     comingSoonLabel: 'Coming soon:',
     deeperIncludes: 'passphrases, multisig setups, watch-only wallets, and more.',
     deeperTopics: ['Passphrases', 'Multisig setups', 'Watch-only wallets'],
-    inPreparation: 'In preparation',
   },
   roadmap: {
     label: 'Your learning path',

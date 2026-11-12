@@ -77,7 +77,6 @@ function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
           <button className="path-card path-card-fundamentals" type="button" onClick={onSelectFundamentals}>
             <div className="path-card-topline">
               <span className="path-card-number">01 · {lessonCount}</span>
-              <span className="path-card-status"><span className="path-card-dot" aria-hidden="true" />{p.availableNow}</span>
             </div>
             <div className="path-card-symbols" aria-hidden="true"><FundamentalsArt /></div>
             <h2>{p.fundamentals}</h2>
@@ -92,7 +91,6 @@ function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
           <div className="path-card path-card-deeper" aria-disabled="true">
             <div className="path-card-topline">
               <span className="path-card-number">02</span>
-              <span className="path-card-status">{p.comingSoon}</span>
             </div>
             <div className="path-card-symbols" aria-hidden="true"><DeeperArt /></div>
             <h2>{p.deeper}</h2>
@@ -101,7 +99,7 @@ function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
               {p.deeperTopics.map((topic) => <li key={topic}>{topic}</li>)}
             </ul>
             <div className="path-card-footer">
-              <span className="path-card-action">{p.inPreparation}</span>
+              <span className="path-card-action">{p.comingSoon}</span>
             </div>
           </div>
         </div>
