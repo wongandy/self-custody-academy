@@ -213,7 +213,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // other view. The lesson moves on when they do.
   const viewingDevice = isMobile && mobileDeviceEntered && mobilePanel === 'device';
   // The cord has clicked into the laptop and the switcher has appeared; over to the device.
-  const mobileHeadWait = isMobile && step.kind === 'device-arrival' && arrivalStarted && mobileCordSeated && !mobileDeviceEntered;
+  // The line stays up while the cord plugs into the device, until Maria's next one.
+  const mobileHeadWait = isMobile && step.kind === 'device-arrival' && arrivalStarted && mobileCordSeated && connection !== 'linked';
   // The learner has switched to the device; the cord is animating but hasn't linked yet.
   const mobileCordAnimating = viewingDevice && step.kind === 'device-arrival' && connection !== 'linked';
   // The cord has clicked into the device; back to the app to send the request.
@@ -238,8 +239,21 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
           ? l4.pairingSent
           : mobilePairedWait
             ? l4.devicePaired
+          // Maria has just said the cord is in, so on phones she skips straight to the button
+          : isMobile && step.kind === 'connect-request'
+            ? l4.connectDeviceMobile
+          // Likewise she has just said "Paired", so the keystore line doesn't open with it
+          : isMobile && stepIndex === KEYSTORE_DETAILS_INDEX
+            ? l4.keystoreReadMobile
+          // The history is still loading: hold the Transactions line until it is on
+          // screen, so she never talks about the 0.04998 BTC before it appears
+          : step.kind === 'connected' && syncing
+            ? l4.openTransactions
             : stepMessage(l4, step, stepIndex);
-  const bubbleKey = nudgeActive ? 'nudge' : check.active ? check.mentorKey : `${mentorName}-${stepIndex}-${message}`;
+  // While the history loads the bubble keeps the previous step's key, so the
+  // held line stays on screen instead of typing itself out again.
+  const bubbleStepIndex = step.kind === 'connected' && syncing ? stepIndex - 1 : stepIndex;
+  const bubbleKey = nudgeActive ? 'nudge' : check.active ? check.mentorKey : `${mentorName}-${bubbleStepIndex}-${message}`;
   const { displayed, done, skip } = useTypewriter(message, 6, bubbleKey);
 
   const walletVisible = stepIndex >= WALLET_INTRO_INDEX;
