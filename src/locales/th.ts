@@ -76,6 +76,9 @@ const th: Dictionary = {
     titleEm: 'กาแฟ',
     titleAfter: 'แอนดี้สักแก้ว ☕',
     lead: 'Self-Custody Academy ใช้งานฟรีและจะฟรีตลอดไป sats ของคุณช่วยให้ผมมีกาแฟดื่ม ได้สร้างบทเรียนและการจำลองใหม่ๆ ดูแลเว็บไซต์ให้ทำงานต่อไป และช่วยให้ผู้คนดูแล Bitcoin ของตัวเองได้มากขึ้น',
+    methodLabel: 'วิธีการชำระเงิน',
+    tabLightning: 'Lightning',
+    tabOnchain: 'On-chain',
     pickLabel: 'เลือกจำนวนกาแฟ',
     cups: [
       { title: 'กาแฟหนึ่งแก้ว', caption: 'พอให้ผมทำบทเรียนต่อได้อีกหนึ่งบท' },
@@ -99,6 +102,10 @@ const th: Dictionary = {
     anyAmountTitle: 'ส่งจำนวนเท่าไหร่ก็ได้',
     anyAmountBody: 'อยากกำหนดจำนวนเองในกระเป๋า? สแกน QR code นี้หรือคัดลอก Lightning address ของผม',
     staticQrAlt: 'QR code ของ Lightning address ของแอนดี้',
+    onchainTitle: 'ส่งแบบ on-chain',
+    onchainBody: 'สแกนด้วยกระเป๋า bitcoin ใดก็ได้ หรือคัดลอกที่อยู่ด้านล่าง เหมาะกับจำนวนที่มากขึ้น เพราะมีค่าธรรมเนียมเครือข่าย',
+    onchainQrAlt: 'QR code ของที่อยู่ bitcoin ของแอนดี้',
+    onchainThanks: 'ทุก sat มีความหมาย ขอบคุณครับ! 🧡',
     note: 'ทุก sat ส่งตรงเข้ากระเป๋าของผม ไม่มีบัญชี ไม่มีการติดตาม ไม่มีการเก็บข้อมูลใดๆ',
   },
   contact: {
