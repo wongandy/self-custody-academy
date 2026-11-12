@@ -429,6 +429,7 @@ const en = {
     connectDevice: 'Your hardware wallet is plugged in. Click CONNECT HARDWARE WALLET under Keystores to send the pairing request.',
     devicePrompt: 'Now confirm the pairing request on your hardware wallet by pressing the checkmark button.',
     // Phones show one device at a time: these three ask the learner to switch views.
+    headToDevice: 'One end of the cord is now plugged into your laptop. Tap HARDWARE WALLET to plug the other end into your device.',
     devicePlugged: 'The cord is in, so your hardware wallet is now connected to your laptop. Tap WALLET SOFTWARE to go back to Cairn.',
     pairingSent: 'Cairn has sent a pairing request to your hardware wallet. Tap HARDWARE WALLET to answer it.',
     devicePaired: 'Paired. Tap WALLET SOFTWARE to see what Cairn read from your hardware wallet.',
