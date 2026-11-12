@@ -10719,3 +10719,112 @@ html.theme-light {
     width: 100%;
   }
 }
+
+/* TEMPORARY: /test Lessons menu (opens a lesson in sandbox mode) */
+.playground-lessons {
+  position: relative;
+}
+
+.playground-header-btn.is-open {
+  color: var(--gold-light);
+  border-color: var(--gold-light);
+}
+
+.playground-lessons-current {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--gold-light);
+  color: var(--bg);
+  font-size: 11px;
+}
+
+.playground-lessons-chevron {
+  transition: transform 160ms ease;
+}
+
+.playground-header-btn.is-open .playground-lessons-chevron {
+  transform: rotate(180deg);
+}
+
+.playground-lessons-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: min(300px, calc(100vw - 32px));
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow-sm), 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.playground-lessons-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.playground-lessons-item:hover {
+  background: rgba(241, 189, 105, 0.08);
+}
+
+.playground-lessons-item.is-active {
+  color: var(--gold-light);
+}
+
+.playground-lessons-num {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.playground-lessons-item.is-active .playground-lessons-num {
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+}
+
+.playground-lessons-title {
+  flex: 1;
+}
+
+/* Phones: the Lessons button keeps its chevron and lesson number, so it's
+   wider than the other icon-only buttons */
+@media (max-width: 600px) {
+  .playground-lessons .playground-header-btn {
+    width: auto;
+    padding: 0 10px;
+    gap: 4px;
+  }
+
+  .playground-lessons-menu {
+    position: fixed;
+    top: 64px;
+    right: 16px;
+  }
+}

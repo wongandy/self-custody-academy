@@ -19,6 +19,8 @@ import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
+import { useSandbox } from '@/lib/sandbox';
+import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 
 type SendScenarioProps = {
@@ -138,7 +140,8 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const [nudgeActive, setNudgeActive] = useState(false);
   const [nudgeKind, setNudgeKind] = useState<NudgeKind>('generic');
   const [nudgeSeq, setNudgeSeq] = useState(0);
-  const [walletTab, setWalletTab] = useState<'transactions' | 'send'>('transactions');
+  const [walletTab, setWalletTab] = useState<WalletTabId>('transactions');
+  const sandbox = useSandbox();
   const [recipient, setRecipient] = useState('');
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
@@ -213,9 +216,9 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
 
   const spotlight = stage === 'intro';
   useLaptopCableAlign(laptopBodyRef, !spotlight);
-  const interactionLocked = !done;
+  const interactionLocked = !done && !sandbox;
   const canContinue = done && !nudgeActive && !addressWrong && !check.active && CONTINUE_STAGES.has(stage);
-  const softwareLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review';
+  const softwareLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review');
   const deviceLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'tx-sent';
 
   const selectedFee = FEE_OPTIONS.find((option) => option.id === feeLevel) ?? FEE_OPTIONS[1];
@@ -377,6 +380,11 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   }, [spotlight]);
 
   const handleSendTab = useCallback(() => {
+    if (sandbox) {
+      setWalletTab('send');
+      if (stage === 'open-send') setStage('enter-address');
+      return;
+    }
     if (softwareLocked) return;
     if (stage === 'open-send') {
       setWalletTab('send');
@@ -385,7 +393,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     }
     if (walletTab === 'send') return;
     handleUnexpectedAction();
-  }, [softwareLocked, stage, walletTab, handleUnexpectedAction]);
+  }, [sandbox, softwareLocked, stage, walletTab, handleUnexpectedAction]);
 
   const handleTransactionsTab = useCallback(() => {
     if (softwareLocked) return;
@@ -400,14 +408,18 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
       }, TX_SHOW_DELAY_MS);
       return;
     }
+    if (sandbox) {
+      setWalletTab('transactions');
+      return;
+    }
     if (walletTab === 'transactions') return;
     handleUnexpectedAction();
-  }, [softwareLocked, stage, walletTab, handleUnexpectedAction]);
+  }, [sandbox, softwareLocked, stage, walletTab, handleUnexpectedAction]);
 
   // MAX is there to teach, not to use: it fills in the whole balance minus the fee,
   // and Maria explains what it's for and that she only needs the lesson amount.
   const handleMax = useCallback(() => {
-    if (softwareLocked || stage !== 'enter-amount') return;
+    if (softwareLocked || (stage !== 'enter-amount' && !sandbox)) return;
     setAmount(formatBtc(toSats(WALLET_BALANCE) - toSats(selectedFee.fee)));
     showNudge('max');
   }, [softwareLocked, stage, selectedFee.fee, showNudge]);
@@ -422,34 +434,34 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   }, []);
 
   const handleFeeSelect = useCallback((nextFee: FeeLevel) => {
-    if (softwareLocked || stage !== 'select-fee') {
+    if (softwareLocked || (stage !== 'select-fee' && !sandbox)) {
       if (!softwareLocked) handleUnexpectedAction();
       return;
     }
     setFeeLevel(nextFee);
-  }, [softwareLocked, stage, handleUnexpectedAction]);
+  }, [sandbox, softwareLocked, stage, handleUnexpectedAction]);
 
   const handleBuildTransaction = useCallback(() => {
-    if (softwareLocked || stage !== 'select-fee') {
+    if (softwareLocked || (stage !== 'select-fee' && !sandbox)) {
       if (!softwareLocked) handleUnexpectedAction();
       return;
     }
-    if (!formValid) {
+    if (!formValid && !sandbox) {
       handleUnexpectedAction();
       return;
     }
     setTransactionBuilt(true);
     setStage('review-tx');
-  }, [softwareLocked, stage, formValid, handleUnexpectedAction]);
+  }, [sandbox, softwareLocked, stage, formValid, handleUnexpectedAction]);
 
   const handleSendToHardware = useCallback(() => {
-    if (softwareLocked || stage !== 'review-tx') {
+    if (softwareLocked || (stage !== 'review-tx' && !sandbox)) {
       if (!softwareLocked) handleUnexpectedAction();
       return;
     }
     setSendRequest(true);
     setStage('hardware-review');
-  }, [softwareLocked, stage, handleUnexpectedAction]);
+  }, [sandbox, softwareLocked, stage, handleUnexpectedAction]);
 
   const handleHardwareConfirm = useCallback(() => {
     setSent(true);
@@ -477,10 +489,10 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     </div>
   );
 
-  const addressFieldEnabled = !softwareLocked && stage === 'enter-address';
-  const labelFieldEnabled = !softwareLocked && stage === 'enter-label';
-  const amountFieldEnabled = !softwareLocked && stage === 'enter-amount';
-  const feeButtonsEnabled = !softwareLocked && stage === 'select-fee';
+  const addressFieldEnabled = sandbox || (!softwareLocked && stage === 'enter-address');
+  const labelFieldEnabled = sandbox || (!softwareLocked && stage === 'enter-label');
+  const amountFieldEnabled = sandbox || (!softwareLocked && stage === 'enter-amount');
+  const feeButtonsEnabled = sandbox || (!softwareLocked && stage === 'select-fee');
   const showAddressInBubble = stage === 'enter-address' && !nudgeActive;
 
   return (
@@ -524,26 +536,27 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                         </button>
                         <button
                           type="button"
-                          className="wallet-nav-item"
-                          onClick={handleUnexpectedAction}
+                          className={`wallet-nav-item${walletTab === 'receive' ? ' active' : ''}`}
+                          onClick={sandbox ? () => setWalletTab('receive') : handleUnexpectedAction}
                           disabled={softwareLocked}
-                          aria-pressed="false"
+                          aria-pressed={walletTab === 'receive'}
                         >
                           <ArrowDownLeft strokeWidth={2.2} />
                           <span className="wallet-nav-label">Receive</span>
                         </button>
                         <button
                           type="button"
-                          className="wallet-nav-item"
-                          onClick={handleUnexpectedAction}
+                          className={`wallet-nav-item${walletTab === 'settings' ? ' active' : ''}`}
+                          onClick={sandbox ? () => setWalletTab('settings') : handleUnexpectedAction}
                           disabled={softwareLocked}
-                          aria-pressed="false"
+                          aria-pressed={walletTab === 'settings'}
                         >
                           <Settings strokeWidth={2.2} />
                           <span className="wallet-nav-label">Settings</span>
                         </button>
                       </aside>
                       <div className="wallet-canvas">
+                        {(walletTab === 'receive' || walletTab === 'settings') && <SandboxWalletTab tab={walletTab} />}
                         {walletTab === 'transactions' && (
                           <div className="wallet-transactions">
                             <div className="wallet-tab-heading">
@@ -634,8 +647,8 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                                 <strong>{selectedFee.fee} BTC</strong>
                               </div>
                             </div>
-                            {stage === 'select-fee' && (
-                              <button className="tx-sim-btn primary" type="button" onClick={handleBuildTransaction} disabled={softwareLocked || !formValid}>
+                            {(stage === 'select-fee' || sandbox) && (
+                              <button className="tx-sim-btn primary" type="button" onClick={handleBuildTransaction} disabled={softwareLocked || (!formValid && !sandbox)}>
                                 <span>Review transaction</span><ArrowRight size={16} strokeWidth={2.4} />
                               </button>
                             )}
@@ -665,7 +678,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                               className="tx-sim-btn primary"
                               type="button"
                               onClick={handleSendToHardware}
-                              disabled={softwareLocked || stage !== 'review-tx'}
+                              disabled={softwareLocked || (stage !== 'review-tx' && !sandbox)}
                             >
                               <ShieldCheck size={16} strokeWidth={2.2} />
                               <span>Review on hardware wallet</span>

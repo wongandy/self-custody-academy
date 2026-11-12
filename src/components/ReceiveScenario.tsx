@@ -19,6 +19,8 @@ import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
+import { useSandbox } from '@/lib/sandbox';
+import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 
 type ReceiveScenarioProps = {
@@ -167,7 +169,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const [sendingStep, setSendingStep] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
   const [nudgeKind, setNudgeKind] = useState<NudgeKind>('generic');
-  const [walletTab, setWalletTab] = useState<'transactions' | 'receive'>('transactions');
+  const [walletTab, setWalletTab] = useState<WalletTabId>('transactions');
+  const sandbox = useSandbox();
   const [addrCopied, setAddrCopied] = useState(false);
   const [addrVerified, setAddrVerified] = useState(false);
   const [verifyingAddr, setVerifyingAddr] = useState(false);
@@ -232,7 +235,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
 
   const spotlight = stage === 'intro';
   useLaptopCableAlign(laptopBodyRef, !spotlight);
-  const interactionLocked = !done;
+  const interactionLocked = !done && !sandbox;
   const canContinue = done && !nudgeActive && !check.active && CONTINUE_STAGES.has(stage);
   // While Maria is mid-line the devices freeze; once she finishes, the learner
   // may press device buttons — every press is gently nudged back on track.
@@ -255,6 +258,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const handleVerifyReject = useCallback(() => showNudge('verify-reject'), [showNudge]);
 
   const handleTransactionsTab = useCallback(() => {
+    if (sandbox) {
+      setWalletTab('transactions');
+      return;
+    }
     const allowed = stage === 'open-tx' || stage === 'waiting' || stage === 'finished';
     if (!allowed) {
       handleUnexpectedAction();
@@ -264,9 +271,14 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     if (stage === 'open-tx') {
       setStage('waiting');
     }
-  }, [stage, handleUnexpectedAction]);
+  }, [stage, handleUnexpectedAction, sandbox]);
 
   const handleReceiveTab = useCallback(() => {
+    if (sandbox) {
+      setWalletTab('receive');
+      if (stage === 'go-receive') setStage('verify-rule');
+      return;
+    }
     if (stage === 'go-receive') {
       setWalletTab('receive');
       setStage('verify-rule');
@@ -277,7 +289,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
       return;
     }
     setWalletTab('receive');
-  }, [stage, handleUnexpectedAction]);
+  }, [stage, handleUnexpectedAction, sandbox]);
 
   const handleCopyAddress = useCallback(() => {
     // Copy stays clickable, as in a real wallet; copying before verifying is the
@@ -521,10 +533,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                         </button>
                         <button
                           type="button"
-                          className="wallet-nav-item"
-                          onClick={handleUnexpectedAction}
+                          className={`wallet-nav-item${walletTab === 'send' ? ' active' : ''}`}
+                          onClick={sandbox ? () => setWalletTab('send') : handleUnexpectedAction}
                           disabled={softwareLocked}
-                          aria-pressed="false"
+                          aria-pressed={walletTab === 'send'}
                         >
                           <ArrowUpRight strokeWidth={2.2} />
                           <span className="wallet-nav-label">Send</span>
@@ -541,17 +553,19 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                         </button>
                         <button
                           type="button"
-                          className="wallet-nav-item"
-                          onClick={handleUnexpectedAction}
+                          className={`wallet-nav-item${walletTab === 'settings' ? ' active' : ''}`}
+                          onClick={sandbox ? () => setWalletTab('settings') : handleUnexpectedAction}
                           disabled={softwareLocked}
-                          aria-pressed="false"
+                          aria-pressed={walletTab === 'settings'}
                         >
                           <Settings strokeWidth={2.2} />
                           <span className="wallet-nav-label">Settings</span>
                         </button>
                       </aside>
                       <div className="wallet-canvas">
-                        {walletTab === 'receive' ? (
+                        {walletTab === 'send' || walletTab === 'settings' ? (
+                          <SandboxWalletTab tab={walletTab} />
+                        ) : walletTab === 'receive' ? (
                           <div className="rx-panel">
                             <div className="wallet-tab-heading">
                               <div className="wallet-tab-title"><ArrowDownLeft strokeWidth={2} /><span>Receive Bitcoin</span></div>
@@ -573,7 +587,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                                 className="tx-sim-btn primary rx-btn"
                                 type="button"
                                 onClick={handleVerifyAddress}
-                                disabled={verifyingAddr || stage === 'go-receive'}
+                                disabled={verifyingAddr || (stage === 'go-receive' && !sandbox)}
                               >
                                 <Eye size={14} strokeWidth={2} />
                                 <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>

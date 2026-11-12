@@ -5,14 +5,16 @@
  * software (laptop) and the hardware wallet all on one screen, every tab and
  * screen unlocked, so the device content can be checked at phone width.
  * Phone-width screens show one device at a time with the device switcher,
- * like the real lessons. Nothing here is saved as progress. It has no link
+ * like the real lessons. Nothing here is saved as progress. The header's
+ * Lessons menu also plays any real lesson in sandbox mode (src/lib/sandbox.ts),
+ * where the mentor no longer locks any device. It has no link
  * anywhere in the app: open it by going to /test.
  *
  * To remove: delete this file, the `.playground-*` block at the end of
  * index.css and the 'scenario-7' screen + '/test' path in App.tsx (plus the
  * `export`s added to PhoneClock / ReceiveQrCode).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
 import {
   AlertTriangle,
@@ -21,6 +23,7 @@ import {
   ArrowLeftRight,
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -40,6 +43,13 @@ import { DeviceSwitcher } from '@/components/DeviceSwitcher';
 import { PhoneClock } from '@/components/WithdrawScenario';
 import { ReceiveQrCode } from '@/components/ReceiveScenario';
 import andyPortrait from '@/components/Andy.webp';
+import ScenarioBriefing from '@/components/ScenarioBriefing';
+import WithdrawScenario from '@/components/WithdrawScenario';
+import RecoverScenario from '@/components/RecoverScenario';
+import ConnectScenario from '@/components/ConnectScenario';
+import ReceiveScenario from '@/components/ReceiveScenario';
+import SendScenario from '@/components/SendScenario';
+import { SandboxContext } from '@/lib/sandbox';
 import { fmt, useI18n } from '@/lib/i18n';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 
@@ -295,11 +305,15 @@ function ExchangePhone() {
 
 /* ── Playground ── */
 
-export default function DevicePlayground() {
+type PlaygroundProps = {
+  connected: boolean;
+  setConnected: Dispatch<SetStateAction<boolean>>;
+};
+
+function Playground({ connected, setConnected }: PlaygroundProps) {
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const [windowTitle] = useState(() => walletWindowTitle('Cairn', getWalletName()));
-  const [resetKey, setResetKey] = useState(0);
   const [activeDevice, setActiveDevice] = useState<DeviceId>('software');
   const [lineIndex, setLineIndex] = useState(0);
 
@@ -312,7 +326,6 @@ export default function DevicePlayground() {
   const [feeId, setFeeId] = useState<(typeof FEE_OPTIONS)[number]['id']>('medium');
   const [addrCopied, setAddrCopied] = useState(false);
   const [addrVerified, setAddrVerified] = useState(false);
-  const [connected, setConnected] = useState(true);
 
   // Requests from the wallet software to the hardware wallet. Each one is
   // cleared once the device answers, so it can be sent again.
@@ -332,22 +345,6 @@ export default function DevicePlayground() {
     setLineIndex((i) => (i + 1) % MENTOR_LINES.length);
   }, [done, skip]);
 
-  const resetAll = useCallback(() => {
-    setResetKey((k) => k + 1);
-    setTab('transactions');
-    setSendStep('form');
-    setRecipient('');
-    setLabel('');
-    setAmount('');
-    setFeeId('medium');
-    setAddrCopied(false);
-    setAddrVerified(false);
-    setConnected(true);
-    setVerifyRequest(false);
-    setSendRequest(false);
-    setConnectRequest(false);
-  }, []);
-
   // On a phone, asking the device to do something jumps to it, as in the lessons.
   const requestOnDevice = useCallback((send: () => void) => {
     send();
@@ -366,38 +363,11 @@ export default function DevicePlayground() {
 
   const hidden = (id: DeviceId) => (isMobile && activeDevice !== id ? ' playground-hidden' : '');
 
-  // The dev controls sit in the site header, next to the language and theme
-  // buttons, so the page itself holds only the devices and the mentor.
-  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
-  useEffect(() => {
-    setHeaderSlot(document.getElementById('playground-header-slot'));
-  }, []);
-
-  const headerControls = headerSlot && createPortal(
-    <>
-      <button type="button" className="playground-header-btn" onClick={resetAll} title="Reset every device">
-        <RotateCcw size={14} strokeWidth={2.2} />
-        <span className="playground-header-btn-label">Reset</span>
-      </button>
-      <button
-        type="button"
-        className="playground-header-btn"
-        onClick={() => setConnected((c) => !c)}
-        title="Switch the Settings keystore between connected and empty"
-      >
-        <Usb size={14} strokeWidth={2.2} />
-        <span className="playground-header-btn-label">{connected ? 'Keystore: connected' : 'Keystore: empty'}</span>
-      </button>
-    </>,
-    headerSlot,
-  );
-
   return (
     <main className="scenario-page scenario-page-connect playground-page">
-      {headerControls}
       <div className="scenario-mentor-layout">
         <div className={`playground-stage${isMobile ? ' has-device-switcher' : ''}`}>
-          <div className="playground-trio" key={resetKey}>
+          <div className="playground-trio">
             {/* ── Phone ── */}
             <div className={`withdraw-phone-wrap playground-device${hidden('exchange')}`}>
               <ExchangePhone />
@@ -761,5 +731,157 @@ export default function DevicePlayground() {
         </div>
       </div>
     </main>
+  );
+}
+
+/* ── /test page: the playground, or any lesson in sandbox mode ── */
+
+type View = 'playground' | 1 | 2 | 3 | 4 | 5 | 6;
+const LESSON_NUMBERS = [1, 2, 3, 4, 5, 6] as const;
+
+function SandboxLesson({ lesson, onExit }: { lesson: Exclude<View, 'playground'>; onExit: () => void }) {
+  switch (lesson) {
+    case 1:
+      return <ScenarioBriefing onComplete={onExit} />;
+    case 2:
+      return <WithdrawScenario completed={false} onBack={onExit} onComplete={onExit} />;
+    case 3:
+      return <RecoverScenario completed={false} onClose={onExit} onBack={onExit} onComplete={onExit} />;
+    case 4:
+      return <ConnectScenario completed={false} onComplete={onExit} />;
+    case 5:
+      return <ReceiveScenario onBack={onExit} onComplete={() => {}} />;
+    case 6:
+      return <SendScenario completed={false} onBack={onExit} onComplete={() => {}} />;
+  }
+}
+
+export default function DevicePlayground() {
+  const { t } = useI18n();
+  const [view, setView] = useState<View>('playground');
+  const [resetKey, setResetKey] = useState(0);
+  const [connected, setConnected] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const choose = useCallback((next: View) => {
+    setView(next);
+    setResetKey((k) => k + 1);
+    setConnected(true);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
+
+  const reset = useCallback(() => {
+    setResetKey((k) => k + 1);
+    setConnected(true);
+  }, []);
+
+  // Close the lessons menu on an outside click or Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  // The dev controls sit in the site header, next to the language and theme
+  // buttons, so the page itself holds only the devices and the mentor.
+  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setHeaderSlot(document.getElementById('playground-header-slot'));
+  }, []);
+
+  const headerControls = headerSlot && createPortal(
+    <>
+      <div className="playground-lessons" ref={menuRef}>
+        <button
+          type="button"
+          className={`playground-header-btn${menuOpen ? ' is-open' : ''}`}
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          title="Open a lesson with every device unlocked"
+        >
+          <BookOpen size={14} strokeWidth={2.2} />
+          <span className="playground-header-btn-label">Lessons</span>
+          {view !== 'playground' && <span className="playground-lessons-current">{view}</span>}
+          <ChevronDown size={14} strokeWidth={2.2} className="playground-lessons-chevron" />
+        </button>
+        {menuOpen && (
+          <div className="playground-lessons-menu" role="menu">
+            <button
+              type="button"
+              role="menuitemradio"
+              aria-checked={view === 'playground'}
+              className={`playground-lessons-item${view === 'playground' ? ' is-active' : ''}`}
+              onClick={() => choose('playground')}
+            >
+              <span className="playground-lessons-num">·</span>
+              <span className="playground-lessons-title">Playground (all devices)</span>
+              {view === 'playground' && <Check size={14} strokeWidth={2.4} />}
+            </button>
+            {LESSON_NUMBERS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                role="menuitemradio"
+                aria-checked={view === n}
+                className={`playground-lessons-item${view === n ? ' is-active' : ''}`}
+                onClick={() => choose(n)}
+              >
+                <span className="playground-lessons-num">{n}</span>
+                <span className="playground-lessons-title">{t.roadmap.titles[n - 1]}</span>
+                {view === n && <Check size={14} strokeWidth={2.4} />}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        className="playground-header-btn"
+        onClick={reset}
+        title={view === 'playground' ? 'Reset every device' : `Restart lesson ${view}`}
+      >
+        <RotateCcw size={14} strokeWidth={2.2} />
+        <span className="playground-header-btn-label">Reset</span>
+      </button>
+      {view === 'playground' && (
+        <button
+          type="button"
+          className="playground-header-btn"
+          onClick={() => setConnected((c) => !c)}
+          title="Switch the Settings keystore between connected and empty"
+        >
+          <Usb size={14} strokeWidth={2.2} />
+          <span className="playground-header-btn-label">{connected ? 'Keystore: connected' : 'Keystore: empty'}</span>
+        </button>
+      )}
+    </>,
+    headerSlot,
+  );
+
+  return (
+    <>
+      {headerControls}
+      {view === 'playground' ? (
+        <Playground key={resetKey} connected={connected} setConnected={setConnected} />
+      ) : (
+        // Finishing a lesson here saves nothing; it just comes back to the playground.
+        <SandboxContext.Provider value>
+          <SandboxLesson key={`${view}-${resetKey}`} lesson={view} onExit={() => choose('playground')} />
+        </SandboxContext.Provider>
+      )}
+    </>
   );
 }
