@@ -170,8 +170,6 @@ const en = {
     includesLabel: 'Includes:',
     fundamentalsIncludes: 'hardware wallet setup, withdrawals, recovery, and more.',
     startLearning: 'Start learning',
-    lessonCount: '{count} interactive lessons',
-    recommendedByAndy: 'Andy recommends starting here',
     deeper: 'Going Deeper',
     deeperDesc: 'Advanced security for protecting larger amounts.',
     comingSoonLabel: 'Coming soon:',

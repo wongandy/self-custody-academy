@@ -9045,10 +9045,6 @@ html.theme-light {
   background: #d8c838;
 }
 
-.theme-light .path-card-number {
-  color: var(--faint);
-}
-
 .theme-light .path-card-art {
   filter: none;
 }
@@ -9704,7 +9700,6 @@ html.theme-light {
   background: #c2b82c;
 }
 
-.path-card-topline,
 .path-card-symbols,
 .path-card h2,
 .path-card-description,
@@ -9712,22 +9707,6 @@ html.theme-light {
 .path-card-action {
   position: relative;
   z-index: 1;
-}
-
-.path-card-topline {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.path-card-number {
-  color: rgba(255, 255, 255, 0.38);
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .path-card-action {
@@ -9744,7 +9723,7 @@ html.theme-light {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 10px 0 10px;
+  margin: 0 0 10px;
 }
 
 .path-card-art {
@@ -9863,30 +9842,6 @@ html.theme-light {
   box-shadow: 0 14px 34px rgba(247, 147, 26, 0.3);
 }
 
-.path-card-andy {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px 4px 4px;
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel-strong);
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.path-card-andy img {
-  width: 26px;
-  height: 26px;
-  object-fit: cover;
-  object-position: top;
-  border-radius: 50%;
-  background: #f4efe6;
-}
-
 /* Coming-soon card: present but quieter so the live path leads */
 .path-card-deeper {
   border-color: rgba(192, 184, 40, 0.35);
@@ -9928,9 +9883,9 @@ html.theme-light {
     overflow-y: auto;
   }
 
+  /* Top-aligned: centring left a tall gap under the header on tall phones */
   .path-selector-content {
     gap: 18px;
-    margin: auto 0;
   }
 
   .path-selector-kicker {
@@ -9958,14 +9913,9 @@ html.theme-light {
     border-radius: 20px;
   }
 
-  .path-card-topline {
-    flex-wrap: wrap;
-    gap: 4px 12px;
-  }
-
   .path-card-symbols {
     min-height: 0;
-    margin: 12px 0 10px;
+    margin: 0 0 10px;
   }
 
   .path-card-art {
@@ -10000,10 +9950,6 @@ html.theme-light {
     padding: 15px 18px;
   }
 
-  .path-card-andy {
-    align-self: center;
-  }
-
   /* Coming-soon path: small art on the left, text on the right */
   .path-card-deeper {
     display: grid;
@@ -10013,19 +9959,19 @@ html.theme-light {
     padding: 16px 18px;
   }
 
-  .path-card-deeper .path-card-topline {
-    grid-column: 1 / -1;
-    margin-bottom: 10px;
-  }
-
   .path-card-deeper .path-card-symbols {
-    grid-row: 2 / span 3;
+    grid-column: 1;
+    grid-row: 1 / span 4;
     align-self: center;
     margin: 0;
   }
 
   .path-card-deeper .path-card-art {
     width: 100%;
+  }
+
+  .path-card-deeper > :not(.path-card-symbols) {
+    grid-column: 2;
   }
 
   .path-card-deeper h2 {
@@ -10048,14 +9994,8 @@ html.theme-light {
     font-size: 11px;
   }
 
-  /* "Coming soon" moves up beside the path number to keep the row short */
   .path-card-deeper .path-card-footer {
-    position: absolute;
-    top: 16px;
-    right: 18px;
-    width: auto;
-    margin: 0;
-    padding: 0;
+    padding-top: 12px;
   }
 }
 
@@ -10087,7 +10027,7 @@ html.theme-light {
   }
 
   .path-card-symbols {
-    margin: 8px 0 6px;
+    margin: 0 0 6px;
   }
 
   .path-card-art {
