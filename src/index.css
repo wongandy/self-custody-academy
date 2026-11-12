@@ -10056,60 +10056,36 @@ html.theme-light {
   }
 }
 
-/* Phones: a smaller QR keeps the heading, address and both buttons on screen */
+/* Phones: the Receive tab fills the window instead of leaving a gap below.
+   The canvas is a size container, so the layout follows the real height of
+   the window (not the viewport) and the QR grows into the room there is:
+   stacked under the heading when the canvas is tall enough, beside the
+   address when it's short (e.g. 375×667). Buttons span the full width. */
 @media (max-width: 600px) {
+  .scenario-page-connect .wallet-canvas:has(> .rx-panel) {
+    container: rx-canvas / size;
+  }
+
   .wallet-window .rx-panel {
+    align-self: stretch;
+    width: 100%;
+    height: auto;
     gap: 10px;
   }
 
-  .wallet-window .rx-qr-frame {
-    width: 132px;
-    padding: 8px;
-  }
-}
-
-/* Short phones (e.g. 375×667): the laptop window is only ~340px tall, so the
-   Receive tab puts a small QR beside the address and the buttons below,
-   keeping everything on screen without scrolling */
-@media (max-width: 600px) and (max-height: 760px) {
-  .scenario-page-connect .wallet-canvas {
-    padding: 14px 16px;
+  .wallet-window .rx-panel > .wallet-tab-heading {
+    align-self: stretch;
   }
 
-  .wallet-window .rx-panel {
-    display: grid;
-    grid-template-columns: 80px minmax(0, 1fr);
-    align-content: start;
-    column-gap: 12px;
-    row-gap: 6px;
-    width: 100%;
-    height: auto;
-  }
-
-  .wallet-window .rx-panel > * {
-    grid-column: 1 / -1;
-  }
-
+  /* Heading + label + one-line address + two buttons + gaps ≈ 210px; the QR
+     takes the rest */
   .wallet-window .rx-panel > .rx-qr-frame {
-    grid-column: 1;
-    grid-row: 2 / span 2;
-    width: 80px;
-    padding: 5px;
-    border-radius: 10px;
-  }
-
-  .wallet-window .rx-panel > .wallet-field-label {
-    grid-column: 2;
-    grid-row: 2;
-    align-self: end;
+    width: clamp(120px, calc(100cqh - 210px), 260px);
+    padding: 8px;
   }
 
   .wallet-window .rx-panel > .rx-addr {
-    grid-column: 2;
-    grid-row: 3;
-    align-self: start;
     max-width: none;
-    text-align: left;
   }
 
   .wallet-window .rx-panel > .rx-btn,
@@ -10117,10 +10093,62 @@ html.theme-light {
     width: 100%;
     min-width: 0;
   }
+}
 
-  .wallet-window .rx-panel > .rx-btn {
-    padding-top: 8px;
-    padding-bottom: 8px;
+/* Short canvas: too little height for a stacked QR worth scanning, so it sits
+   beside the address and fills the height left over by the heading and the
+   two buttons (≈ 110px), up to just over half the width */
+@media (max-width: 600px) {
+  @container rx-canvas (max-height: 339px) {
+    .wallet-window .rx-panel {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      /* heading | spacer | label | address | spacer | button | button: the
+         spacers center the label + address beside the QR */
+      grid-template-rows: auto 1fr auto auto 1fr auto auto;
+      align-content: stretch;
+      column-gap: 12px;
+      row-gap: 0;
+    }
+
+    .wallet-window .rx-panel > * {
+      grid-column: 1 / -1;
+    }
+
+    .wallet-window .rx-panel > .wallet-tab-heading {
+      margin-bottom: 8px;
+    }
+
+    .wallet-window .rx-panel > .rx-qr-frame {
+      grid-column: 1;
+      grid-row: 2 / span 4;
+      align-self: center;
+      width: min(calc(100cqh - 112px), 52cqw);
+      padding: 7px;
+      border-radius: 10px;
+    }
+
+    .wallet-window .rx-panel > .wallet-field-label {
+      grid-column: 2;
+      grid-row: 3;
+      margin-bottom: 4px;
+    }
+
+    .wallet-window .rx-panel > .rx-addr {
+      grid-column: 2;
+      grid-row: 4;
+      text-align: left;
+    }
+
+    .wallet-window .rx-panel > .rx-btn,
+    .wallet-window .rx-panel > .tx-addr-verified {
+      margin-top: 8px;
+    }
+
+    .wallet-window .rx-panel > .rx-btn {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
   }
 }
 
@@ -10248,6 +10276,203 @@ html.theme-light {
   }
 }
 
+/* Phones: Send and Settings fit the wallet window without scrolling.
+   The window is only 100dvh - 280px tall (≈ 280px of canvas on a 375×667
+   phone), so the forms use the width: Label sits beside Amount, Wallet Type
+   beside Address Type, and controls are a little shorter than on laptops. */
+@media (max-width: 600px) {
+  .scenario-page-connect .wallet-canvas {
+    padding: 12px 14px;
+  }
+
+  .wallet-window .send-form-screen,
+  .wallet-window .wallet-settings {
+    gap: 10px;
+  }
+
+  /* Send: Pay to on its own row, Label + Amount side by side */
+  .wallet-window .send-form-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .wallet-window .send-form-fields > .tx-sim-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .wallet-window .tx-sim-field {
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .wallet-window .tx-sim-field input,
+  .wallet-select {
+    height: 34px;
+    padding: 0 10px;
+  }
+
+  .wallet-window .tx-sim-field input {
+    min-width: 0;
+  }
+
+  .wallet-window .send-amount-field {
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .wallet-window .send-amount-field input {
+    flex: 1;
+  }
+
+  .wallet-window .send-amount-field .withdraw-max-btn {
+    flex-shrink: 0;
+    padding: 5px 7px;
+  }
+
+  .wallet-window .send-fee-section {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .wallet-window .send-fee-options {
+    gap: 6px;
+  }
+
+  .wallet-window .send-fee-options .tx-fee-btn {
+    padding: 6px 4px;
+  }
+
+  .wallet-window .send-fee-total {
+    padding-top: 8px;
+  }
+
+  .wallet-window .send-form-screen > .tx-sim-btn {
+    padding: 10px 16px;
+  }
+
+  /* Settings: both dropdowns on one row, a slimmer keystore card */
+  .wallet-window .wallet-settings-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .wallet-window .wallet-field {
+    gap: 4px;
+  }
+
+  .wallet-window .wallet-settings-section {
+    gap: 6px;
+  }
+
+  .wallet-window .wallet-keystore-tabs {
+    padding-top: 4px;
+  }
+
+  .wallet-window .wallet-keystore-tab {
+    padding: 4px 10px;
+  }
+
+  .wallet-window .wallet-keystore-body.is-filled {
+    padding: 8px 12px;
+  }
+
+  .wallet-window .wallet-keystore-details {
+    gap: 5px 12px;
+  }
+}
+
+/* Short phones (e.g. 375×667): the estimated fee moves up beside "Fee" (the
+   explanation line gives way), so the Review button stays on screen */
+@media (max-width: 600px) and (max-height: 760px) {
+  .wallet-window .send-form-screen,
+  .wallet-window .wallet-settings {
+    gap: 8px;
+  }
+
+  .wallet-window .wallet-tab-heading {
+    min-height: 22px;
+  }
+
+  /* Slimmer window chrome: title bar and tab row */
+  .scenario-page-connect .wallet-window-titlebar {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  .scenario-page-connect .wallet-sidebar {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .scenario-page-connect .wallet-nav-item {
+    gap: 3px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .scenario-page-connect .wallet-canvas {
+    padding: 10px 14px 8px;
+  }
+
+  .wallet-window .tx-sim-field > span,
+  .wallet-window .wallet-field-label {
+    line-height: 1.25;
+  }
+
+  .wallet-window .send-form-balance {
+    padding: 3px 9px;
+    font-size: 11.5px;
+  }
+
+  .wallet-window .send-fee-section {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 6px 10px;
+    padding: 8px 10px;
+  }
+
+  .wallet-window .send-fee-heading {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .wallet-window .send-fee-explanation {
+    display: none;
+  }
+
+  .wallet-window .send-fee-total {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-top: 0;
+    border-top: 0;
+    font-size: 11.5px;
+  }
+
+  .wallet-window .send-fee-options {
+    grid-column: 1 / -1;
+  }
+
+  .wallet-window .send-fee-options .tx-fee-btn {
+    padding: 5px 4px;
+  }
+
+  .wallet-window .send-fee-heading,
+  .wallet-window .send-fee-options .tx-fee-btn > * {
+    line-height: 1.2;
+  }
+
+  .wallet-window .send-form-screen {
+    gap: 7px;
+  }
+
+  .wallet-window .send-form-screen > .tx-sim-btn {
+    padding: 9px 16px;
+  }
+}
 
 /* ── TEMPORARY: Lesson 7 device playground ──
    All three devices on one screen (wrapping on narrower laptops); phones show
