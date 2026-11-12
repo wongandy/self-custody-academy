@@ -212,6 +212,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // three moments Maria stops, says what just happened and asks them to tap the
   // other view. The lesson moves on when they do.
   const viewingDevice = isMobile && mobileDeviceEntered && mobilePanel === 'device';
+  // The cord has clicked into the laptop and the switcher has appeared; over to the device.
+  const mobileHeadWait = isMobile && step.kind === 'device-arrival' && arrivalStarted && mobileCordSeated && !mobileDeviceEntered;
   // The cord has clicked into the device; back to the app to send the request.
   const mobilePlugWait = viewingDevice && step.kind === 'device-arrival' && connection === 'linked';
   // The request is sent; over to the device to confirm it.
@@ -224,6 +226,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       ? check.mentorLine
     : walletBooting
       ? l4.walletWaiting
+      : mobileHeadWait
+        ? l4.headToDevice
       : mobilePlugWait
         ? l4.devicePlugged
         : mobilePromptWait
@@ -274,7 +278,6 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       ? done && !walletBooting
       : done && !walletBooting && !sliding && (!devicePending && !connecting);
   const softwareLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive));
-  const deviceLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive));
   const connectButtonEnabled = step.kind === 'connect-request' && usbConnectionComplete && done && !nudgeActive;
 
   const expectedAction: ExpectedAction =
@@ -283,6 +286,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       : step.kind === 'device-prompt'
         ? { type: 'confirm' }
         : { type: 'none' };
+  // The device only responds while the lesson is waiting on it. With nothing
+  // expected of it, a stray press must not switch it off or change its screen.
+  const deviceLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive) || expectedAction.type === 'none');
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const duoSlotRef = useFitScale(0.5);
@@ -637,7 +643,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleContinue]);
 
-  // The switcher option the learner should tap next, if the lesson is waiting on it
+  // The switcher option the learner should tap next, if the lesson is waiting on it.
+  // The rest of the time the switcher is locked: the learner stays on the device
+  // the lesson is talking about.
   const mobileSwitchHint: 'software' | 'device' | null =
     mobileCableHalf || mobilePromptWait
       ? 'device'
@@ -1031,6 +1039,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 active={mobileDeviceEntered ? mobilePanel : 'software'}
                 onSelect={handleMobileSwitch}
                 pulseId={mobileSwitchHint}
+                disabled={!sandbox && mobileSwitchHint === null}
               />
             )}
           </div>
