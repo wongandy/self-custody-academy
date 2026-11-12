@@ -12,6 +12,7 @@ import {
 import { BIP39_WORDLIST, generateMnemonic } from '@/lib/bip39';
 import { setSessionMnemonic } from '@/lib/walletSession';
 import { useI18n } from '@/lib/i18n';
+import { useSandbox } from '@/lib/sandbox';
 
 export type WalletPhase =
   | 'off'
@@ -83,6 +84,8 @@ type HardwareWalletProps = {
   expectedAction?: ExpectedAction;
 };
 
+const NO_EXPECTED_ACTION: ExpectedAction = { type: 'none' };
+
 export const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
 
 // Sending: recipient, amount and fee are reviewed one screen at a time; a final
@@ -128,7 +131,11 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onVerifyReject, onSendConfirm, onSendReject, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction = { type: 'none' } }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onVerifyReject, onSendConfirm, onSendReject, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked: lockedProp = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction: expectedActionProp = NO_EXPECTED_ACTION }: HardwareWalletProps) {
+  // TEMPORARY (/test sandbox): every button works, whatever the mentor expects.
+  const sandbox = useSandbox();
+  const locked = sandbox ? false : lockedProp;
+  const expectedAction = sandbox ? NO_EXPECTED_ACTION : expectedActionProp;
   // Screen text stays English like a real device; only the caption under it is translated.
   const { t } = useI18n();
   const [phase, setPhase] = useState<WalletPhase>(initialPhase ?? (startAtMenu ? 'menu' : 'off'));

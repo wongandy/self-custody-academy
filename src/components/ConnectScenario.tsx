@@ -8,6 +8,8 @@ import en, { type Dictionary } from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { useSandbox } from '@/lib/sandbox';
+import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 import { setWalletName as saveWalletName, walletWindowTitle } from '@/lib/walletName';
 
@@ -179,6 +181,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [mobileDeviceEntered, setMobileDeviceEntered] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false);
   const [walletName, setWalletName] = useState('');
+  // TEMPORARY (/test sandbox): a tab the learner opened by hand, overriding the lesson's.
+  const sandbox = useSandbox();
+  const [sandboxTab, setSandboxTab] = useState<WalletTabId | null>(null);
   const walletNameInputRef = useRef<HTMLDivElement>(null);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -221,7 +226,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   // Nothing on the laptop, device or phone responds until the mentor has finished talking
   // and Cairn has finished starting up.
-  const interactionLocked = !done || walletBooting || arrivalWaiting || arrivalAnimating || connecting;
+  const interactionLocked = !sandbox && (!done || walletBooting || arrivalWaiting || arrivalAnimating || connecting);
   const usbConnectionComplete = connection === 'linked';
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
@@ -239,6 +244,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // After pairing, Settings shows the filled-in keystore; the app moves to
   // Transactions once the learner clicks that tab.
   const activeTab: 'settings' | 'transactions' = stepIndex >= CONNECTED_INDEX ? 'transactions' : 'settings';
+  const shownTab: WalletTabId = (sandbox && sandboxTab) || activeTab;
   const trimmedWalletName = walletName.trim();
 
   const canContinue = nudgeActive || check.active
@@ -246,8 +252,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     : arrivalWaiting
       ? done && !walletBooting
       : done && !walletBooting && !sliding && (!devicePending && !connecting);
-  const softwareLocked = interactionLocked || (canContinue && !nudgeActive);
-  const deviceLocked = interactionLocked || (canContinue && !nudgeActive);
+  const softwareLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive));
+  const deviceLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive));
   const connectButtonEnabled = step.kind === 'connect-request' && usbConnectionComplete && done && !nudgeActive;
 
   const expectedAction: ExpectedAction =
@@ -782,47 +788,54 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                       <aside className="wallet-sidebar">
                       <button
                         type="button"
-                        className={`wallet-nav-item${activeTab === 'transactions' ? ' active' : ''}`}
-                        onClick={activeTab === 'transactions' ? () => {} : step.kind === 'open-transactions' ? handleOpenTransactions : handleUnexpectedAction}
+                        className={`wallet-nav-item${shownTab === 'transactions' ? ' active' : ''}`}
+                        onClick={sandbox
+                          ? () => {
+                            if (step.kind === 'open-transactions') handleOpenTransactions();
+                            setSandboxTab('transactions');
+                          }
+                          : activeTab === 'transactions' ? () => {} : step.kind === 'open-transactions' ? handleOpenTransactions : handleUnexpectedAction}
                         disabled={softwareLocked}
-                        aria-pressed={activeTab === 'transactions'}
+                        aria-pressed={shownTab === 'transactions'}
                       >
                         <ArrowLeftRight strokeWidth={2.2} />
                         <span className="wallet-nav-label">Transactions</span>
                       </button>
                       <button
                         type="button"
-                        className="wallet-nav-item"
-                        onClick={handleUnexpectedAction}
+                        className={`wallet-nav-item${shownTab === 'send' ? ' active' : ''}`}
+                        onClick={sandbox ? () => setSandboxTab('send') : handleUnexpectedAction}
                         disabled={softwareLocked}
-                        aria-pressed="false"
+                        aria-pressed={shownTab === 'send'}
                       >
                         <ArrowUpRight strokeWidth={2.2} />
                         <span className="wallet-nav-label">Send</span>
                       </button>
                       <button
                         type="button"
-                        className="wallet-nav-item"
-                        onClick={handleUnexpectedAction}
+                        className={`wallet-nav-item${shownTab === 'receive' ? ' active' : ''}`}
+                        onClick={sandbox ? () => setSandboxTab('receive') : handleUnexpectedAction}
                         disabled={softwareLocked}
-                        aria-pressed="false"
+                        aria-pressed={shownTab === 'receive'}
                       >
                         <ArrowDownLeft strokeWidth={2.2} />
                         <span className="wallet-nav-label">Receive</span>
                       </button>
                       <button
                         type="button"
-                        className={`wallet-nav-item${activeTab === 'settings' ? ' active' : ''}`}
-                        onClick={activeTab === 'settings' ? () => {} : handleUnexpectedAction}
+                        className={`wallet-nav-item${shownTab === 'settings' ? ' active' : ''}`}
+                        onClick={sandbox ? () => setSandboxTab('settings') : activeTab === 'settings' ? () => {} : handleUnexpectedAction}
                         disabled={softwareLocked}
-                        aria-pressed={activeTab === 'settings'}
+                        aria-pressed={shownTab === 'settings'}
                       >
                         <Settings strokeWidth={2.2} />
                         <span className="wallet-nav-label">Settings</span>
                       </button>
                     </aside>
                     <div className="wallet-canvas">
-                      {activeTab === 'settings' ? (
+                      {shownTab === 'send' || shownTab === 'receive' ? (
+                        <SandboxWalletTab tab={shownTab} />
+                      ) : shownTab === 'settings' ? (
                         <div className="wallet-settings">
                           <div className="wallet-tab-heading">
                             <div className="wallet-tab-title"><Settings strokeWidth={2} /><span>Settings</span></div>
