@@ -48,7 +48,7 @@ const th: Dictionary = {
     footerSupportedBy: 'สนับสนุนโดย',
     footerAbout: 'เกี่ยวกับเรา',
     footerContact: 'ติดต่อเรา',
-    footerDonate: 'สนับสนุน',
+    footerDonate: 'กระปุกทิป',
     footerNavAria: 'ลิงก์ของเว็บไซต์',
   },
   about: {
@@ -71,7 +71,7 @@ const th: Dictionary = {
     closing: "นี่คือคำถามที่ผมได้ยินบ่อยที่สุด งั้นมาทำพลาดที่นี่ ฟรีๆ แล้วค่อยทำจริงเมื่อพร้อม",
   },
   donate: {
-    eyebrow: 'สนับสนุนอะคาเดมี',
+    eyebrow: 'กระปุกทิป',
     titleBefore: 'เลี้ยง',
     titleEm: 'กาแฟ',
     titleAfter: 'แอนดี้สักแก้ว ☕',

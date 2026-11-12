@@ -53,7 +53,7 @@ const en = {
     footerSupportedBy: 'Supported by',
     footerAbout: 'About us',
     footerContact: 'Contact us',
-    footerDonate: 'Donate',
+    footerDonate: 'Tip jar',
     footerNavAria: 'Site links',
   },
   about: {
@@ -76,7 +76,7 @@ const en = {
     closing: "That's the question I hear most. So mess up here, for free, and do it for real when you're ready.",
   },
   donate: {
-    eyebrow: 'Support the academy',
+    eyebrow: 'Tip jar',
     titleBefore: 'Buy Andy a ',
     titleEm: 'coffee',
     titleAfter: ' ☕',
