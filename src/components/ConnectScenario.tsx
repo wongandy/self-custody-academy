@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronDown, ChevronRight, Download, Layers, Plus, Settings, Usb, Wallet } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
+import { DeviceSwitcher } from '@/components/DeviceSwitcher';
 import andyPortrait from '@/components/Andy.webp';
 import mariaPortrait from '@/components/Maria.webp';
 import en, { type Dictionary } from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
+import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 import { setWalletName as saveWalletName, walletWindowTitle } from '@/lib/walletName';
@@ -256,6 +258,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
         : { type: 'none' };
 
   const portraitRef = useRef<HTMLDivElement>(null);
+  const duoSlotRef = useFitScale(0.5);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
   const laptopCaptionRef = useRef<HTMLDivElement>(null);
@@ -264,7 +267,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
   // The device stays off screen until the learner continues from Maria's explanation;
-  // on phones it stays off screen until they tap "Switch to hardware wallet".
+  // on phones it stays off screen until they tap "Hardware wallet" in the device switcher.
   useEffect(() => {
     if (step.kind !== 'device-arrival' || !arrivalStarted) return;
 
@@ -652,24 +655,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   );
 
   return (
-    <main className={`scenario-page scenario-page-fit ${check.active ? 'knowledge-check-scene' : spotlight ? '' : 'scenario-page-connect'}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? '' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
         {check.active && <KnowledgeCheckKicker />}
         {walletVisible && !check.active && (
-          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${mobileCableHalf ? ' mobile-half-cable' : ''}`}>
-            {showMobileSwitch && (
-              <button
-                type="button"
-                className={`withdraw-switch-btn withdraw-switch-btn-enter${mobileCableHalf ? ' withdraw-switch-btn-pulse' : ''}`}
-                onClick={handleMobileSwitch}
-              >
-                <ArrowLeftRight size={14} strokeWidth={2.2} />
-                <span key={mobilePanel} className="withdraw-switch-label">
-                  {mobilePanel === 'device' ? l4.switchToSoftware : l4.switchToDevice}
-                </span>
-              </button>
-            )}
-
+          <div ref={duoSlotRef} className="fit-slot fit-wrap">
+          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${mobileCableHalf ? ' mobile-half-cable' : ''}${showMobileSwitch ? ' has-device-switcher' : ''}`}>
             <div className={`wallet-laptop laptop-enter${isMobile && mobilePanel === 'device' ? ' mobile-hidden' : ''}`}>
               <div ref={laptopRef} className="wallet-laptop-body">
                 <div className="wallet-window">
@@ -977,6 +968,19 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 </div>
               </div>
             )}
+
+            {showMobileSwitch && (
+              <DeviceSwitcher
+                options={[
+                  { id: 'software', label: t.common.captionWalletSoftware },
+                  { id: 'device', label: t.common.captionHardwareWallet },
+                ]}
+                active={mobileDeviceEntered ? mobilePanel : 'software'}
+                onSelect={handleMobileSwitch}
+                pulseId={mobileCableHalf ? 'device' : null}
+              />
+            )}
+          </div>
           </div>
         )}
 

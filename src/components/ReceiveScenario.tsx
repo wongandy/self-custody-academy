@@ -16,6 +16,7 @@ import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet
 import mariaPortrait from '@/components/Maria.webp';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
+import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
@@ -104,7 +105,7 @@ function buildQrModules(): boolean[][] {
   return grid;
 }
 
-function ReceiveQrCode() {
+export function ReceiveQrCode() {
   const modules = useMemo(buildQrModules, []);
   return (
     <svg viewBox={`0 0 ${QR_MODULES} ${QR_MODULES}`} shapeRendering="crispEdges" role="img" aria-label="Receive address QR code">
@@ -180,6 +181,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
+  const duoSlotRef = useFitScale(0.5);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopBodyRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -489,10 +491,11 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   );
 
   return (
-    <main className={`scenario-page scenario-page-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
         {check.active && <KnowledgeCheckKicker />}
         {!spotlight && !check.active && (
+          <div ref={duoSlotRef} className="fit-slot fit-wrap">
           <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
             <div className="wallet-laptop laptop-enter">
               <div ref={laptopBodyRef} className="wallet-laptop-body">
@@ -653,6 +656,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                 />
               </div>
             </div>
+          </div>
           </div>
         )}
 

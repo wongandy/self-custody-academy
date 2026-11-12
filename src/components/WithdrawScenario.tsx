@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowLeftRight, ChevronDown, ChevronRight, Check, CheckCircle2, Copy, Smartphone, AlertTriangle, Wifi, XCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, Check, CheckCircle2, Copy, Smartphone, AlertTriangle, Wifi, XCircle } from 'lucide-react';
 import HardwareWallet, { RECEIVE_ADDRESS, type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
 import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
+import { useFitScale } from '@/lib/useFitScale';
+import { DeviceSwitcher } from '@/components/DeviceSwitcher';
 
 type WithdrawScenarioProps = {
   completed: boolean;
@@ -41,7 +43,7 @@ function formatPhoneTime(date: Date) {
   return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
-function PhoneClock() {
+export function PhoneClock() {
   const [time, setTime] = useState(() => formatPhoneTime(new Date()));
 
   useEffect(() => {
@@ -107,7 +109,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const INTRO_MESSAGES = [...l2.intro, l2.handover];
   const EXCHANGE_PHASE_MESSAGES: Record<ExchangePhase, readonly string[]> = {
     'enter-address': [l2.exchangeIntro[EXCHANGE_INTRO_COUNT - 1]],
-    'enter-amount': l2.enterAmount,
+    'enter-amount': [l2.enterAmount],
     'ready-to-withdraw': [l2.readyToWithdraw],
   };
   const MENTOR_MESSAGES: Record<string, string> = {
@@ -140,7 +142,6 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const exchangeIntroPlayed = useRef(false);
   const [switchIntroStep, setSwitchIntroStep] = useState<number | null>(null);
   const [exchangePhase, setExchangePhase] = useState<ExchangePhase>('enter-address');
-  const [amountGuidanceStep, setAmountGuidanceStep] = useState<number | null>(null);
   const [switchPulse, setSwitchPulse] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'withdraw-slide-left' | 'withdraw-slide-right' | null>(null);
   const usedSwitchPrompt = useRef(false);
@@ -159,6 +160,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const [phoneVisible, setPhoneVisible] = useState(false);
   const portraitRef = useRef<HTMLDivElement>(null);
+  const middleAreaRef = useFitScale();
   const bubbleRef = useRef<HTMLDivElement>(null);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
@@ -177,10 +179,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const isOnExchangeForm = (isMobile ? activePanel === 'exchange' : phoneVisible) && exchangeScreen === 'form';
   const exchangeIntroLocking = exchangeIntroStep !== null && exchangeIntroStep < EXCHANGE_INTRO_COUNT - 1;
   const addressLocked = isOnExchangeForm && (exchangeIntroLocking || exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
-  const amountGuidanceLocked = isOnExchangeForm && exchangePhase === 'enter-amount' && amountGuidanceStep === 0;
-  const amountLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || amountGuidanceLocked);
+  const amountLocked = isOnExchangeForm && exchangePhase === 'enter-address';
   const amountNudgeLocked = isOnExchangeForm && exchangePhase === 'ready-to-withdraw';
-  const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || amountGuidanceLocked || exchangePhase === 'ready-to-withdraw');
+  const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'ready-to-withdraw');
   const withdrawBtnLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'enter-amount');
   const switchNudgeLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
   const expectedAction: ExpectedAction =
@@ -193,6 +194,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const showSwitchButton = !isInIntro && (
     switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_COUNT - 1 : addressCopied || activePanel === 'exchange'
   );
+  const showSwitcher = showSwitchButton && isMobile;
   const currentIntroMessage = INTRO_MESSAGES[introStep];
 
   const trimmedAddress = sendAddress.trim();
@@ -243,7 +245,10 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       ? currentIntroMessage
       : receiveAddressStep !== null
         ? l2.receiveAddress[receiveAddressStep]
-        : exchangeIntroStep !== null
+        // The exchange walkthrough only speaks while the exchange is on screen;
+        // flipping back to the wallet (e.g. to re-copy the address) falls
+        // through to the wallet's own guidance.
+        : exchangeIntroStep !== null && isExchangePanelActive
           ? l2.exchangeIntro[exchangeIntroStep]
           : resetBlockedMsg && activePanel === 'wallet'
         ? MENTOR_MESSAGES['factory-reset-blocked']
@@ -254,7 +259,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
           : amountTooLow && isOnExchangeForm
             ? l2.amountCorrection
             : isOnExchangeForm
-              ? EXCHANGE_PHASE_MESSAGES[exchangePhase][exchangePhase === 'enter-amount' ? amountGuidanceStep ?? 0 : 0]
+              ? EXCHANGE_PHASE_MESSAGES[exchangePhase][0]
             : MENTOR_MESSAGES[walletStateKey] || MENTOR_MESSAGES['panel-exchange']);
 
   const mentorMessageKey = nudgeActive
@@ -263,7 +268,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       ? `knowledge-check-${quizIndex}-${knowledgeFeedback}-${wrongAttempt}`
       : isInIntro
         ? `intro-${introStep}`
-        : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${amountGuidanceStep}-${amountTooLow}-${addressMismatch}`;
+        : `${walletStateKey}-${resetBlockedMsg}-${receiveAddressStep}-${exchangeIntroStep}-${switchIntroStep}-${exchangePhase}-${amountTooLow}-${addressMismatch}`;
   const { displayed, done, skip } = useTypewriter(mentorMessage, 6, mentorMessageKey);
   const knowledgeCheckCanAnswer = knowledgeCheckActive && !checkedAnswer && done;
 
@@ -275,13 +280,11 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
         ? introStep < HANDOVER_INDEX && done
       : receiveAddressStep !== null
         ? receiveAddressStep < RECEIVE_ADDRESS_COUNT - 1 && done
-        : exchangeIntroStep !== null
+        : exchangeIntroStep !== null && isExchangePanelActive
           ? exchangeIntroStep < EXCHANGE_INTRO_COUNT - 1 && done
           : switchIntroStep !== null
           ? switchIntroStep < SWITCH_INTRO_COUNT - 1
-          : isOnExchangeForm
-            ? exchangePhase === 'enter-amount' && amountGuidanceStep === 0 && done
-            : exchangeScreen === 'success';
+          : !isOnExchangeForm && exchangeScreen === 'success';
 
   const switchLocked = activePanel === 'exchange' && canContinue;
 
@@ -512,22 +515,18 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
       }
       return;
     }
-    if (exchangeIntroStep !== null) {
+    if (exchangeIntroStep !== null && isExchangePanelActive) {
       if (exchangeIntroStep < EXCHANGE_INTRO_COUNT - 1) {
         setExchangeIntroStep(exchangeIntroStep + 1);
-      } else {
-        setExchangeIntroStep(null);
       }
+      // The last line ("paste the receive address…") waits for the paste, not
+      // a click; clearing the step here would restart the same line.
       return;
     }
     if (switchIntroStep !== null) {
       if (switchIntroStep < SWITCH_INTRO_COUNT - 1) {
         setSwitchIntroStep(switchIntroStep + 1);
       }
-      return;
-    }
-    if (isOnExchangeForm && exchangePhase === 'enter-amount' && amountGuidanceStep === 0) {
-      setAmountGuidanceStep(1);
       return;
     }
     if (knowledgeCheckActive) {
@@ -596,36 +595,19 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
     if (!isOnExchangeForm) return;
     if (exchangePhase === 'enter-address' && isAddressValid) {
       setExchangePhase('enter-amount');
-      setAmountGuidanceStep(0);
       if (exchangeIntroStep !== null) setExchangeIntroStep(null);
     } else if (exchangePhase === 'enter-amount' && isAmountValid && isAddressValid) {
       setExchangePhase('ready-to-withdraw');
-      setAmountGuidanceStep(null);
     } else if (exchangePhase === 'ready-to-withdraw' && !isAmountValid) {
       setExchangePhase('enter-amount');
-      setAmountGuidanceStep(1);
     }
   }, [isOnExchangeForm, exchangePhase, isAddressValid, isAmountValid, exchangeIntroStep]);
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
         {knowledgeCheckActive && <div className="knowledge-check-kicker">{t.quiz.checkIn}</div>}
-        {!knowledgeCheckActive && <div className={spotlight ? 'withdraw-middle-area hidden' : 'withdraw-middle-area'}>
-          {showSwitchButton && isMobile && (
-            <button
-              className={`withdraw-switch-btn withdraw-switch-btn-enter${switchPulse ? ' withdraw-switch-btn-pulse' : ''}`}
-              type="button"
-              onClick={handleSwitchPanel}
-              disabled={switchLocked}
-            >
-              <ArrowLeftRight size={14} strokeWidth={2.2} />
-              <span key={activePanel} className="withdraw-switch-label">
-                {activePanel === 'exchange' ? l2.switchToWallet : l2.switchToExchange}
-              </span>
-            </button>
-          )}
-
+        {!knowledgeCheckActive && <div ref={middleAreaRef} className={`withdraw-middle-area fit-slot${spotlight ? ' hidden' : ''}${showSwitcher ? ' has-device-switcher' : ''}`}>
           <div className="withdraw-panels-wrap">
             {/* ── Smartphone exchange panel ── */}
             <div className={`withdraw-phone-wrap ${!isMobile ? (phoneVisible ? 'withdraw-phone-desktop-enter' : 'withdraw-panel-hidden') : activePanel === 'exchange' ? slideDirection ?? '' : 'withdraw-panel-hidden'}`}>
@@ -868,6 +850,19 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
               </div>
             )}
           </div>
+
+          {showSwitcher && (
+            <DeviceSwitcher
+              options={[
+                { id: 'wallet', label: t.common.captionHardwareWallet },
+                { id: 'exchange', label: l2.deviceExchange },
+              ]}
+              active={activePanel}
+              onSelect={handleSwitchPanel}
+              pulseId={switchPulse ? 'exchange' : null}
+              disabled={switchLocked}
+            />
+          )}
         </div>}
 
         <div className="mentor-row">

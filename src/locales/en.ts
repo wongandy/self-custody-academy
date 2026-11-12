@@ -88,9 +88,8 @@ const en = {
   },
   andyIntro: {
     lines: [
-      "Hey there! I'm Andy, and I will teach you how to self-custody your Bitcoin. Learning to secure it requires patience and some practice.",
-      'Everything here is simulated, so you can explore freely with zero risk. Choose the learning path that fits where you are, and build confidence one step at a time.',
-      "Feel free to dive straight into any lesson that catches your eye, or just follow along step-by-step — it's completely up to you.",
+      "Hey there! I'm Andy, and I'll teach you how to self-custody your Bitcoin. It takes a little practice — and everything here is simulated, so there's zero risk.",
+      "Jump into any lesson that catches your eye, or follow them in order — it's up to you.",
     ],
   },
   pathSelector: {
@@ -238,16 +237,13 @@ const en = {
     handover: "You've already set up your hardware wallet, so select 'Receive Bitcoin' to generate a receive address.",
     switchIntro: [
       "Receive address copied! Now let's switch over to the exchange on your phone so we can paste it there.",
-      'Press "Switch to Exchange Wallet" at the top to head to the exchange on your phone.',
+      'Tap "Exchange" below the device to head to the exchange on your phone.',
     ],
     exchangeIntro: [
       "Your BitExchange app is open on your phone with 0.05 BTC in it. Let's withdraw it to your hardware wallet.",
       "In the Send to address field, paste the receive address you copied from your hardware wallet. That's where your Bitcoin will go.",
     ],
-    enterAmount: [
-      'The network charges a small fee to process the transaction. It comes out of the amount you withdraw — see the Received line below.',
-      'Good job. In the Withdraw amount field, type 0.05 to send your full balance, or tap MAX.',
-    ],
+    enterAmount: 'In the Withdraw amount field, type 0.05 to send your full balance, or tap MAX.',
     readyToWithdraw: 'Alright. Now click Withdraw to send your Bitcoin to your hardware wallet.',
     amountCorrection: 'The amount to withdraw should be 0.05 BTC. Type 0.05 or click MAX to continue.',
     receiveAddress: [
@@ -261,14 +257,13 @@ const en = {
     walletSettings: "You can explore the device settings. Return to the menu when you're ready to continue.",
     walletMenuReceive: "Select 'Receive Bitcoin' to get your receive address.",
     walletMenuSendBlocked: "You can explore the wallet options here. Select 'Receive Bitcoin' whenever you're ready to continue.",
-    walletReceiveCopied: 'Copied the address? Press the switch button above to go back to the exchange.',
+    walletReceiveCopied: 'Copied the address? Tap "Exchange" below to go back to the exchange.',
     walletReceiveCopiedDesktop: "Address copied. The exchange is now open next to your wallet — let's paste the address there.",
     addressMismatch: "That address doesn't match your hardware wallet's. One wrong character sends your Bitcoin elsewhere — go back and copy it again.",
     exchangeConfirm: "Review carefully: the address on the exchange must match the one from your device. Once confirmed, the transaction can't be cancelled.",
     exchangeSuccess: "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
     factoryResetBlocked: "Factory resetting isn't part of this lesson — it would erase your wallet. Let's head back and keep going.",
-    switchToWallet: 'Switch to Hardware Wallet',
-    switchToExchange: 'Switch to Exchange Wallet',
+    deviceExchange: 'Exchange',
     knowledgePrompts: [
       'Nice work. Before we wrap up, two quick questions about safely withdrawing Bitcoin.',
       'Good job. One more question about the withdrawal details.',
@@ -376,8 +371,6 @@ const en = {
     ],
     openTransactions: "Now let's find the Bitcoin you withdrew from the exchange earlier. Click the Transactions tab.",
     connected: 'There it is — the 0.04998 BTC you withdrew from the exchange earlier. This tab shows your balance and every payment you send or receive.',
-    switchToSoftware: 'Switch to wallet software',
-    switchToDevice: 'Switch to hardware wallet',
     knowledgePrompts: [
       'Nice work. Before we wrap up, two quick questions about connecting your wallet.',
       'Good job. One more question about where your keys live.',

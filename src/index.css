@@ -4832,6 +4832,62 @@ html.theme-light {
   }
 }
 
+/* A wrapper added only to act as a .fit-slot (Lessons 4–6 wrap .connect-duo):
+   invisible to layout everywhere except the one-screen lesson layout below. */
+.fit-wrap {
+  display: contents;
+}
+
+/* ── One-screen lesson layout (laptop/desktop) ──
+   The lesson fills exactly one viewport: header, then a flexible stage for the
+   device, then Andy's bubble at its natural (fixed-ish) height. The stage gives
+   up space (useFitScale shrinks the device) so the bubble is never pushed below
+   the fold. Below 560px tall we stop shrinking and let the page scroll. */
+@media (min-width: 601px) {
+  .lesson-fit:not(.knowledge-check-scene) {
+    flex: none;
+    height: max(100vh, 560px);
+    height: max(100dvh, 560px);
+    padding: 80px 0 24px;
+  }
+
+  .lesson-fit:not(.knowledge-check-scene) .scenario-mentor-layout {
+    flex: 1;
+    min-height: 0;
+    padding: 0 28px;
+    gap: 20px;
+  }
+
+  .lesson-fit:not(.knowledge-check-scene) .scenario-mentor-layout.spotlight {
+    justify-content: center;
+    gap: 0;
+  }
+
+  /* The device area (.fit-slot) shrinks when the viewport is short and never
+     grows, so on tall screens the device + bubble stay together at the top as
+     before. useFitScale writes --fit-scale for its first child. */
+  .lesson-fit .scenario-mentor-layout:not(.spotlight) .fit-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 1 auto;
+    min-height: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lesson-fit .fit-slot > :first-child {
+    flex: none;
+    /* `scale` (not `transform`) so it composes with the enter animations' transforms */
+    scale: var(--fit-scale, 1);
+    transform-origin: center center;
+  }
+
+  .lesson-fit .scenario-mentor-layout:not(.spotlight) .mentor-row {
+    flex: none;
+  }
+}
+
 /* ── Scenario briefing with wallet ── */
 
 .hw-wallet-slot {
@@ -5618,80 +5674,6 @@ html.theme-light {
   max-width: 420px;
 }
 
-.withdraw-switch-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 20px;
-  border: 1px solid rgba(241, 189, 105, 0.55);
-  border-radius: 10px;
-  background: rgba(241, 189, 105, 0.08);
-  color: var(--gold-light);
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
-}
-
-.withdraw-switch-btn:hover {
-  border-color: rgba(241, 189, 105, 0.85);
-  background: rgba(241, 189, 105, 0.16);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(241, 189, 105, 0.16);
-}
-
-@keyframes withdraw-switch-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.withdraw-switch-btn-enter {
-  animation: withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-
-.withdraw-switch-label {
-  display: inline-block;
-  animation: withdraw-switch-label-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes withdraw-switch-label-in {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes withdraw-switch-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(241, 189, 105, 0);
-  }
-  50% {
-    box-shadow: 0 0 0 5px rgba(241, 189, 105, 0.22), 0 0 18px 3px rgba(241, 189, 105, 0.3);
-  }
-}
-
-.withdraw-switch-btn-pulse {
-  border-color: var(--gold-light);
-  background: rgba(241, 189, 105, 0.14);
-  animation:
-    withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards,
-    withdraw-switch-pulse 2s ease-in-out infinite;
-}
-
 @keyframes withdraw-panel-in-right {
   from {
     opacity: 0;
@@ -5725,12 +5707,6 @@ html.theme-light {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .withdraw-switch-btn-pulse {
-    animation: withdraw-switch-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-    box-shadow: 0 0 0 4px rgba(241, 189, 105, 0.28);
-  }
-
-  .withdraw-switch-label,
   .withdraw-phone-wrap.withdraw-slide-right,
   .withdraw-wallet-wrap.withdraw-slide-right,
   .withdraw-phone-wrap.withdraw-slide-left,
@@ -5739,8 +5715,120 @@ html.theme-light {
   }
 }
 
-.withdraw-switch-btn:active {
-  transform: translateY(0);
+/* ── Device switcher (phone width: one device on screen at a time) ──
+   Sits where the device caption was and replaces it, so it adds no height. */
+
+.device-switcher {
+  display: inline-flex;
+  flex: none;
+  align-self: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.device-switcher-option {
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.device-switcher-option:not(.is-active):not(:disabled):hover {
+  color: var(--gold-light);
+}
+
+.device-switcher-option.is-active {
+  background: var(--gold-light);
+  color: var(--bg);
+  cursor: default;
+}
+
+.device-switcher-option:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.device-switcher-option:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+}
+
+@keyframes device-switcher-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.device-switcher-enter {
+  animation: device-switcher-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes device-switcher-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px var(--gold-light), 0 0 0 0 rgba(241, 189, 105, 0);
+  }
+  50% {
+    box-shadow: inset 0 0 0 1px var(--gold-light), 0 0 0 4px rgba(241, 189, 105, 0.3), 0 0 14px 2px rgba(241, 189, 105, 0.35);
+  }
+}
+
+.device-switcher-option.is-pulsing {
+  color: var(--gold-light);
+  animation: device-switcher-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .device-switcher-enter {
+    animation: none;
+  }
+
+  .device-switcher-option.is-pulsing {
+    animation: none;
+    box-shadow: inset 0 0 0 1px var(--gold-light), 0 0 0 3px rgba(241, 189, 105, 0.28);
+  }
+}
+
+/* The switcher names the device on screen, so the plain caption goes */
+.has-device-switcher .device-caption,
+.has-device-switcher .hw-device-label {
+  display: none;
+}
+
+/* Sit at the caption's 8px distance rather than the area's 16px gap */
+.withdraw-middle-area > .device-switcher {
+  margin-top: -8px;
+}
+
+/* The switcher lives inside the locked duo but must stay tappable:
+   the lesson lock only covers the devices */
+.connect-duo.is-locked .device-switcher {
+  pointer-events: auto;
+}
+
+/* Lesson 4 phone flow: the half-plugged cord runs off to the right under the
+   laptop; the switcher sits over it so the cord tucks behind the pill */
+.connect-duo .device-switcher {
+  position: relative;
+  z-index: 5;
 }
 
 .withdraw-panels-wrap {
@@ -7739,22 +7827,11 @@ html.theme-light {
     flex-shrink: 0;
   }
 
-  /* Phone flow: the wallet window keeps its height, the switch button sits above
-     the panels, and the hardware wallet is a separate panel reached by switching. */
+  /* Phone flow: the wallet window keeps its height, the device switcher sits
+     below it, and the hardware wallet is a separate panel reached by switching. */
 
   .scenario-page-connect .connect-duo.is-wide {
     gap: 8px;
-  }
-
-  .scenario-page-connect .connect-duo.is-wide .withdraw-switch-btn {
-    align-self: center;
-    flex-shrink: 0;
-  }
-
-  /* The switch button lives inside the locked duo but must stay tappable:
-     the lesson lock only covers the panels below it */
-  .connect-duo.is-locked .withdraw-switch-btn {
-    pointer-events: auto;
   }
 
   .scenario-page-connect .wallet-laptop.mobile-hidden,
@@ -9772,3 +9849,117 @@ html.theme-light {
   }
 }
 
+
+/* ── TEMPORARY: Lesson 7 device playground ──
+   All three devices on one screen (wrapping on narrower laptops); phones show
+   one at a time via the device switcher. Remove with DevicePlayground.tsx. */
+
+.roadmap-playground-link {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  align-self: center;
+  margin: 28px auto 0;
+  padding: 10px 18px;
+  border: 1px dashed var(--gold-light);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gold-light);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.roadmap-playground-link:hover:not(:disabled) {
+  background: rgba(241, 189, 105, 0.08);
+}
+
+.scenario-page-connect.playground-page {
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: visible;
+}
+
+.playground-header-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playground-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.playground-header-btn:hover {
+  color: var(--gold-light);
+}
+
+/* Phones: icon-only, so the header still fits on one row */
+@media (max-width: 600px) {
+  .playground-header-btn {
+    width: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .playground-header-btn-label {
+    display: none;
+  }
+}
+
+.playground-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.playground-trio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 32px;
+  width: 100%;
+}
+
+.playground-device {
+  animation: none;
+}
+
+.scenario-page-connect .playground-trio .wallet-laptop {
+  flex: 1 1 520px;
+  max-width: 640px;
+}
+
+.playground-hidden {
+  display: none !important;
+}
+
+@media (max-width: 600px) {
+  .playground-trio {
+    gap: 0;
+  }
+
+  .scenario-page-connect .playground-trio .wallet-laptop {
+    flex: none;
+    width: 100%;
+  }
+}
