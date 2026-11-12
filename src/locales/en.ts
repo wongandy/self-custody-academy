@@ -53,7 +53,7 @@ const en = {
     footerSupportedBy: 'Supported by',
     footerAbout: 'About us',
     footerContact: 'Contact us',
-    footerDonate: 'Donate',
+    footerDonate: 'Tip jar',
     footerNavAria: 'Site links',
   },
   about: {
@@ -76,11 +76,14 @@ const en = {
     closing: "That's the question I hear most. So mess up here, for free, and do it for real when you're ready.",
   },
   donate: {
-    eyebrow: 'Support the academy',
+    eyebrow: 'Tip jar',
     titleBefore: 'Buy Andy a ',
     titleEm: 'coffee',
     titleAfter: ' ☕',
     lead: "Self-Custody Academy is free and always will be. Your sats keep the coffee flowing, so I can build new lessons and simulations, keep the site running, and help more people take control of their own Bitcoin.",
+    methodLabel: 'Payment method',
+    tabLightning: 'Lightning',
+    tabOnchain: 'On-chain',
     pickLabel: 'Choose how many coffees',
     cups: [
       { title: 'One coffee', caption: 'Keeps me going for one more lesson.' },
@@ -104,6 +107,10 @@ const en = {
     anyAmountTitle: 'Pay any amount',
     anyAmountBody: 'Prefer to choose the amount in your wallet? Scan this QR code or copy my Lightning address.',
     staticQrAlt: "QR code for Andy's Lightning address",
+    onchainTitle: 'Send on-chain',
+    onchainBody: 'Scan with any bitcoin wallet or copy the address below. Best for larger amounts, since network fees apply.',
+    onchainQrAlt: "QR code for Andy's bitcoin address",
+    onchainThanks: 'Every sat counts. Thank you! 🧡',
     note: 'Every sat goes straight to my wallet. No accounts, no tracking, nothing is stored here.',
   },
   contact: {
