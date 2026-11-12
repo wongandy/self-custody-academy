@@ -28,3 +28,4 @@ supabase/.gitignore
 supabase/config.toml
 thai-translation-review.csv
 .claude-auth/
+bin/
