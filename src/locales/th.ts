@@ -165,8 +165,6 @@ const th: Dictionary = {
     includesLabel: 'ประกอบด้วย:',
     fundamentalsIncludes: 'การตั้งค่าฮาร์ดแวร์วอลเล็ต การถอนเหรียญ การกู้คืนวอลเล็ต และอื่น ๆ',
     startLearning: 'เริ่มเรียน',
-    lessonCount: 'บทเรียนแบบโต้ตอบ {count} บท',
-    recommendedByAndy: 'แอนดี้แนะนำให้เริ่มที่นี่',
     deeper: 'เจาะลึกยิ่งขึ้น',
     deeperDesc: 'ความปลอดภัยขั้นสูงสำหรับการปกป้องเงินจำนวนมาก',
     comingSoonLabel: 'เร็ว ๆ นี้:',
