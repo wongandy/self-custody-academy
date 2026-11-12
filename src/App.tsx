@@ -13,6 +13,7 @@ import DevicePlayground from '@/components/DevicePlayground'; // TEMPORARY: Less
 import AuthScreen from '@/components/AuthScreen';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
 import { AboutPage, CODE_ORANGE_URL, ContactPage } from '@/components/InfoPages';
+import { DonatePage } from '@/components/DonatePage';
 import heroImage from '@/components/hero.webp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -30,9 +31,22 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'scenario-7' | 'auth' | 'about' | 'contact';
+type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'scenario-7' | 'auth' | 'about' | 'contact' | 'donate';
 
 const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6', 'scenario-7'];
+
+// Pages that have their own URL. Every other screen lives at "/".
+const SCREEN_PATHS: Partial<Record<Screen, string>> = {
+  about: '/about',
+  contact: '/contact-us',
+  donate: '/donate',
+};
+
+function screenFromPath(pathname: string): Screen | null {
+  const path = pathname.replace(/\/+$/, '') || '/';
+  const match = Object.entries(SCREEN_PATHS).find(([, p]) => p === path);
+  return match ? (match[0] as Screen) : null;
+}
 
 function App() {
   const { user, isReady, isRecovering, linkError, signOut } = useAuth();
@@ -40,7 +54,9 @@ function App() {
 
   // Arriving from a password-reset email: show the "set a new password" form.
   // Arriving from an expired/invalid auth link: show the login screen (it opens the reset form).
-  const [screen, setScreen] = useState<Screen>(isRecovering || linkError ? 'auth' : 'home');
+  const [screen, setScreen] = useState<Screen>(
+    isRecovering || linkError ? 'auth' : screenFromPath(window.location.pathname) ?? 'home',
+  );
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
@@ -98,6 +114,21 @@ function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [screen]);
+
+  // Keep the address bar in sync with the About / Contact pages.
+  useEffect(() => {
+    const target = SCREEN_PATHS[screen] ?? '/';
+    if (window.location.pathname !== target) {
+      window.history.pushState(null, '', target);
+    }
+  }, [screen]);
+
+  // Browser back / forward between "/", "/about" and "/contact-us".
+  useEffect(() => {
+    const onPopState = () => setScreen(screenFromPath(window.location.pathname) ?? 'home');
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   useEffect(() => {
     if (isRecovering) {
@@ -171,7 +202,7 @@ function App() {
   }, [signOut]);
 
   const isInScenario = SCENARIO_SCREENS.includes(screen);
-  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact';
+  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact' || screen === 'donate';
 
   return (
     <div className={`app-shell theme-${theme}`}>
@@ -362,9 +393,11 @@ function App() {
         />
       )}
 
-      {screen === 'about' && <AboutPage onBack={() => setScreen('home')} />}
+      {screen === 'about' && <AboutPage />}
 
-      {screen === 'contact' && <ContactPage onBack={() => setScreen('home')} />}
+      {screen === 'contact' && <ContactPage />}
+
+      {screen === 'donate' && <DonatePage />}
 
       {showFooter && (
         <footer className="site-footer">
@@ -391,6 +424,15 @@ function App() {
                 onClick={() => setScreen('contact')}
               >
                 {t.home.footerContact}
+              </button>
+              <span className="footer-separator" aria-hidden="true">•</span>
+              <button
+                type="button"
+                className={`footer-link${screen === 'donate' ? ' is-active' : ''}`}
+                aria-current={screen === 'donate' ? 'page' : undefined}
+                onClick={() => setScreen('donate')}
+              >
+                {t.home.footerDonate}
               </button>
             </nav>
             <span className="footer-divider" aria-hidden="true" />
