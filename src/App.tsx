@@ -40,6 +40,8 @@ const SCREEN_PATHS: Partial<Record<Screen, string>> = {
   about: '/about',
   contact: '/contact-us',
   donate: '/tip-jar',
+  // TEMPORARY: Lesson 7 device playground, reachable only by typing the URL
+  'scenario-7': '/test',
 };
 
 // Old URLs that still open their page (the address bar then shows the new one).
