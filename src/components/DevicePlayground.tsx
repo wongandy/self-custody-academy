@@ -5,11 +5,12 @@
  * software (laptop) and the hardware wallet all on one screen, every tab and
  * screen unlocked, so the device content can be checked at phone width.
  * Phone-width screens show one device at a time with the device switcher,
- * like the real lessons. Nothing here is saved as progress.
+ * like the real lessons. Nothing here is saved as progress. It has no link
+ * anywhere in the app: open it by going to /test.
  *
  * To remove: delete this file, the `.playground-*` block at the end of
- * index.css, the 'scenario-7' screen in App.tsx and the playground button in
- * Roadmap.tsx (plus the `export`s added to PhoneClock / ReceiveQrCode).
+ * index.css and the 'scenario-7' screen + '/test' path in App.tsx (plus the
+ * `export`s added to PhoneClock / ReceiveQrCode).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';

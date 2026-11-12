@@ -10478,28 +10478,6 @@ html.theme-light {
    All three devices on one screen (wrapping on narrower laptops); phones show
    one at a time via the device switcher. Remove with DevicePlayground.tsx. */
 
-.roadmap-playground-link {
-  display: flex;
-  width: fit-content;
-  align-items: center;
-  gap: 8px;
-  align-self: center;
-  margin: 28px auto 0;
-  padding: 10px 18px;
-  border: 1px dashed var(--gold-light);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--gold-light);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.roadmap-playground-link:hover:not(:disabled) {
-  background: rgba(241, 189, 105, 0.08);
-}
-
 .scenario-page-connect.playground-page {
   height: auto;
   min-height: 100vh;
