@@ -9878,14 +9878,25 @@ html.theme-light {
    folds into a compact row beneath it so nothing shrinks below 10px. */
 @media (max-width: 700px) {
   .path-selector-page {
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
     padding: 76px 16px 20px;
     overflow-y: auto;
   }
 
-  /* Top-aligned: centring left a tall gap under the header on tall phones */
+  /* Fill the screen: spare height is shared above and below the heading
+     instead of collecting under the cards (or as a gap under the header) */
   .path-selector-content {
+    flex: 1 0 auto;
     gap: 18px;
+  }
+
+  .path-selector-heading {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .path-selector-kicker {
@@ -9903,6 +9914,7 @@ html.theme-light {
   }
 
   .path-selector-options {
+    flex-shrink: 0;
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
@@ -9950,40 +9962,6 @@ html.theme-light {
     padding: 15px 18px;
   }
 
-  /* Coming-soon path: small art on the left, text on the right */
-  .path-card-deeper {
-    display: grid;
-    grid-template-columns: 78px minmax(0, 1fr);
-    column-gap: 14px;
-    align-items: start;
-    padding: 16px 18px;
-  }
-
-  .path-card-deeper .path-card-symbols {
-    grid-column: 1;
-    grid-row: 1 / span 4;
-    align-self: center;
-    margin: 0;
-  }
-
-  .path-card-deeper .path-card-art {
-    width: 100%;
-  }
-
-  .path-card-deeper > :not(.path-card-symbols) {
-    grid-column: 2;
-  }
-
-  .path-card-deeper h2 {
-    font-size: clamp(22px, 6.6vw, 28px);
-  }
-
-  .path-card-deeper .path-card-description {
-    margin-top: 7px;
-    font-size: 13px;
-    line-height: 1.4;
-  }
-
   .path-card-topics {
     gap: 6px;
     margin-top: 10px;
@@ -10006,7 +9984,7 @@ html.theme-light {
   }
 }
 
-/* Short phones: trim the extras so both paths still fit on one screen */
+/* Short phones: tighter spacing */
 @media (max-height: 720px) and (max-width: 700px) {
   .path-selector-page {
     padding-top: 64px;
@@ -10019,11 +9997,6 @@ html.theme-light {
 
   .path-selector-options {
     gap: 10px;
-  }
-
-  .path-selector-heading p,
-  .path-card-includes {
-    display: none;
   }
 
   .path-card-symbols {
@@ -10044,6 +10017,14 @@ html.theme-light {
 
   .path-card-deeper {
     padding: 13px 18px;
+  }
+}
+
+/* Very short phones: drop the secondary copy */
+@media (max-height: 640px) and (max-width: 700px) {
+  .path-selector-heading p,
+  .path-card-includes {
+    display: none;
   }
 }
 
