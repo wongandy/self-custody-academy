@@ -53,6 +53,8 @@ a {
   --shadow-sm: 0 3px 10px rgba(0, 0, 0, 0.18);
   --shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.22);
   min-height: 100vh;
+  /* Phones: match the visible screen, not the taller URL-bar-hidden one */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -6474,8 +6476,8 @@ html.theme-light {
   pointer-events: auto;
 }
 
-/* Lesson 4 phone flow: the half-plugged cord runs off to the right under the
-   laptop; the switcher sits over it so the cord tucks behind the pill */
+/* Lesson 4 phone flow: the cord runs in its own lane between the panel and the
+   switcher (see .connect-paged); the pill still stacks above it as a safeguard */
 .connect-duo .device-switcher {
   position: relative;
   z-index: 5;
@@ -8659,6 +8661,134 @@ html.theme-light {
 @keyframes cable-plug-settle-up {
   from { transform: translate(-50%, 2px) scale(1.08); }
   to { transform: translate(-50%, 0) scale(1); }
+}
+
+/* ── Lesson 4 phone flow (.connect-paged): one panel on screen at a time ──
+   The panel sits right under the header and Maria follows directly beneath it,
+   so spare height collects at the bottom of the page instead of around the
+   device. Both panels share one height, and the strip beneath them (cord lane
+   plus switcher) is reserved from the start, so the switcher and the bubble
+   stay put when the switcher appears and when the learner flips panels. */
+
+@media (max-width: 600px) {
+  .scenario-page-connect.connect-paged {
+    --paged-panel-h: max(320px, calc(100dvh - 318px));
+    --paged-lane: 34px;
+    --paged-switcher-h: 36px;
+  }
+
+  .scenario-page-connect.connect-paged .scenario-mentor-layout {
+    gap: 16px;
+  }
+
+  .scenario-page-connect.connect-paged .connect-duo.is-wide {
+    flex: none;
+    justify-content: flex-start;
+    gap: 0;
+    padding-bottom: calc(var(--paged-lane) + var(--paged-switcher-h));
+  }
+
+  .scenario-page-connect.connect-paged .connect-duo.is-wide.has-device-switcher {
+    padding-bottom: 0;
+  }
+
+  .scenario-page-connect.connect-paged .wallet-laptop {
+    height: var(--paged-panel-h);
+    min-height: 0;
+  }
+
+  /* Until the switcher replaces it, the caption sits centered in the reserved strip */
+  .scenario-page-connect.connect-paged .wallet-laptop .device-caption {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: calc((var(--paged-lane) + var(--paged-switcher-h) - 18px) / 2);
+    line-height: 18px;
+  }
+
+  .scenario-page-connect.connect-paged .connect-duo .device-switcher {
+    box-sizing: border-box;
+    min-height: var(--paged-switcher-h);
+    margin-top: var(--paged-lane);
+  }
+
+  /* Wallet software panel: the cord rises into the laptop's underside and seats
+     with a click. Only then does the switcher appear (ConnectScenario's
+     CORD_SEAT_MS). Flipping back to this panel later shows it already plugged in. */
+
+  .scenario-page-connect.connect-paged .connect-cable.cable-under-wallet .plug-start {
+    animation: none;
+  }
+
+  .scenario-page-connect.connect-paged .connect-cable.cable-under-wallet.is-entering .plug-end-track {
+    animation: cable-cord-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .scenario-page-connect.connect-paged .connect-cable.cable-under-wallet.is-entering .plug-start {
+    animation:
+      cable-plug-settle-up 240ms cubic-bezier(0.22, 1, 0.36, 1) 520ms both,
+      cable-seat-glow 460ms ease-out 540ms both;
+  }
+
+  /* Hardware wallet panel: same height as the laptop panel, with the device
+     scaled to fill it (--hw-fit, set by useDeviceFit) */
+
+  .scenario-page-connect.connect-paged .connect-device-stage {
+    height: var(--paged-panel-h);
+    align-items: center;
+  }
+
+  .scenario-page-connect.connect-paged .connect-device-stage .hw-wallet-device {
+    transform: scale(var(--hw-fit, 1));
+    transform-origin: center;
+    margin-bottom: 0;
+  }
+
+  /* The row is exactly the unscaled device, so 50% + 50% x fit is the scaled
+     device's visible bottom edge. The plug lands under the power button (104px
+     left of center on the unscaled device) and the cord starts at the screen
+     edge, 16px left of the row. */
+  .scenario-page-connect.connect-paged .connect-device-row .connect-cable.cable-device-panel {
+    top: calc(50% + 50% * var(--hw-fit, 1) - 1px);
+    left: -16px;
+    width: calc(50% + 16px - 104px * var(--hw-fit, 1));
+  }
+
+  .scenario-page-connect.connect-paged .connect-device-row .connect-cable.cable-device-panel.is-seating .plug-end {
+    animation:
+      cable-plug-settle-up 240ms cubic-bezier(0.22, 1, 0.36, 1) both,
+      cable-seat-glow 460ms ease-out 20ms both;
+  }
+}
+
+@keyframes cable-cord-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  40% { opacity: 1; }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* A ring flashes out from the plug as it clicks home; the first two shadows
+   are the plug's own, repeated so the ring doesn't replace them */
+@keyframes cable-seat-glow {
+  from {
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 0 0 0 rgba(241, 189, 105, 0.75);
+  }
+  to {
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 0 0 8px rgba(241, 189, 105, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scenario-page-connect.connect-paged .connect-cable .plug-end-track,
+  .scenario-page-connect.connect-paged .connect-cable .connect-cable-plug {
+    animation: none !important;
+  }
 }
 
 /* ── Light theme: warm paper ── */
