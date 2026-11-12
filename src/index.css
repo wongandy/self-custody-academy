@@ -1251,11 +1251,51 @@ html.theme-light {
   cursor: pointer;
 }
 
+.donate-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 36px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.donate-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  color: var(--muted);
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.donate-tab:hover {
+  color: var(--text);
+}
+
+.donate-tab.is-active {
+  color: #2a1606;
+  background: linear-gradient(145deg, #ffaa3d, #f7931a);
+}
+
+.donate-tab:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+}
+
 .donate-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  margin-top: 40px;
+  margin-top: 24px;
 }
 
 .donate-cups {
@@ -1399,7 +1439,7 @@ html.theme-light {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  margin-top: 40px;
+  margin-top: 24px;
   padding: 28px;
   text-align: center;
   border: 1px solid var(--line);
@@ -1425,10 +1465,20 @@ html.theme-light {
   background: #fff;
 }
 
+.donate-qr {
+  min-width: 260px;
+  min-height: 260px;
+}
+
 .donate-qr img {
   display: block;
   width: 240px;
   height: 240px;
+}
+
+.donate-onchain .donate-hint {
+  max-width: 420px;
+  line-height: 1.6;
 }
 
 .donate-hint {
