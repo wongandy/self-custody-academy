@@ -214,6 +214,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const viewingDevice = isMobile && mobileDeviceEntered && mobilePanel === 'device';
   // The cord has clicked into the laptop and the switcher has appeared; over to the device.
   const mobileHeadWait = isMobile && step.kind === 'device-arrival' && arrivalStarted && mobileCordSeated && !mobileDeviceEntered;
+  // The learner has switched to the device; the cord is animating but hasn't linked yet.
+  const mobileCordAnimating = viewingDevice && step.kind === 'device-arrival' && connection !== 'linked';
   // The cord has clicked into the device; back to the app to send the request.
   const mobilePlugWait = viewingDevice && step.kind === 'device-arrival' && connection === 'linked';
   // The request is sent; over to the device to confirm it.
@@ -227,6 +229,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     : walletBooting
       ? l4.walletWaiting
       : mobileHeadWait
+        ? l4.headToDevice
+      : mobileCordAnimating
         ? l4.headToDevice
       : mobilePlugWait
         ? l4.devicePlugged
