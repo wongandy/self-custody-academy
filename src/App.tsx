@@ -39,13 +39,18 @@ const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 's
 const SCREEN_PATHS: Partial<Record<Screen, string>> = {
   about: '/about',
   contact: '/contact-us',
-  donate: '/donate',
+  donate: '/tip-jar',
+};
+
+// Old URLs that still open their page (the address bar then shows the new one).
+const PATH_ALIASES: Record<string, Screen> = {
+  '/donate': 'donate',
 };
 
 function screenFromPath(pathname: string): Screen | null {
   const path = pathname.replace(/\/+$/, '') || '/';
   const match = Object.entries(SCREEN_PATHS).find(([, p]) => p === path);
-  return match ? (match[0] as Screen) : null;
+  return match ? (match[0] as Screen) : PATH_ALIASES[path] ?? null;
 }
 
 function App() {
@@ -115,10 +120,15 @@ function App() {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [screen]);
 
-  // Keep the address bar in sync with the About / Contact pages.
+  // Keep the address bar in sync with the pages that have their own URL.
   useEffect(() => {
     const target = SCREEN_PATHS[screen] ?? '/';
-    if (window.location.pathname !== target) {
+    const current = window.location.pathname;
+    if (current === target) return;
+    // Swap an old alias for the new URL in place, so Back doesn't bounce on it.
+    if (PATH_ALIASES[current.replace(/\/+$/, '')] === screen) {
+      window.history.replaceState(null, '', target);
+    } else {
       window.history.pushState(null, '', target);
     }
   }, [screen]);
