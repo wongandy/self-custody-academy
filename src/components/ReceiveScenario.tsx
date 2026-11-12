@@ -759,7 +759,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={bubbleKey}>
+            <div className={`mentor-bubble-content${stage === 'hand-over' ? ' has-chat' : ''}`} key={bubbleKey}>
               <span className="mentor-bubble-name">Maria</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
@@ -810,14 +810,15 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                 </div>
               )}
             </div>
-            {canContinue && (
+            {stage !== 'hand-over' && (
               <button
-                className={`bubble-next ready`}
+                className={`bubble-next ${canContinue ? 'ready' : ''}`}
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleContinue();
                 }}
+                disabled={!canContinue}
                 aria-label={t.common.continue}
               >
                 <ChevronRight size={18} strokeWidth={2.5} />

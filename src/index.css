@@ -4373,6 +4373,21 @@ html.theme-light {
   margin-top: 12px;
 }
 
+/* Lesson 5, laptops: the paste row fits in the room the bubble keeps for a
+   third line of text (67px), so the bubble keeps the same height as on every
+   other step and the devices above it don't shrink. One line of text (22px)
+   + 6px gap + 38px row = 66px. */
+@media (min-width: 601px) {
+  .mentor-bubble-content.has-chat .mentor-bubble-text-wrap {
+    min-height: 23px;
+  }
+
+  .mentor-bubble-content.has-chat .mentor-chat-input-row {
+    height: 38px;
+    margin-top: 6px;
+  }
+}
+
 .mentor-chat-input {
   flex: 1;
   min-width: 0;

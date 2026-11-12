@@ -485,7 +485,7 @@ const en = {
     copyNowMobile: "Now press 'Copy address' to copy it.",
     copyTooEarly: 'Not yet — verify it on your device first. Malware can swap a copied address, so only copy once it checks out.',
     verifyReject: "Good instinct — if they didn't match, you'd press X to reject it and never use that address. These match, so press the checkmark.",
-    handOver: 'Now paste the address and send it to me so I can send you some Bitcoin. For privacy, use a fresh receive address for every payment.',
+    handOver: 'Now paste the address and send it to me so I can send you some Bitcoin.',
     warn: "That doesn't match the address your device verified. Copy it again from the wallet and send it to me.",
     openTx: 'Open the Transactions tab in your wallet to watch for it.',
     waiting: 'It should show up in a few seconds. Real payments take about 10 minutes to confirm.',
