@@ -8,6 +8,7 @@ import en, { type Dictionary } from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { useDeviceFit } from '@/lib/useDeviceFit';
 import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
@@ -179,6 +180,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const [mobilePanel, setMobilePanel] = useState<'software' | 'device'>('software');
   const [mobileDeviceEntered, setMobileDeviceEntered] = useState(false);
+  const [mobileCordSeated, setMobileCordSeated] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false);
   const [walletName, setWalletName] = useState('');
   // TEMPORARY (/test sandbox): a tab the learner opened by hand, overriding the lesson's.
@@ -197,6 +199,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   }, []);
 
   const SLIDE_SETTLE_MS = 620;
+  // Phones: the cord rises into the laptop and seats before the device switcher appears
+  const CORD_SEAT_MS = 1000;
 
   const step = STEPS[stepIndex];
   const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
@@ -218,7 +222,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const spotlight = !walletVisible;
   const mobileCableHalf = isMobile && walletVisible && step.kind === 'device-arrival' && arrivalStarted && !mobileDeviceEntered;
   const showCable = mobileCableHalf || connection === 'plugging' || connection === 'seating' || connection === 'linked';
-  const showMobileSwitch = isMobile && walletVisible && arrivalStarted;
+  const mobileCordEntering = mobileCableHalf && !mobileCordSeated;
+  const showMobileSwitch = isMobile && walletVisible && arrivalStarted && (mobileCordSeated || mobileDeviceEntered);
   const arrivalWaiting = step.kind === 'device-arrival' && !arrivalRequested;
   const arrivalAnimating = step.kind === 'device-arrival' && arrivalRequested && !arrivalStarted;
   const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
@@ -268,7 +273,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
   const laptopCaptionRef = useRef<HTMLDivElement>(null);
+  const deviceStageRef = useRef<HTMLDivElement>(null);
   useLaptopCableAlign(laptopRef, walletVisible);
+  useDeviceFit(deviceStageRef, isMobile && mobileDeviceEntered);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
@@ -352,6 +359,15 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     const timer = setTimeout(() => setArrivalStarted(true), reduce ? 0 : SLIDE_SETTLE_MS);
     return () => clearTimeout(timer);
   }, [step.kind, done, arrivalRequested, arrivalStarted]);
+
+  // On phones the cord plugs into the laptop first; only once it has seated does
+  // the device switcher appear, inviting the learner over to the hardware wallet.
+  useEffect(() => {
+    if (!arrivalStarted || mobileCordSeated) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = setTimeout(() => setMobileCordSeated(true), reduce ? 0 : CORD_SEAT_MS);
+    return () => clearTimeout(timer);
+  }, [arrivalStarted, mobileCordSeated]);
 
   // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
   // On phones the linked cord stays visible for a beat before the view returns to the app.
@@ -507,7 +523,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   };
 
   // The name field takes focus as soon as Maria has finished asking for a name.
+  // Not on touch screens: focus would raise the keyboard over what she is saying.
   useEffect(() => {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     if (step.kind === 'wallet-name' && !softwareLocked) walletNameInputRef.current?.focus();
   }, [step.kind, softwareLocked]);
 
@@ -611,6 +629,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     'connect-cable',
     showCable ? `is-${connection}` : 'is-dormant',
     syncing ? 'is-syncing' : '',
+    mobileCordEntering ? 'is-entering' : '',
   ].filter(Boolean).join(' ');
 
   const mobileCableVariant = !isMobile
@@ -661,12 +680,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   );
 
   return (
-    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? '' : 'scenario-page-connect'}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? '' : 'scenario-page-connect connect-paged'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
         {check.active && <KnowledgeCheckKicker />}
         {walletVisible && !check.active && (
           <div ref={duoSlotRef} className="fit-slot fit-wrap">
-          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${mobileCableHalf ? ' mobile-half-cable' : ''}${showMobileSwitch ? ' has-device-switcher' : ''}`}>
+          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${showMobileSwitch ? ' has-device-switcher' : ''}`}>
             <div className={`wallet-laptop laptop-enter${isMobile && mobilePanel === 'device' ? ' mobile-hidden' : ''}`}>
               <div ref={laptopRef} className="wallet-laptop-body">
                 <div className="wallet-window">
@@ -964,6 +983,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
             {(isMobile ? mobileDeviceEntered : true) && (
               <div
+                ref={deviceStageRef}
                 className={`connect-device-stage ${!isMobile && connection === 'idle' ? 'is-dormant' : `phase-${connection}`}${isMobile && mobilePanel !== 'device' ? ' mobile-hidden' : ''}`}
               >
                 <div className="connect-device-row">
