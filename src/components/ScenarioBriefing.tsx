@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Check, CheckCircle2, ChevronRight, Power, XCircle } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
+import { useFitScale } from '@/lib/useFitScale';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
 import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
@@ -113,6 +114,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const walletSlotRef = useFitScale();
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   const isInIntro = !introDone;
@@ -422,11 +424,11 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   }, [spotlight]);
 
   return (
-    <main className={`scenario-page scenario-page-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${spotlight ? 'scenario-page-spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-scene' : ''}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
         {knowledgeCheckActive && <div className="knowledge-check-kicker">{t.quiz.checkIn}</div>}
         {!knowledgeCheckActive && (
-          <div className={walletVisible ? 'hw-wallet-slot' : 'hw-wallet-slot hidden'}>
+          <div ref={walletSlotRef} className={walletVisible ? 'hw-wallet-slot fit-slot' : 'hw-wallet-slot fit-slot hidden'}>
             <HardwareWallet
               onComplete={() => {}}
               onPhaseChange={setWalletPhase}

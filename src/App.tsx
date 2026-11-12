@@ -9,6 +9,7 @@ import ConnectScenario from '@/components/ConnectScenario';
 import SendScenario from '@/components/SendScenario';
 import ReceiveScenario from '@/components/ReceiveScenario';
 import RecoverScenario from '@/components/RecoverScenario';
+import DevicePlayground from '@/components/DevicePlayground'; // TEMPORARY: Lesson 7 playground
 import AuthScreen from '@/components/AuthScreen';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
 import { AboutPage, CODE_ORANGE_URL, ContactPage } from '@/components/InfoPages';
@@ -30,9 +31,9 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'auth' | 'about' | 'contact' | 'donate';
+type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'scenario-7' | 'auth' | 'about' | 'contact' | 'donate';
 
-const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6'];
+const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6', 'scenario-7'];
 
 // Pages that have their own URL. Every other screen lives at "/".
 const SCREEN_PATHS: Partial<Record<Screen, string>> = {
@@ -238,6 +239,8 @@ function App() {
         )}
 
         <div className="header-actions">
+          {/* TEMPORARY: Lesson 7 playground puts its dev controls here */}
+          {screen === 'scenario-7' && <div id="playground-header-slot" className="playground-header-slot" />}
           <LocaleSwitcher />
           <button
             className="theme-toggle"
@@ -375,6 +378,9 @@ function App() {
           onComplete={() => handleScenarioComplete(6)}
         />
       )}
+
+      {/* TEMPORARY: Lesson 7 device playground (not saved as progress) */}
+      {screen === 'scenario-7' && <DevicePlayground />}
 
       {screen === 'auth' && (
         <AuthScreen
