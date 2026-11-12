@@ -478,6 +478,11 @@ const en = {
     verifyRule: "This is your receive address. Before copying it, let's prove it really came from your device — press 'Verify address on device' below it.",
     compareCheck: 'Your device now shows the address. If it matches the one in the wallet software, press the checkmark button on the device.',
     copyNow: "Verified — the address genuinely came from your device. Now press 'Copy address' to copy it.",
+    // Phones show one device at a time: these lines ask the learner to switch views.
+    verifySent: 'Cairn has sent the address to your hardware wallet. Tap HARDWARE WALLET to check it there.',
+    compareCheckMobile: 'Your device now shows the address. Make sure it matches the one in Cairn — you can switch between the two. If it matches, press the checkmark on the device.',
+    verifiedMobile: 'Verified — the address genuinely came from your device. Tap WALLET SOFTWARE to copy it.',
+    copyNowMobile: "Now press 'Copy address' to copy it.",
     copyTooEarly: 'Not yet — verify it on your device first. Malware can swap a copied address, so only copy once it checks out.',
     verifyReject: "Good instinct — if they didn't match, you'd press X to reject it and never use that address. These match, so press the checkmark.",
     handOver: 'Now paste the address and send it to me so I can send you some Bitcoin. For privacy, use a fresh receive address for every payment.',
