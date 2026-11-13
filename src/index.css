@@ -3483,8 +3483,11 @@ html.theme-light {
   cursor: not-allowed;
 }
 
+/* Scoped under .auth-switch so it beats the generic `.auth-switch button` link style */
+.auth-switch .auth-back-link,
 .auth-back-link {
   display: inline-flex;
+  text-decoration: none;
   align-items: center;
   gap: 6px;
   background: none;
@@ -3496,6 +3499,7 @@ html.theme-light {
   transition: color 0.2s ease;
 }
 
+.auth-switch .auth-back-link:hover,
 .auth-back-link:hover {
   color: var(--gold);
 }
