@@ -244,6 +244,12 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Password-reset email. Production uses the same file, pasted into
+# Dashboard → Authentication → Emails → Reset Password (keep the subject identical).
+[auth.email.template.recovery]
+subject = "Reset your password · รีเซ็ตรหัสผ่าน"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
