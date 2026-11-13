@@ -265,6 +265,42 @@ describe('setting a new password from the reset email', () => {
   });
 });
 
+describe('show / hide password', () => {
+  it('reveals and hides each password field independently', async () => {
+    const { user } = renderAuth({ mode: 'register' });
+    const password = screen.getByPlaceholderText(a.passwordPlaceholderNew);
+    const confirm = screen.getByPlaceholderText(a.confirmPlaceholder);
+    expect(password).toHaveAttribute('type', 'password');
+    expect(confirm).toHaveAttribute('type', 'password');
+
+    const [firstEye] = screen.getAllByRole('button', { name: a.showPassword });
+    await user.click(firstEye);
+    expect(password).toHaveAttribute('type', 'text');
+    expect(confirm).toHaveAttribute('type', 'password');
+    expect(firstEye).toHaveAccessibleName(a.hidePassword);
+    expect(firstEye).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(firstEye);
+    expect(password).toHaveAttribute('type', 'password');
+  });
+
+  it('keeps what was typed when toggling, and does not submit the form', async () => {
+    const { user } = renderAuth();
+    const password = screen.getByPlaceholderText(a.passwordPlaceholder);
+    await user.type(password, 'hunter22');
+    await user.click(screen.getByRole('button', { name: a.showPassword }));
+    expect(password).toHaveValue('hunter22');
+    expect(screen.queryByText(a.errEmailPassword)).not.toBeInTheDocument();
+    expect(api.signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it('is on the new-password form too, in Thai', async () => {
+    initialAuthCallback.isRecovery = true;
+    renderAuth({ locale: 'th' });
+    expect(screen.getAllByRole('button', { name: th.auth.showPassword })).toHaveLength(2);
+  });
+});
+
 describe('saved email language', () => {
   it('saves the browsing language on accounts that have none', async () => {
     api.getSession.mockResolvedValue({ data: { session: fakeSession() }, error: null });

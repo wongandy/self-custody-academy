@@ -29,3 +29,7 @@ supabase/config.toml
 thai-translation-review.csv
 .claude-auth/
 bin/
+
+# Supabase CLI local state
+supabase/.branches/
+supabase/.temp/

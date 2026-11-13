@@ -222,6 +222,8 @@ const th: Dictionary = {
     newPasswordTitle: 'ตั้งรหัสผ่านใหม่',
     newPasswordSubtitle: 'เลือกรหัสผ่านใหม่สำหรับบัญชีของคุณ',
     newPassword: 'รหัสผ่านใหม่',
+    showPassword: 'แสดงรหัสผ่าน',
+    hidePassword: 'ซ่อนรหัสผ่าน',
     saveNewPassword: 'บันทึกรหัสผ่านใหม่',
     confirmTitle: 'ตรวจสอบอีเมลของคุณ',
     confirmSentBefore: 'เราได้ส่งลิงก์ยืนยันไปที่ ',
