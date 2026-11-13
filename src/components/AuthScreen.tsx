@@ -1,10 +1,51 @@
 import { useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowRight, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import andyPortrait from '@/components/Andy.webp';
 import { useI18n } from '@/lib/i18n';
 
 type AuthMode = 'register' | 'login' | 'recovery';
+
+type PasswordInputProps = {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  autoComplete: 'new-password' | 'current-password';
+  disabled: boolean;
+  showLabel: string;
+  hideLabel: string;
+};
+
+/** Password field with an eye button so the user can check what they typed. */
+function PasswordInput({ value, onChange, placeholder, autoComplete, disabled, showLabel, hideLabel }: PasswordInputProps) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <span className="auth-password">
+      <input
+        type={visible ? 'text' : 'password'}
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+      />
+      <button
+        type="button"
+        className="auth-password-toggle"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? hideLabel : showLabel}
+        aria-pressed={visible}
+        title={visible ? hideLabel : showLabel}
+        disabled={disabled}
+      >
+        {visible ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
+      </button>
+    </span>
+  );
+}
 
 type AuthScreenProps = {
   mode: AuthMode;
@@ -166,25 +207,27 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
           <form className="auth-form" onSubmit={handleNewPasswordSubmit}>
             <label className="auth-field">
               <span className="auth-field-label"><LockKeyhole size={13} /> {a.newPassword}</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder={a.passwordPlaceholderNew}
+              <PasswordInput
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={setPassword}
+                placeholder={a.passwordPlaceholderNew}
+                autoComplete="new-password"
                 disabled={isSubmitting}
+                showLabel={a.showPassword}
+                hideLabel={a.hidePassword}
               />
             </label>
 
             <label className="auth-field">
               <span className="auth-field-label"><ShieldCheck size={13} /> {a.confirmPassword}</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder={a.confirmPlaceholder}
+              <PasswordInput
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={setConfirmPassword}
+                placeholder={a.confirmPlaceholder}
+                autoComplete="new-password"
                 disabled={isSubmitting}
+                showLabel={a.showPassword}
+                hideLabel={a.hidePassword}
               />
             </label>
 
@@ -348,26 +391,28 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
 
           <label className="auth-field">
             <span className="auth-field-label"><LockKeyhole size={13} /> {a.password}</span>
-            <input
-              type="password"
-              autoComplete={isRegister ? 'new-password' : 'current-password'}
-              placeholder={isRegister ? a.passwordPlaceholderNew : a.passwordPlaceholder}
+            <PasswordInput
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
+              placeholder={isRegister ? a.passwordPlaceholderNew : a.passwordPlaceholder}
+              autoComplete={isRegister ? 'new-password' : 'current-password'}
               disabled={isSubmitting}
+              showLabel={a.showPassword}
+              hideLabel={a.hidePassword}
             />
           </label>
 
           {isRegister && (
             <label className="auth-field">
               <span className="auth-field-label"><ShieldCheck size={13} /> {a.confirmPassword}</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder={a.confirmPlaceholder}
+              <PasswordInput
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={setConfirmPassword}
+                placeholder={a.confirmPlaceholder}
+                autoComplete="new-password"
                 disabled={isSubmitting}
+                showLabel={a.showPassword}
+                hideLabel={a.hidePassword}
               />
             </label>
           )}

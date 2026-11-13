@@ -227,6 +227,8 @@ const en = {
     newPasswordTitle: 'Set a new password',
     newPasswordSubtitle: 'Choose a new password for your account.',
     newPassword: 'New password',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     saveNewPassword: 'Save new password',
     confirmTitle: 'Check your email',
     confirmSentBefore: "We've sent a confirmation link to ",
