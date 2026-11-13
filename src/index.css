@@ -53,6 +53,8 @@ a {
   --shadow-sm: 0 3px 10px rgba(0, 0, 0, 0.18);
   --shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.22);
   min-height: 100vh;
+  /* Phones: match the visible screen, not the taller URL-bar-hidden one */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -4371,6 +4373,21 @@ html.theme-light {
   margin-top: 12px;
 }
 
+/* Lesson 5, laptops: the paste row fits in the room the bubble keeps for a
+   third line of text (67px), so the bubble keeps the same height as on every
+   other step and the devices above it don't shrink. One line of text (22px)
+   + 6px gap + 38px row = 66px. */
+@media (min-width: 601px) {
+  .mentor-bubble-content.has-chat .mentor-bubble-text-wrap {
+    min-height: 23px;
+  }
+
+  .mentor-bubble-content.has-chat .mentor-chat-input-row {
+    height: 38px;
+    margin-top: 6px;
+  }
+}
+
 .mentor-chat-input {
   flex: 1;
   min-width: 0;
@@ -6474,8 +6491,8 @@ html.theme-light {
   pointer-events: auto;
 }
 
-/* Lesson 4 phone flow: the half-plugged cord runs off to the right under the
-   laptop; the switcher sits over it so the cord tucks behind the pill */
+/* Lesson 4 phone flow: the cord runs in its own lane between the panel and the
+   switcher (see .connect-paged); the pill still stacks above it as a safeguard */
 .connect-duo .device-switcher {
   position: relative;
   z-index: 5;
@@ -8661,6 +8678,134 @@ html.theme-light {
   to { transform: translate(-50%, 0) scale(1); }
 }
 
+/* ── Lesson 4 phone flow (.connect-paged): one panel on screen at a time ──
+   The panel sits right under the header and Maria follows directly beneath it,
+   so spare height collects at the bottom of the page instead of around the
+   device. Both panels share one height, and the strip beneath them (cord lane
+   plus switcher) is reserved from the start, so the switcher and the bubble
+   stay put when the switcher appears and when the learner flips panels. */
+
+@media (max-width: 600px) {
+  .scenario-page-connect.connect-paged {
+    --paged-panel-h: max(320px, calc(100dvh - 318px));
+    --paged-lane: 34px;
+    --paged-switcher-h: 36px;
+  }
+
+  .scenario-page-connect.connect-paged .scenario-mentor-layout {
+    gap: 16px;
+  }
+
+  .scenario-page-connect.connect-paged .connect-duo.is-wide {
+    flex: none;
+    justify-content: flex-start;
+    gap: 0;
+    padding-bottom: calc(var(--paged-lane) + var(--paged-switcher-h));
+  }
+
+  .scenario-page-connect.connect-paged .connect-duo.is-wide.has-device-switcher {
+    padding-bottom: 0;
+  }
+
+  .scenario-page-connect.connect-paged .wallet-laptop {
+    height: var(--paged-panel-h);
+    min-height: 0;
+  }
+
+  /* Until the switcher replaces it, the caption sits centered in the reserved strip */
+  .scenario-page-connect.connect-paged .wallet-laptop .device-caption {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: calc((var(--paged-lane) + var(--paged-switcher-h) - 18px) / 2);
+    line-height: 18px;
+  }
+
+  .scenario-page-connect.connect-paged .connect-duo .device-switcher {
+    box-sizing: border-box;
+    min-height: var(--paged-switcher-h);
+    margin-top: var(--paged-lane);
+  }
+
+  /* Wallet software panel: the cord rises into the laptop's underside and seats
+     with a click. Only then does the switcher appear (ConnectScenario's
+     CORD_SEAT_MS). Flipping back to this panel later shows it already plugged in. */
+
+  .scenario-page-connect.connect-paged .connect-cable.cable-under-wallet .plug-start {
+    animation: none;
+  }
+
+  .scenario-page-connect.connect-paged .connect-cable.cable-under-wallet.is-entering .plug-end-track {
+    animation: cable-cord-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .scenario-page-connect.connect-paged .connect-cable.cable-under-wallet.is-entering .plug-start {
+    animation:
+      cable-plug-settle-up 240ms cubic-bezier(0.22, 1, 0.36, 1) 520ms both,
+      cable-seat-glow 460ms ease-out 540ms both;
+  }
+
+  /* Hardware wallet panel: same height as the laptop panel, with the device
+     scaled to fill it (--hw-fit, set by useDeviceFit) */
+
+  .scenario-page-connect.connect-paged .connect-device-stage {
+    height: var(--paged-panel-h);
+    align-items: center;
+  }
+
+  .scenario-page-connect.connect-paged .connect-device-stage .hw-wallet-device {
+    transform: scale(var(--hw-fit, 1));
+    transform-origin: center;
+    margin-bottom: 0;
+  }
+
+  /* The row is exactly the unscaled device, so 50% + 50% x fit is the scaled
+     device's visible bottom edge. The plug lands under the power button (104px
+     left of center on the unscaled device) and the cord starts at the screen
+     edge, 16px left of the row. */
+  .scenario-page-connect.connect-paged .connect-device-row .connect-cable.cable-device-panel {
+    top: calc(50% + 50% * var(--hw-fit, 1) - 1px);
+    left: -16px;
+    width: calc(50% + 16px - 104px * var(--hw-fit, 1));
+  }
+
+  .scenario-page-connect.connect-paged .connect-device-row .connect-cable.cable-device-panel.is-seating .plug-end {
+    animation:
+      cable-plug-settle-up 240ms cubic-bezier(0.22, 1, 0.36, 1) both,
+      cable-seat-glow 460ms ease-out 20ms both;
+  }
+}
+
+@keyframes cable-cord-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  40% { opacity: 1; }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* A ring flashes out from the plug as it clicks home; the first two shadows
+   are the plug's own, repeated so the ring doesn't replace them */
+@keyframes cable-seat-glow {
+  from {
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 0 0 0 rgba(241, 189, 105, 0.75);
+  }
+  to {
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 0 0 8px rgba(241, 189, 105, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scenario-page-connect.connect-paged .connect-cable .plug-end-track,
+  .scenario-page-connect.connect-paged .connect-cable .connect-cable-plug {
+    animation: none !important;
+  }
+}
+
 /* ── Light theme: warm paper ── */
 /* Cream page, white cards, warm-black text, Bitcoin orange as the one accent.
    Simulated devices (hardware wallet, phone, tx panel, laptop wallet) stay dark like real hardware. */
@@ -9045,10 +9190,6 @@ html.theme-light {
   background: #d8c838;
 }
 
-.theme-light .path-card-number {
-  color: var(--faint);
-}
-
 .theme-light .path-card-art {
   filter: none;
 }
@@ -9301,6 +9442,45 @@ html.theme-light {
 
 .send-success-screen {
   align-items: flex-start;
+}
+
+/* Broadcast but not yet in a block */
+.send-review-status.send-status-pending {
+  color: var(--gold-light);
+}
+
+.send-success-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Lesson 6: Cairn's own check that the amount plus fee fits in the balance */
+.send-amount-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.send-amount-error {
+  color: var(--danger);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.wallet-window .send-amount-field input.error {
+  border-color: rgba(232, 113, 113, 0.6);
+}
+
+.send-success-txid {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--muted) !important;
+  overflow-wrap: anywhere;
 }
 
 /* ── Wallet software: one fixed screen size for every tab and lesson ──
@@ -9704,7 +9884,6 @@ html.theme-light {
   background: #c2b82c;
 }
 
-.path-card-topline,
 .path-card-symbols,
 .path-card h2,
 .path-card-description,
@@ -9714,23 +9893,6 @@ html.theme-light {
   z-index: 1;
 }
 
-.path-card-topline {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.path-card-number {
-  color: rgba(255, 255, 255, 0.38);
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.path-card-status,
 .path-card-action {
   font-family: 'DM Mono', 'Noto Sans Thai', monospace;
   font-size: 10px;
@@ -9739,17 +9901,13 @@ html.theme-light {
   text-transform: uppercase;
 }
 
-.path-card-status {
-  color: currentColor;
-}
-
 .path-card-symbols {
   width: 100%;
   min-height: 116px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 10px 0 10px;
+  margin: 0 0 10px;
 }
 
 .path-card-art {
@@ -9777,28 +9935,12 @@ html.theme-light {
   transform: translate(4px, -4px);
 }
 
-.path-card-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-right: 8px;
-  vertical-align: 1px;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 0 0 currentColor;
-  animation: path-dot-pulse 2.4s ease-out infinite;
-}
-
-@keyframes path-dot-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 190, 92, 0.55); }
-  70%, 100% { box-shadow: 0 0 0 7px rgba(255, 190, 92, 0); }
-}
-
 .path-card-footer {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: auto;
   padding-top: 22px;
@@ -9861,6 +10003,7 @@ html.theme-light {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  white-space: nowrap;
 }
 
 /* Mirrors .primary-button so the main action looks the same site-wide */
@@ -9881,30 +10024,6 @@ html.theme-light {
 .path-card-fundamentals:hover .path-card-action {
   background: linear-gradient(145deg, #ffb84d, #ff9e2c);
   box-shadow: 0 14px 34px rgba(247, 147, 26, 0.3);
-}
-
-.path-card-andy {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px 4px 4px;
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel-strong);
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.path-card-andy img {
-  width: 26px;
-  height: 26px;
-  object-fit: cover;
-  object-position: top;
-  border-radius: 50%;
-  background: #f4efe6;
 }
 
 /* Coming-soon card: present but quieter so the live path leads */
@@ -9928,7 +10047,7 @@ html.theme-light {
 }
 
 .path-card-deeper .path-card-action {
-  color: var(--muted);
+  color: currentColor;
 }
 
 .path-card-action svg {
@@ -9939,188 +10058,157 @@ html.theme-light {
   transform: translateX(4px);
 }
 
+/* Phones: the live path gets a full-width card, the coming-soon path
+   folds into a compact row beneath it so nothing shrinks below 10px. */
 @media (max-width: 700px) {
   .path-selector-page {
-    padding: 72px 16px 16px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 76px 16px 20px;
+    overflow-y: auto;
   }
 
+  /* Fill the screen: spare height is shared above and below the heading
+     instead of collecting under the cards (or as a gap under the header) */
   .path-selector-content {
-    gap: 16px;
+    flex: 1 0 auto;
+    gap: 18px;
+  }
+
+  .path-selector-heading {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .path-selector-kicker {
     margin-bottom: 12px;
-    font-size: 9px;
   }
 
   .path-selector-heading h1 {
-    font-size: clamp(36px, 10.5vw, 54px);
-    letter-spacing: -0.09em;
+    font-size: clamp(34px, 10.5vw, 48px);
   }
 
   .path-selector-heading p {
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .path-selector-options {
+    flex-shrink: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .path-card {
+    min-height: 0;
+    padding: 18px 18px 18px;
+    border-radius: 20px;
+  }
+
+  .path-card-symbols {
+    min-height: 0;
+    margin: 0 0 10px;
+  }
+
+  .path-card-art {
+    width: 168px;
+  }
+
+  .path-card h2 {
+    font-size: clamp(30px, 9.4vw, 40px);
+    overflow-wrap: anywhere;
+  }
+
+  .path-card-description {
     margin-top: 10px;
-    font-size: 12px;
+    font-size: 14px;
+  }
+
+  .path-card-includes {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .path-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-top: 16px;
+  }
+
+  .path-card-fundamentals .path-card-action {
+    justify-content: center;
+    padding: 15px 18px;
+  }
+
+  .path-card-topics {
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .path-card-topics li {
+    padding: 3px 9px;
+    font-size: 11px;
+  }
+
+  .path-card-deeper .path-card-footer {
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .path-card {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+
+/* Short phones: tighter spacing */
+@media (max-height: 720px) and (max-width: 700px) {
+  .path-selector-page {
+    padding-top: 64px;
+    padding-bottom: 12px;
+  }
+
+  .path-selector-content {
+    gap: 10px;
   }
 
   .path-selector-options {
     gap: 10px;
   }
 
-  .path-card {
-    min-height: 0;
-    padding: 15px 12px 13px;
-    border-radius: 18px;
-  }
-
-  .path-card-topline {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .path-card-status,
-  .path-card-action {
-    font-size: 8px;
-    letter-spacing: 0.07em;
-  }
-
   .path-card-symbols {
-    min-height: 72px;
-    margin: 7px 0 9px;
+    margin: 0 0 6px;
   }
 
   .path-card-art {
-    width: min(100%, 130px);
+    width: 100px;
   }
 
   .path-card-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
     padding-top: 12px;
   }
 
-
-  .path-card-topics {
-    gap: 4px;
-    margin-top: 9px;
-  }
-
-  .path-card-topics li {
-    padding: 3px 7px;
-    font-size: 9px;
-  }
-
   .path-card-fundamentals .path-card-action {
-    gap: 6px;
-    padding: 8px 10px;
-    font-size: 8px;
-    letter-spacing: 0.07em;
+    padding: 13px 18px;
   }
 
-  .path-card-andy {
-    gap: 5px;
-    padding: 2px 8px 2px 2px;
-    font-size: 7px;
-  }
-
-  .path-card-andy img {
-    width: 18px;
-    height: 18px;
-  }
-
-  .path-card h2 {
-    min-height: 2em;
-    font-size: clamp(15px, 5.5vw, 23px);
-    letter-spacing: -0.07em;
-    line-height: 0.92;
-    overflow-wrap: anywhere;
-  }
-
-  .path-card-fundamentals h2 {
-    white-space: nowrap;
-  }
-
-  .path-card-description {
-    margin-top: 8px;
-    font-size: 11px;
-    line-height: 1.35;
-  }
-
-  .path-card-includes {
-    margin-top: 9px;
-    font-size: 10px;
-    line-height: 1.4;
-  }
-
-  .path-card-action {
-    gap: 5px;
-    padding-top: 0;
-  }
-
-  .path-card-action svg {
-    width: 13px;
-    height: 13px;
+  .path-card-deeper {
+    padding: 13px 18px;
   }
 }
 
-@media (max-width: 380px) {
-  .path-selector-page {
-    padding-right: 12px;
-    padding-left: 12px;
-  }
-
-  .path-selector-options {
-    gap: 8px;
-  }
-
-  .path-card {
-    padding-right: 10px;
-    padding-left: 10px;
-  }
-
-  .path-card h2 {
-    font-size: clamp(14px, 5.2vw, 20px);
-  }
-
-  .path-card-description,
+/* Very short phones: drop the secondary copy */
+@media (max-height: 640px) and (max-width: 700px) {
+  .path-selector-heading p,
   .path-card-includes {
-    font-size: 9px;
-  }
-}
-
-@media (max-height: 680px) and (max-width: 700px) {
-  .path-selector-page {
-    padding-top: 64px;
-  }
-
-  .path-selector-content {
-    gap: 12px;
-  }
-
-  .path-selector-heading p {
     display: none;
-  }
-
-  .path-card-symbols {
-    min-height: 58px;
-  }
-
-  .path-card-art {
-    width: min(100%, 104px);
-  }
-
-  .path-card-description {
-    margin-top: 6px;
-  }
-
-  .path-card-includes {
-    margin-top: 7px;
-  }
-
-  .path-card-footer {
-    padding-top: 9px;
   }
 }
 
@@ -10146,7 +10234,6 @@ html.theme-light {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .path-card-dot { animation: none; }
   .path-art-back, .path-art-front { transition: none; }
 }
 
@@ -10420,7 +10507,43 @@ html.theme-light {
   gap: 8px 14px;
   width: 100%;
   margin: 0;
-  animation: wallet-placeholder-in 260ms ease;
+}
+
+/* The details arrive so they can't be missed: the box flashes gold and the
+   four fields drop in one after another. On phones the app is hidden while the
+   device confirms the pairing, and the animation starts when the learner
+   switches back to it. */
+
+.wallet-keystore-body.is-filled {
+  animation: keystore-filled-glow 1600ms ease-out both;
+}
+
+.wallet-keystore-details > * {
+  animation: keystore-field-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.wallet-keystore-details > :nth-child(n + 1) { animation-delay: 200ms; }
+.wallet-keystore-details > :nth-child(n + 3) { animation-delay: 380ms; }
+.wallet-keystore-details > :nth-child(n + 5) { animation-delay: 560ms; }
+.wallet-keystore-details > :nth-child(n + 7) { animation-delay: 740ms; }
+
+@keyframes keystore-filled-glow {
+  0% { box-shadow: inset 0 0 0 1px rgba(241, 189, 105, 0), 0 0 0 0 rgba(241, 189, 105, 0); }
+  18% { box-shadow: inset 0 0 0 1px rgba(241, 189, 105, 0.9), 0 0 18px 2px rgba(241, 189, 105, 0.35); }
+  70% { box-shadow: inset 0 0 0 1px rgba(241, 189, 105, 0.9), 0 0 18px 2px rgba(241, 189, 105, 0.35); }
+  100% { box-shadow: inset 0 0 0 1px rgba(241, 189, 105, 0), 0 0 0 0 rgba(241, 189, 105, 0); }
+}
+
+@keyframes keystore-field-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-keystore-body.is-filled,
+  .wallet-keystore-details > * {
+    animation: none;
+  }
 }
 
 @container (max-width: 440px) {
@@ -10814,5 +10937,114 @@ html.theme-light {
   .scenario-page-connect .playground-trio .wallet-laptop {
     flex: none;
     width: 100%;
+  }
+}
+
+/* TEMPORARY: /test Lessons menu (opens a lesson in sandbox mode) */
+.playground-lessons {
+  position: relative;
+}
+
+.playground-header-btn.is-open {
+  color: var(--gold-light);
+  border-color: var(--gold-light);
+}
+
+.playground-lessons-current {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--gold-light);
+  color: var(--bg);
+  font-size: 11px;
+}
+
+.playground-lessons-chevron {
+  transition: transform 160ms ease;
+}
+
+.playground-header-btn.is-open .playground-lessons-chevron {
+  transform: rotate(180deg);
+}
+
+.playground-lessons-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: min(300px, calc(100vw - 32px));
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow-sm), 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.playground-lessons-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.playground-lessons-item:hover {
+  background: rgba(241, 189, 105, 0.08);
+}
+
+.playground-lessons-item.is-active {
+  color: var(--gold-light);
+}
+
+.playground-lessons-num {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.playground-lessons-item.is-active .playground-lessons-num {
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+}
+
+.playground-lessons-title {
+  flex: 1;
+}
+
+/* Phones: the Lessons button keeps its chevron and lesson number, so it's
+   wider than the other icon-only buttons */
+@media (max-width: 600px) {
+  .playground-lessons .playground-header-btn {
+    width: auto;
+    padding: 0 10px;
+    gap: 4px;
+  }
+
+  .playground-lessons-menu {
+    position: fixed;
+    top: 64px;
+    right: 16px;
   }
 }

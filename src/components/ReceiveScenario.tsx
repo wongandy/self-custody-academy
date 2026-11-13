@@ -13,12 +13,16 @@ import {
   Settings,
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
-import mariaPortrait from '@/components/Maria.webp';
+import { DeviceSwitcher } from '@/components/DeviceSwitcher';
+import { walletLessonsMentor as mentor } from '@/lib/mentors';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { useDeviceFit } from '@/lib/useDeviceFit';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
+import { useSandbox } from '@/lib/sandbox';
+import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 
 type ReceiveScenarioProps = {
@@ -33,7 +37,7 @@ const VERIFY_REJECT_NUDGE_MS = 5000;
 
 type NudgeKind = 'generic' | 'early-copy' | 'verify-reject';
 
-// Maria's lines live in the dictionary (`lesson5`); every locale has the same list lengths.
+// The mentor's lines live in the dictionary (`lesson5`); every locale has the same list lengths.
 const INTRO_COUNT = en.lesson5.intro.length;
 const SENDING_COUNT = en.lesson5.sending.length;
 
@@ -167,7 +171,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const [sendingStep, setSendingStep] = useState(0);
   const [nudgeActive, setNudgeActive] = useState(false);
   const [nudgeKind, setNudgeKind] = useState<NudgeKind>('generic');
-  const [walletTab, setWalletTab] = useState<'transactions' | 'receive'>('transactions');
+  const [walletTab, setWalletTab] = useState<WalletTabId>('transactions');
+  const sandbox = useSandbox();
   const [addrCopied, setAddrCopied] = useState(false);
   const [addrVerified, setAddrVerified] = useState(false);
   const [verifyingAddr, setVerifyingAddr] = useState(false);
@@ -178,6 +183,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const chatInputRef = useRef<HTMLInputElement>(null);
   const [txArrived, setTxArrived] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
+  // Phones show one device at a time; the learner switches with the device switcher.
+  const [mobilePanel, setMobilePanel] = useState<'software' | 'device'>('software');
+  const [visitedDevice, setVisitedDevice] = useState(false);
+  const deviceStageRef = useRef<HTMLDivElement>(null);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
@@ -194,10 +203,33 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     return () => query.removeEventListener('change', onChange);
   }, []);
 
+  // Phones: the address check spans both devices, so Maria says which one to look at.
+  // During the comparison the learner may flip back and forth; otherwise the
+  // lesson waits for the one tap she asks for.
+  const viewingDevice = isMobile && mobilePanel === 'device';
+  const mobileLine: { key: string; text: string } | null = !isMobile
+    ? null
+    : stage === 'compare-check'
+      ? visitedDevice
+        ? { key: 'compare-mobile', text: l5.compareCheckMobile }
+        : { key: 'verify-sent', text: l5.verifySent }
+      : stage === 'copy-now'
+        ? viewingDevice
+          ? { key: 'verified-mobile', text: l5.verifiedMobile }
+          : { key: 'copy-now-mobile', text: l5.copyNowMobile }
+        : null;
+  const mobileSwitchHint: 'software' | 'device' | null =
+    stage === 'compare-check' && !viewingDevice
+      ? 'device'
+      : stage === 'copy-now' && viewingDevice
+        ? 'software'
+        : null;
   const message = nudgeActive
-    ? nudgeKind === 'early-copy' ? l5.copyTooEarly : nudgeKind === 'verify-reject' ? l5.verifyReject : t.common.nudgeLater
+    ? nudgeKind === 'early-copy' ? l5.copyTooEarly : nudgeKind === 'verify-reject' ? l5.verifyReject : t.common[mentor.nudge]
     : check.active
       ? check.mentorLine
+    : mobileLine
+      ? mobileLine.text
     : stage === 'intro'
       ? l5.intro[introStep] ?? l5.intro[0]
       : stage === 'go-receive'
@@ -221,6 +253,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     ? `nudge-${nudgeKind}`
     : check.active
       ? check.mentorKey
+      : mobileLine
+        ? mobileLine.key
       : stage === 'intro'
         ? `intro-${introStep}`
         : stage === 'hand-over'
@@ -232,7 +266,20 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
 
   const spotlight = stage === 'intro';
   useLaptopCableAlign(laptopBodyRef, !spotlight);
-  const interactionLocked = !done;
+  useDeviceFit(deviceStageRef, isMobile && !spotlight && !check.active);
+
+  const handleMobileSwitch = useCallback((panel: 'software' | 'device') => {
+    setMobilePanel(panel);
+    if (panel === 'device') setVisitedDevice(true);
+  }, []);
+
+  // Safety net: everything after the copy happens in the app.
+  useEffect(() => {
+    if (stage === 'hand-over' || stage === 'sending' || stage === 'open-tx' || stage === 'waiting' || stage === 'finished') {
+      setMobilePanel('software');
+    }
+  }, [stage]);
+  const interactionLocked = !done && !sandbox;
   const canContinue = done && !nudgeActive && !check.active && CONTINUE_STAGES.has(stage);
   // While Maria is mid-line the devices freeze; once she finishes, the learner
   // may press device buttons — every press is gently nudged back on track.
@@ -255,6 +302,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const handleVerifyReject = useCallback(() => showNudge('verify-reject'), [showNudge]);
 
   const handleTransactionsTab = useCallback(() => {
+    if (sandbox) {
+      setWalletTab('transactions');
+      return;
+    }
     const allowed = stage === 'open-tx' || stage === 'waiting' || stage === 'finished';
     if (!allowed) {
       handleUnexpectedAction();
@@ -264,9 +315,14 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     if (stage === 'open-tx') {
       setStage('waiting');
     }
-  }, [stage, handleUnexpectedAction]);
+  }, [stage, handleUnexpectedAction, sandbox]);
 
   const handleReceiveTab = useCallback(() => {
+    if (sandbox) {
+      setWalletTab('receive');
+      if (stage === 'go-receive') setStage('verify-rule');
+      return;
+    }
     if (stage === 'go-receive') {
       setWalletTab('receive');
       setStage('verify-rule');
@@ -277,7 +333,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
       return;
     }
     setWalletTab('receive');
-  }, [stage, handleUnexpectedAction]);
+  }, [stage, handleUnexpectedAction, sandbox]);
 
   const handleCopyAddress = useCallback(() => {
     // Copy stays clickable, as in a real wallet; copying before verifying is the
@@ -458,7 +514,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     : baseTransactions;
 
   const cableEl = (
-    <div className={`connect-cable is-linked${isMobile ? ' cable-under-wallet' : ''}`} aria-hidden="true">
+    <div className={`connect-cable is-linked${isMobile ? (viewingDevice ? ' cable-device-panel' : ' cable-under-wallet') : ''}`} aria-hidden="true">
       <span className="plug-end-track">
         <svg
           className="connect-cable-wire connect-cable-wire-h"
@@ -484,6 +540,14 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
           <path className="cable-line" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
           <path className="cable-pulse" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
         </svg>
+        <svg
+          className="connect-cable-wire connect-cable-wire-device"
+          viewBox="0 0 200 48"
+          preserveAspectRatio="none"
+        >
+          <path className="cable-line" d="M0 26 C 47 26, 93 26, 140 26 C 172 26, 200 20, 200 11" pathLength={100} />
+          <path className="cable-pulse" d="M0 26 C 47 26, 93 26, 140 26 C 172 26, 200 20, 200 11" pathLength={100} />
+        </svg>
         <span className="connect-cable-plug plug-start" />
         <span className="connect-cable-plug plug-end" />
       </span>
@@ -491,13 +555,13 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   );
 
   return (
-    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect connect-paged'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
         {check.active && <KnowledgeCheckKicker />}
         {!spotlight && !check.active && (
           <div ref={duoSlotRef} className="fit-slot fit-wrap">
-          <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
-            <div className="wallet-laptop laptop-enter">
+          <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}${isMobile ? ' has-device-switcher' : ''}`}>
+            <div className={`wallet-laptop laptop-enter${viewingDevice ? ' mobile-hidden' : ''}`}>
               <div ref={laptopBodyRef} className="wallet-laptop-body">
                 <div className="wallet-window">
                   <div className="wallet-window-titlebar">
@@ -521,10 +585,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                         </button>
                         <button
                           type="button"
-                          className="wallet-nav-item"
-                          onClick={handleUnexpectedAction}
+                          className={`wallet-nav-item${walletTab === 'send' ? ' active' : ''}`}
+                          onClick={sandbox ? () => setWalletTab('send') : handleUnexpectedAction}
                           disabled={softwareLocked}
-                          aria-pressed="false"
+                          aria-pressed={walletTab === 'send'}
                         >
                           <ArrowUpRight strokeWidth={2.2} />
                           <span className="wallet-nav-label">Send</span>
@@ -541,17 +605,19 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                         </button>
                         <button
                           type="button"
-                          className="wallet-nav-item"
-                          onClick={handleUnexpectedAction}
+                          className={`wallet-nav-item${walletTab === 'settings' ? ' active' : ''}`}
+                          onClick={sandbox ? () => setWalletTab('settings') : handleUnexpectedAction}
                           disabled={softwareLocked}
-                          aria-pressed="false"
+                          aria-pressed={walletTab === 'settings'}
                         >
                           <Settings strokeWidth={2.2} />
                           <span className="wallet-nav-label">Settings</span>
                         </button>
                       </aside>
                       <div className="wallet-canvas">
-                        {walletTab === 'receive' ? (
+                        {walletTab === 'send' || walletTab === 'settings' ? (
+                          <SandboxWalletTab tab={walletTab} />
+                        ) : walletTab === 'receive' ? (
                           <div className="rx-panel">
                             <div className="wallet-tab-heading">
                               <div className="wallet-tab-title"><ArrowDownLeft strokeWidth={2} /><span>Receive Bitcoin</span></div>
@@ -573,7 +639,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                                 className="tx-sim-btn primary rx-btn"
                                 type="button"
                                 onClick={handleVerifyAddress}
-                                disabled={verifyingAddr || stage === 'go-receive'}
+                                disabled={verifyingAddr || (stage === 'go-receive' && !sandbox)}
                               >
                                 <Eye size={14} strokeWidth={2} />
                                 <span>{verifyingAddr ? 'Verifying…' : 'Verify address on device'}</span>
@@ -634,14 +700,15 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                 </div>
               </div>
 
-              {isMobile && cableEl}
+              {isMobile && !viewingDevice && cableEl}
               <div className="device-caption">{t.common.captionWalletSoftware}</div>
             </div>
 
             {!isMobile && cableEl}
 
-            <div className="connect-device-stage phase-linked">
+            <div ref={deviceStageRef} className={`connect-device-stage phase-linked${isMobile && !viewingDevice ? ' mobile-hidden' : ''}`}>
               <div className="connect-device-row">
+                {viewingDevice && cableEl}
                 <HardwareWallet
                   mode="withdraw"
                   initialPhase="ready-menu"
@@ -656,31 +723,44 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                 />
               </div>
             </div>
+
+            {isMobile && (
+              <DeviceSwitcher
+                options={[
+                  { id: 'software', label: t.common.captionWalletSoftware },
+                  { id: 'device', label: t.common.captionHardwareWallet },
+                ]}
+                active={mobilePanel}
+                onSelect={handleMobileSwitch}
+                pulseId={mobileSwitchHint}
+                disabled={!sandbox && mobileSwitchHint === null && stage !== 'compare-check'}
+              />
+            )}
           </div>
           </div>
         )}
 
         <div className="mentor-row">
           <div
-            key="maria"
+            key={mentor.name}
             ref={portraitRef}
             className="mentor-portrait mentor-portrait-enter"
-            aria-label={fmt(t.common.mentorAria, { name: 'Maria' })}
+            aria-label={fmt(t.common.mentorAria, { name: mentor.name })}
             role="img"
           >
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={mariaPortrait} alt={fmt(t.common.mentorAria, { name: 'Maria' })} />
+              <img className="mentor-portrait-image" src={mentor.portrait} alt={fmt(t.common.mentorAria, { name: mentor.name })} />
             </div>
-            <div className="mentor-portrait-badge">Maria</div>
+            <div className="mentor-portrait-badge">{mentor.name}</div>
           </div>
           <div
             ref={bubbleRef}
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={bubbleKey}>
-              <span className="mentor-bubble-name">Maria</span>
+            <div className={`mentor-bubble-content${stage === 'hand-over' ? ' has-chat' : ''}`} key={bubbleKey}>
+              <span className="mentor-bubble-name">{mentor.name}</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
                 <p className="mentor-bubble-text">
@@ -723,21 +803,22 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                     type="button"
                     onClick={handleSubmitAddress}
                     disabled={chatLocked || !chatInput.trim()}
-                    aria-label={l5.sendAria}
+                    aria-label={fmt(l5.sendAria, { name: mentor.name })}
                   >
                     <SendHorizontal size={16} strokeWidth={2.2} />
                   </button>
                 </div>
               )}
             </div>
-            {canContinue && (
+            {stage !== 'hand-over' && (
               <button
-                className={`bubble-next ready`}
+                className={`bubble-next ${canContinue ? 'ready' : ''}`}
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleContinue();
                 }}
+                disabled={!canContinue}
                 aria-label={t.common.continue}
               >
                 <ChevronRight size={18} strokeWidth={2.5} />

@@ -1,5 +1,4 @@
 import { ArrowRight } from 'lucide-react';
-import andyPortrait from '@/components/Andy.webp';
 import { useI18n } from '@/lib/i18n';
 
 type PathSelectorProps = {
@@ -62,7 +61,6 @@ function DeeperArt() {
 function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
   const { t } = useI18n();
   const p = t.pathSelector;
-  const lessonCount = p.lessonCount.replace('{count}', String(t.roadmap.titles.length));
 
   return (
     <main className="path-selector-page">
@@ -75,25 +73,16 @@ function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
 
         <div className="path-selector-options" aria-label={p.pathsAria}>
           <button className="path-card path-card-fundamentals" type="button" onClick={onSelectFundamentals}>
-            <div className="path-card-topline">
-              <span className="path-card-number">01 · {lessonCount}</span>
-              <span className="path-card-status"><span className="path-card-dot" aria-hidden="true" />{p.availableNow}</span>
-            </div>
             <div className="path-card-symbols" aria-hidden="true"><FundamentalsArt /></div>
             <h2>{p.fundamentals}</h2>
             <p className="path-card-description">{p.fundamentalsDesc}</p>
             <p className="path-card-includes"><strong>{p.includesLabel}</strong> {p.fundamentalsIncludes}</p>
             <div className="path-card-footer">
               <span className="path-card-action">{p.startLearning} <ArrowRight size={16} strokeWidth={2.3} /></span>
-              <span className="path-card-andy"><img src={andyPortrait} alt="" />{p.recommendedByAndy}</span>
             </div>
           </button>
 
           <div className="path-card path-card-deeper" aria-disabled="true">
-            <div className="path-card-topline">
-              <span className="path-card-number">02</span>
-              <span className="path-card-status">{p.comingSoon}</span>
-            </div>
             <div className="path-card-symbols" aria-hidden="true"><DeeperArt /></div>
             <h2>{p.deeper}</h2>
             <p className="path-card-description">{p.deeperDesc}</p>
@@ -101,7 +90,7 @@ function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
               {p.deeperTopics.map((topic) => <li key={topic}>{topic}</li>)}
             </ul>
             <div className="path-card-footer">
-              <span className="path-card-action">{p.inPreparation}</span>
+              <span className="path-card-action">{p.comingSoon}</span>
             </div>
           </div>
         </div>

@@ -48,8 +48,8 @@ const en = {
     titleAfter: ' and secure your Bitcoin.',
     getStarted: 'Get started',
     haveAccount: 'I already have an account',
-    footerMode: 'Learning mode: simulation only',
-    footerNoBtc: 'No real BTC involved',
+    footerMode: 'Simulation only',
+    footerNoBtc: 'No real BTC',
     footerSupportedBy: 'Supported by',
     footerAbout: 'About us',
     footerContact: 'Contact us',
@@ -164,21 +164,17 @@ const en = {
     title: 'Choose your path',
     subtitle: 'Start with the essential skills, or explore what comes next as your confidence grows.',
     pathsAria: 'Learning paths',
-    availableNow: 'Available now',
     comingSoon: 'Coming soon',
     fundamentals: 'Fundamentals',
     fundamentalsDesc: 'The essential building blocks of self-custody.',
     includesLabel: 'Includes:',
     fundamentalsIncludes: 'hardware wallet setup, withdrawals, recovery, and more.',
     startLearning: 'Start learning',
-    lessonCount: '{count} interactive lessons',
-    recommendedByAndy: 'Andy recommends starting here',
     deeper: 'Going Deeper',
     deeperDesc: 'Advanced security for protecting larger amounts.',
     comingSoonLabel: 'Coming soon:',
     deeperIncludes: 'passphrases, multisig setups, watch-only wallets, and more.',
     deeperTopics: ['Passphrases', 'Multisig setups', 'Watch-only wallets'],
-    inPreparation: 'In preparation',
   },
   roadmap: {
     label: 'Your learning path',
@@ -413,8 +409,13 @@ const en = {
     ],
   },
 
-  // Lesson 4 — Connect to wallet software (Andy hands over to Maria)
+  // Lesson 4 — Connect to wallet software. Andy teaches it alone (`solo`); with
+  // Maria switched on (src/lib/mentors.ts) Andy hands over to her instead.
   lesson4: {
+    solo: [
+      "Now let's connect your hardware wallet to a wallet software — a laptop app for viewing your wallet's balance, history and payments.",
+      "You already have one installed called Cairn. Let's open it and take a look.",
+    ],
     andy: [
       "Now let's connect your hardware wallet to a wallet software. Maria is our expert here, so I'll hand you over to her!",
     ],
@@ -432,6 +433,14 @@ const en = {
     deviceArrival: "Under Keystores, Cairn asks where this wallet's keys come from. Ours live on the hardware wallet, so let's plug it in.",
     connectDevice: 'Your hardware wallet is plugged in. Click CONNECT HARDWARE WALLET under Keystores to send the pairing request.',
     devicePrompt: 'Now confirm the pairing request on your hardware wallet by pressing the checkmark button.',
+    // Phones show one device at a time: these three ask the learner to switch views.
+    // Phones: Maria has just said "Paired", so the keystore explanation doesn't repeat it.
+    keystoreReadMobile: 'Cairn read three things from your device. The master fingerprint identifies your hardware wallet, and the derivation path tells Cairn where your addresses live.',
+    connectDeviceMobile: 'Now click CONNECT HARDWARE WALLET under Keystores to send the pairing request.',
+    headToDevice: 'One end of the cord is now plugged into your laptop. Tap HARDWARE WALLET to plug the other end into your device.',
+    devicePlugged: 'The cord is in, so your hardware wallet is now connected to your laptop. Tap WALLET SOFTWARE to go back to Cairn.',
+    pairingSent: 'Cairn has sent a pairing request to your hardware wallet. Tap HARDWARE WALLET to answer it.',
+    devicePaired: 'Paired. Tap WALLET SOFTWARE to see what Cairn read from your hardware wallet.',
     keystoreDetails: [
       'Paired! Cairn read three things from your device. The master fingerprint identifies your hardware wallet, and the derivation path tells Cairn where your addresses live.',
       'The xpub lets Cairn see your balance and create addresses — but it can never spend. Your private keys never leave the device.',
@@ -464,7 +473,7 @@ const en = {
     ],
   },
 
-  // Lesson 5 — Receiving Bitcoin (Maria)
+  // Lesson 5 — Receiving Bitcoin (taught by the wallet-lessons mentor)
   lesson5: {
     intro: [
       "Let's walk through receiving Bitcoin with your hardware wallet. Remember: your Bitcoin lives on the blockchain, not inside the device.",
@@ -474,12 +483,17 @@ const en = {
     verifyRule: "This is your receive address. Before copying it, let's prove it really came from your device — press 'Verify address on device' below it.",
     compareCheck: 'Your device now shows the address. If it matches the one in the wallet software, press the checkmark button on the device.',
     copyNow: "Verified — the address genuinely came from your device. Now press 'Copy address' to copy it.",
+    // Phones show one device at a time: these lines ask the learner to switch views.
+    verifySent: 'Cairn has sent the address to your hardware wallet. Tap HARDWARE WALLET to check it there.',
+    compareCheckMobile: 'Your device now shows the address. Make sure it matches the one in Cairn — you can switch between the two. If it matches, press the checkmark on the device.',
+    verifiedMobile: 'Verified — the address genuinely came from your device. Tap WALLET SOFTWARE to copy it.',
+    copyNowMobile: "Now press 'Copy address' to copy it.",
     copyTooEarly: 'Not yet — verify it on your device first. Malware can swap a copied address, so only copy once it checks out.',
     verifyReject: "Good instinct — if they didn't match, you'd press X to reject it and never use that address. These match, so press the checkmark.",
-    handOver: 'Now paste the address and send it to me so I can send you some Bitcoin. For privacy, use a fresh receive address for every payment.',
+    handOver: 'Now paste the address and send it to me so I can send you some Bitcoin.',
     warn: "That doesn't match the address your device verified. Copy it again from the wallet and send it to me.",
     openTx: 'Open the Transactions tab in your wallet to watch for it.',
-    waiting: 'It should show up in a few seconds. Real payments take about 10 minutes to confirm.',
+    waiting: 'It should show up in a few seconds. Payments take about 10 minutes to confirm.',
     finished: "And there it is — 0.1 BTC received! Share an address, verify it on your device, and watch the payment arrive. Lesson complete.",
     sending: [
       "Got it! I'm sending you 0.1 BTC now — it's on its way.",
@@ -488,7 +502,7 @@ const en = {
     pasteFallback: 'Paste here with Ctrl+V or ⌘V…',
     chatAria: 'Paste the receive address',
     pasteAria: 'Paste from clipboard',
-    sendAria: 'Send address to Maria',
+    sendAria: 'Send address to {name}',
     knowledgePrompts: [
       'Nice work. Before we wrap up, two quick questions about receiving Bitcoin.',
       "Good job. One more question about what's safe to share.",
@@ -515,7 +529,7 @@ const en = {
     ],
   },
 
-  // Lesson 6 — Sending Bitcoin (Maria)
+  // Lesson 6 — Sending Bitcoin (taught by the wallet-lessons mentor)
   lesson6: {
     intro: [
       "Let's send Bitcoin from your hardware wallet. The wallet software prepares the transaction, and your hardware wallet signs and approves it.",
@@ -531,10 +545,16 @@ const en = {
     reviewTx: 'Check the recipient, amount and fee carefully. If everything matches, send the transaction to your hardware wallet for its own review.',
     hardwareReview: 'Now check each detail on the hardware wallet screen. Press the checkmark to step through the recipient, amount and fee, then confirm the payment.',
     txSent: 'Approved and broadcast! Open the Transactions tab to see your payment.',
+    // Phones show one device at a time: these lines ask the learner to switch views.
+    sentToDevice: 'Cairn has sent the payment to your hardware wallet for review. Tap HARDWARE WALLET to check it there.',
+    hardwareReviewMobile: 'Compare the recipient, amount and fee on the device with Cairn — switch between them as often as you like. Press the checkmark to step through, then confirm the payment.',
+    txSentDevice: 'Approved and broadcast! Tap WALLET SOFTWARE to go back to Cairn.',
+    txSentMobile: 'Now open the Transactions tab to see your payment.',
+    amountWrong: "That's not the amount I asked for. Change the Amount to exactly {amount} BTC.",
     maxNudge: 'MAX fills in your whole balance minus the fee — handy for emptying a wallet. I only need {amount} BTC, so type that instead.',
     sendReject: "Good instinct — if anything looked wrong, X would cancel it and nothing would be sent. Everything checks out, so press the checkmark.",
     finished: "There it is. Remember the habit: check the address, amount and fee on your hardware wallet's screen before you approve.",
-    copyAddressAria: "Copy Maria's address",
+    copyAddressAria: "Copy {name}'s address",
     knowledgePrompts: [
       'Before we wrap up, two quick questions about sending Bitcoin.',
       'Good job. One more question about approving a payment.',

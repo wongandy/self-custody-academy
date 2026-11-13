@@ -2,12 +2,14 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronDown, ChevronRight, Download, Layers, Plus, Settings, Usb, Wallet } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
-import andyPortrait from '@/components/Andy.webp';
-import mariaPortrait from '@/components/Maria.webp';
+import { MENTORS, WALLET_LESSONS_MENTOR } from '@/lib/mentors';
 import en, { type Dictionary } from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { useDeviceFit } from '@/lib/useDeviceFit';
+import { useSandbox } from '@/lib/sandbox';
+import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 import { setWalletName as saveWalletName, walletWindowTitle } from '@/lib/walletName';
 
@@ -17,7 +19,7 @@ type ConnectScenarioProps = {
 };
 
 type Step =
-  | { kind: 'mentor'; mentor: 'andy' | 'maria' }
+  | { kind: 'mentor'; mentor: 'andy' | 'maria' | 'solo' }
   | { kind: 'wallet-intro' }
   | { kind: 'wallet-name' }
   | { kind: 'wallet-settings' }
@@ -56,15 +58,23 @@ const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['device', 'laptop', 'cloud'], correctId: 'device' },
 ];
 
-// One speaking turn per line, in order: Andy hands over (`lesson4.andy`), then
-// Maria takes it (`lesson4.maria`). Deriving the turns from the dictionary's
-// lists means adding or removing a line can never leave a turn without a line
-// or shift the lines out of step. Every locale has the same list lengths.
+// One speaking turn per line, in order. With Maria switched on
+// (src/lib/mentors.ts) Andy hands over (`lesson4.andy`), then Maria takes it
+// (`lesson4.maria`); otherwise Andy teaches the lesson alone (`lesson4.solo`).
+// Deriving the turns from the dictionary's lists means adding or removing a
+// line can never leave a turn without a line or shift the lines out of step.
+// Every locale has the same list lengths.
 // The Settings and keystore explanations work the same way: one step per line.
+const WITH_MARIA = WALLET_LESSONS_MENTOR === 'maria';
 const HANDOFF_COUNT = en.lesson4.andy.length;
+const INTRO_STEPS: Step[] = WITH_MARIA
+  ? [
+    ...en.lesson4.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
+    ...en.lesson4.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
+  ]
+  : en.lesson4.solo.map((): Step => ({ kind: 'mentor', mentor: 'solo' }));
 const STEPS: Step[] = [
-  ...en.lesson4.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
-  ...en.lesson4.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
+  ...INTRO_STEPS,
   { kind: 'wallet-intro' },
   { kind: 'wallet-name' },
   ...en.lesson4.walletSettings.map((): Step => ({ kind: 'wallet-settings' })),
@@ -140,6 +150,7 @@ function useTypewriter(text: string, speed = 6, resetKey = '') {
 function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): string {
   switch (step.kind) {
     case 'mentor':
+      if (step.mentor === 'solo') return l4.solo[stepIndex] ?? '';
       if (step.mentor === 'andy') return l4.andy[stepIndex] ?? '';
       return l4.maria[stepIndex - HANDOFF_COUNT] ?? '';
     case 'wallet-intro':
@@ -177,8 +188,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const [mobilePanel, setMobilePanel] = useState<'software' | 'device'>('software');
   const [mobileDeviceEntered, setMobileDeviceEntered] = useState(false);
+  const [mobileCordSeated, setMobileCordSeated] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false);
   const [walletName, setWalletName] = useState('');
+  // TEMPORARY (/test sandbox): a tab the learner opened by hand, overriding the lesson's.
+  const sandbox = useSandbox();
+  const [sandboxTab, setSandboxTab] = useState<WalletTabId | null>(null);
   const walletNameInputRef = useRef<HTMLDivElement>(null);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -192,28 +207,71 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   }, []);
 
   const SLIDE_SETTLE_MS = 620;
+  // Phones: the cord rises into the laptop and seats before the device switcher appears
+  const CORD_SEAT_MS = 1000;
 
   const step = STEPS[stepIndex];
-  const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
-  const portrait = mentorName === 'Andy' ? andyPortrait : mariaPortrait;
+  // Andy opens the lesson; after the handoff (if Maria is on) the lesson's mentor takes over.
+  const mentor = step.kind === 'mentor' && step.mentor === 'andy' ? MENTORS.andy : MENTORS[WALLET_LESSONS_MENTOR];
+  const mentorName = mentor.name;
+  const portrait = mentor.portrait;
   // Maria asks the learner to wait until Cairn has finished starting up, then
   // walks the learner through creating a wallet once the app is on screen.
   const walletBooting = step.kind === 'wallet-intro' && bootPhase !== 'ready';
+  // Phones show one device at a time and the learner does the switching: at
+  // three moments Maria stops, says what just happened and asks them to tap the
+  // other view. The lesson moves on when they do.
+  const viewingDevice = isMobile && mobileDeviceEntered && mobilePanel === 'device';
+  // The cord has clicked into the laptop and the switcher has appeared; over to the device.
+  // The line stays up while the cord plugs into the device, until Maria's next one.
+  const mobileHeadWait = isMobile && step.kind === 'device-arrival' && arrivalStarted && mobileCordSeated && connection !== 'linked';
+  // The learner has switched to the device; the cord is animating but hasn't linked yet.
+  const mobileCordAnimating = viewingDevice && step.kind === 'device-arrival' && connection !== 'linked';
+  // The cord has clicked into the device; back to the app to send the request.
+  const mobilePlugWait = viewingDevice && step.kind === 'device-arrival' && connection === 'linked';
+  // The request is sent; over to the device to confirm it.
+  const mobilePromptWait = isMobile && !viewingDevice && step.kind === 'device-prompt' && !connected;
+  // Confirmed on the device; back to the app to see the keystore.
+  const mobilePairedWait = viewingDevice && step.kind === 'device-prompt' && connected;
   const message = nudgeActive
-    ? t.common.nudgeLater
+    ? t.common[MENTORS[WALLET_LESSONS_MENTOR].nudge]
     : check.active
       ? check.mentorLine
     : walletBooting
       ? l4.walletWaiting
-      : stepMessage(l4, step, stepIndex);
-  const bubbleKey = nudgeActive ? 'nudge' : check.active ? check.mentorKey : `${mentorName}-${stepIndex}-${message}`;
+      : mobileHeadWait
+        ? l4.headToDevice
+      : mobileCordAnimating
+        ? l4.headToDevice
+      : mobilePlugWait
+        ? l4.devicePlugged
+        : mobilePromptWait
+          ? l4.pairingSent
+          : mobilePairedWait
+            ? l4.devicePaired
+          // Maria has just said the cord is in, so on phones she skips straight to the button
+          : isMobile && step.kind === 'connect-request'
+            ? l4.connectDeviceMobile
+          // Likewise she has just said "Paired", so the keystore line doesn't open with it
+          : isMobile && stepIndex === KEYSTORE_DETAILS_INDEX
+            ? l4.keystoreReadMobile
+          // The history is still loading: hold the Transactions line until it is on
+          // screen, so she never talks about the 0.04998 BTC before it appears
+          : step.kind === 'connected' && syncing
+            ? l4.openTransactions
+            : stepMessage(l4, step, stepIndex);
+  // While the history loads the bubble keeps the previous step's key, so the
+  // held line stays on screen instead of typing itself out again.
+  const bubbleStepIndex = step.kind === 'connected' && syncing ? stepIndex - 1 : stepIndex;
+  const bubbleKey = nudgeActive ? 'nudge' : check.active ? check.mentorKey : `${mentorName}-${bubbleStepIndex}-${message}`;
   const { displayed, done, skip } = useTypewriter(message, 6, bubbleKey);
 
   const walletVisible = stepIndex >= WALLET_INTRO_INDEX;
   const spotlight = !walletVisible;
   const mobileCableHalf = isMobile && walletVisible && step.kind === 'device-arrival' && arrivalStarted && !mobileDeviceEntered;
   const showCable = mobileCableHalf || connection === 'plugging' || connection === 'seating' || connection === 'linked';
-  const showMobileSwitch = isMobile && walletVisible && arrivalStarted;
+  const mobileCordEntering = mobileCableHalf && !mobileCordSeated;
+  const showMobileSwitch = isMobile && walletVisible && arrivalStarted && (mobileCordSeated || mobileDeviceEntered);
   const arrivalWaiting = step.kind === 'device-arrival' && !arrivalRequested;
   const arrivalAnimating = step.kind === 'device-arrival' && arrivalRequested && !arrivalStarted;
   const connecting = step.kind === 'device-arrival' && arrivalStarted && connection !== 'linked';
@@ -221,7 +279,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   // Nothing on the laptop, device or phone responds until the mentor has finished talking
   // and Cairn has finished starting up.
-  const interactionLocked = !done || walletBooting || arrivalWaiting || arrivalAnimating || connecting;
+  const interactionLocked = !sandbox && (!done || walletBooting || arrivalWaiting || arrivalAnimating || connecting);
   const usbConnectionComplete = connection === 'linked';
 
   const requestPending = step.kind === 'connect-request' && !connectRequested;
@@ -232,13 +290,14 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const syncPending = step.kind === 'connected' && syncing;
   // Creating the wallet happens in the app itself: New Wallet, then the name dialog.
   const appPending = step.kind === 'wallet-intro' || step.kind === 'wallet-name';
-  const devicePending = requestPending || confirmPending || appPending || tabPending || syncPending;
+  const devicePending = requestPending || confirmPending || appPending || tabPending || syncPending || mobilePlugWait || mobilePairedWait;
   // No wallet exists until the name dialog is confirmed. The Settings tab shows
   // until the pairing is confirmed, then the app moves to the Transactions tab.
   const walletCreated = stepIndex > WALLET_NAME_INDEX;
   // After pairing, Settings shows the filled-in keystore; the app moves to
   // Transactions once the learner clicks that tab.
   const activeTab: 'settings' | 'transactions' = stepIndex >= CONNECTED_INDEX ? 'transactions' : 'settings';
+  const shownTab: WalletTabId = (sandbox && sandboxTab) || activeTab;
   const trimmedWalletName = walletName.trim();
 
   const canContinue = nudgeActive || check.active
@@ -246,8 +305,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     : arrivalWaiting
       ? done && !walletBooting
       : done && !walletBooting && !sliding && (!devicePending && !connecting);
-  const softwareLocked = interactionLocked || (canContinue && !nudgeActive);
-  const deviceLocked = interactionLocked || (canContinue && !nudgeActive);
+  const softwareLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive));
   const connectButtonEnabled = step.kind === 'connect-request' && usbConnectionComplete && done && !nudgeActive;
 
   const expectedAction: ExpectedAction =
@@ -256,13 +314,18 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
       : step.kind === 'device-prompt'
         ? { type: 'confirm' }
         : { type: 'none' };
+  // The device only responds while the lesson is waiting on it. With nothing
+  // expected of it, a stray press must not switch it off or change its screen.
+  const deviceLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive) || expectedAction.type === 'none');
 
   const portraitRef = useRef<HTMLDivElement>(null);
   const duoSlotRef = useFitScale(0.5);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
   const laptopCaptionRef = useRef<HTMLDivElement>(null);
+  const deviceStageRef = useRef<HTMLDivElement>(null);
   useLaptopCableAlign(laptopRef, walletVisible);
+  useDeviceFit(deviceStageRef, isMobile && mobileDeviceEntered);
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
 
   // The device slides in, the cord plugs into the laptop, then the device meets the cord.
@@ -271,17 +334,13 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   useEffect(() => {
     if (step.kind !== 'device-arrival' || !arrivalStarted) return;
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      if (connection !== 'linked') setConnection('linked');
-      if (isMobile) {
-        setMobileDeviceEntered(true);
-        setMobilePanel('device');
-      }
-      return;
-    }
-
     // On phones the sequence waits until the learner switches to the hardware wallet
     if (isMobile && connection === 'idle') return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (connection !== 'linked') setConnection('linked');
+      return;
+    }
 
     const order: ConnectionPhase[] = ['idle', 'arriving', 'plugging', 'seating', 'linked'];
     const nextIndex = order.indexOf(connection) + 1;
@@ -347,26 +406,34 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => clearTimeout(timer);
   }, [step.kind, done, arrivalRequested, arrivalStarted]);
 
-  // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
-  // On phones the linked cord stays visible for a beat before the view returns to the app.
+  // On phones the cord plugs into the laptop first; only once it has seated does
+  // the device switcher appear, inviting the learner over to the hardware wallet.
   useEffect(() => {
-    if (step.kind !== 'device-arrival' || connection !== 'linked') return;
+    if (!arrivalStarted || mobileCordSeated) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = setTimeout(() => setMobileCordSeated(true), reduce ? 0 : CORD_SEAT_MS);
+    return () => clearTimeout(timer);
+  }, [arrivalStarted, mobileCordSeated]);
+
+  // The moment the cord finishes seating, Maria moves on to the pairing request on her own.
+  // On phones she waits until the learner has switched back to the app (mobilePlugWait).
+  useEffect(() => {
+    if (step.kind !== 'device-arrival' || connection !== 'linked' || viewingDevice) return;
     const timer = setTimeout(() => {
       setStepIndex((current) => (STEPS[current].kind === 'device-arrival' ? current + 1 : current));
-    }, isMobile ? 1400 : 0);
+    }, 0);
     return () => clearTimeout(timer);
-  }, [step.kind, connection, isMobile]);
+  }, [step.kind, connection, viewingDevice]);
 
-  // On phones the visible panel follows the story: the app for the pairing
-  // request, the sync and the result; the device while the pairing is confirmed on it.
+  // On phones the learner switches views themselves. This is only a safety net:
+  // the steps that happen in the app are never left showing the device.
   useEffect(() => {
     if (!isMobile || !mobileDeviceEntered) return;
     if (syncing) {
       setMobilePanel('software');
       return;
     }
-    if (step.kind === 'connect-request' || step.kind === 'keystore-details' || step.kind === 'open-transactions' || step.kind === 'connected') setMobilePanel('software');
-    else if (step.kind === 'device-prompt') setMobilePanel('device');
+    if (step.kind === 'keystore-details' || step.kind === 'open-transactions' || step.kind === 'connected') setMobilePanel('software');
   }, [isMobile, mobileDeviceEntered, step.kind, syncing]);
 
   // While the lesson is about the keystore (connect, confirm, details), keep
@@ -391,10 +458,11 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
   // The device has confirmed the pairing and the sync animation has run its course:
   // the balance and history are on screen, so Maria moves to her connected line on her own.
+  // On phones she waits until the learner has switched back to the app (mobilePairedWait).
   useEffect(() => {
-    if (step.kind !== 'device-prompt' || !connected) return;
+    if (step.kind !== 'device-prompt' || !connected || viewingDevice) return;
     setStepIndex((current) => (STEPS[current].kind === 'device-prompt' ? current + 1 : current));
-  }, [step.kind, connected]);
+  }, [step.kind, connected, viewingDevice]);
 
   // The app boots once the wallet window is on screen: brand mark, a short load,
   // then the tabs and history fade in. Leaving the lesson unmounts this component,
@@ -501,7 +569,9 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   };
 
   // The name field takes focus as soon as Maria has finished asking for a name.
+  // Not on touch screens: focus would raise the keyboard over what she is saying.
   useEffect(() => {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     if (step.kind === 'wallet-name' && !softwareLocked) walletNameInputRef.current?.focus();
   }, [step.kind, softwareLocked]);
 
@@ -601,10 +671,21 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleContinue]);
 
+  // The switcher option the learner should tap next, if the lesson is waiting on it.
+  // The rest of the time the switcher is locked: the learner stays on the device
+  // the lesson is talking about.
+  const mobileSwitchHint: 'software' | 'device' | null =
+    mobileCableHalf || mobilePromptWait
+      ? 'device'
+      : mobilePlugWait || mobilePairedWait || (viewingDevice && step.kind === 'connect-request')
+        ? 'software'
+        : null;
+
   const cableClass = [
     'connect-cable',
     showCable ? `is-${connection}` : 'is-dormant',
     syncing ? 'is-syncing' : '',
+    mobileCordEntering ? 'is-entering' : '',
   ].filter(Boolean).join(' ');
 
   const mobileCableVariant = !isMobile
@@ -655,12 +736,12 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   );
 
   return (
-    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? '' : 'scenario-page-connect'}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? '' : 'scenario-page-connect connect-paged'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
         {check.active && <KnowledgeCheckKicker />}
         {walletVisible && !check.active && (
           <div ref={duoSlotRef} className="fit-slot fit-wrap">
-          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${mobileCableHalf ? ' mobile-half-cable' : ''}${showMobileSwitch ? ' has-device-switcher' : ''}`}>
+          <div className={`connect-duo is-wide ${interactionLocked ? 'is-locked' : ''}${showMobileSwitch ? ' has-device-switcher' : ''}`}>
             <div className={`wallet-laptop laptop-enter${isMobile && mobilePanel === 'device' ? ' mobile-hidden' : ''}`}>
               <div ref={laptopRef} className="wallet-laptop-body">
                 <div className="wallet-window">
@@ -782,47 +863,54 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                       <aside className="wallet-sidebar">
                       <button
                         type="button"
-                        className={`wallet-nav-item${activeTab === 'transactions' ? ' active' : ''}`}
-                        onClick={activeTab === 'transactions' ? () => {} : step.kind === 'open-transactions' ? handleOpenTransactions : handleUnexpectedAction}
+                        className={`wallet-nav-item${shownTab === 'transactions' ? ' active' : ''}`}
+                        onClick={sandbox
+                          ? () => {
+                            if (step.kind === 'open-transactions') handleOpenTransactions();
+                            setSandboxTab('transactions');
+                          }
+                          : activeTab === 'transactions' ? () => {} : step.kind === 'open-transactions' ? handleOpenTransactions : handleUnexpectedAction}
                         disabled={softwareLocked}
-                        aria-pressed={activeTab === 'transactions'}
+                        aria-pressed={shownTab === 'transactions'}
                       >
                         <ArrowLeftRight strokeWidth={2.2} />
                         <span className="wallet-nav-label">Transactions</span>
                       </button>
                       <button
                         type="button"
-                        className="wallet-nav-item"
-                        onClick={handleUnexpectedAction}
+                        className={`wallet-nav-item${shownTab === 'send' ? ' active' : ''}`}
+                        onClick={sandbox ? () => setSandboxTab('send') : handleUnexpectedAction}
                         disabled={softwareLocked}
-                        aria-pressed="false"
+                        aria-pressed={shownTab === 'send'}
                       >
                         <ArrowUpRight strokeWidth={2.2} />
                         <span className="wallet-nav-label">Send</span>
                       </button>
                       <button
                         type="button"
-                        className="wallet-nav-item"
-                        onClick={handleUnexpectedAction}
+                        className={`wallet-nav-item${shownTab === 'receive' ? ' active' : ''}`}
+                        onClick={sandbox ? () => setSandboxTab('receive') : handleUnexpectedAction}
                         disabled={softwareLocked}
-                        aria-pressed="false"
+                        aria-pressed={shownTab === 'receive'}
                       >
                         <ArrowDownLeft strokeWidth={2.2} />
                         <span className="wallet-nav-label">Receive</span>
                       </button>
                       <button
                         type="button"
-                        className={`wallet-nav-item${activeTab === 'settings' ? ' active' : ''}`}
-                        onClick={activeTab === 'settings' ? () => {} : handleUnexpectedAction}
+                        className={`wallet-nav-item${shownTab === 'settings' ? ' active' : ''}`}
+                        onClick={sandbox ? () => setSandboxTab('settings') : activeTab === 'settings' ? () => {} : handleUnexpectedAction}
                         disabled={softwareLocked}
-                        aria-pressed={activeTab === 'settings'}
+                        aria-pressed={shownTab === 'settings'}
                       >
                         <Settings strokeWidth={2.2} />
                         <span className="wallet-nav-label">Settings</span>
                       </button>
                     </aside>
                     <div className="wallet-canvas">
-                      {activeTab === 'settings' ? (
+                      {shownTab === 'send' || shownTab === 'receive' ? (
+                        <SandboxWalletTab tab={shownTab} />
+                      ) : shownTab === 'settings' ? (
                         <div className="wallet-settings">
                           <div className="wallet-tab-heading">
                             <div className="wallet-tab-title"><Settings strokeWidth={2} /><span>Settings</span></div>
@@ -951,6 +1039,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
 
             {(isMobile ? mobileDeviceEntered : true) && (
               <div
+                ref={deviceStageRef}
                 className={`connect-device-stage ${!isMobile && connection === 'idle' ? 'is-dormant' : `phase-${connection}`}${isMobile && mobilePanel !== 'device' ? ' mobile-hidden' : ''}`}
               >
                 <div className="connect-device-row">
@@ -977,7 +1066,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                 ]}
                 active={mobileDeviceEntered ? mobilePanel : 'software'}
                 onSelect={handleMobileSwitch}
-                pulseId={mobileCableHalf ? 'device' : null}
+                pulseId={mobileSwitchHint}
+                disabled={!sandbox && mobileSwitchHint === null}
               />
             )}
           </div>

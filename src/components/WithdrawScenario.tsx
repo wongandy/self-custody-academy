@@ -6,6 +6,7 @@ import en from '@/locales/en';
 import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
+import { useSandbox } from '@/lib/sandbox';
 
 type WithdrawScenarioProps = {
   completed: boolean;
@@ -158,7 +159,9 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const [wrongOptionId, setWrongOptionId] = useState<string | null>(null);
   const [wrongAttempt, setWrongAttempt] = useState(0);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
-  const [phoneVisible, setPhoneVisible] = useState(false);
+  // TEMPORARY (/test sandbox): the phone is on screen and every field is open from the start.
+  const sandbox = useSandbox();
+  const [phoneVisible, setPhoneVisible] = useState(sandbox);
   const portraitRef = useRef<HTMLDivElement>(null);
   const middleAreaRef = useFitScale();
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -178,12 +181,12 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const spotlight = isInIntro && introStep < HANDOVER_INDEX;
   const isOnExchangeForm = (isMobile ? activePanel === 'exchange' : phoneVisible) && exchangeScreen === 'form';
   const exchangeIntroLocking = exchangeIntroStep !== null && exchangeIntroStep < EXCHANGE_INTRO_COUNT - 1;
-  const addressLocked = isOnExchangeForm && (exchangeIntroLocking || exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
-  const amountLocked = isOnExchangeForm && exchangePhase === 'enter-address';
-  const amountNudgeLocked = isOnExchangeForm && exchangePhase === 'ready-to-withdraw';
-  const maxLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'ready-to-withdraw');
-  const withdrawBtnLocked = isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'enter-amount');
-  const switchNudgeLocked = isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
+  const addressLocked = !sandbox && isOnExchangeForm && (exchangeIntroLocking || exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
+  const amountLocked = !sandbox && isOnExchangeForm && exchangePhase === 'enter-address';
+  const amountNudgeLocked = !sandbox && isOnExchangeForm && exchangePhase === 'ready-to-withdraw';
+  const maxLocked = !sandbox && isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'ready-to-withdraw');
+  const withdrawBtnLocked = !sandbox && isOnExchangeForm && (exchangePhase === 'enter-address' || exchangePhase === 'enter-amount');
+  const switchNudgeLocked = !sandbox && isOnExchangeForm && (exchangePhase === 'enter-amount' || exchangePhase === 'ready-to-withdraw');
   const expectedAction: ExpectedAction =
     activePanel === 'wallet' && walletPhase === 'menu' && !hasRetrievedAddress
       ? { type: 'confirm-menu-item', label: 'Receive Bitcoin' }
@@ -194,7 +197,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
   const showSwitchButton = !isInIntro && (
     switchIntroStep !== null ? switchIntroStep === SWITCH_INTRO_COUNT - 1 : addressCopied || activePanel === 'exchange'
   );
-  const showSwitcher = showSwitchButton && isMobile;
+  const showSwitcher = isMobile && (sandbox ? walletVisible : showSwitchButton);
   const currentIntroMessage = INTRO_MESSAGES[introStep];
 
   const trimmedAddress = sendAddress.trim();
@@ -286,7 +289,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
           ? switchIntroStep < SWITCH_INTRO_COUNT - 1
           : !isOnExchangeForm && exchangeScreen === 'success';
 
-  const switchLocked = activePanel === 'exchange' && canContinue;
+  const switchLocked = !sandbox && activePanel === 'exchange' && canContinue;
 
   // The wallet ignores input while Andy is still talking, and while the
   // continue button is the only expected action.
@@ -480,7 +483,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
 
   const handleWithdraw = () => {
     if (withdrawBtnLocked) return;
-    if (canWithdraw) {
+    if (canWithdraw || sandbox) {
       setExchangeScreen('confirm');
     }
   };
@@ -723,7 +726,7 @@ export default function WithdrawScenario({ onComplete }: WithdrawScenarioProps) 
                           className="withdraw-btn"
                           type="button"
                           onClick={handleWithdraw}
-                          disabled={!canWithdraw || withdrawBtnLocked}
+                          disabled={(!canWithdraw && !sandbox) || withdrawBtnLocked}
                         >
                           Withdraw
                         </button>
