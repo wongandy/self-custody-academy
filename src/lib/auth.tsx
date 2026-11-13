@@ -34,6 +34,19 @@ function toCode(error: AuthError): string {
   return error.code ?? (error.status === 429 ? 'over_request_rate_limit' : 'unknown');
 }
 
+/**
+ * Supabase normally returns errors, but a dropped connection or a non-JSON response
+ * from a proxy can make the call throw. Turn that into an error result so the form
+ * unlocks and shows a message instead of sitting on "Please wait…".
+ */
+async function attempt<T>(call: () => Promise<T>, fallback: (code: string) => T): Promise<T> {
+  try {
+    return await call();
+  } catch {
+    return fallback('unknown');
+  }
+}
+
 function redirectUrl() {
   return `${window.location.origin}${window.location.pathname}`;
 }
@@ -67,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback((email: string, password: string) => attempt<SignUpResult>(async () => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -81,32 +94,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'user_already_exists', needsConfirmation: false };
     }
     return { error: null, needsConfirmation: !data.session };
-  }, [locale]);
+  }, (code) => ({ error: code, needsConfirmation: false })), [locale]);
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback((email: string, password: string) => attempt<AuthResult>(async () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: toCode(error) };
-    return { error: null };
-  }, []);
+    return { error: error ? toCode(error) : null };
+  }, (code) => ({ error: code })), []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
   }, []);
 
-  const resetPassword = useCallback(async (email: string) => {
+  const resetPassword = useCallback((email: string) => attempt<AuthResult>(async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl(),
     });
-    if (error) return { error: toCode(error) };
-    return { error: null };
-  }, []);
+    return { error: error ? toCode(error) : null };
+  }, (code) => ({ error: code })), []);
 
-  const updatePassword = useCallback(async (password: string) => {
+  const updatePassword = useCallback((password: string) => attempt<AuthResult>(async () => {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) return { error: toCode(error) };
     setIsRecovering(false);
     return { error: null };
-  }, []);
+  }, (code) => ({ error: code })), []);
 
   // Keep the saved email language in step with the language the user browses in,
   // so accounts made before `locale` existed (or that switch language) get it too.
