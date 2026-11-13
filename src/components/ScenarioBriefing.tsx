@@ -96,7 +96,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [introStep, setIntroStep] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [walletPhase, setWalletPhase] = useState<WalletPhase>('off');
-  const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked'>('create-intro');
+  const [menuSelection, setMenuSelection] = useState<'create-intro' | 'recover-intro' | 'send-blocked'>('create-intro');
   const [createWordsStep, setCreateWordsStep] = useState(0);
   const [createDoneStep, setCreateDoneStep] = useState(0);
   const [readyMenuSeen, setReadyMenuSeen] = useState(false);
@@ -141,7 +141,6 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     'create-quiz': l1.createQuiz,
     'create-done': l1.createDone[0],
     'recover-intro': l1.recoverLater,
-    'receive-address': l1.receiveAddress,
     'send-blocked': l1.sendBlocked,
     settings: l1.readyMenu,
     'reset-warn': l1.factoryReset,

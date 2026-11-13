@@ -38,7 +38,7 @@ import {
   Usb,
   Wifi,
 } from 'lucide-react';
-import HardwareWallet, { RECEIVE_ADDRESS as DEVICE_ADDRESS, type WalletPhase } from '@/components/HardwareWallet';
+import HardwareWallet, { type WalletPhase } from '@/components/HardwareWallet';
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
 import { PhoneClock } from '@/components/WithdrawScenario';
 import { ReceiveQrCode } from '@/components/ReceiveQrCode';
@@ -136,7 +136,7 @@ function ExchangePhone() {
   const [screen, setScreen] = useState<PhoneScreen>('form');
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
-  const displayAddress = address.trim() || DEVICE_ADDRESS;
+  const displayAddress = address.trim() || LAPTOP_RECEIVE_ADDRESS;
   const half = Math.ceil(displayAddress.length / 2);
   const numericAmount = Number.parseFloat(amount) || 0;
   const received = Math.max(0, numericAmount - NETWORK_FEE);
