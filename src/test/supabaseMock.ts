@@ -23,6 +23,15 @@ function createSupabaseMock() {
     updateUser: vi.fn(async (): Promise<Result> => ({ data: { user: null }, error: null })),
     signOut: vi.fn(async (): Promise<{ error: unknown }> => ({ error: null })),
   };
+  /** `learning_progress` reads and writes: supabase.from(t).select().eq().maybeSingle() / .upsert(). */
+  const db = {
+    maybeSingle: vi.fn(async (): Promise<{ data: Record<string, unknown> | null; error: unknown }> => ({ data: null, error: null })),
+    upsert: vi.fn<(row: Record<string, unknown>) => Promise<{ error: unknown }>>(async () => ({ error: null })),
+  };
+  const from = vi.fn(() => ({
+    select: () => ({ eq: () => ({ maybeSingle: db.maybeSingle }) }),
+    upsert: db.upsert,
+  }));
   const emit = (event: AuthChangeEvent, session: Session | null) => listeners.forEach((cb) => cb(event, session));
   const reset = () => {
     listeners.length = 0;
@@ -33,8 +42,13 @@ function createSupabaseMock() {
     auth.signUp.mockReset();
     auth.signInWithPassword.mockReset();
     auth.resetPasswordForEmail.mockReset();
+    from.mockClear();
+    db.maybeSingle.mockReset();
+    db.maybeSingle.mockImplementation(async () => ({ data: null, error: null }));
+    db.upsert.mockReset();
+    db.upsert.mockImplementation(async () => ({ error: null }));
   };
-  return { supabase: { auth }, emit, reset };
+  return { supabase: { auth, from }, db, emit, reset };
 }
 
 
