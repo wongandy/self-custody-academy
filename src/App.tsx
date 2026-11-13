@@ -106,9 +106,14 @@ function App() {
     const merged = mergeLessons(remote, local);
     setCompletedLessons(merged);
     if (merged.length > remote.length) {
-      await supabase
+      const { error: saveError } = await supabase
         .from('learning_progress')
         .upsert({ user_id: user.id, completed_lessons: merged, updated_at: new Date().toISOString() });
+      if (saveError) {
+        // Keep the guest's browser copy so the next roadmap visit can try again.
+        setProgressError('We could not save your progress. Your current session still works.');
+        return;
+      }
     }
     clearLocalProgress();
   }, [user]);
