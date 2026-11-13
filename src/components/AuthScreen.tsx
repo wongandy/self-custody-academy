@@ -50,6 +50,12 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
 
   const isRegister = mode === 'register';
 
+  // The error belongs to the form the user just submitted; don't carry it across modes.
+  const switchMode = (next: 'register' | 'login') => {
+    setError(null);
+    onSwitchMode(next);
+  };
+
   const defaultTitle = isRegister ? a.registerTitle : a.loginTitle;
   const defaultSubtitle = isRegister ? a.registerSubtitle : a.loginSubtitle;
 
@@ -197,7 +203,7 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
               disabled={isSubmitting}
               onClick={() => {
                 // A dead reset link leaves the user stuck here; let them sign in or ask for a new link.
-                onSwitchMode('login');
+                switchMode('login');
                 cancelRecovery();
               }}
             >
@@ -232,7 +238,7 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
                 setConfirmationSent(false);
                 setPassword('');
                 setConfirmPassword('');
-                onSwitchMode('login');
+                switchMode('login');
               }}
             >
               <ArrowLeft size={14} strokeWidth={2.2} /> {a.backToSignIn}
@@ -398,9 +404,9 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
 
         <div className="auth-switch">
           {isRegister ? (
-            <p>{a.haveAccount} <button type="button" onClick={() => onSwitchMode('login')}>{a.signIn}</button></p>
+            <p>{a.haveAccount} <button type="button" onClick={() => switchMode('login')}>{a.signIn}</button></p>
           ) : (
-            <p>{a.newHere} <button type="button" onClick={() => onSwitchMode('register')}>{a.createAccountLink}</button></p>
+            <p>{a.newHere} <button type="button" onClick={() => switchMode('register')}>{a.createAccountLink}</button></p>
           )}
         </div>
       </div>
