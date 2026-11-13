@@ -230,7 +230,7 @@ const en = {
     saveNewPassword: 'Save new password',
     confirmTitle: 'Check your email',
     confirmSentBefore: "We've sent a confirmation link to ",
-    confirmSentAfter: '. Click it to activate your account, then sign in.',
+    confirmSentAfter: '. Click it to activate your account. You\'ll be signed in automatically.',
     errInvalidCredentials: 'Incorrect email or password.',
     errUserExists: 'An account with this email already exists. Try signing in instead.',
     errEmailNotConfirmed: 'Please confirm your email first — check your inbox for the link.',

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { initialAuthCallback, supabase } from '@/lib/supabase';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * Auth results carry a stable error code (Supabase's `error.code` where available)
@@ -22,6 +23,8 @@ type AuthContextValue = {
   signIn: (email: string, password: string) => Promise<AuthResult>;
   resetPassword: (email: string) => Promise<AuthResult>;
   updatePassword: (password: string) => Promise<AuthResult>;
+  /** Leave the "set a new password" screen (e.g. the reset link turned out to be dead) and start over. */
+  cancelRecovery: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -36,6 +39,7 @@ function redirectUrl() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { locale } = useI18n();
   const [session, setSession] = useState<Session | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isRecovering, setIsRecovering] = useState(initialAuthCallback.isRecovery);
@@ -67,7 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: redirectUrl() },
+      // `locale` picks the language of the emails Supabase sends this user.
+      options: { emailRedirectTo: redirectUrl(), data: { locale } },
     });
     if (error) return { error: toCode(error), needsConfirmation: false };
     // With email confirmation on, Supabase hides duplicate sign-ups behind a fake
@@ -76,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'user_already_exists', needsConfirmation: false };
     }
     return { error: null, needsConfirmation: !data.session };
-  }, []);
+  }, [locale]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -103,11 +108,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }, []);
 
+  // Keep the saved email language in step with the language the user browses in,
+  // so accounts made before `locale` existed (or that switch language) get it too.
+  const user = session?.user ?? null;
+  const savedLocale = user?.user_metadata?.locale;
+  useEffect(() => {
+    if (!user || savedLocale === locale) return;
+    supabase.auth.updateUser({ data: { locale } });
+  }, [user?.id, savedLocale, locale]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cancelRecovery = useCallback(async () => {
+    setIsRecovering(false);
+    await supabase.auth.signOut();
+  }, []);
+
   const clearLinkError = useCallback(() => setLinkError(null), []);
 
   const value: AuthContextValue = {
     session,
-    user: session?.user ?? null,
+    user,
     isReady,
     isRecovering,
     linkError,
@@ -116,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     resetPassword,
     updatePassword,
+    cancelRecovery,
     signOut,
   };
 
