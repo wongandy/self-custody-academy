@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, Usb, WalletCards } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Check, KeyRound, Landmark, Usb, WalletCards } from 'lucide-react';
 import { fmt, useI18n } from '@/lib/i18n';
 
 type RoadmapProps = {
@@ -23,10 +23,10 @@ type Scenario = {
 // Titles come from the dictionary (`roadmap.titles`), in the same order.
 const scenarios: Scenario[] = [
   { number: 1, icon: WalletCards },
-  { number: 2, icon: ArrowDownToLine },
-  { number: 3, icon: KeyRound },
-  { number: 4, icon: Usb },
-  { number: 5, icon: ArrowDownToLine },
+  { number: 2, icon: Usb },
+  { number: 3, icon: ArrowDownToLine },
+  { number: 4, icon: KeyRound },
+  { number: 5, icon: Landmark },
   { number: 6, icon: ArrowUpFromLine },
 ];
 

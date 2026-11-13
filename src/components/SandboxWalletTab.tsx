@@ -7,7 +7,7 @@
  */
 import { useState } from 'react';
 import { ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, Check, ChevronDown, Copy, Eye, Settings, Usb } from 'lucide-react';
-import { ReceiveQrCode } from '@/components/ReceiveScenario';
+import { ReceiveQrCode } from '@/components/ReceiveQrCode';
 
 export type WalletTabId = 'transactions' | 'send' | 'receive' | 'settings';
 
@@ -21,8 +21,8 @@ export const WALLET_TABS = [
 const BALANCE = '0.14998';
 const RECEIVE_ADDRESS = 'bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu';
 const TRANSACTIONS = [
-  { date: '2026-10-20 14:32', value: '+0.10000 BTC', balance: '0.14998 BTC' },
-  { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC' },
+  { date: '2026-10-20 14:32', value: '+0.04998 BTC', balance: '0.14998 BTC' },
+  { date: '2026-09-21 09:48', value: '+0.10000 BTC', balance: '0.10000 BTC' },
 ];
 const FEE_OPTIONS = [
   { id: 'low', label: 'Low', rate: '2 sats/vB', fee: '0.00000120' },
@@ -134,7 +134,7 @@ export function SandboxWalletTab({ tab }: { tab: WalletTabId }) {
           <div className="wallet-tab-title"><ArrowDownLeft strokeWidth={2} /><span>Receive Bitcoin</span></div>
         </div>
         <div className="rx-qr-frame" aria-hidden="true">
-          <ReceiveQrCode />
+          <ReceiveQrCode address={RECEIVE_ADDRESS} />
         </div>
         <span className="wallet-field-label">Receive address</span>
         <p className="rx-addr">{RECEIVE_ADDRESS}</p>

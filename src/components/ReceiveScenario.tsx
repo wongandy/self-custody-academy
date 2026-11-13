@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ArrowDownLeft,
   ArrowLeftRight,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
+import { ReceiveQrCode } from '@/components/ReceiveQrCode';
 import { walletLessonsMentor as mentor } from '@/lib/mentors';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
@@ -37,9 +38,9 @@ const VERIFY_REJECT_NUDGE_MS = 5000;
 
 type NudgeKind = 'generic' | 'early-copy' | 'verify-reject';
 
-// The mentor's lines live in the dictionary (`lesson5`); every locale has the same list lengths.
-const INTRO_COUNT = en.lesson5.intro.length;
-const SENDING_COUNT = en.lesson5.sending.length;
+// The mentor's lines live in the dictionary (`lesson3`); every locale has the same list lengths.
+const INTRO_COUNT = en.lesson3.intro.length;
+const SENDING_COUNT = en.lesson3.sending.length;
 
 type MentorStage =
   | 'intro'
@@ -55,7 +56,7 @@ type MentorStage =
 
 const CONTINUE_STAGES = new Set<MentorStage>(['intro', 'sending', 'finished']);
 
-// Answer key for the check-in; the wording is `lesson5.questions`, in this order.
+// Answer key for the check-in; the wording is `lesson3.questions`, in this order.
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['match', 'faster', 'fee'], correctId: 'match' },
   { optionIds: ['address', 'phrase', 'pin'], correctId: 'address' },
@@ -70,56 +71,9 @@ type TransactionRow = {
 };
 
 // A valid native SegWit address: the first receive address of the public BIP84
-// test wallet, so it belongs to no real person. It differs from the Lesson 2
-// address on purpose: a fresh address for every payment.
+// test wallet (m/84'/0'/0'/0/0), so it belongs to no real person. Lesson 5's
+// withdrawal uses the next one (…/0/1): a fresh address for every payment.
 const RECEIVE_ADDRESS = 'bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu';
-
-const QR_MODULES = 25;
-
-// Decorative QR-style matrix seeded deterministically; not a scannable code.
-function buildQrModules(): boolean[][] {
-  let seed = 0x9e3779b9;
-  const rand = () => {
-    seed = (seed * 1664525 + 1013904223) >>> 0;
-    return seed / 0xffffffff;
-  };
-  const grid: boolean[][] = Array.from({ length: QR_MODULES }, () =>
-    Array.from({ length: QR_MODULES }, () => rand() > 0.52));
-
-  const drawFinder = (row0: number, col0: number) => {
-    for (let r = -1; r <= 7; r++) {
-      for (let c = -1; c <= 7; c++) {
-        const row = row0 + r;
-        const col = col0 + c;
-        if (row < 0 || col < 0 || row >= QR_MODULES || col >= QR_MODULES) continue;
-        if (r === -1 || r === 7 || c === -1 || c === 7) {
-          grid[row][col] = false;
-          continue;
-        }
-        const ring = r === 0 || r === 6 || c === 0 || c === 6;
-        const core = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-        grid[row][col] = ring || core;
-      }
-    }
-  };
-
-  drawFinder(0, 0);
-  drawFinder(0, QR_MODULES - 7);
-  drawFinder(QR_MODULES - 7, 0);
-  return grid;
-}
-
-export function ReceiveQrCode() {
-  const modules = useMemo(buildQrModules, []);
-  return (
-    <svg viewBox={`0 0 ${QR_MODULES} ${QR_MODULES}`} shapeRendering="crispEdges" role="img" aria-label="Receive address QR code">
-      <rect width={QR_MODULES} height={QR_MODULES} fill="#ffffff" />
-      {modules.flatMap((row, r) =>
-        row.map((on, c) =>
-          on ? <rect key={`${r}-${c}`} x={c} y={r} width={1} height={1} fill="#17191b" /> : null))}
-    </svg>
-  );
-}
 
 function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
@@ -163,9 +117,9 @@ function useTypewriter(text: string, speed = 6, resetKey = '') {
 
 function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   const { t } = useI18n();
-  // Same title bar as lesson 4: the wallet name the learner chose there
+  // Same title bar as lesson 2: the wallet name the learner chose there
   const [windowTitle] = useState(() => walletWindowTitle('Cairn', getWalletName()));
-  const l5 = t.lesson5;
+  const l5 = t.lesson3;
   const [stage, setStage] = useState<MentorStage>('intro');
   const [introStep, setIntroStep] = useState(0);
   const [sendingStep, setSendingStep] = useState(0);
@@ -505,13 +459,11 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     );
   }, [spotlight]);
 
-  const balance = txArrived ? '0.14998' : '0.04998';
-  const baseTransactions: TransactionRow[] = [
-    { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
-  ];
+  // The wallet is brand new (Lesson 2 left it empty), so this is its first payment.
+  const balance = txArrived ? '0.10000' : '0.00000';
   const transactions: TransactionRow[] = txArrived
-    ? [{ date: '2026-10-20 14:32', value: '+0.10000 BTC', balance: '0.14998 BTC', incoming: true, fresh: true }, ...baseTransactions]
-    : baseTransactions;
+    ? [{ date: '2026-09-21 09:48', value: '+0.10000 BTC', balance: '0.10000 BTC', incoming: true, fresh: true }]
+    : [];
 
   const cableEl = (
     <div className={`connect-cable is-linked${isMobile ? (viewingDevice ? ' cable-device-panel' : ' cable-under-wallet') : ''}`} aria-hidden="true">
@@ -623,7 +575,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                               <div className="wallet-tab-title"><ArrowDownLeft strokeWidth={2} /><span>Receive Bitcoin</span></div>
                             </div>
                             <div className="rx-qr-frame" aria-hidden="true">
-                              <ReceiveQrCode />
+                              <ReceiveQrCode address={RECEIVE_ADDRESS} />
                             </div>
                             <span className="wallet-field-label">Receive address</span>
                             <p className="rx-addr">{RECEIVE_ADDRESS}</p>
@@ -686,6 +638,11 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                                     <td>{tx.balance}</td>
                                   </tr>
                                 ))}
+                                {transactions.length === 0 && (
+                                  <tr className="wallet-tx-empty">
+                                    <td colSpan={3}>No transactions yet</td>
+                                  </tr>
+                                )}
                               </tbody>
                             </table>
                           </div>

@@ -4373,7 +4373,7 @@ html.theme-light {
   margin-top: 12px;
 }
 
-/* Lesson 5, laptops: the paste row fits in the room the bubble keeps for a
+/* Lesson 3, laptops: the paste row fits in the room the bubble keeps for a
    third line of text (67px), so the bubble keeps the same height as on every
    other step and the devices above it don't shrink. One line of text (22px)
    + 6px gap + 38px row = 66px. */
@@ -5499,7 +5499,7 @@ html.theme-light {
   }
 }
 
-/* A wrapper added only to act as a .fit-slot (Lessons 4–6 wrap .connect-duo):
+/* A wrapper added only to act as a .fit-slot (the wallet-software lessons wrap .connect-duo):
    invisible to layout everywhere except the one-screen lesson layout below. */
 .fit-wrap {
   display: contents;
@@ -5719,7 +5719,7 @@ html.theme-light {
   }
 }
 
-/* ── Lesson 3: recovery intro ── */
+/* ── Lesson 4: recovery intro ── */
 
 .recover-close {
   display: inline-flex;
@@ -6491,7 +6491,7 @@ html.theme-light {
   pointer-events: auto;
 }
 
-/* Lesson 4 phone flow: the cord runs in its own lane between the panel and the
+/* Lesson 2 phone flow: the cord runs in its own lane between the panel and the
    switcher (see .connect-paged); the pill still stacks above it as a safeguard */
 .connect-duo .device-switcher {
   position: relative;
@@ -8412,6 +8412,13 @@ html.theme-light {
   font-weight: 600;
 }
 
+/* A wallet with no payments yet (Lessons 2 and 3) */
+.wallet-tx-table tr.wallet-tx-empty td {
+  padding: 22px 14px;
+  text-align: center;
+  color: var(--muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wallet-transactions {
     animation: none;
@@ -8678,7 +8685,7 @@ html.theme-light {
   to { transform: translate(-50%, 0) scale(1); }
 }
 
-/* ── Lesson 4 phone flow (.connect-paged): one panel on screen at a time ──
+/* ── Lesson 2 phone flow (.connect-paged): one panel on screen at a time ──
    The panel sits right under the header and Maria follows directly beneath it,
    so spare height collects at the bottom of the page instead of around the
    device. Both panels share one height, and the strip beneath them (cord lane
@@ -9681,7 +9688,7 @@ html.theme-light {
   -webkit-user-select: all;
 }
 
-/* ── Lesson 2: desktop side-by-side layout ── */
+/* ── Lesson 5: desktop side-by-side layout ── */
 
 @media (min-width: 601px) {
   .withdraw-panels-wrap {
@@ -10240,7 +10247,7 @@ html.theme-light {
 .path-art-solid { fill: #33373a; }
 .theme-light .path-art-solid { fill: #fffaf2; }
 
-/* ── Cairn wallet software: one look for every tab (lessons 4–6) ──
+/* ── Cairn wallet software: one look for every tab (lessons 2, 3, 5, 6) ──
    Each tab opens with the same heading (sidebar icon + bold title), uses the
    same small grey field labels above 38px controls, the same green primary
    button, and starts at the top of the canvas. */
@@ -10490,7 +10497,7 @@ html.theme-light {
   }
 }
 
-/* Lesson 4: Keystore 1 after pairing — what Cairn read from the device.
+/* Lesson 2: Keystore 1 after pairing — what Cairn read from the device.
    Laptops: two rows of label/value pairs so it fits where the Connect button
    was. Narrow keystore boxes (phones, small tablets): one pair per row. */
 .wallet-keystore-body.is-filled {
@@ -11046,5 +11053,302 @@ html.theme-light {
     position: fixed;
     top: 64px;
     right: 16px;
+  }
+}
+
+/* ── Lesson 5: withdraw to Cairn by scanning its QR code ──
+   Laptops: the phone (exchange) beside the wallet software + hardware wallet
+   pair from Lesson 3. Phones: one device at a time via the device switcher. */
+
+.wd-trio {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 28px;
+  width: 100%;
+}
+
+.wd-trio.is-locked {
+  pointer-events: none;
+}
+
+.scenario-page-connect .wd-trio > .connect-duo {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.wd-trio .withdraw-phone-wrap {
+  animation-duration: 700ms;
+}
+
+/* The camera view covers the app, so the screen is its positioning box */
+.wd-phone .withdraw-phone-screen {
+  position: relative;
+}
+
+@media (max-width: 600px) {
+  .wd-trio {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scenario-page-connect .wd-trio > .connect-duo {
+    width: 100%;
+  }
+
+  .scenario-page-connect .wd-trio .withdraw-phone-wrap.mobile-hidden {
+    display: none;
+  }
+
+  /* Three devices to switch between: a tighter pill so it keeps the 16px gutter */
+  .wd-trio .device-switcher {
+    max-width: 100%;
+  }
+
+  .wd-trio .device-switcher-option {
+    padding: 5px 9px;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* Address field: read-only until scanned, with the scan button inside it */
+
+.wd-addr-field {
+  position: relative;
+}
+
+.wd-addr-field .withdraw-addr-input {
+  padding-right: 38px;
+  cursor: default;
+}
+
+.wd-scan-btn {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid rgba(167, 232, 67, 0.3);
+  border-radius: 6px;
+  background: rgba(167, 232, 67, 0.08);
+  color: var(--green);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background-color 180ms ease;
+}
+
+.wd-scan-btn:hover {
+  background: rgba(167, 232, 67, 0.16);
+}
+
+.wd-scan-btn:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+}
+
+/* The step's next action: a soft pulse, like the device switcher's */
+.wd-scan-btn.is-next {
+  animation: wd-scan-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes wd-scan-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 232, 67, 0.45); }
+  50% { box-shadow: 0 0 0 5px rgba(167, 232, 67, 0); }
+}
+
+/* The scanned address, in full on two lines */
+.wd-addr-scanned {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(167, 232, 67, 0.4);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--green);
+  animation: withdraw-addr-status-in 220ms ease;
+}
+
+.wd-addr-scanned-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
+  font-size: 10px;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.wd-addr-scanned svg {
+  flex-shrink: 0;
+}
+
+/* Camera scanner. It shows what the camera sees, so it stays dark in both themes. */
+
+.wd-scanner {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  border-radius: 29px;
+  background: #050607;
+  color: #f2f4f3;
+  overflow: hidden;
+  animation: wd-scanner-in 220ms ease both;
+}
+
+@keyframes wd-scanner-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.wd-scanner-top {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 14px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wd-scanner-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+  cursor: pointer;
+}
+
+.wd-scanner-view {
+  position: relative;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+/* The laptop screen the phone is pointed at, with Cairn's QR code on it */
+.wd-scanner-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 45%, #3a4146 0%, #1b1f22 55%, #0b0d0e 100%);
+}
+
+.wd-scanner-scene::before {
+  content: '';
+  position: absolute;
+  width: 88%;
+  height: 64%;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1e2326, #15191b);
+  box-shadow: 0 0 0 6px #2a2f33;
+}
+
+.wd-scanner-qr {
+  position: relative;
+  z-index: 1;
+  width: 118px;
+  padding: 7px;
+  border-radius: 6px;
+  background: #ffffff;
+  transform: rotate(-2deg) scale(0.98);
+  animation: wd-camera-drift 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The hand steadies the camera onto the code */
+@keyframes wd-camera-drift {
+  from { transform: translate(16px, 20px) rotate(-8deg) scale(0.84); }
+  to { transform: rotate(-2deg) scale(0.98); }
+}
+
+.wd-scanner-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.wd-scanner-frame {
+  position: relative;
+  z-index: 2;
+  width: 150px;
+  height: 150px;
+}
+
+.wd-corner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 0 solid #ffffff;
+  transition: border-color 200ms ease;
+}
+
+.wd-corner.tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-top-left-radius: 10px; }
+.wd-corner.tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-top-right-radius: 10px; }
+.wd-corner.bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-bottom-left-radius: 10px; }
+.wd-corner.br { right: 0; bottom: 0; border-right-width: 3px; border-bottom-width: 3px; border-bottom-right-radius: 10px; }
+
+.wd-scanner.is-found .wd-corner {
+  border-color: #a7e843;
+}
+
+.wd-scanner-line {
+  position: absolute;
+  top: 10px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #a7e843, transparent);
+  box-shadow: 0 0 10px #a7e843;
+  animation: wd-scan-sweep 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes wd-scan-sweep {
+  from { top: 10px; }
+  to { top: calc(100% - 12px); }
+}
+
+.wd-scanner-hint {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 14px 24px;
+  color: rgba(242, 244, 243, 0.8);
+  font-size: 11px;
+  text-align: center;
+}
+
+.wd-scanner.is-found .wd-scanner-hint {
+  color: #a7e843;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wd-scan-btn.is-next,
+  .wd-scanner,
+  .wd-scanner-qr,
+  .wd-scanner-line {
+    animation: none;
   }
 }
