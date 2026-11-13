@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
-import mariaPortrait from '@/components/Maria.webp';
+import { walletLessonsMentor as mentor } from '@/lib/mentors';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
@@ -79,7 +79,7 @@ const FEE_OPTIONS: FeeOption[] = [
   { id: 'high', label: 'High', rate: '18 sats/vB', fee: '0.00001080' },
 ];
 
-// Maria's lines live in the dictionary (`lesson6`); every locale has the same list lengths.
+// The mentor's lines live in the dictionary (`lesson6`); every locale has the same list lengths.
 const INTRO_COUNT = en.lesson6.intro.length;
 
 // The wallet as Lesson 5 left it: the Lesson 2 withdrawal plus Maria's 0.1 BTC.
@@ -208,7 +208,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
       ? fmt(l6.maxNudge, { amount: SEND_AMOUNT })
       : nudgeKind === 'send-reject'
         ? l6.sendReject
-        : t.common.nudgeLater
+        : t.common[mentor.nudge]
     : check.active
       ? check.mentorLine
     : mobileLine
@@ -836,17 +836,17 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
 
         <div className="mentor-row">
           <div
-            key="maria"
+            key={mentor.name}
             ref={portraitRef}
             className="mentor-portrait mentor-portrait-enter"
-            aria-label={fmt(t.common.mentorAria, { name: 'Maria' })}
+            aria-label={fmt(t.common.mentorAria, { name: mentor.name })}
             role="img"
           >
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={mariaPortrait} alt={fmt(t.common.mentorAria, { name: 'Maria' })} />
+              <img className="mentor-portrait-image" src={mentor.portrait} alt={fmt(t.common.mentorAria, { name: mentor.name })} />
             </div>
-            <div className="mentor-portrait-badge">Maria</div>
+            <div className="mentor-portrait-badge">{mentor.name}</div>
           </div>
           <div
             ref={bubbleRef}
@@ -854,7 +854,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
             onClick={handleContinue}
           >
             <div className={`mentor-bubble-content${showAddressInBubble ? ' has-chat' : ''}`} key={bubbleKey}>
-              <span className="mentor-bubble-name">Maria</span>
+              <span className="mentor-bubble-name">{mentor.name}</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
                 <p className="mentor-bubble-text">
@@ -869,7 +869,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                     className="mentor-chat-btn"
                     type="button"
                     onClick={handleCopyAddress}
-                    aria-label={l6.copyAddressAria}
+                    aria-label={fmt(l6.copyAddressAria, { name: mentor.name })}
                   >
                     {addressCopied ? <Check size={16} strokeWidth={2.4} /> : <Copy size={16} strokeWidth={2} />}
                   </button>

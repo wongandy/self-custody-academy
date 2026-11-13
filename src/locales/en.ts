@@ -409,8 +409,13 @@ const en = {
     ],
   },
 
-  // Lesson 4 — Connect to wallet software (Andy hands over to Maria)
+  // Lesson 4 — Connect to wallet software. Andy teaches it alone (`solo`); with
+  // Maria switched on (src/lib/mentors.ts) Andy hands over to her instead.
   lesson4: {
+    solo: [
+      "Now let's connect your hardware wallet to a wallet software — a laptop app for viewing your wallet's balance, history and payments.",
+      "You already have one installed called Cairn. Let's open it and take a look.",
+    ],
     andy: [
       "Now let's connect your hardware wallet to a wallet software. Maria is our expert here, so I'll hand you over to her!",
     ],
@@ -468,7 +473,7 @@ const en = {
     ],
   },
 
-  // Lesson 5 — Receiving Bitcoin (Maria)
+  // Lesson 5 — Receiving Bitcoin (taught by the wallet-lessons mentor)
   lesson5: {
     intro: [
       "Let's walk through receiving Bitcoin with your hardware wallet. Remember: your Bitcoin lives on the blockchain, not inside the device.",
@@ -488,7 +493,7 @@ const en = {
     handOver: 'Now paste the address and send it to me so I can send you some Bitcoin.',
     warn: "That doesn't match the address your device verified. Copy it again from the wallet and send it to me.",
     openTx: 'Open the Transactions tab in your wallet to watch for it.',
-    waiting: 'It should show up in a few seconds. Real payments take about 10 minutes to confirm.',
+    waiting: 'It should show up in a few seconds. Payments take about 10 minutes to confirm.',
     finished: "And there it is — 0.1 BTC received! Share an address, verify it on your device, and watch the payment arrive. Lesson complete.",
     sending: [
       "Got it! I'm sending you 0.1 BTC now — it's on its way.",
@@ -497,7 +502,7 @@ const en = {
     pasteFallback: 'Paste here with Ctrl+V or ⌘V…',
     chatAria: 'Paste the receive address',
     pasteAria: 'Paste from clipboard',
-    sendAria: 'Send address to Maria',
+    sendAria: 'Send address to {name}',
     knowledgePrompts: [
       'Nice work. Before we wrap up, two quick questions about receiving Bitcoin.',
       "Good job. One more question about what's safe to share.",
@@ -524,7 +529,7 @@ const en = {
     ],
   },
 
-  // Lesson 6 — Sending Bitcoin (Maria)
+  // Lesson 6 — Sending Bitcoin (taught by the wallet-lessons mentor)
   lesson6: {
     intro: [
       "Let's send Bitcoin from your hardware wallet. The wallet software prepares the transaction, and your hardware wallet signs and approves it.",
@@ -549,7 +554,7 @@ const en = {
     maxNudge: 'MAX fills in your whole balance minus the fee — handy for emptying a wallet. I only need {amount} BTC, so type that instead.',
     sendReject: "Good instinct — if anything looked wrong, X would cancel it and nothing would be sent. Everything checks out, so press the checkmark.",
     finished: "There it is. Remember the habit: check the address, amount and fee on your hardware wallet's screen before you approve.",
-    copyAddressAria: "Copy Maria's address",
+    copyAddressAria: "Copy {name}'s address",
     knowledgePrompts: [
       'Before we wrap up, two quick questions about sending Bitcoin.',
       'Good job. One more question about approving a payment.',
