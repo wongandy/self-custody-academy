@@ -6980,35 +6980,6 @@ html.theme-light {
   text-align: center;
 }
 
-.hw-copy-btn {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid rgba(167, 232, 67, 0.3);
-  border-radius: 7px;
-  background: rgba(167, 232, 67, 0.08);
-  color: var(--green);
-  cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
-}
-
-.hw-copy-btn:hover {
-  background: rgba(167, 232, 67, 0.18);
-  border-color: rgba(167, 232, 67, 0.55);
-}
-
-.hw-copy-btn:active {
-  transform: scale(0.92);
-}
-
-.hw-copy-btn.copied {
-  background: rgba(167, 232, 67, 0.25);
-  border-color: var(--green);
-}
-
 /* ── Responsive ── */
 
 @media (max-width: 600px) {
@@ -7050,7 +7021,9 @@ html.theme-light {
 }
 
 .withdraw-btn:disabled {
-  opacity: 0.4;
+  background: #2e3235;
+  color: #6c7377;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -11078,8 +11051,36 @@ html.theme-light {
   min-width: 0;
 }
 
-.wd-trio .withdraw-phone-wrap {
-  animation-duration: 700ms;
+/* Laptops: the phone sits left of Cairn, beside the address it scans. When it
+   joins, its slot widens first, so Cairn and the device glide over to make room,
+   then the phone slides in from the left. The phone hangs off the slot's left
+   side while it grows, so it never overlaps Cairn. */
+@media (min-width: 601px) {
+  .wd-trio .withdraw-phone-wrap {
+    order: 0;
+    align-items: flex-end;
+    animation: wd-phone-make-room 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .wd-trio .withdraw-phone-wrap > * {
+    animation: wd-phone-slide-in 800ms cubic-bezier(0.22, 1, 0.36, 1) 250ms both;
+  }
+}
+
+@keyframes wd-phone-make-room {
+  from { width: 0; min-width: 0; margin-right: -28px; }
+  to { width: 260px; min-width: 260px; margin-right: 0; }
+}
+
+@keyframes wd-phone-slide-in {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 600px) {
+  .wd-trio .withdraw-phone-wrap {
+    animation: none;
+  }
 }
 
 /* The camera view covers the app, so the screen is its positioning box */
@@ -11152,14 +11153,14 @@ html.theme-light {
   outline-offset: 2px;
 }
 
-/* The step's next action: a soft pulse, like the device switcher's */
-.wd-scan-btn.is-next {
-  animation: wd-scan-pulse 1.6s ease-in-out infinite;
+/* The control the current step wants: a soft gold ring, like the device switcher's */
+.wd-next {
+  animation: wd-next-pulse 1.8s ease-in-out infinite;
 }
 
-@keyframes wd-scan-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 232, 67, 0.45); }
-  50% { box-shadow: 0 0 0 5px rgba(167, 232, 67, 0); }
+@keyframes wd-next-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(241, 189, 105, 0.55); }
+  50% { box-shadow: 0 0 0 5px rgba(241, 189, 105, 0); }
 }
 
 /* The scanned address, in full on two lines */
@@ -11203,12 +11204,22 @@ html.theme-light {
   background: #050607;
   color: #f2f4f3;
   overflow: hidden;
-  animation: wd-scanner-in 220ms ease both;
+  animation: wd-scanner-in 400ms ease both;
+}
+
+/* The camera closes before the address lands in the field */
+.wd-scanner.is-closing {
+  animation: wd-scanner-out 350ms ease both;
 }
 
 @keyframes wd-scanner-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes wd-scanner-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .wd-scanner-top {
@@ -11270,10 +11281,10 @@ html.theme-light {
   border-radius: 6px;
   background: #ffffff;
   transform: rotate(-2deg) scale(0.98);
-  animation: wd-camera-drift 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: wd-camera-drift 1.2s cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 
-/* The hand steadies the camera onto the code */
+/* While the camera opens, the hand steadies it onto the code */
 @keyframes wd-camera-drift {
   from { transform: translate(16px, 20px) rotate(-8deg) scale(0.84); }
   to { transform: rotate(-2deg) scale(0.98); }
@@ -11290,6 +11301,13 @@ html.theme-light {
   z-index: 2;
   width: 150px;
   height: 150px;
+  /* Wide while the camera settles, then the brackets close in on the code */
+  transform: scale(1.12);
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wd-scanner:not(.is-opening) .wd-scanner-frame {
+  transform: scale(0.94);
 }
 
 .wd-corner {
@@ -11317,7 +11335,7 @@ html.theme-light {
   height: 2px;
   background: linear-gradient(90deg, transparent, #a7e843, transparent);
   box-shadow: 0 0 10px #a7e843;
-  animation: wd-scan-sweep 1.2s ease-in-out infinite alternate;
+  animation: wd-scan-sweep 0.8s ease-in-out infinite alternate;
 }
 
 @keyframes wd-scan-sweep {
@@ -11325,30 +11343,60 @@ html.theme-light {
   to { top: calc(100% - 12px); }
 }
 
+/* Tall enough for the found state (title + the address on two lines), so the
+   camera view doesn't jump when the address appears */
 .wd-scanner-hint {
   position: relative;
   z-index: 3;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
+  min-height: 84px;
   margin: 0;
-  padding: 12px 14px 24px;
+  padding: 10px 14px 22px;
   color: rgba(242, 244, 243, 0.8);
   font-size: 11px;
   text-align: center;
 }
 
-.wd-scanner.is-found .wd-scanner-hint {
+.wd-scanner-found {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #a7e843;
   font-weight: 700;
 }
 
+.wd-scanner-addr {
+  display: flex;
+  flex-direction: column;
+  color: #f2f4f3;
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
+  font-size: 10px;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  animation: wd-scanner-in 400ms ease both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .wd-scan-btn.is-next,
-  .wd-scanner,
-  .wd-scanner-qr,
-  .wd-scanner-line {
+  .wd-next {
     animation: none;
+    box-shadow: 0 0 0 2px var(--gold-light);
+  }
+
+  .wd-scanner,
+  .wd-scanner.is-closing,
+  .wd-scanner-qr,
+  .wd-scanner-line,
+  .wd-scanner-addr,
+  .wd-trio .withdraw-phone-wrap,
+  .wd-trio .withdraw-phone-wrap > * {
+    animation: none;
+  }
+
+  .wd-scanner-frame {
+    transition: none;
   }
 }

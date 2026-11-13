@@ -803,7 +803,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                 {viewingDevice && cableEl}
                 <HardwareWallet
                   mode="withdraw"
-                  initialPhase="ready-menu"
+                  initialPhase="connect-done"
                   locked={deviceLocked}
                   expectedAction={expectedAction}
                   sendRequest={sendRequest}
