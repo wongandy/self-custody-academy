@@ -11,10 +11,10 @@ export const MENTORS = {
 export type MentorId = keyof typeof MENTORS;
 
 /**
- * Who teaches the wallet-software lessons (4–6). Andy teaches them for now;
- * set this to 'maria' to bring Maria back: Lesson 4 then opens with Andy
- * handing over to her (`lesson4.andy` + `lesson4.maria`) and she takes
- * Lessons 5 and 6. With Andy it opens with `lesson4.solo` instead.
+ * Who teaches the wallet-software lessons (2, 3 and 6). Andy teaches them for
+ * now; set this to 'maria' to bring Maria back: Lesson 2 then opens with Andy
+ * handing over to her (`lesson2.andy` + `lesson2.maria`) and she takes
+ * Lessons 3 and 6. With Andy it opens with `lesson2.solo` instead.
  */
 export const WALLET_LESSONS_MENTOR = 'andy' as MentorId;
 

@@ -1,4 +1,4 @@
-// The name the learner gives their wallet in Cairn (lesson 4), shown in the
+// The name the learner gives their wallet in Cairn (lesson 2), shown in the
 // wallet software's title bar in every later lesson.
 
 const STORAGE_KEY = 'sca_wallet_name';

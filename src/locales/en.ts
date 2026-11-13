@@ -186,10 +186,10 @@ const en = {
     start: 'START',
     titles: [
       'Set up hardware wallet',
-      'Withdraw Bitcoin from exchange',
-      'Recover hardware wallet',
       'Connect to wallet software',
       'Receiving Bitcoin',
+      'Recover hardware wallet',
+      'Withdraw Bitcoin from exchange',
       'Sending Bitcoin',
     ],
   },
@@ -291,127 +291,9 @@ const en = {
     ],
   },
 
-  // Lesson 2 — Withdraw from exchange (Andy)
-  lesson2: {
-    intro: [
-      "This time, let's withdraw your Bitcoin from the exchange to your hardware wallet. Keeping it in your own wallet means you truly own it.",
-      "You no longer rely on a third party to hold it for you. Your Bitcoin is in your hands — that's what self-custody is all about.",
-    ],
-    handover: "You've already set up your hardware wallet, so select 'Receive Bitcoin' to generate a receive address.",
-    switchIntro: [
-      "Receive address copied! Now let's switch over to the exchange on your phone so we can paste it there.",
-      'Tap "Exchange" below the device to head to the exchange on your phone.',
-    ],
-    exchangeIntro: [
-      "Your BitExchange app is open on your phone with 0.05 BTC in it. Let's withdraw it to your hardware wallet.",
-      "In the Send to address field, paste the receive address you copied from your hardware wallet. That's where your Bitcoin will go.",
-    ],
-    enterAmount: 'In the Withdraw amount field, type 0.05 to send your full balance, or tap MAX.',
-    readyToWithdraw: 'Alright. Now click Withdraw to send your Bitcoin to your hardware wallet.',
-    amountCorrection: 'The amount to withdraw should be 0.05 BTC. Type 0.05 or click MAX to continue.',
-    receiveAddress: [
-      'A receive address is a unique string your wallet generates. To receive Bitcoin from someone, you give them this address.',
-      "There's your receive address. Click the copy button{icon} next to it to copy it.",
-    ],
-    panelExchange: 'Follow the instructions to withdraw your Bitcoin to your hardware wallet.',
-    panelWallet: "Select 'Receive Bitcoin' to get your receive address.",
-    walletBooting: 'The device is booting up. Hang tight for a moment.',
-    walletMenu: "Feel free to explore the device. When you're ready, select 'Receive Bitcoin' to get your receive address.",
-    walletSettings: "You can explore the device settings. Return to the menu when you're ready to continue.",
-    walletMenuReceive: "Select 'Receive Bitcoin' to get your receive address.",
-    walletMenuSendBlocked: "You can explore the wallet options here. Select 'Receive Bitcoin' whenever you're ready to continue.",
-    walletReceiveCopied: 'Copied the address? Tap "Exchange" below to go back to the exchange.',
-    walletReceiveCopiedDesktop: "Address copied. The exchange is now open next to your wallet — let's paste the address there.",
-    addressMismatch: "That address doesn't match your hardware wallet's. One wrong character sends your Bitcoin elsewhere — go back and copy it again.",
-    exchangeConfirm: "Review carefully: the address on the exchange must match the one from your device. Once confirmed, the transaction can't be cancelled.",
-    exchangeSuccess: "Well done! Your Bitcoin is on its way to your hardware wallet. Let's wrap this up.",
-    factoryResetBlocked: "Factory resetting isn't part of this lesson — it would erase your wallet. Let's head back and keep going.",
-    deviceExchange: 'Exchange',
-    knowledgePrompts: [
-      'Nice work. Before we wrap up, two quick questions about safely withdrawing Bitcoin.',
-      'Good job. One more question about the withdrawal details.',
-    ],
-    questions: [
-      {
-        question: 'Why should you verify the receive address on your hardware wallet?',
-        options: {
-          speed: 'To make the withdrawal process faster',
-          match: 'To make sure the address in the exchange matches the address from the device',
-          fee: 'To avoid paying the network fee',
-        },
-        correctLine: 'Exactly. Address verification helps make sure your Bitcoin is going to the wallet you intended.',
-      },
-      {
-        question: 'What is the network fee when you withdraw Bitcoin?',
-        options: {
-          extra: 'A small charge for processing the transaction, taken from the amount you withdraw',
-          balance: 'The amount removed from your hardware wallet balance',
-          exchange: 'A fee that replaces the Bitcoin being sent',
-        },
-        correctLine: 'Right. The network fee pays for processing the transaction and comes out of the amount you withdraw, so you receive slightly less.',
-      },
-    ],
-  },
-
-  // Lesson 3 — Recover hardware wallet (Andy)
-  lesson3: {
-    intro: [
-      "Now let's cover one of the most overlooked skills in self-custody: recovering your wallet if your device is lost, stolen or destroyed.",
-      "Your recovery phrase is universal — it works on most hardware wallets. Let's go back to your device and I'll show you how.",
-    ],
-    handover: 'First, we need a factory reset to wipe the device clean. Go to Settings to start.',
-    recoverIntro: [
-      'On the next screen, you will be asked to input each word of your recovery phrase.',
-      'Lost your copy? This simulation lets you view it, but in real life no one can help you if you lose it. Always keep a paper copy.',
-      'To view it, press the button with the paper symbol{icon} below my portrait.',
-    ],
-    recoverType: 'Type each word, or use Up/Down to pick a letter or suggested word. Press X to backspace.',
-    walletMenu: 'Select Settings to reset the device to factory settings.',
-    walletSettings: 'A factory reset erases everything — the device will forget your wallet. Only the recovery phrase you wrote down can restore it.',
-    walletResetWarn: "Don't worry — as long as you've written down your recovery phrase, your Bitcoin is safe.",
-    walletResetConfirm: "Last warning: be completely sure your recovery phrase is written down. I can't stress this enough.",
-    walletResetCancelled: "Nothing was erased — your wallet is still on the device. Head back into Settings when you're ready.",
-    walletResetDone: 'The device is wiping itself clean. Let it finish and restart.',
-    walletBooting: "It's coming back up as a fresh, empty device. One moment.",
-    walletWiped: "The device is blank now, just like new out of the box. Let's practice recovering — select Recover wallet.",
-    walletRecoverDone: 'Your wallet is restored! Keep your recovery phrase safe and your Bitcoin is never lost — it works on any compatible device.',
-    walletRecoverCelebrate: "Great job recovering your wallet! You just did something most Bitcoin owners never practice. Let's wrap this up!",
-    walletReceiveBlocked: "Receiving isn't part of this lesson. Stick with Settings so we can reset the device and practise recovering it.",
-    walletSendBlocked: "Sending isn't part of this lesson. Stick with Settings so we can reset the device and practise recovering it.",
-    words: 'Here are your 12 words: {words}',
-    wordsPractice: "Since you skipped Lesson 1, I made a practice recovery phrase for this wallet. Here are your 12 words: {words}",
-    wordsMissing: 'I could not find your simulation phrase. You may need to redo Lesson 1 to generate a new wallet.',
-    showPhrase: 'Show recovery phrase',
-    hidePhrase: 'Hide recovery phrase',
-    knowledgePrompts: [
-      'Before we wrap up, two quick questions about recovering your wallet.',
-      'Nice. One more question about what happens if you lose your device.',
-    ],
-    questions: [
-      {
-        question: 'What do you need to restore your wallet after a factory reset?',
-        options: {
-          phrase: 'Your 12-word recovery phrase',
-          pin: 'Just the device PIN',
-          support: "A call to the hardware wallet company's support team",
-        },
-        correctLine: 'Exactly. Your recovery phrase is the only thing that can bring your wallet back, so keep it safe.',
-      },
-      {
-        question: 'If your hardware wallet is lost or broken, what happens to your Bitcoin?',
-        options: {
-          safe: 'It stays safe on the blockchain, and you can restore it on a new device with your recovery phrase',
-          gone: "It's gone forever along with the device",
-          company: 'The manufacturer can send it back to you',
-        },
-        correctLine: 'Right. Your Bitcoin never lived on the device. With your recovery phrase, you can recover it on any compatible device.',
-      },
-    ],
-  },
-
-  // Lesson 4 — Connect to wallet software. Andy teaches it alone (`solo`); with
+  // Lesson 2 — Connect to wallet software. Andy teaches it alone (`solo`); with
   // Maria switched on (src/lib/mentors.ts) Andy hands over to her instead.
-  lesson4: {
+  lesson2: {
     solo: [
       "Now let's connect your hardware wallet to a wallet software — a laptop app for viewing your wallet's balance, history and payments.",
       "You already have one installed called Cairn. Let's open it and take a look.",
@@ -445,8 +327,8 @@ const en = {
       'Paired! Cairn read three things from your device. The master fingerprint identifies your hardware wallet, and the derivation path tells Cairn where your addresses live.',
       'The xpub lets Cairn see your balance and create addresses — but it can never spend. Your private keys never leave the device.',
     ],
-    openTransactions: "Now let's find the Bitcoin you withdrew from the exchange earlier. Click the Transactions tab.",
-    connected: 'There it is — the 0.04998 BTC you withdrew from the exchange earlier. This tab shows your balance and every payment you send or receive.',
+    openTransactions: "Now let's look at your wallet's history. Click the Transactions tab.",
+    connected: "Empty for now — that's normal for a brand-new wallet. From here on, this tab shows your balance and every payment you receive or send.",
     knowledgePrompts: [
       'Nice work. Before we wrap up, two quick questions about connecting your wallet.',
       'Good job. One more question about where your keys live.',
@@ -473,8 +355,8 @@ const en = {
     ],
   },
 
-  // Lesson 5 — Receiving Bitcoin (taught by the wallet-lessons mentor)
-  lesson5: {
+  // Lesson 3 — Receiving Bitcoin (taught by the wallet-lessons mentor)
+  lesson3: {
     intro: [
       "Let's walk through receiving Bitcoin with your hardware wallet. Remember: your Bitcoin lives on the blockchain, not inside the device.",
       "Your hardware wallet's main job is just to hold your private keys so you can safely access and control those funds.",
@@ -525,6 +407,117 @@ const en = {
           pin: 'Your device PIN',
         },
         correctLine: 'Right. A receive address is safe to share. Never give anyone your recovery phrase.',
+      },
+    ],
+  },
+
+  // Lesson 4 — Recover hardware wallet (Andy)
+  lesson4: {
+    intro: [
+      "Now let's cover one of the most overlooked skills in self-custody: recovering your wallet if your device is lost, stolen or destroyed.",
+      "Your recovery phrase is universal — it works on most hardware wallets. Let's go back to your device and I'll show you how.",
+    ],
+    handover: 'First, we need a factory reset to wipe the device clean. Go to Settings to start.',
+    recoverIntro: [
+      'On the next screen, you will be asked to input each word of your recovery phrase.',
+      'Lost your copy? This simulation lets you view it, but in real life no one can help you if you lose it. Always keep a paper copy.',
+      'To view it, press the button with the paper symbol{icon} below my portrait.',
+    ],
+    recoverType: 'Type each word, or use Up/Down to pick a letter or suggested word. Press X to backspace.',
+    walletMenu: 'Select Settings to reset the device to factory settings.',
+    walletSettings: 'A factory reset erases everything — the device will forget your wallet. Only the recovery phrase you wrote down can restore it.',
+    walletResetWarn: "Don't worry — the 0.1 BTC you received lives on the blockchain, not on the device. As long as you've written down your recovery phrase, it's safe.",
+    walletResetConfirm: "Last warning: be completely sure your recovery phrase is written down. I can't stress this enough.",
+    walletResetCancelled: "Nothing was erased — your wallet is still on the device. Head back into Settings when you're ready.",
+    walletResetDone: 'The device is wiping itself clean. Let it finish and restart.',
+    walletBooting: "It's coming back up as a fresh, empty device. One moment.",
+    walletWiped: "The device is blank now, just like new out of the box. Let's practice recovering — select Recover wallet.",
+    walletRecoverDone: 'Your wallet is restored, and so is your access to that 0.1 BTC. Keep your recovery phrase safe and your Bitcoin is never lost — it works on any compatible device.',
+    walletRecoverCelebrate: "Great job recovering your wallet! You just did something most Bitcoin owners never practice. Let's wrap this up!",
+    walletReceiveBlocked: "Receiving isn't part of this lesson. Stick with Settings so we can reset the device and practise recovering it.",
+    walletSendBlocked: "Sending isn't part of this lesson. Stick with Settings so we can reset the device and practise recovering it.",
+    words: 'Here are your 12 words: {words}',
+    wordsPractice: "Since you skipped Lesson 1, I made a practice recovery phrase for this wallet. Here are your 12 words: {words}",
+    wordsMissing: 'I could not find your simulation phrase. You may need to redo Lesson 1 to generate a new wallet.',
+    showPhrase: 'Show recovery phrase',
+    hidePhrase: 'Hide recovery phrase',
+    knowledgePrompts: [
+      'Before we wrap up, two quick questions about recovering your wallet.',
+      'Nice. One more question about what happens if you lose your device.',
+    ],
+    questions: [
+      {
+        question: 'What do you need to restore your wallet after a factory reset?',
+        options: {
+          phrase: 'Your 12-word recovery phrase',
+          pin: 'Just the device PIN',
+          support: "A call to the hardware wallet company's support team",
+        },
+        correctLine: 'Exactly. Your recovery phrase is the only thing that can bring your wallet back, so keep it safe.',
+      },
+      {
+        question: 'If your hardware wallet is lost or broken, what happens to your Bitcoin?',
+        options: {
+          safe: 'It stays safe on the blockchain, and you can restore it on a new device with your recovery phrase',
+          gone: "It's gone forever along with the device",
+          company: 'The manufacturer can send it back to you',
+        },
+        correctLine: 'Right. Your Bitcoin never lived on the device. With your recovery phrase, you can recover it on any compatible device.',
+      },
+    ],
+  },
+
+  // Lesson 5 — Withdraw from exchange (taught by the wallet-lessons mentor)
+  lesson5: {
+    intro: [
+      'Time to take your Bitcoin off the exchange. While it sits there, the exchange holds the keys — not you.',
+      "You have 0.05 BTC on BitExchange, on your phone. Let's move it into your own wallet, where only you hold the keys.",
+    ],
+    goReceive: 'First, you need an address to withdraw to. Open the Receive tab in Cairn.',
+    freshAddress: "Notice this isn't the address you shared to receive your 0.1 BTC. Cairn gives you a fresh address each time, so your payments are harder to link together.",
+    verifyRule: "Before you use it, check it really came from your device — press 'Verify address on device'.",
+    compareCheck: 'Your device now shows the address. If it matches the one in Cairn, press the checkmark button on the device.',
+    // Phones show one device at a time: these lines ask the learner to switch views.
+    verifySent: 'Cairn has sent the address to your hardware wallet. Tap HARDWARE WALLET to check it there.',
+    compareCheckMobile: 'Your device now shows the address. Make sure it matches the one in Cairn — you can switch between the two. If it matches, press the checkmark on the device.',
+    verifyReject: "Good instinct — if they didn't match, you'd press X to reject it and never use that address. These match, so press the checkmark.",
+    goExchange: "Verified. Now on your phone, tap the scan button{icon} in BitExchange's Send to address field and point the camera at the QR code in Cairn.",
+    goExchangeMobile: 'Verified. Now pick up your phone — tap PHONE to open BitExchange.',
+    scanPrompt: 'Tap the scan button{icon} in the Send to address field, then point the camera at the QR code on your laptop screen.',
+    scanEarly: "Not yet — verify the address on your device first. Only scan an address you've checked.",
+    typeInstead: 'You could type it, but 42 characters by hand is asking for a mistake. Tap the scan button{icon} instead.',
+    scanned: 'Scanned. Still, check that the address on the exchange matches Cairn and your device — at least the first and last few characters.',
+    enterAmount: 'In the Withdraw amount field, type 0.05 to send your full balance, or tap MAX.',
+    amountCorrection: 'The amount to withdraw should be 0.05 BTC. Type 0.05 or tap MAX to continue.',
+    readyToWithdraw: 'Alright. Now tap Withdraw to send your Bitcoin to your own wallet.',
+    exchangeConfirm: "Review carefully: the address on the exchange must match the one from your device. Once confirmed, the transaction can't be cancelled.",
+    exchangeSuccess: "Done! The exchange has sent your Bitcoin. Let's watch it arrive in your wallet.",
+    openTx: 'Open the Transactions tab in Cairn to watch for it.',
+    openTxMobile: 'Tap WALLET SOFTWARE, then open the Transactions tab to watch for it.',
+    waiting: 'It should show up in a few seconds. Real payments take about 10 minutes to confirm.',
+    finished: "There it is — 0.04998 BTC, a little under 0.05 because the network fee came out of the amount. Your balance is now 0.14998 BTC, and it's in your custody.",
+    knowledgePrompts: [
+      'Nice work. Before we wrap up, two quick questions about safely withdrawing Bitcoin.',
+      'Good job. One more question about the withdrawal details.',
+    ],
+    questions: [
+      {
+        question: 'Why scan the QR code instead of typing the address?',
+        options: {
+          fee: 'Scanning lowers the network fee',
+          typo: "Scanning copies every character exactly, so there's no risk of a typo",
+          faster: 'Scanned withdrawals confirm faster',
+        },
+        correctLine: 'Exactly. One wrong character can send your Bitcoin somewhere else for good. Scanning avoids typos — and you still check the result.',
+      },
+      {
+        question: 'What is the network fee when you withdraw Bitcoin?',
+        options: {
+          extra: 'A small charge for processing the transaction, taken from the amount you withdraw',
+          balance: 'The amount removed from your hardware wallet balance',
+          exchange: 'A fee that replaces the Bitcoin being sent',
+        },
+        correctLine: 'Right. The network fee pays for processing the transaction and comes out of the amount you withdraw, so you receive slightly less.',
       },
     ],
   },

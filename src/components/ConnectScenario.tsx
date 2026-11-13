@@ -52,36 +52,36 @@ const CONNECTION_DELAYS: Record<ConnectionPhase, number> = {
 
 const NUDGE_DURATION_MS = 1250;
 
-// Answer key for the check-in; the wording is `lesson4.questions`, in this order.
+// Answer key for the check-in; the wording is `lesson2.questions`, in this order.
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['view', 'spend', 'recover'], correctId: 'view' },
   { optionIds: ['device', 'laptop', 'cloud'], correctId: 'device' },
 ];
 
 // One speaking turn per line, in order. With Maria switched on
-// (src/lib/mentors.ts) Andy hands over (`lesson4.andy`), then Maria takes it
-// (`lesson4.maria`); otherwise Andy teaches the lesson alone (`lesson4.solo`).
+// (src/lib/mentors.ts) Andy hands over (`lesson2.andy`), then Maria takes it
+// (`lesson2.maria`); otherwise Andy teaches the lesson alone (`lesson2.solo`).
 // Deriving the turns from the dictionary's lists means adding or removing a
 // line can never leave a turn without a line or shift the lines out of step.
 // Every locale has the same list lengths.
 // The Settings and keystore explanations work the same way: one step per line.
 const WITH_MARIA = WALLET_LESSONS_MENTOR === 'maria';
-const HANDOFF_COUNT = en.lesson4.andy.length;
+const HANDOFF_COUNT = en.lesson2.andy.length;
 const INTRO_STEPS: Step[] = WITH_MARIA
   ? [
-    ...en.lesson4.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
-    ...en.lesson4.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
+    ...en.lesson2.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
+    ...en.lesson2.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
   ]
-  : en.lesson4.solo.map((): Step => ({ kind: 'mentor', mentor: 'solo' }));
+  : en.lesson2.solo.map((): Step => ({ kind: 'mentor', mentor: 'solo' }));
 const STEPS: Step[] = [
   ...INTRO_STEPS,
   { kind: 'wallet-intro' },
   { kind: 'wallet-name' },
-  ...en.lesson4.walletSettings.map((): Step => ({ kind: 'wallet-settings' })),
+  ...en.lesson2.walletSettings.map((): Step => ({ kind: 'wallet-settings' })),
   { kind: 'device-arrival' },
   { kind: 'connect-request' },
   { kind: 'device-prompt' },
-  ...en.lesson4.keystoreDetails.map((): Step => ({ kind: 'keystore-details' })),
+  ...en.lesson2.keystoreDetails.map((): Step => ({ kind: 'keystore-details' })),
   { kind: 'open-transactions' },
   { kind: 'connected' },
 ];
@@ -101,11 +101,10 @@ const KEYSTORE = {
 };
 const WALLET_NAME_MAX = 24;
 
-const WALLET_BALANCE = '0.04998';
+// A brand-new wallet: nothing has been sent to it yet (Lesson 3 brings the first payment).
+const WALLET_BALANCE = '0.00000';
 const WALLET_APP_NAME = 'Cairn';
-const TRANSACTIONS = [
-  { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
-];
+const TRANSACTIONS: { date: string; value: string; balance: string; incoming: boolean }[] = [];
 
 function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
@@ -147,7 +146,7 @@ function useTypewriter(text: string, speed = 6, resetKey = '') {
   return { displayed, done, skip };
 }
 
-function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): string {
+function stepMessage(l4: Dictionary['lesson2'], step: Step, stepIndex: number): string {
   switch (step.kind) {
     case 'mentor':
       if (step.mentor === 'solo') return l4.solo[stepIndex] ?? '';
@@ -176,7 +175,7 @@ function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): 
 
 export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const { t } = useI18n();
-  const l4 = t.lesson4;
+  const l4 = t.lesson2;
   const [stepIndex, setStepIndex] = useState(0);
   const [connectRequested, setConnectRequested] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -523,8 +522,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
     setStepIndex((current) => Math.min(current + 1, STEPS.length - 1));
   }, [done, skip, nudgeActive, check, walletBooting, step, stepIndex, arrivalRequested, arrivalAnimating, devicePending, connecting]);
 
-  // Opening Transactions loads the wallet's history from the device, then Maria
-  // points out the withdrawal from Lesson 2.
+  // Opening Transactions loads the wallet's history from the device, then the
+  // mentor points out that a brand-new wallet starts empty.
   const handleOpenTransactions = () => {
     if (step.kind !== 'open-transactions' || softwareLocked) return;
     setSyncing(true);
@@ -1009,6 +1008,11 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                                   <td>{tx.balance}</td>
                                 </tr>
                               ))}
+                              {!syncing && TRANSACTIONS.length === 0 && (
+                                <tr className="wallet-tx-empty">
+                                  <td colSpan={3}>No transactions yet</td>
+                                </tr>
+                              )}
                             </tbody>
                           </table>
                           {syncing && (
