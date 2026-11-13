@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
-import mariaPortrait from '@/components/Maria.webp';
+import { walletLessonsMentor as mentor } from '@/lib/mentors';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
@@ -37,7 +37,7 @@ const VERIFY_REJECT_NUDGE_MS = 5000;
 
 type NudgeKind = 'generic' | 'early-copy' | 'verify-reject';
 
-// Maria's lines live in the dictionary (`lesson5`); every locale has the same list lengths.
+// The mentor's lines live in the dictionary (`lesson5`); every locale has the same list lengths.
 const INTRO_COUNT = en.lesson5.intro.length;
 const SENDING_COUNT = en.lesson5.sending.length;
 
@@ -225,7 +225,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
         ? 'software'
         : null;
   const message = nudgeActive
-    ? nudgeKind === 'early-copy' ? l5.copyTooEarly : nudgeKind === 'verify-reject' ? l5.verifyReject : t.common.nudgeLater
+    ? nudgeKind === 'early-copy' ? l5.copyTooEarly : nudgeKind === 'verify-reject' ? l5.verifyReject : t.common[mentor.nudge]
     : check.active
       ? check.mentorLine
     : mobileLine
@@ -742,17 +742,17 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
 
         <div className="mentor-row">
           <div
-            key="maria"
+            key={mentor.name}
             ref={portraitRef}
             className="mentor-portrait mentor-portrait-enter"
-            aria-label={fmt(t.common.mentorAria, { name: 'Maria' })}
+            aria-label={fmt(t.common.mentorAria, { name: mentor.name })}
             role="img"
           >
             <div className="mentor-portrait-glow" />
             <div className="mentor-portrait-ring">
-              <img className="mentor-portrait-image" src={mariaPortrait} alt={fmt(t.common.mentorAria, { name: 'Maria' })} />
+              <img className="mentor-portrait-image" src={mentor.portrait} alt={fmt(t.common.mentorAria, { name: mentor.name })} />
             </div>
-            <div className="mentor-portrait-badge">Maria</div>
+            <div className="mentor-portrait-badge">{mentor.name}</div>
           </div>
           <div
             ref={bubbleRef}
@@ -760,7 +760,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
             onClick={handleContinue}
           >
             <div className={`mentor-bubble-content${stage === 'hand-over' ? ' has-chat' : ''}`} key={bubbleKey}>
-              <span className="mentor-bubble-name">Maria</span>
+              <span className="mentor-bubble-name">{mentor.name}</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
                 <p className="mentor-bubble-text">
@@ -803,7 +803,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                     type="button"
                     onClick={handleSubmitAddress}
                     disabled={chatLocked || !chatInput.trim()}
-                    aria-label={l5.sendAria}
+                    aria-label={fmt(l5.sendAria, { name: mentor.name })}
                   >
                     <SendHorizontal size={16} strokeWidth={2.2} />
                   </button>

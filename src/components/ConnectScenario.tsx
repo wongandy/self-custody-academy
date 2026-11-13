@@ -2,8 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronDown, ChevronRight, Download, Layers, Plus, Settings, Usb, Wallet } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
-import andyPortrait from '@/components/Andy.webp';
-import mariaPortrait from '@/components/Maria.webp';
+import { MENTORS, WALLET_LESSONS_MENTOR } from '@/lib/mentors';
 import en, { type Dictionary } from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
@@ -20,7 +19,7 @@ type ConnectScenarioProps = {
 };
 
 type Step =
-  | { kind: 'mentor'; mentor: 'andy' | 'maria' }
+  | { kind: 'mentor'; mentor: 'andy' | 'maria' | 'solo' }
   | { kind: 'wallet-intro' }
   | { kind: 'wallet-name' }
   | { kind: 'wallet-settings' }
@@ -59,15 +58,23 @@ const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['device', 'laptop', 'cloud'], correctId: 'device' },
 ];
 
-// One speaking turn per line, in order: Andy hands over (`lesson4.andy`), then
-// Maria takes it (`lesson4.maria`). Deriving the turns from the dictionary's
-// lists means adding or removing a line can never leave a turn without a line
-// or shift the lines out of step. Every locale has the same list lengths.
+// One speaking turn per line, in order. With Maria switched on
+// (src/lib/mentors.ts) Andy hands over (`lesson4.andy`), then Maria takes it
+// (`lesson4.maria`); otherwise Andy teaches the lesson alone (`lesson4.solo`).
+// Deriving the turns from the dictionary's lists means adding or removing a
+// line can never leave a turn without a line or shift the lines out of step.
+// Every locale has the same list lengths.
 // The Settings and keystore explanations work the same way: one step per line.
+const WITH_MARIA = WALLET_LESSONS_MENTOR === 'maria';
 const HANDOFF_COUNT = en.lesson4.andy.length;
+const INTRO_STEPS: Step[] = WITH_MARIA
+  ? [
+    ...en.lesson4.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
+    ...en.lesson4.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
+  ]
+  : en.lesson4.solo.map((): Step => ({ kind: 'mentor', mentor: 'solo' }));
 const STEPS: Step[] = [
-  ...en.lesson4.andy.map((): Step => ({ kind: 'mentor', mentor: 'andy' })),
-  ...en.lesson4.maria.map((): Step => ({ kind: 'mentor', mentor: 'maria' })),
+  ...INTRO_STEPS,
   { kind: 'wallet-intro' },
   { kind: 'wallet-name' },
   ...en.lesson4.walletSettings.map((): Step => ({ kind: 'wallet-settings' })),
@@ -143,6 +150,7 @@ function useTypewriter(text: string, speed = 6, resetKey = '') {
 function stepMessage(l4: Dictionary['lesson4'], step: Step, stepIndex: number): string {
   switch (step.kind) {
     case 'mentor':
+      if (step.mentor === 'solo') return l4.solo[stepIndex] ?? '';
       if (step.mentor === 'andy') return l4.andy[stepIndex] ?? '';
       return l4.maria[stepIndex - HANDOFF_COUNT] ?? '';
     case 'wallet-intro':
@@ -203,8 +211,10 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const CORD_SEAT_MS = 1000;
 
   const step = STEPS[stepIndex];
-  const mentorName = step.kind === 'mentor' && step.mentor === 'andy' ? 'Andy' : 'Maria';
-  const portrait = mentorName === 'Andy' ? andyPortrait : mariaPortrait;
+  // Andy opens the lesson; after the handoff (if Maria is on) the lesson's mentor takes over.
+  const mentor = step.kind === 'mentor' && step.mentor === 'andy' ? MENTORS.andy : MENTORS[WALLET_LESSONS_MENTOR];
+  const mentorName = mentor.name;
+  const portrait = mentor.portrait;
   // Maria asks the learner to wait until Cairn has finished starting up, then
   // walks the learner through creating a wallet once the app is on screen.
   const walletBooting = step.kind === 'wallet-intro' && bootPhase !== 'ready';
@@ -224,7 +234,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   // Confirmed on the device; back to the app to see the keystore.
   const mobilePairedWait = viewingDevice && step.kind === 'device-prompt' && connected;
   const message = nudgeActive
-    ? t.common.nudgeLater
+    ? t.common[MENTORS[WALLET_LESSONS_MENTOR].nudge]
     : check.active
       ? check.mentorLine
     : walletBooting

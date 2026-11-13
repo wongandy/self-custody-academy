@@ -527,7 +527,7 @@ function Playground({ connected, setConnected }: PlaygroundProps) {
                           <div className="tx-sim-screen tx-sim-success-screen send-success-screen">
                             <CheckCircle2 size={38} strokeWidth={1.6} />
                             <span className="tx-sim-success-title">Payment sent</span>
-                            <p className="tx-sim-success-body">{SEND_AMOUNT} BTC was approved by the hardware wallet and broadcast to Maria's address.</p>
+                            <p className="tx-sim-success-body">{SEND_AMOUNT} BTC was approved by the hardware wallet and broadcast to Andy's address.</p>
                             <button className="tx-sim-btn ghost" type="button" onClick={() => setSendStep('form')}>
                               <span>New payment (playground only)</span>
                             </button>
