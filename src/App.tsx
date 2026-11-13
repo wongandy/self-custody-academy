@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LogOut, Moon, Sun, X } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
@@ -122,10 +122,16 @@ function App() {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [screen]);
 
+  // The path the app last put in (or read from) the address bar. popstate also fires
+  // when only the #hash changes, e.g. when Supabase clears the token from a
+  // password-reset link, and that must not navigate away from the current screen.
+  const lastPathRef = useRef(window.location.pathname);
+
   // Keep the address bar in sync with the pages that have their own URL.
   useEffect(() => {
     const target = SCREEN_PATHS[screen] ?? '/';
     const current = window.location.pathname;
+    lastPathRef.current = target;
     if (current === target) return;
     // Swap an old alias for the new URL in place, so Back doesn't bounce on it.
     if (PATH_ALIASES[current.replace(/\/+$/, '')] === screen) {
@@ -137,7 +143,12 @@ function App() {
 
   // Browser back / forward between "/", "/about" and "/contact-us".
   useEffect(() => {
-    const onPopState = () => setScreen(screenFromPath(window.location.pathname) ?? 'home');
+    const onPopState = () => {
+      const path = window.location.pathname;
+      if (path === lastPathRef.current) return;
+      lastPathRef.current = path;
+      setScreen(screenFromPath(path) ?? 'home');
+    };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
