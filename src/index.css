@@ -9444,6 +9444,45 @@ html.theme-light {
   align-items: flex-start;
 }
 
+/* Broadcast but not yet in a block */
+.send-review-status.send-status-pending {
+  color: var(--gold-light);
+}
+
+.send-success-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Lesson 6: Cairn's own check that the amount plus fee fits in the balance */
+.send-amount-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.send-amount-error {
+  color: var(--danger);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.wallet-window .send-amount-field input.error {
+  border-color: rgba(232, 113, 113, 0.6);
+}
+
+.send-success-txid {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--muted) !important;
+  overflow-wrap: anywhere;
+}
+
 /* ── Wallet software: one fixed screen size for every tab and lesson ──
    The window's height used to follow its content, so the laptop base (and the
    USB cord plugged into it) jumped between tabs. Now the screen is always the
