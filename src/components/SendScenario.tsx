@@ -13,11 +13,13 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet';
+import { DeviceSwitcher } from '@/components/DeviceSwitcher';
 import mariaPortrait from '@/components/Maria.webp';
 import en from '@/locales/en';
 import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
+import { useDeviceFit } from '@/lib/useDeviceFit';
 import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
@@ -68,6 +70,8 @@ type NudgeKind = 'generic' | 'max' | 'send-reject';
 const SEND_AMOUNT = '0.01';
 // Maria's own address (the BIP173 example address), not the learner's device address.
 const MARIA_ADDRESS = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
+// Made-up transaction ID for the sent payment (random hex, not a real transaction).
+const SENT_TXID = 'a3f1c9e07b52d84f6e19c3a7d05b8e2f41c6d9a8b7e03f5c2d14a96e8b70c3f5';
 
 const FEE_OPTIONS: FeeOption[] = [
   { id: 'low', label: 'Low', rate: '2 sats/vB', fee: '0.00000120' },
@@ -155,7 +159,13 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const txShowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [addressCopied, setAddressCopied] = useState(false);
   const [addressWrong, setAddressWrong] = useState(false);
+  // A spendable amount that isn't the one Maria asked for: she says so (Cairn has no complaint).
+  const [amountWrong, setAmountWrong] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 600px)').matches);
+  // Phones show one device at a time; the learner switches with the device switcher.
+  const [mobilePanel, setMobilePanel] = useState<'software' | 'device'>('software');
+  const [visitedDevice, setVisitedDevice] = useState(false);
+  const deviceStageRef = useRef<HTMLDivElement>(null);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
@@ -172,6 +182,27 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     return () => query.removeEventListener('change', onChange);
   }, []);
 
+  // Phones: the payment is approved on the device, so Maria says when to switch.
+  // While the device shows the payment the learner may flip back and forth to
+  // compare it with Cairn; otherwise the switcher only works when she asks for it.
+  const viewingDevice = isMobile && mobilePanel === 'device';
+  const mobileLine: { key: string; text: string } | null = !isMobile
+    ? null
+    : stage === 'hardware-review'
+      ? visitedDevice
+        ? { key: 'hw-review-mobile', text: l6.hardwareReviewMobile }
+        : { key: 'sent-to-device', text: l6.sentToDevice }
+      : stage === 'tx-sent'
+        ? viewingDevice
+          ? { key: 'tx-sent-device', text: l6.txSentDevice }
+          : { key: 'tx-sent-mobile', text: l6.txSentMobile }
+        : null;
+  const mobileSwitchHint: 'software' | 'device' | null =
+    stage === 'hardware-review' && !viewingDevice
+      ? 'device'
+      : stage === 'tx-sent' && viewingDevice
+        ? 'software'
+        : null;
   const message = nudgeActive
     ? nudgeKind === 'max'
       ? fmt(l6.maxNudge, { amount: SEND_AMOUNT })
@@ -180,8 +211,12 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
         : t.common.nudgeLater
     : check.active
       ? check.mentorLine
+    : mobileLine
+      ? mobileLine.text
     : addressWrong && stage === 'enter-address'
       ? l6.addressWrong
+      : amountWrong && stage === 'enter-amount'
+        ? fmt(l6.amountWrong, { amount: SEND_AMOUNT })
       : stage === 'intro'
         ? fmt(l6.intro[introStep] ?? l6.intro[0], { amount: SEND_AMOUNT })
         : stage === 'open-send'
@@ -207,8 +242,12 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     ? `nudge-${nudgeKind}`
     : check.active
       ? check.mentorKey
+      : mobileLine
+        ? mobileLine.key
       : addressWrong && stage === 'enter-address'
         ? 'address-wrong'
+        : amountWrong && stage === 'enter-amount'
+          ? 'amount-wrong'
         : stage === 'intro'
           ? `intro-${introStep}`
           : stage;
@@ -216,6 +255,17 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
 
   const spotlight = stage === 'intro';
   useLaptopCableAlign(laptopBodyRef, !spotlight);
+  useDeviceFit(deviceStageRef, isMobile && !spotlight && !check.active);
+
+  const handleMobileSwitch = useCallback((panel: 'software' | 'device') => {
+    setMobilePanel(panel);
+    if (panel === 'device') setVisitedDevice(true);
+  }, []);
+
+  // Safety net: the lesson ends in the app.
+  useEffect(() => {
+    if (stage === 'finished') setMobilePanel('software');
+  }, [stage]);
   const interactionLocked = !done && !sandbox;
   const canContinue = done && !nudgeActive && !addressWrong && !check.active && CONTINUE_STAGES.has(stage);
   const softwareLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review');
@@ -225,7 +275,15 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   // What leaves the wallet is the amount plus the fee; the balance after uses the fee actually chosen.
   const totalSentSats = toSats(SEND_AMOUNT) + toSats(selectedFee.fee);
   const sentBalance = formatBtc(toSats(WALLET_BALANCE) - totalSentSats);
-  const formValid = recipient.trim() === MARIA_ADDRESS && amount.trim() === SEND_AMOUNT;
+  // The amount as typed, in satoshis; null while it isn't a positive number yet.
+  const amountTrimmed = amount.trim();
+  const amountSats = amountTrimmed !== '' && Number.isFinite(Number(amountTrimmed)) && Number(amountTrimmed) > 0
+    ? toSats(amountTrimmed)
+    : null;
+  const amountIsRequested = amountSats === toSats(SEND_AMOUNT);
+  // Cairn's own check, as in a real wallet: the amount plus the fee must fit in the balance.
+  const insufficientFunds = amountSats !== null && amountSats + toSats(selectedFee.fee) > toSats(WALLET_BALANCE);
+  const formValid = recipient.trim() === MARIA_ADDRESS && amountIsRequested;
 
   const expectedAction: ExpectedAction =
     stage === 'hardware-review'
@@ -291,13 +349,20 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     return () => clearTimeout(timer);
   }, [label, stage]);
 
-  // Auto-advance: correct amount -> explain-fees stage (brief delay)
+  // Auto-advance: correct amount -> explain-fees stage (brief delay).
+  // Any other amount Cairn can cover: once the learner stops typing, Maria says
+  // it isn't the amount she asked for. More than the balance is Cairn's error to show.
   useEffect(() => {
     if (stage !== 'enter-amount') return;
-    if (amount.trim() !== SEND_AMOUNT) return;
-    const timer = setTimeout(() => setStage('explain-fees'), 600);
+    setAmountWrong(false);
+    if (amountIsRequested) {
+      const timer = setTimeout(() => setStage('explain-fees'), 600);
+      return () => clearTimeout(timer);
+    }
+    if (amountSats === null || insufficientFunds) return;
+    const timer = setTimeout(() => setAmountWrong(true), 900);
     return () => clearTimeout(timer);
-  }, [amount, stage]);
+  }, [amount, stage, amountIsRequested, amountSats, insufficientFunds]);
 
   const handleContinue = useCallback(() => {
     if (!done) {
@@ -469,7 +534,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   }, []);
 
   const cableEl = (
-    <div className={`connect-cable is-linked${isMobile ? ' cable-under-wallet' : ''}`} aria-hidden="true">
+    <div className={`connect-cable is-linked${isMobile ? (viewingDevice ? ' cable-device-panel' : ' cable-under-wallet') : ''}`} aria-hidden="true">
       <span className="plug-end-track">
         <svg className="connect-cable-wire connect-cable-wire-h" viewBox="0 0 100 40" preserveAspectRatio="none">
           <path className="cable-line" d="M0 20 L 20 20 C 36 20, 36 31, 50 31 C 64 31, 64 20, 80 20 L 100 20" pathLength={100} />
@@ -482,6 +547,10 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
         <svg className="connect-cable-wire connect-cable-wire-under" viewBox="0 0 240 48" preserveAspectRatio="none">
           <path className="cable-line" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
           <path className="cable-pulse" d="M20 0 C 20 14, 28 18, 50 20 C 110 25, 180 21, 240 22" pathLength={100} />
+        </svg>
+        <svg className="connect-cable-wire connect-cable-wire-device" viewBox="0 0 200 48" preserveAspectRatio="none">
+          <path className="cable-line" d="M0 26 C 47 26, 93 26, 140 26 C 172 26, 200 20, 200 11" pathLength={100} />
+          <path className="cable-pulse" d="M0 26 C 47 26, 93 26, 140 26 C 172 26, 200 20, 200 11" pathLength={100} />
         </svg>
         <span className="connect-cable-plug plug-start" />
         <span className="connect-cable-plug plug-end" />
@@ -496,13 +565,13 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const showAddressInBubble = stage === 'enter-address' && !nudgeActive;
 
   return (
-    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect'}`}>
+    <main className={`scenario-page scenario-page-fit lesson-fit ${check.active ? 'knowledge-check-scene' : spotlight ? 'scenario-page-spotlight' : 'scenario-page-connect connect-paged'}`}>
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${check.active ? 'knowledge-check-layout' : ''}`}>
         {check.active && <KnowledgeCheckKicker />}
         {!spotlight && !check.active && (
           <div ref={duoSlotRef} className="fit-slot fit-wrap">
-          <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}`}>
-            <div className="wallet-laptop laptop-enter">
+          <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}${isMobile ? ' has-device-switcher' : ''}`}>
+            <div className={`wallet-laptop laptop-enter${viewingDevice ? ' mobile-hidden' : ''}`}>
               <div ref={laptopBodyRef} className="wallet-laptop-body">
                 <div className="wallet-window">
                   <div className="wallet-window-titlebar">
@@ -615,9 +684,19 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                                 <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Add a label…" disabled={!labelFieldEnabled} />
                               </label>
                               <label className="tx-sim-field">
-                                <span>Amount</span>
+                                <span className="send-amount-label">
+                                  Amount
+                                  {insufficientFunds && <em className="send-amount-error" role="alert">Insufficient funds</em>}
+                                </span>
                                 <div className="send-amount-field">
-                                  <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" disabled={!amountFieldEnabled} />
+                                  <input
+                                    className={insufficientFunds ? 'error' : undefined}
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    placeholder="0.00"
+                                    disabled={!amountFieldEnabled}
+                                    aria-invalid={insufficientFunds}
+                                  />
                                   <span>BTC</span>
                                   <button className="withdraw-max-btn" type="button" onClick={handleMax} disabled={!amountFieldEnabled}>MAX</button>
                                 </div>
@@ -687,10 +766,22 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                         )}
 
                         {walletTab === 'send' && sent && (
-                          <div className="tx-sim-screen tx-sim-success-screen send-success-screen">
-                            <CheckCircle2 size={38} strokeWidth={1.6} />
-                            <span className="tx-sim-success-title">Payment sent</span>
-                            <p className="tx-sim-success-body">{SEND_AMOUNT} BTC was approved by the hardware wallet and broadcast to Maria's address.</p>
+                          // What a real wallet shows after broadcasting: it can't know who owns
+                          // an address, so no names; just the status and the transaction ID.
+                          <div className="send-review-screen send-success-screen">
+                            <div className="send-form-heading wallet-tab-heading">
+                              <div className="wallet-tab-title"><CheckCircle2 strokeWidth={2} /><span>Transaction broadcast</span></div>
+                              <span className="send-review-status send-status-pending">Unconfirmed</span>
+                            </div>
+                            <div className="tx-sim-confirm-box">
+                              <div className="tx-confirm-row"><span>Amount</span><strong>{SEND_AMOUNT} BTC</strong></div>
+                              <div className="tx-confirm-row"><span>Network fee</span><strong>{selectedFee.fee} BTC</strong></div>
+                              <div className="tx-confirm-row tx-confirm-row-address">
+                                <span>Transaction ID</span>
+                                <strong className="send-success-txid">{SENT_TXID}</strong>
+                              </div>
+                            </div>
+                            <p className="send-success-note">Sent to the Bitcoin network. It confirms once a miner includes it in a block.</p>
                           </div>
                         )}
                       </div>
@@ -701,14 +792,15 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                   <span className="wallet-laptop-notch" />
                 </div>
               </div>
-              {isMobile && cableEl}
+              {isMobile && !viewingDevice && cableEl}
               <div className="device-caption">{t.common.captionWalletSoftware}</div>
             </div>
 
             {!isMobile && cableEl}
 
-            <div className="connect-device-stage phase-linked">
+            <div ref={deviceStageRef} className={`connect-device-stage phase-linked${isMobile && !viewingDevice ? ' mobile-hidden' : ''}`}>
               <div className="connect-device-row">
+                {viewingDevice && cableEl}
                 <HardwareWallet
                   mode="withdraw"
                   initialPhase="ready-menu"
@@ -725,6 +817,19 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                 />
               </div>
             </div>
+
+            {isMobile && (
+              <DeviceSwitcher
+                options={[
+                  { id: 'software', label: t.common.captionWalletSoftware },
+                  { id: 'device', label: t.common.captionHardwareWallet },
+                ]}
+                active={mobilePanel}
+                onSelect={handleMobileSwitch}
+                pulseId={mobileSwitchHint}
+                disabled={!sandbox && mobileSwitchHint === null && stage !== 'hardware-review'}
+              />
+            )}
           </div>
           </div>
         )}
@@ -748,7 +853,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
             className={`mentor-bubble ${canContinue ? 'is-ready' : ''}`}
             onClick={handleContinue}
           >
-            <div className="mentor-bubble-content" key={bubbleKey}>
+            <div className={`mentor-bubble-content${showAddressInBubble ? ' has-chat' : ''}`} key={bubbleKey}>
               <span className="mentor-bubble-name">Maria</span>
               <div className="mentor-bubble-text-wrap">
                 <p className="mentor-bubble-text-ghost">{message}</p>
@@ -771,14 +876,15 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                 </div>
               )}
             </div>
-            {canContinue && (
+            {!showAddressInBubble && (
               <button
-                className="bubble-next ready"
+                className={`bubble-next ${canContinue ? 'ready' : ''}`}
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleContinue();
                 }}
+                disabled={!canContinue}
                 aria-label={t.common.continue}
               >
                 <ChevronRight size={18} strokeWidth={2.5} />

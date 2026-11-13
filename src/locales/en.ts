@@ -540,6 +540,12 @@ const en = {
     reviewTx: 'Check the recipient, amount and fee carefully. If everything matches, send the transaction to your hardware wallet for its own review.',
     hardwareReview: 'Now check each detail on the hardware wallet screen. Press the checkmark to step through the recipient, amount and fee, then confirm the payment.',
     txSent: 'Approved and broadcast! Open the Transactions tab to see your payment.',
+    // Phones show one device at a time: these lines ask the learner to switch views.
+    sentToDevice: 'Cairn has sent the payment to your hardware wallet for review. Tap HARDWARE WALLET to check it there.',
+    hardwareReviewMobile: 'Compare the recipient, amount and fee on the device with Cairn — switch between them as often as you like. Press the checkmark to step through, then confirm the payment.',
+    txSentDevice: 'Approved and broadcast! Tap WALLET SOFTWARE to go back to Cairn.',
+    txSentMobile: 'Now open the Transactions tab to see your payment.',
+    amountWrong: "That's not the amount I asked for. Change the Amount to exactly {amount} BTC.",
     maxNudge: 'MAX fills in your whole balance minus the fee — handy for emptying a wallet. I only need {amount} BTC, so type that instead.',
     sendReject: "Good instinct — if anything looked wrong, X would cancel it and nothing would be sent. Everything checks out, so press the checkmark.",
     finished: "There it is. Remember the habit: check the address, amount and fee on your hardware wallet's screen before you approve.",
