@@ -1,0 +1,87 @@
+<!--
+  Password-reset email (Supabase "Reset Password" template).
+  Local: wired up in supabase/config.toml.
+  Production: paste this whole file into Dashboard → Authentication → Emails → Reset Password.
+
+  Language: .Data is the user's metadata. The app saves `locale` ("en" or "th") there.
+  Accounts with no saved locale (created before this was added) get both languages.
+-->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Self-Custody Academy</title>
+</head>
+<body style="margin:0;padding:0;background:#f2ece3;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f2ece3;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#faf7f2;border-radius:16px;border:1px solid #e6ddd0;">
+        <tr>
+          <td style="padding:28px 32px 8px 32px;font-family:Manrope,'Noto Sans Thai',Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#b0732a;">
+            Self-Custody Academy
+          </td>
+        </tr>
+
+{{ if .Data.locale }}{{ if eq .Data.locale "th" }}
+        <!-- Thai -->
+        <tr>
+          <td style="padding:8px 32px 0 32px;font-family:'Noto Sans Thai',Tahoma,Arial,sans-serif;color:#1f1a14;">
+            <h1 style="margin:0 0 16px 0;font-size:24px;line-height:1.3;">รีเซ็ตรหัสผ่านของคุณ</h1>
+            <p style="margin:0 0 24px 0;font-size:15px;line-height:1.7;">เราได้รับคำขอให้รีเซ็ตรหัสผ่านสำหรับบัญชี Self-Custody Academy ของคุณ ({{ .Email }})</p>
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 26px;background:#d9943c;color:#2a1606;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;">ตั้งรหัสผ่านใหม่</a>
+            <p style="margin:24px 0 0 0;font-size:14px;line-height:1.7;color:#5c544a;">ลิงก์นี้ใช้ได้ครั้งเดียวและจะหมดอายุภายใน 1 ชั่วโมง</p>
+            <p style="margin:8px 0 0 0;font-size:14px;line-height:1.7;color:#5c544a;">หากคุณไม่ได้เป็นผู้ขอ คุณสามารถเพิกเฉยต่ออีเมลนี้ได้ รหัสผ่านของคุณจะไม่เปลี่ยนแปลง</p>
+            <p style="margin:20px 0 0 0;font-size:12px;line-height:1.6;color:#8a8175;">กดปุ่มไม่ได้? คัดลอกลิงก์นี้ไปวางในเบราว์เซอร์:<br><a href="{{ .ConfirmationURL }}" style="color:#b0732a;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px 32px 28px 32px;font-family:'Noto Sans Thai',Tahoma,Arial,sans-serif;">
+            <p style="margin:0;padding-top:16px;border-top:1px solid #e6ddd0;font-size:12px;line-height:1.6;color:#8a8175;">อย่าแชร์วลีกู้คืน (seed phrase) ให้ใครเด็ดขาด เราจะไม่ขอข้อมูลนี้จากคุณ<br><a href="https://selfcustody.academy" style="color:#8a8175;">selfcustody.academy</a></p>
+          </td>
+        </tr>
+{{ else }}
+        <!-- English -->
+        <tr>
+          <td style="padding:8px 32px 0 32px;font-family:Manrope,Arial,Helvetica,sans-serif;color:#1f1a14;">
+            <h1 style="margin:0 0 16px 0;font-size:24px;line-height:1.3;">Reset your password</h1>
+            <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;">We received a request to reset the password for your Self-Custody Academy account ({{ .Email }}).</p>
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 26px;background:#d9943c;color:#2a1606;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;">Set a new password</a>
+            <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#5c544a;">This link works once and expires in 1 hour.</p>
+            <p style="margin:8px 0 0 0;font-size:14px;line-height:1.6;color:#5c544a;">If you didn't ask for this, you can ignore this email. Your password won't change.</p>
+            <p style="margin:20px 0 0 0;font-size:12px;line-height:1.6;color:#8a8175;">Button not working? Copy this link into your browser:<br><a href="{{ .ConfirmationURL }}" style="color:#b0732a;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px 32px 28px 32px;font-family:Manrope,Arial,Helvetica,sans-serif;">
+            <p style="margin:0;padding-top:16px;border-top:1px solid #e6ddd0;font-size:12px;line-height:1.6;color:#8a8175;">Never share your seed phrase with anyone. We will never ask for it.<br><a href="https://selfcustody.academy" style="color:#8a8175;">selfcustody.academy</a></p>
+          </td>
+        </tr>
+{{ end }}{{ else }}
+        <!-- No saved language: both -->
+        <tr>
+          <td style="padding:8px 32px 0 32px;font-family:Manrope,'Noto Sans Thai',Arial,Helvetica,sans-serif;color:#1f1a14;">
+            <h1 style="margin:0 0 16px 0;font-size:24px;line-height:1.3;">Reset your password</h1>
+            <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;">We received a request to reset the password for your Self-Custody Academy account ({{ .Email }}).</p>
+            <h2 style="margin:0 0 12px 0;font-size:18px;line-height:1.3;font-family:'Noto Sans Thai',Tahoma,Arial,sans-serif;">รีเซ็ตรหัสผ่านของคุณ</h2>
+            <p style="margin:0 0 24px 0;font-size:15px;line-height:1.7;font-family:'Noto Sans Thai',Tahoma,Arial,sans-serif;">เราได้รับคำขอให้รีเซ็ตรหัสผ่านสำหรับบัญชี Self-Custody Academy ของคุณ</p>
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 26px;background:#d9943c;color:#2a1606;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;">Set a new password · ตั้งรหัสผ่านใหม่</a>
+            <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#5c544a;">This link works once and expires in 1 hour. If you didn't ask for this, you can ignore this email. Your password won't change.</p>
+            <p style="margin:8px 0 0 0;font-size:14px;line-height:1.7;color:#5c544a;font-family:'Noto Sans Thai',Tahoma,Arial,sans-serif;">ลิงก์นี้ใช้ได้ครั้งเดียวและจะหมดอายุภายใน 1 ชั่วโมง หากคุณไม่ได้เป็นผู้ขอ คุณสามารถเพิกเฉยต่ออีเมลนี้ได้ รหัสผ่านของคุณจะไม่เปลี่ยนแปลง</p>
+            <p style="margin:20px 0 0 0;font-size:12px;line-height:1.6;color:#8a8175;">Button not working? Copy this link into your browser · กดปุ่มไม่ได้? คัดลอกลิงก์นี้ไปวางในเบราว์เซอร์:<br><a href="{{ .ConfirmationURL }}" style="color:#b0732a;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px 32px 28px 32px;font-family:Manrope,'Noto Sans Thai',Arial,Helvetica,sans-serif;">
+            <p style="margin:0;padding-top:16px;border-top:1px solid #e6ddd0;font-size:12px;line-height:1.6;color:#8a8175;">Never share your seed phrase with anyone. We will never ask for it.<br>อย่าแชร์วลีกู้คืน (seed phrase) ให้ใครเด็ดขาด เราจะไม่ขอข้อมูลนี้จากคุณ<br><a href="https://selfcustody.academy" style="color:#8a8175;">selfcustody.academy</a></p>
+          </td>
+        </tr>
+{{ end }}
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

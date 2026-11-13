@@ -17,7 +17,7 @@ type AuthScreenProps = {
 };
 
 function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: AuthScreenProps) {
-  const { signUp, signIn, resetPassword, updatePassword, linkError, clearLinkError } = useAuth();
+  const { signUp, signIn, resetPassword, updatePassword, cancelRecovery, linkError, clearLinkError } = useAuth();
   const { t } = useI18n();
   const a = t.auth;
   const errorText = (code: string) => {
@@ -189,6 +189,21 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
               {!isSubmitting && <ArrowRight size={18} strokeWidth={2.5} />}
             </button>
           </form>
+
+          <div className="auth-switch">
+            <button
+              type="button"
+              className="auth-back-link"
+              disabled={isSubmitting}
+              onClick={() => {
+                // A dead reset link leaves the user stuck here; let them sign in or ask for a new link.
+                onSwitchMode('login');
+                cancelRecovery();
+              }}
+            >
+              <ArrowLeft size={14} strokeWidth={2.2} /> {a.backToSignIn}
+            </button>
+          </div>
         </div>
       </main>
     );
