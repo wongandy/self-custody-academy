@@ -18,16 +18,16 @@ type RecoverScenarioProps = {
 
 type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked';
 
-// Andy's lines live in the dictionary (`lesson3`). He reads `intro` in order
+// Andy's lines live in the dictionary (`lesson4`). He reads `intro` in order
 // while the wallet is still hidden; the hand-over line (`handover`) always comes
 // right after them and the wallet window appears on it, so lines added to
 // `intro` play first, in the spotlight.
-const HANDOVER_INDEX = en.lesson3.intro.length;
-const RECOVER_INTRO_COUNT = en.lesson3.recoverIntro.length;
+const HANDOVER_INDEX = en.lesson4.intro.length;
+const RECOVER_INTRO_COUNT = en.lesson4.recoverIntro.length;
 
 const NUDGE_DURATION_MS = 1250;
 
-// Answer key for the check-in; the wording is `lesson3.questions`, in this order.
+// Answer key for the check-in; the wording is `lesson4.questions`, in this order.
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['phrase', 'pin', 'support'], correctId: 'phrase' },
   { optionIds: ['safe', 'gone', 'company'], correctId: 'safe' },
@@ -75,7 +75,7 @@ function useTypewriter(text: string, speed = 6, resetKey = '') {
 
 export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioProps) {
   const { t } = useI18n();
-  const l3 = t.lesson3;
+  const l3 = t.lesson4;
   const INTRO_MESSAGES = [...l3.intro, l3.handover];
   const MENTOR_MESSAGES: Record<string, string> = {
     'wallet-menu': l3.walletMenu,

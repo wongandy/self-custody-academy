@@ -82,11 +82,11 @@ const FEE_OPTIONS: FeeOption[] = [
 // The mentor's lines live in the dictionary (`lesson6`); every locale has the same list lengths.
 const INTRO_COUNT = en.lesson6.intro.length;
 
-// The wallet as Lesson 5 left it: the Lesson 2 withdrawal plus Maria's 0.1 BTC.
+// The wallet as Lesson 5 left it: Lesson 3's 0.1 BTC plus the Lesson 5 withdrawal.
 const WALLET_BALANCE = '0.14998';
 const STARTING_TRANSACTIONS = [
-  { date: '2026-10-20 14:32', value: '+0.10000 BTC', balance: '0.14998 BTC' },
-  { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC' },
+  { date: '2026-10-20 14:32', value: '+0.04998 BTC', balance: '0.14998 BTC' },
+  { date: '2026-09-21 09:48', value: '+0.10000 BTC', balance: '0.10000 BTC' },
 ];
 
 // Amounts are worked out in satoshis so the fee isn't lost to floating-point rounding.
@@ -136,7 +136,7 @@ function useTypewriter(text: string, speed = 6, resetKey = '') {
 
 export default function SendScenario({ onComplete }: SendScenarioProps) {
   const { t } = useI18n();
-  // Same title bar as lesson 4: the wallet name the learner chose there
+  // Same title bar as lesson 2: the wallet name the learner chose there
   const [windowTitle] = useState(() => walletWindowTitle('Cairn', getWalletName()));
   const l6 = t.lesson6;
   const [stage, setStage] = useState<SendStage>('intro');
@@ -154,7 +154,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const [sendRequest, setSendRequest] = useState(false);
   const [sent, setSent] = useState(false);
   // The sent payment appears in Transactions a moment after the tab opens, so it
-  // slides in like the incoming payment in Lesson 5.
+  // slides in like the incoming payment in Lesson 3.
   const [txShown, setTxShown] = useState(false);
   const txShowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [addressCopied, setAddressCopied] = useState(false);

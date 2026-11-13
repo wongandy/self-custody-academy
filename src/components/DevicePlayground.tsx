@@ -12,7 +12,7 @@
  *
  * To remove: delete this file, the `.playground-*` block at the end of
  * index.css and the 'scenario-7' screen + '/test' path in App.tsx (plus the
- * `export`s added to PhoneClock / ReceiveQrCode).
+ * `export`s added to PhoneClock).
  */
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
@@ -41,7 +41,7 @@ import {
 import HardwareWallet, { RECEIVE_ADDRESS as DEVICE_ADDRESS, type WalletPhase } from '@/components/HardwareWallet';
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
 import { PhoneClock } from '@/components/WithdrawScenario';
-import { ReceiveQrCode } from '@/components/ReceiveScenario';
+import { ReceiveQrCode } from '@/components/ReceiveQrCode';
 import andyPortrait from '@/components/Andy.webp';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
 import WithdrawScenario from '@/components/WithdrawScenario';
@@ -79,8 +79,8 @@ const FEE_OPTIONS = [
   { id: 'high', label: 'High', rate: '18 sats/vB', fee: '0.00001080' },
 ] as const;
 const TRANSACTIONS = [
-  { date: '2026-10-20 14:32', value: '+0.10000 BTC', balance: '0.14998 BTC', incoming: true },
-  { date: '2026-09-21 09:48', value: '+0.04998 BTC', balance: '0.04998 BTC', incoming: true },
+  { date: '2026-10-20 14:32', value: '+0.04998 BTC', balance: '0.14998 BTC', incoming: true },
+  { date: '2026-09-21 09:48', value: '+0.10000 BTC', balance: '0.10000 BTC', incoming: true },
 ];
 const KEYSTORE = {
   fingerprint: '3442193e',
@@ -130,7 +130,7 @@ function useIsMobile() {
   return isMobile;
 }
 
-/* ── Phone: BitExchange withdraw flow (Lesson 2) ── */
+/* ── Phone: BitExchange withdraw flow (Lesson 5) ── */
 
 function ExchangePhone() {
   const [screen, setScreen] = useState<PhoneScreen>('form');
@@ -540,7 +540,7 @@ function Playground({ connected, setConnected }: PlaygroundProps) {
                               <div className="wallet-tab-title"><ArrowDownLeft strokeWidth={2} /><span>Receive Bitcoin</span></div>
                             </div>
                             <div className="rx-qr-frame" aria-hidden="true">
-                              <ReceiveQrCode />
+                              <ReceiveQrCode address={LAPTOP_RECEIVE_ADDRESS} />
                             </div>
                             <span className="wallet-field-label">Receive address</span>
                             <p className="rx-addr">{LAPTOP_RECEIVE_ADDRESS}</p>
@@ -744,13 +744,13 @@ function SandboxLesson({ lesson, onExit }: { lesson: Exclude<View, 'playground'>
     case 1:
       return <ScenarioBriefing onComplete={onExit} />;
     case 2:
-      return <WithdrawScenario completed={false} onBack={onExit} onComplete={onExit} />;
-    case 3:
-      return <RecoverScenario completed={false} onClose={onExit} onBack={onExit} onComplete={onExit} />;
-    case 4:
       return <ConnectScenario completed={false} onComplete={onExit} />;
-    case 5:
+    case 3:
       return <ReceiveScenario onBack={onExit} onComplete={() => {}} />;
+    case 4:
+      return <RecoverScenario completed={false} onClose={onExit} onBack={onExit} onComplete={onExit} />;
+    case 5:
+      return <WithdrawScenario completed={false} onBack={onExit} onComplete={onExit} />;
     case 6:
       return <SendScenario completed={false} onBack={onExit} onComplete={() => {}} />;
   }

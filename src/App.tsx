@@ -353,31 +353,31 @@ function App() {
       )}
 
       {screen === 'scenario-2' && (
-        <WithdrawScenario
+        <ConnectScenario
           completed={completedLessons.includes(2)}
-          onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(2)}
         />
       )}
 
       {screen === 'scenario-3' && (
-        <RecoverScenario
-          completed={completedLessons.includes(3)}
-          onClose={goToRoadmap}
-          onComplete={() => handleScenarioComplete(3)}
+        <ReceiveScenario
           onBack={goToRoadmap}
+          onComplete={() => handleScenarioComplete(3)}
         />
       )}
 
       {screen === 'scenario-4' && (
-        <ConnectScenario
+        <RecoverScenario
           completed={completedLessons.includes(4)}
+          onClose={goToRoadmap}
           onComplete={() => handleScenarioComplete(4)}
+          onBack={goToRoadmap}
         />
       )}
 
       {screen === 'scenario-5' && (
-        <ReceiveScenario
+        <WithdrawScenario
+          completed={completedLessons.includes(5)}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(5)}
         />
