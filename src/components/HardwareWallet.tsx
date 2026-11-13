@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Copy,
   Power,
   X,
 } from 'lucide-react';
@@ -26,7 +25,6 @@ export type WalletPhase =
   | 'recover-quiz'
   | 'recover-type'
   | 'recover-done'
-  | 'receive-address'
   | 'send-blocked'
   | 'settings'
   | 'reset-warn'
@@ -47,15 +45,13 @@ export type ExpectedAction =
   | { type: 'confirm-menu-item'; label: string }
   | { type: 'confirm' }
   | { type: 'external' }
-  | { type: 'copy-address' }
   | { type: 'none' };
 
 type HardwareWalletProps = {
   onComplete: () => void;
   onPowerChange?: (isOn: boolean) => void;
   onPhaseChange?: (phase: WalletPhase) => void;
-  onMenuSelectionChange?: (phase: 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked') => void;
-  onCopyAddress?: () => void;
+  onMenuSelectionChange?: (phase: 'create-intro' | 'recover-intro' | 'send-blocked') => void;
   onReadyMenuSelect?: (label: string) => void;
   onFactoryResetAttempt?: () => void;
   onConnectConfirm?: () => void;
@@ -85,8 +81,6 @@ type HardwareWalletProps = {
 };
 
 const NO_EXPECTED_ACTION: ExpectedAction = { type: 'none' };
-
-export const RECEIVE_ADDRESS = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
 
 // Sending: recipient, amount and fee are reviewed one screen at a time; a final
 // "Approve transaction?" screen shows the total, and only its checkmark signs.
@@ -131,7 +125,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onCopyAddress, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onVerifyReject, onSendConfirm, onSendReject, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked: lockedProp = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction: expectedActionProp = NO_EXPECTED_ACTION }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onVerifyReject, onSendConfirm, onSendReject, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked: lockedProp = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction: expectedActionProp = NO_EXPECTED_ACTION }: HardwareWalletProps) {
   // TEMPORARY (/test sandbox): every button works, whatever the mentor expects.
   const sandbox = useSandbox();
   const locked = sandbox ? false : lockedProp;
@@ -164,11 +158,9 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const [typeInput, setTypeInput] = useState('');
   const [typeList, setTypeList] = useState<string[]>([]);
   const [typeListIndex, setTypeListIndex] = useState(0);
-  const [addrCopied, setAddrCopied] = useState(false);
   const [sendReviewStep, setSendReviewStep] = useState(0);
   const sendTotal = ((btcToSats(sendAmount) + btcToSats(sendFee)) / 100_000_000).toFixed(8);
   const [acceptedWord, setAcceptedWord] = useState<string | null>(null);
-  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const acceptTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typeFieldRef = useRef<HTMLInputElement>(null);
 
@@ -184,8 +176,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       }
       if (mode === 'withdraw' || isReadyMenu) {
         return [
-          { label: 'Receive Bitcoin', phase: 'receive-address' },
-          { label: 'Send Bitcoin', phase: 'send-blocked' },
+          { label: 'Sign Transaction', phase: 'send-blocked' },
           { label: 'Settings', phase: 'settings' },
         ];
       }
@@ -204,9 +195,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
         ? 'create-intro'
         : next === 'recover-intro'
           ? 'recover-intro'
-          : next === 'receive-address'
-            ? 'receive-address'
-            : 'send-blocked',
+          : 'send-blocked',
     );
   }, [onMenuSelectionChange, wiped]);
 
@@ -248,13 +237,13 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   }, [connectRequest, phase, updatePhase]);
 
   useEffect(() => {
-    if (!verifyRequest || (phase !== 'ready-menu' && phase !== 'menu')) return;
+    if (!verifyRequest || (phase !== 'ready-menu' && phase !== 'menu' && phase !== 'connect-done')) return;
     const timer = setTimeout(() => updatePhase('verify-address'), 450);
     return () => clearTimeout(timer);
   }, [verifyRequest, phase, updatePhase]);
 
   useEffect(() => {
-    if (!sendRequest || (phase !== 'ready-menu' && phase !== 'menu')) return;
+    if (!sendRequest || (phase !== 'ready-menu' && phase !== 'menu' && phase !== 'connect-done')) return;
     setSendReviewStep(0);
     updatePhase('send-review');
   }, [sendRequest, phase, updatePhase]);
@@ -335,7 +324,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onPowerChange?.(true);
       return;
     }
-    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item' || expectedAction.type === 'confirm' || expectedAction.type === 'external' || expectedAction.type === 'copy-address') {
+    if (expectedAction.type === 'power-on' || expectedAction.type === 'confirm-menu-item' || expectedAction.type === 'confirm' || expectedAction.type === 'external') {
       onUnexpectedAction?.();
       return;
     }
@@ -384,11 +373,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onMenuSelectionChange?.('send-blocked');
       return;
     }
-    if (target === 'receive-address') {
-      updatePhase('receive-address');
-      onMenuSelectionChange?.('receive-address');
-      return;
-    }
     if (target === 'create-intro') {
       const words = generateMnemonic(12);
       setMnemonic(words);
@@ -416,9 +400,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const handleUp = useCallback(() => {
     if (locked || isBootingPhase()) return;
     if (
-      (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu'))
+      (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu' || phase === 'connect-done'))
       || (expectedAction.type === 'confirm' && phase === 'connect-confirm')
-      || (expectedAction.type === 'copy-address' && phase === 'receive-address')
       || (expectedAction.type === 'confirm' && phase === 'send-review')
     ) {
       onUnexpectedAction?.();
@@ -445,9 +428,8 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const handleDown = useCallback(() => {
     if (locked || isBootingPhase()) return;
     if (
-      (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu'))
+      (expectedAction.type === 'external' && (phase === 'menu' || phase === 'ready-menu' || phase === 'connect-done'))
       || (expectedAction.type === 'confirm' && phase === 'connect-confirm')
-      || (expectedAction.type === 'copy-address' && phase === 'receive-address')
       || (expectedAction.type === 'confirm' && phase === 'send-review')
     ) {
       onUnexpectedAction?.();
@@ -553,7 +535,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onUnexpectedAction?.();
       return;
     }
-    if ((expectedAction.type === 'external' && phase !== 'verify-address' && phase !== 'verify-done') || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
+    if (expectedAction.type === 'external' && phase !== 'verify-address' && phase !== 'verify-done') {
       onUnexpectedAction?.();
       return;
     }
@@ -598,9 +580,6 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     if (phase === 'ready-menu' || phase === 'menu') {
       const item = menuItems[menuIndex];
       if (item) activateMenuItem(item);
-    } else if (phase === 'receive-address') {
-      updatePhase('menu');
-      setMenuIndex(0);
     } else if (phase === 'create-intro') {
       updatePhase('create-words');
     } else if (phase === 'create-words') {
@@ -693,21 +672,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
     isExpectedMenuItem,
   ]);
 
-  const handleCopyAddress = useCallback(() => {
-    if (locked || isBootingPhase()) return;
-    if (expectedAction.type !== 'none' && expectedAction.type !== 'copy-address') {
-      onUnexpectedAction?.();
-      return;
-    }
-    navigator.clipboard?.writeText(RECEIVE_ADDRESS).catch(() => {});
-    setAddrCopied(true);
-    onCopyAddress?.();
-    if (copyTimer.current) clearTimeout(copyTimer.current);
-    copyTimer.current = setTimeout(() => setAddrCopied(false), 2000);
-  }, [onCopyAddress, locked, isBootingPhase, expectedAction, onUnexpectedAction]);
-
   useEffect(() => () => {
-    if (copyTimer.current) clearTimeout(copyTimer.current);
     if (acceptTimer.current) clearTimeout(acceptTimer.current);
   }, []);
 
@@ -741,7 +706,7 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
       onUnexpectedAction?.();
       return;
     }
-    if (expectedAction.type === 'external' || (expectedAction.type === 'copy-address' && phase === 'receive-address')) {
+    if (expectedAction.type === 'external') {
       onUnexpectedAction?.();
       return;
     }
@@ -1086,29 +1051,11 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
                 <p className="hw-screen-body">Restarting with a blank device…</p>
               </div>
             )}
-            {phase === 'receive-address' && (
-              <div className="hw-screen-text">
-                <span className="hw-screen-title">Receive address</span>
-                <div className="hw-receive-addr-box">
-                  <button
-                    className={addrCopied ? 'hw-copy-btn copied' : 'hw-copy-btn'}
-                    type="button"
-                    onClick={handleCopyAddress}
-                    disabled={locked || isBooting}
-                    aria-label={addrCopied ? 'Address copied' : 'Copy address'}
-                  >
-                    {addrCopied ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.2} />}
-                  </button>
-                  <span className="hw-receive-addr">{RECEIVE_ADDRESS}</span>
-                </div>
-                <p className="hw-screen-body">Use this address to receive Bitcoin. Press the checkmark to go back.</p>
-              </div>
-            )}
             {phase === 'verify-address' && (
               <div className="hw-screen-text">
                 <span className="hw-screen-title">Verify address</span>
                 <div className="hw-receive-addr-box">
-                  <span className="hw-receive-addr">{verifyAddress ?? RECEIVE_ADDRESS}</span>
+                  <span className="hw-receive-addr">{verifyAddress ?? ''}</span>
                 </div>
                 {/* <p className="hw-screen-body">Compare it with the wallet software. Press the checkmark to confirm it matches.</p> */}
               </div>

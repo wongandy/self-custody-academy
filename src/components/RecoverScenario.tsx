@@ -16,7 +16,7 @@ type RecoverScenarioProps = {
   onBack: () => void;
 };
 
-type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'receive-address' | 'send-blocked';
+type MenuSelection = 'idle' | 'create-intro' | 'recover-intro' | 'send-blocked';
 
 // Andy's lines live in the dictionary (`lesson4`). He reads `intro` in order
 // while the wallet is still hidden; the hand-over line (`handover`) always comes
@@ -88,7 +88,6 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
     'wallet-wiped': l3.walletWiped,
     'wallet-recover-done': l3.walletRecoverDone,
     'wallet-recover-celebrate': l3.walletRecoverCelebrate,
-    'wallet-receive-blocked': l3.walletReceiveBlocked,
     'wallet-send-blocked': l3.walletSendBlocked,
   };
   const [introStep, setIntroStep] = useState(0);
@@ -158,9 +157,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
             ? 'wallet-menu'
             : menuSelection === 'send-blocked'
               ? 'wallet-send-blocked'
-              : menuSelection === 'receive-address'
-                ? 'wallet-receive-blocked'
-                : `wallet-menu-${menuSelection}`
+              : `wallet-menu-${menuSelection}`
           : walletPhase === 'settings'
             ? 'wallet-settings'
             : `wallet-${walletPhase}`;

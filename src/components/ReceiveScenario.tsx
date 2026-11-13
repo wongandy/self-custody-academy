@@ -668,7 +668,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                 {viewingDevice && cableEl}
                 <HardwareWallet
                   mode="withdraw"
-                  initialPhase="ready-menu"
+                  initialPhase="connect-done"
                   locked={deviceLocked}
                   expectedAction={expectedAction}
                   onUnexpectedAction={handleUnexpectedAction}

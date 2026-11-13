@@ -44,16 +44,28 @@ const NETWORK_FEE = 0.00002;
 // it belongs to no real person.
 const WITHDRAW_ADDRESS = 'bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g';
 
-// How long the phone camera "looks" before it finds the code, then how long
-// the found state shows before the scanner closes.
-const SCAN_AIM_MS = 1500;
-const SCAN_FOUND_MS = 700;
+// The scan plays in stages slow enough to follow: the camera opens and the code
+// drifts into the frame, the scan line sweeps it, the decoded address shows,
+// then the camera closes and the address lands in the field.
+type ScannerStage = 'closed' | 'opening' | 'aiming' | 'found' | 'closing';
+const SCAN_STAGE_MS: Record<Exclude<ScannerStage, 'closed'>, number> = {
+  opening: 1200,
+  aiming: 1600,
+  found: 2000,
+  closing: 350,
+};
+const NEXT_SCAN_STAGE: Record<Exclude<ScannerStage, 'closed'>, ScannerStage> = {
+  opening: 'aiming',
+  aiming: 'found',
+  found: 'closing',
+  closing: 'closed',
+};
 
 const NUDGE_DURATION_MS = 1250;
 // Lesson-specific nudges are full explanations, so they stay up long enough to read.
 const EXPLAIN_NUDGE_MS = 4500;
 
-type NudgeKind = 'generic' | 'scan-early' | 'type-instead' | 'verify-reject';
+type NudgeKind = 'generic' | 'type-instead' | 'verify-reject';
 
 // The mentor's lines live in the dictionary (`lesson5`); every locale has the same list lengths.
 const INTRO_COUNT = en.lesson5.intro.length;
@@ -184,7 +196,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   const [addrVerified, setAddrVerified] = useState(false);
   const [verifyingAddr, setVerifyingAddr] = useState(false);
   const [verifyRequested, setVerifyRequested] = useState(false);
-  const [scanner, setScanner] = useState<'closed' | 'aiming' | 'found'>('closed');
+  const [scanner, setScanner] = useState<ScannerStage>('closed');
   const [sendAddress, setSendAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [amountError, setAmountError] = useState('');
@@ -269,13 +281,11 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
       case 'finished': return l5.finished;
     }
   };
-  const nudgeLine = nudgeKind === 'scan-early'
-    ? l5.scanEarly
-    : nudgeKind === 'type-instead'
-      ? l5.typeInstead
-      : nudgeKind === 'verify-reject'
-        ? l5.verifyReject
-        : t.common[mentor.nudge];
+  const nudgeLine = nudgeKind === 'type-instead'
+    ? l5.typeInstead
+    : nudgeKind === 'verify-reject'
+      ? l5.verifyReject
+      : t.common[mentor.nudge];
   const message = withIconMark(nudgeActive
     ? nudgeLine
     : check.active
@@ -320,6 +330,27 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   // learner may press anything — presses that don't fit the step are nudged.
   const deviceLocked = interactionLocked;
   const expectedAction: ExpectedAction = { type: 'external' };
+
+  // The phone only joins once there's something to do on it: after the address
+  // is verified, when the mentor says "now on your phone…".
+  const phoneShown = sandbox || addrVerified;
+
+  // The one control the current step wants pulses, once the mentor has finished
+  // the line and (on phones) only while its device is on screen.
+  type NextTarget = 'receive-tab' | 'verify' | 'scan' | 'max' | 'withdraw' | 'confirm' | 'tx-tab';
+  const nextTarget: NextTarget | null = !done || nudgeActive || check.active || sandbox
+    ? null
+    : stage === 'go-receive' ? 'receive-tab'
+      : stage === 'verify-rule' ? 'verify'
+        : stage === 'scan' ? 'scan'
+          : stage === 'enter-amount' ? 'max'
+            : stage === 'ready' ? 'withdraw'
+              : stage === 'confirm' ? 'confirm'
+                : stage === 'open-tx' ? 'tx-tab'
+                  : null;
+  const onPhone = (target: NextTarget) => target === 'scan' || target === 'max' || target === 'withdraw' || target === 'confirm';
+  const nextClass = (target: NextTarget) =>
+    nextTarget === target && (!isMobile || (onPhone(target) ? viewingExchange : viewingSoftware)) ? ' wd-next' : '';
 
   const showNudge = useCallback((kind: NudgeKind) => {
     setNudgeKind(kind);
@@ -382,29 +413,28 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   const handleOpenScanner = useCallback(() => {
     if (scanner !== 'closed') return;
     if (!sandbox && stage !== 'scan') {
-      showNudge(addrVerified ? 'generic' : 'scan-early');
+      showNudge('generic');
       return;
     }
-    setScanner('aiming');
-  }, [scanner, sandbox, stage, addrVerified, showNudge]);
+    setScanner('opening');
+  }, [scanner, sandbox, stage, showNudge]);
 
   const handleCloseScanner = useCallback(() => {
     if (scanTimer.current) clearTimeout(scanTimer.current);
     setScanner('closed');
   }, []);
 
-  // The camera "finds" the code after a moment, then fills in the address.
+  // Step through the scan stages; once the camera has closed, fill in the address.
   useEffect(() => {
     if (scanner === 'closed') return;
     scanTimer.current = setTimeout(() => {
-      if (scanner === 'aiming') {
-        setScanner('found');
-        return;
+      const next = NEXT_SCAN_STAGE[scanner];
+      setScanner(next);
+      if (next === 'closed') {
+        setSendAddress(WITHDRAW_ADDRESS);
+        setStage((current) => (current === 'scan' ? 'scanned' : current));
       }
-      setScanner('closed');
-      setSendAddress(WITHDRAW_ADDRESS);
-      setStage((current) => (current === 'scan' ? 'scanned' : current));
-    }, scanner === 'aiming' ? SCAN_AIM_MS : SCAN_FOUND_MS);
+    }, SCAN_STAGE_MS[scanner]);
     return () => {
       if (scanTimer.current) clearTimeout(scanTimer.current);
     };
@@ -414,8 +444,8 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   // why scanning is better instead of letting the learner type 42 characters.
   const handleAddressFieldClick = useCallback(() => {
     if (sandbox || isAddressValid) return;
-    showNudge(stage === 'scan' ? 'type-instead' : addrVerified ? 'generic' : 'scan-early');
-  }, [sandbox, isAddressValid, stage, addrVerified, showNudge]);
+    showNudge(stage === 'scan' ? 'type-instead' : 'generic');
+  }, [sandbox, isAddressValid, stage, showNudge]);
 
   const handleAmountChange = useCallback((val: string) => {
     if (!sandbox && !amountStage) {
@@ -657,7 +687,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                         className="withdraw-addr-input"
                       />
                       <button
-                        className={`wd-scan-btn${stage === 'scan' && (viewingExchange || !isMobile) ? ' is-next' : ''}`}
+                        className={`wd-scan-btn${nextClass('scan')}`}
                         type="button"
                         onClick={handleOpenScanner}
                         aria-label="Scan QR code"
@@ -671,7 +701,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                 <div className="withdraw-phone-section">
                   <div className="withdraw-phone-label-row">
                     <label>Withdraw amount</label>
-                    <button className="withdraw-max-btn" type="button" onClick={handleMax}>
+                    <button className={`withdraw-max-btn${nextClass('max')}`} type="button" onClick={handleMax}>
                       MAX
                     </button>
                   </div>
@@ -705,7 +735,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                 </div>
 
                 <button
-                  className="withdraw-btn"
+                  className={`withdraw-btn${nextClass('withdraw')}`}
                   type="button"
                   onClick={handleWithdraw}
                   disabled={!sandbox && stage !== 'ready'}
@@ -754,7 +784,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                   <span>Please confirm the address and network are correct. Transactions cannot be cancelled once confirmed.</span>
                 </div>
 
-                <button className="withdraw-confirm-btn" type="button" onClick={handleConfirm}>
+                <button className={`withdraw-confirm-btn${nextClass('confirm')}`} type="button" onClick={handleConfirm}>
                   Confirm
                 </button>
               </>
@@ -806,7 +836,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
 
           {/* ── Camera scanner, over the app ── */}
           {scanner !== 'closed' && (
-            <div className={`wd-scanner${scanner === 'found' ? ' is-found' : ''}`} role="dialog" aria-label="Scan QR code">
+            <div className={`wd-scanner is-${scanner}${scanner === 'found' || scanner === 'closing' ? ' is-found' : ''}`} role="dialog" aria-label="Scan QR code">
               <div className="wd-scanner-top">
                 <button className="wd-scanner-close" type="button" onClick={handleCloseScanner} aria-label="Close scanner">
                   <X size={16} strokeWidth={2.2} />
@@ -828,16 +858,20 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                   {scanner === 'aiming' && <span className="wd-scanner-line" />}
                 </div>
               </div>
-              <p className="wd-scanner-hint" aria-live="polite">
-                {scanner === 'found' ? (
+              <div className="wd-scanner-hint" aria-live="polite">
+                {scanner === 'found' || scanner === 'closing' ? (
                   <>
-                    <CheckCircle2 size={13} strokeWidth={2.4} />
-                    <span>Bitcoin address found</span>
+                    <span className="wd-scanner-found">
+                      <CheckCircle2 size={13} strokeWidth={2.4} />
+                      <span>Bitcoin address found</span>
+                    </span>
+                    {/* What the camera read, in full */}
+                    <span className="wd-scanner-addr"><SplitAddress address={WITHDRAW_ADDRESS} /></span>
                   </>
                 ) : (
-                  <span>Point your camera at the QR code</span>
+                  <span>{scanner === 'aiming' ? 'Scanning…' : 'Point your camera at the QR code'}</span>
                 )}
-              </p>
+              </div>
             </div>
           )}
         </div>
@@ -853,7 +887,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
         {!spotlight && !check.active && (
           <div ref={trioSlotRef} className="fit-slot fit-wrap">
             <div className={`wd-trio${interactionLocked ? ' is-locked' : ''}${isMobile ? ' has-device-switcher' : ''}`}>
-              {phoneEl}
+              {phoneShown && phoneEl}
               <div className={`connect-duo is-wide${interactionLocked ? ' is-locked' : ''}${isMobile ? ' has-device-switcher' : ''}`}>
                 <div className={`wallet-laptop laptop-enter${isMobile && !viewingSoftware ? ' mobile-hidden' : ''}`}>
                   <div ref={laptopBodyRef} className="wallet-laptop-body">
@@ -869,7 +903,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                           <aside className="wallet-sidebar">
                             <button
                               type="button"
-                              className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}`}
+                              className={`wallet-nav-item${walletTab === 'transactions' ? ' active' : ''}${nextClass('tx-tab')}`}
                               onClick={handleTransactionsTab}
                               disabled={deviceLocked}
                               aria-pressed={walletTab === 'transactions'}
@@ -889,7 +923,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                             </button>
                             <button
                               type="button"
-                              className={`wallet-nav-item${walletTab === 'receive' ? ' active' : ''}`}
+                              className={`wallet-nav-item${walletTab === 'receive' ? ' active' : ''}${nextClass('receive-tab')}`}
                               onClick={handleReceiveTab}
                               disabled={deviceLocked}
                               aria-pressed={walletTab === 'receive'}
@@ -929,7 +963,9 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                                   </div>
                                 ) : (
                                   <button
-                                    className="tx-sim-btn primary rx-btn"
+                                    // Quiet while the mentor is still explaining the fresh address;
+                                    // it lights up (and pulses) once verifying is the step.
+                                    className={`tx-sim-btn ${stage === 'go-receive' || stage === 'fresh-address' ? 'ghost' : 'primary'} rx-btn${nextClass('verify')}`}
                                     type="button"
                                     onClick={handleVerifyAddress}
                                     disabled={verifyingAddr}
@@ -996,7 +1032,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                     {viewingDevice && cableEl}
                     <HardwareWallet
                       mode="withdraw"
-                      initialPhase="ready-menu"
+                      initialPhase="connect-done"
                       locked={deviceLocked}
                       expectedAction={expectedAction}
                       onUnexpectedAction={handleUnexpectedAction}
@@ -1011,10 +1047,11 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
 
                 {isMobile && (
                   <DeviceSwitcher
+                    // Same order as on laptops; the phone joins at the end once it's needed.
                     options={[
-                      { id: 'exchange', label: t.common.captionPhone },
                       { id: 'software', label: t.common.captionWalletSoftware },
                       { id: 'device', label: t.common.captionHardwareWallet },
+                      ...(phoneShown ? [{ id: 'exchange' as const, label: t.common.captionPhone }] : []),
                     ]}
                     active={mobilePanel}
                     onSelect={handleMobileSwitch}
