@@ -2805,10 +2805,11 @@ html.theme-light {
   place-items: center;
   width: 26px;
   height: 26px;
-  color: #2a1606;
+  /* Green = done (orange is reserved for the recommended next lesson). */
+  color: var(--bg);
   border-radius: 999px;
-  background: #f7931a;
-  box-shadow: 0 0 0 3px var(--panel), 0 0 14px rgba(247, 147, 26, 0.45);
+  background: var(--green);
+  box-shadow: 0 0 0 3px var(--panel), 0 0 14px color-mix(in srgb, var(--green) 45%, transparent);
 }
 
 .roadmap-card-body {
@@ -2864,8 +2865,8 @@ html.theme-light {
 }
 
 .roadmap-card-badge.is-replay {
-  color: var(--gold-light);
-  border: 1px solid rgba(247, 147, 26, 0.4);
+  color: var(--muted);
+  border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: 0 0 0 3px var(--bg);
 }
@@ -2891,14 +2892,10 @@ html.theme-light {
   color: var(--gold-light);
 }
 
-.roadmap-card.complete {
-  --art-bg: rgba(247, 147, 26, 0.13);
-  --art-stroke: #f1bd69;
-  border-color: rgba(247, 147, 26, 0.32);
-}
-
-.roadmap-card.complete .roadmap-card-eyebrow {
-  color: var(--gold-light);
+/* Finished cards stay neutral like not-started ones; only the green check (and Replay)
+   mark them, so the orange recommended card is the one that stands out. */
+.roadmap-card.complete:hover:not(:disabled) .roadmap-card-badge.is-replay {
+  color: var(--text);
 }
 
 /* ── Footer: main button and guide ── */
@@ -2948,11 +2945,21 @@ html.theme-light {
 
 /* Desktop: all six lessons in one row, with the main button above the fold. */
 @media (min-width: 1100px) {
+  /* Wider than the rest of the site on big screens: six cards share the width, so extra
+     room goes into bigger cards and text instead of empty margins. */
   .roadmap-page {
-    padding-bottom: 32px;
+    width: min(100% - 64px, 1480px);
+    /* Everything fits on one screen here, so centre the block in the space under the header
+       instead of leaving the spare height below it. The larger bottom padding (vs 92px top)
+       keeps it slightly above true centre. With no spare height, nothing moves. */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 96px;
   }
 
   .roadmap-board {
+    width: min(100%, 1400px);
     padding-bottom: 16px;
   }
 
@@ -2966,9 +2973,11 @@ html.theme-light {
     gap: 20px;
   }
 
+  /* Each card is a size container, so its text can scale with the card's width (cqi). */
   .roadmap-grid > li {
     flex: 0 0 calc((100% - 5 * 20px) / 6);
     min-width: 0;
+    container-type: inline-size;
   }
 
   .roadmap-grid-wrap.is-short .roadmap-grid {
@@ -3033,21 +3042,22 @@ html.theme-light {
     height: 22px;
   }
 
+  /* Minimums match the ~157px cards of a 1100–1200px window; larger cards get larger text. */
   .roadmap-card-body {
     gap: 5px;
-    padding: 12px 12px 4px;
+    padding: clamp(12px, 7cqi, 16px) clamp(12px, 7cqi, 16px) 4px;
   }
 
   .roadmap-card-eyebrow {
-    font-size: 9px;
+    font-size: clamp(9px, 4.4cqi, 10.5px);
   }
 
   .roadmap-card-title {
-    font-size: 14.5px;
+    font-size: clamp(14.5px, 7.6cqi, 18px);
   }
 
   .roadmap-card-desc {
-    font-size: 12.5px;
+    font-size: clamp(12.5px, 6.4cqi, 15px);
     line-height: 1.45;
   }
 
@@ -3114,9 +3124,10 @@ html.theme-light {
   100% { opacity: 1; transform: scale(1); }
 }
 
+/* Finishing a lesson flashes green (done); the next card's pulse stays orange (next). */
 @keyframes celebration-card-glow {
-  0% { box-shadow: 0 0 0 0 rgba(247, 147, 26, 0.5); }
-  45% { box-shadow: 0 0 0 2px rgba(247, 147, 26, 0.6), 0 0 36px 6px rgba(247, 147, 26, 0.35); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 50%, transparent); }
+  45% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 60%, transparent), 0 0 36px 6px color-mix(in srgb, var(--green) 35%, transparent); }
   100% { box-shadow: var(--shadow-sm); }
 }
 
@@ -9443,11 +9454,6 @@ html.theme-light {
   --art-paper: #fff3df;
   --art-accent: #fff3df;
   box-shadow: 0 0 0 1px rgba(247, 147, 26, 0.5), 0 10px 30px rgba(247, 147, 26, 0.2);
-}
-
-.theme-light .roadmap-card.complete {
-  --art-bg: #fdf0dc;
-  --art-stroke: #8a4a00;
 }
 
 .theme-light .roadmap-connector.todo {

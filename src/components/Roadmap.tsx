@@ -376,6 +376,8 @@ function Roadmap({
   const total = scenarios.length;
   const doneCount = displayDone.size;
   const allDone = doneSet.size === total;
+  // "Next" implies earlier progress, so a brand-new learner sees "Start here" instead.
+  const nextLabel = doneSet.size === 0 ? t.roadmap.startHere : t.roadmap.recommendedNext;
 
   const revealDelay = (ms: number) => (animate ? { animationDelay: `${ms}ms` } : undefined);
 
@@ -463,7 +465,7 @@ function Roadmap({
               const state = getNodeState(n);
               const title = t.roadmap.titles[index];
               const lessonLabel = fmt(t.roadmap.lessonLabel, { n });
-              const stateLabel = state === 'complete' ? t.roadmap.completed : state === 'available' ? t.roadmap.recommendedNext : '';
+              const stateLabel = state === 'complete' ? t.roadmap.completed : state === 'available' ? nextLabel : '';
 
               return (
                 <li key={n}>
@@ -493,7 +495,7 @@ function Roadmap({
                     </span>
                     {state === 'available' && (
                       <span className="roadmap-card-badge is-next" aria-hidden="true">
-                        {t.roadmap.recommendedNext}
+                        {nextLabel}
                       </span>
                     )}
                     {state === 'complete' && (
@@ -535,10 +537,9 @@ function Roadmap({
               type="button"
               disabled={isLoading}
               onClick={() => onSelectScenario(suggestedScenario)}
+              aria-label={`${fmt(t.roadmap.startLessonCta, { n: suggestedScenario })}: ${t.roadmap.titles[suggestedScenario - 1]}`}
             >
-              {doneCount === 0
-                ? t.roadmap.startCta
-                : fmt(t.roadmap.continueCta, { title: t.roadmap.titles[suggestedScenario - 1] })}
+              {fmt(t.roadmap.startLessonCta, { n: suggestedScenario })}
               <ArrowRight size={16} strokeWidth={2.4} aria-hidden="true" />
             </button>
           </div>

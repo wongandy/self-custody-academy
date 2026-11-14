@@ -10,6 +10,8 @@ import lesson1Art from '@/components/roadmap/lesson-1.webp';
 import lesson2Art from '@/components/roadmap/lesson-2.webp';
 import lesson3Art from '@/components/roadmap/lesson-3.webp';
 import lesson4Art from '@/components/roadmap/lesson-4.webp';
+import lesson5Art from '@/components/roadmap/lesson-5.webp';
+import lesson6Art from '@/components/roadmap/lesson-6.webp';
 
 const S = {
   fill: 'var(--art-fill)',
@@ -173,6 +175,8 @@ const IMAGES: Record<number, string> = {
   2: lesson2Art,
   3: lesson3Art,
   4: lesson4Art,
+  5: lesson5Art,
+  6: lesson6Art,
 };
 
 export default function LessonArt({ n }: { n: number }) {
