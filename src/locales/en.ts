@@ -203,10 +203,10 @@ const en = {
     ],
     lessonLabel: 'Lesson {n}',
     recommendedNext: 'Recommended next',
+    startHere: 'Start here',
     completed: 'Completed',
     replay: 'Replay',
-    continueCta: 'Continue: {title}',
-    startCta: 'Start with Lesson 1',
+    startLessonCta: 'Start Lesson {n}',
   },
   auth: {
     registerTitle: 'Time to create an account',

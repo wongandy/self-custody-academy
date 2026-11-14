@@ -198,10 +198,10 @@ const th: Dictionary = {
     ],
     lessonLabel: 'บทที่ {n}',
     recommendedNext: 'แนะนำให้เรียนต่อ',
+    startHere: 'เริ่มที่นี่',
     completed: 'เรียนจบแล้ว',
     replay: 'เรียนซ้ำ',
-    continueCta: 'เรียนต่อ: {title}',
-    startCta: 'เริ่มบทที่ 1',
+    startLessonCta: 'เริ่มบทที่ {n}',
   },
   auth: {
     registerTitle: 'ถึงเวลาสร้างบัญชีแล้ว',
