@@ -1,3 +1,5 @@
+import { LESSONS } from '@/lib/lessons';
+
 // Lesson numbers follow the roadmap order. The order changed once: before it,
 // lessons 2–5 were Withdraw, Recover, Connect, Receive; now they are Connect,
 // Receive, Recover, Withdraw. Progress saved under the old numbering lives in
@@ -8,7 +10,9 @@ const OLD_ORDER_KEY = 'sca_local_lessons';
 // Older builds still stored a single count ("old lessons 1..N done").
 const LEGACY_KEY = 'sca_local_progress';
 
-export const TOTAL_LESSONS = 6;
+export const TOTAL_LESSONS = LESSONS.length;
+// Legacy saves come from the six-lesson era, so their conversion stays capped at six.
+const LEGACY_LESSON_COUNT = 6;
 
 /** Old lesson number → new lesson number. Mirrored by the reorder_lessons SQL migration. */
 const OLD_TO_NEW: Record<number, number> = { 1: 1, 2: 5, 3: 4, 4: 2, 5: 3, 6: 6 };
@@ -41,7 +45,7 @@ function readOldOrderLessons(): number[] | null {
   } else {
     const legacy = localStorage.getItem(LEGACY_KEY);
     if (legacy === null) return null;
-    const count = Math.min(Math.max(parseInt(legacy, 10) || 0, 0), TOTAL_LESSONS);
+    const count = Math.min(Math.max(parseInt(legacy, 10) || 0, 0), LEGACY_LESSON_COUNT);
     old = Array.from({ length: count }, (_, i) => i + 1);
   }
   return normalizeLessons(old.map((n) => OLD_TO_NEW[n]));
