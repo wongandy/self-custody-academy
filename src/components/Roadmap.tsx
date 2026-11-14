@@ -123,6 +123,31 @@ function Roadmap({
   const isScrollable = isRowLayout && scenarios.length > CARDS_PER_ROW;
   const [scrollEdges, setScrollEdges] = useState({ atStart: true, atEnd: false });
 
+  // Once the progress bar has scrolled up under the fixed header, show a thin copy of it there.
+  const progressRef = useRef<HTMLDivElement | null>(null);
+  const [showMiniProgress, setShowMiniProgress] = useState(false);
+  // The fixed header is 64px on wider screens and 56px on phones: measure it so the line sits flush under it.
+  const [headerHeight, setHeaderHeight] = useState(64);
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>('.site-header');
+    if (!header) return;
+    const measure = () => setHeaderHeight(header.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const el = progressRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowMiniProgress(!entry.isIntersecting && entry.boundingClientRect.top < headerHeight),
+      { rootMargin: `-${headerHeight}px 0px 0px 0px` },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [headerHeight]);
+
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const { titles, descriptions } = t.roadmap;
@@ -376,6 +401,7 @@ function Roadmap({
         </div>
 
         <div
+          ref={progressRef}
           className="roadmap-progress"
           role="progressbar"
           aria-label={t.roadmap.label}
@@ -518,6 +544,16 @@ function Roadmap({
           </div>
         )}
       </section>
+
+      {/* Decorative copy of the progress bar; the real one above keeps role="progressbar". */}
+      <div
+        className={`roadmap-mini-progress ${showMiniProgress ? 'is-visible' : ''}`}
+        // Overlap the header's 1px bottom border so the line and the header read as one edge.
+        style={{ top: headerHeight - 1 }}
+        aria-hidden="true"
+      >
+        <span style={{ width: `${(doneCount / total) * 100}%` }} />
+      </div>
     </main>
   );
 }

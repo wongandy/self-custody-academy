@@ -2596,6 +2596,34 @@ html.theme-light {
   transition: width 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Thin progress line under the fixed header, shown once the real bar scrolls out of view. */
+.roadmap-mini-progress {
+  position: fixed;
+  top: 63px; /* set from the measured header height in Roadmap.tsx */
+  left: 0;
+  right: 0;
+  z-index: 21; /* above the header, so it covers the header's bottom border */
+  height: 3px;
+  /* The line colour on top of the page colour: an opaque track, so nothing shows through. */
+  background: linear-gradient(var(--line), var(--line)), var(--bg);
+  opacity: 0;
+  transform: translateY(-3px);
+  transition: opacity 200ms ease, transform 200ms ease;
+  pointer-events: none;
+}
+
+.roadmap-mini-progress.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.roadmap-mini-progress > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #ffb04d, #f7931a);
+  transition: width 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .roadmap-grid-wrap,
 .roadmap-track {
   position: relative;
@@ -3172,7 +3200,9 @@ html.theme-light {
 @media (prefers-reduced-motion: reduce) {
   .roadmap-card,
   .roadmap-cta,
-  .roadmap-progress-fill {
+  .roadmap-progress-fill,
+  .roadmap-mini-progress,
+  .roadmap-mini-progress > span {
     transition: none;
   }
 
