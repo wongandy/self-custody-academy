@@ -58,6 +58,9 @@ a {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  /* clip, not hidden, where supported: hidden turns the shell into a scroll container,
+     which stops position: sticky (the roadmap's mobile dock) from sticking to the screen. */
+  overflow-x: clip;
   color: var(--text);
   background:
     radial-gradient(circle at 18% 46%, rgba(217, 148, 60, 0.08), transparent 27rem),
@@ -2915,18 +2918,7 @@ html.theme-light {
   flex-shrink: 0;
 }
 
-.roadmap-guide {
-  max-width: 520px;
-}
-
-.roadmap-guide-text {
-  margin: 0;
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* Desktop: all six lessons in one row so Andy stays above the fold. */
+/* Desktop: all six lessons in one row, with the main button above the fold. */
 @media (min-width: 1100px) {
   .roadmap-page {
     padding-bottom: 32px;
@@ -3146,18 +3138,34 @@ html.theme-light {
     font-size: 8px;
   }
 
-  .roadmap-footer {
-    margin-top: 40px;
-  }
-
-  .roadmap-cta {
-    width: 100%;
-  }
 }
 
 @media (max-width: 440px) {
   .roadmap-page {
     width: min(100% - 32px, 1120px);
+  }
+}
+
+/* Tablets and phones: the cards stack taller than the screen, so the main button docks to
+   the bottom while the cards scroll behind it. Sticky (not fixed): at the end of the page
+   the dock settles in place instead of covering the last card or the site footer. */
+@media (max-width: 1099px) {
+  .roadmap-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 15;
+    margin: 32px calc(50% - 50vw) 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  .roadmap-cta {
+    width: min(100%, 560px);
+    min-height: 46px;
+    padding: 10px 20px;
   }
 }
 

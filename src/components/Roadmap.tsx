@@ -2,7 +2,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { ArrowRight, Check, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { fmt, useI18n } from '@/lib/i18n';
 import { LESSONS, firstUnfinished } from '@/lib/lessons';
-import andyPortrait from '@/components/Andy.webp';
 import LessonArt from '@/components/roadmap/LessonArt';
 
 type RoadmapProps = {
@@ -54,14 +53,20 @@ function revealInRow(scroller: HTMLElement | null, el: HTMLElement | null, smoot
   });
 }
 
-function glideToLesson(el: HTMLButtonElement | null): boolean {
+/**
+ * Scroll the page so `el` is centered in the visible space between the fixed header and
+ * `dockHeight` (the mobile bottom dock, 0 on desktop). Returns true if it started a smooth scroll.
+ */
+function glideToLesson(el: HTMLButtonElement | null, dockHeight = 0): boolean {
   if (!el) return false;
   const rect = el.getBoundingClientRect();
   const topMargin = 96;
-  const bottomMargin = 80;
+  const bottomMargin = dockHeight > 0 ? dockHeight + 16 : 80;
   if (rect.top >= topMargin && rect.bottom <= window.innerHeight - bottomMargin) return false;
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+  const reduced = prefersReducedMotion();
+  const visible = window.innerHeight - topMargin - bottomMargin;
+  const top = window.scrollY + rect.top - topMargin - Math.max(0, (visible - rect.height) / 2);
+  window.scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' });
   return !reduced;
 }
 
@@ -106,6 +111,9 @@ function Roadmap({
   const arrivalScrolledRef = useRef(false);
   const gridRef = useRef<HTMLOListElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const footerRef = useRef<HTMLDivElement | null>(null);
+  // Height of the mobile bottom dock (the sticky footer), so auto-scroll keeps cards clear of it.
+  const dockHeightRef = useRef(0);
   const rowRevealedRef = useRef(false);
   const lessonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const celebrationDoneRef = useRef(onCelebrationDone);
@@ -221,7 +229,7 @@ function Roadmap({
 
       const next = firstUnfinished(new Set(completedLessons)) ?? justCompletedScenario;
       revealInRow(scrollerRef.current, lessonRefs.current[next - 1] ?? null, true);
-      const gliding = glideToLesson(lessonRefs.current[next - 1] ?? null);
+      const gliding = glideToLesson(lessonRefs.current[next - 1] ?? null, dockHeightRef.current);
 
       if (prefersReduced) {
         finish();
@@ -267,11 +275,31 @@ function Roadmap({
   // Where the celebration points next, once the just-finished lesson counts as done.
   const nextAfterCelebration = firstUnfinished(doneSet);
 
+  // The footer (the main button) only renders while there's a lesson to continue.
+  const hasFooter = suggestedScenario !== null;
+
+  // Below 1100px the footer is a sticky bottom dock: track its height so auto-scroll keeps
+  // cards clear of it. 0 on desktop or when there's no footer.
+  useLayoutEffect(() => {
+    const footer = footerRef.current;
+    if (!footer || isRowLayout || !hasFooter) {
+      dockHeightRef.current = 0;
+      return;
+    }
+    const measure = () => {
+      dockHeightRef.current = footer.offsetHeight;
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [isRowLayout, hasFooter]);
+
   useEffect(() => {
     if (animate || isLoading || justCompletedScenario || arrivalScrolledRef.current) return;
     const timer = setTimeout(() => {
       arrivalScrolledRef.current = true;
-      glideToLesson(lessonRefs.current[(suggestedScenario ?? scenarios.length) - 1] ?? null);
+      glideToLesson(lessonRefs.current[(suggestedScenario ?? scenarios.length) - 1] ?? null, dockHeightRef.current);
     }, 80);
     return () => clearTimeout(timer);
   }, [animate, isLoading, justCompletedScenario, suggestedScenario]);
@@ -323,12 +351,6 @@ function Roadmap({
   const total = scenarios.length;
   const doneCount = displayDone.size;
   const allDone = doneSet.size === total;
-
-  const guideMessage = allDone
-    ? t.roadmap.guideDone
-    : doneSet.size === 0
-      ? t.roadmap.guideStart
-      : fmt(t.roadmap.guideMid, { done: doneSet.size, left: total - doneSet.size });
 
   const revealDelay = (ms: number) => (animate ? { animationDelay: `${ms}ms` } : undefined);
 
@@ -474,8 +496,14 @@ function Roadmap({
           )}
         </div>
 
-        <div className={`roadmap-footer ${animate ? 'roadmap-reveal-fade' : ''}`} style={revealDelay(300 + total * 140)}>
-          {suggestedScenario !== null && (
+        {/* Only while there's a lesson to continue; on phones this is the sticky bottom bar,
+            so an empty one would just be a stray strip. */}
+        {suggestedScenario !== null && (
+          <div
+            ref={footerRef}
+            className={`roadmap-footer ${animate ? 'roadmap-reveal-fade' : ''}`}
+            style={revealDelay(300 + total * 140)}
+          >
             <button
               className="roadmap-cta"
               type="button"
@@ -487,23 +515,8 @@ function Roadmap({
                 : fmt(t.roadmap.continueCta, { title: t.roadmap.titles[suggestedScenario - 1] })}
               <ArrowRight size={16} strokeWidth={2.4} aria-hidden="true" />
             </button>
-          )}
-
-          {/* Same Andy portrait + bubble as the lesson pages (.mentor-*), without the typewriter. */}
-          <div className="mentor-row roadmap-guide">
-            <div className="mentor-portrait" aria-hidden="true">
-              <div className="mentor-portrait-glow" />
-              <div className="mentor-portrait-ring">
-                <img className="mentor-portrait-image" src={andyPortrait} alt="" />
-              </div>
-              <div className="mentor-portrait-badge">Andy</div>
-            </div>
-            <div className="mentor-bubble">
-              <span className="mentor-bubble-name">{t.roadmap.guideName}</span>
-              <p className="roadmap-guide-text">{guideMessage}</p>
-            </div>
           </div>
-        </div>
+        )}
       </section>
     </main>
   );

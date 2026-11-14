@@ -207,10 +207,6 @@ const en = {
     replay: 'Replay',
     continueCta: 'Continue: {title}',
     startCta: 'Start with Lesson 1',
-    guideName: 'Andy',
-    guideStart: 'Welcome! Follow the recommended path, or jump into any lesson that catches your eye.',
-    guideMid: '{done} down, {left} to go. Pick up where you left off, or jump to any lesson you like.',
-    guideDone: "You've finished every lesson. Your keys, your coins. Replay any lesson whenever you want a refresher.",
   },
   auth: {
     registerTitle: 'Time to create an account',
