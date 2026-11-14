@@ -8,6 +8,8 @@
 import type { ReactNode } from 'react';
 import lesson1Art from '@/components/roadmap/lesson-1.webp';
 import lesson2Art from '@/components/roadmap/lesson-2.webp';
+import lesson3Art from '@/components/roadmap/lesson-3.webp';
+import lesson4Art from '@/components/roadmap/lesson-4.webp';
 
 const S = {
   fill: 'var(--art-fill)',
@@ -169,6 +171,8 @@ const ART = [SetUpArt, ConnectArt, ReceiveArt, RecoverArt, WithdrawArt, SendArt]
 const IMAGES: Record<number, string> = {
   1: lesson1Art,
   2: lesson2Art,
+  3: lesson3Art,
+  4: lesson4Art,
 };
 
 export default function LessonArt({ n }: { n: number }) {
