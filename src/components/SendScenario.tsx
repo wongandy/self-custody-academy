@@ -341,11 +341,12 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     }
   }, [recipient, stage]);
 
-  // Auto-advance: non-empty label -> enter-amount stage (brief delay so learner sees it)
+  // Auto-advance: non-empty label -> enter-amount stage once the learner pauses typing.
+  // The label field stays editable during enter-amount, so a slow typist can still finish it.
   useEffect(() => {
     if (stage !== 'enter-label') return;
     if (label.trim().length === 0) return;
-    const timer = setTimeout(() => setStage('enter-amount'), 600);
+    const timer = setTimeout(() => setStage('enter-amount'), 1500);
     return () => clearTimeout(timer);
   }, [label, stage]);
 
@@ -559,7 +560,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   );
 
   const addressFieldEnabled = sandbox || (!softwareLocked && stage === 'enter-address');
-  const labelFieldEnabled = sandbox || (!softwareLocked && stage === 'enter-label');
+  const labelFieldEnabled = sandbox || (!softwareLocked && (stage === 'enter-label' || stage === 'enter-amount'));
   const amountFieldEnabled = sandbox || (!softwareLocked && stage === 'enter-amount');
   const feeButtonsEnabled = sandbox || (!softwareLocked && stage === 'select-fee');
   const showAddressInBubble = stage === 'enter-address' && !nudgeActive;
