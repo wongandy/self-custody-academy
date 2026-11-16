@@ -22,6 +22,7 @@ import { clearLocalProgress, getLocalLessons, mergeLessons, normalizeLessons, se
 import { applyTheme, getStoredTheme, type Theme } from '@/lib/theme';
 import { fmt, useI18n } from '@/lib/i18n';
 import { clearStoredMnemonic } from '@/lib/walletSession';
+import { clearLedger, syncLedger } from '@/lib/walletLedger';
 import { LESSONS, lessonPath } from '@/lib/lessons';
 import { inAppClick } from '@/lib/links';
 import { applyPageMeta, type PageMeta } from '@/lib/pageMeta';
@@ -137,7 +138,7 @@ function App() {
     setProgressError(null);
     const { data, error } = await supabase
       .from('learning_progress')
-      .select('completed_lessons')
+      .select('completed_lessons, wallet_transactions')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -146,6 +147,8 @@ function App() {
       setProgressError('We could not load saved progress. You can still start fresh.');
       return;
     }
+    // The wallet's saved payments: keep the newer of this browser's and the account's.
+    syncLedger(user.id, data?.wallet_transactions).catch(() => {});
     const remote = normalizeLessons(data?.completed_lessons);
     const local = getLocalLessons();
     const merged = mergeLessons(remote, local);
@@ -296,6 +299,7 @@ function App() {
     await signOut();
     clearLocalProgress();
     clearStoredMnemonic();
+    clearLedger();
     setCompletedLessons([]);
     setScreen('home');
   }, [signOut]);

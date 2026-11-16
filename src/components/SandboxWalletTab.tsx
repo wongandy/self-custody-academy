@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, Check, ChevronDown, Copy, Eye, Settings, Usb } from 'lucide-react';
 import { ReceiveQrCode } from '@/components/ReceiveQrCode';
+import { STORY_ADDRESSES, formatBtc, resolveLedger, toTxRow } from '@/lib/walletLedger';
 
 export type WalletTabId = 'transactions' | 'send' | 'receive' | 'settings';
 
@@ -18,12 +19,11 @@ export const WALLET_TABS = [
   { id: 'settings', icon: Settings, label: 'Settings' },
 ] as const;
 
-const BALANCE = '0.14998';
-const RECEIVE_ADDRESS = 'bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu';
-const TRANSACTIONS = [
-  { date: '2026-10-20 14:32', value: '+0.04998 BTC', balance: '0.14998 BTC' },
-  { date: '2026-09-21 09:48', value: '+0.10000 BTC', balance: '0.10000 BTC' },
-];
+const RECEIVE_ADDRESS = STORY_ADDRESSES.receive;
+// The wallet as Lesson 5 leaves it, with the dates and amounts the learner's lessons saved.
+const ledger = () => resolveLedger('withdraw');
+const walletBalance = () => { const l = ledger(); return formatBtc(l[l.length - 1].balance_sats); };
+const transactions = () => ledger().map(toTxRow).reverse();
 const FEE_OPTIONS = [
   { id: 'low', label: 'Low', rate: '2 sats/vB', fee: '0.00000120' },
   { id: 'medium', label: 'Medium', rate: '8 sats/vB', fee: '0.00000480' },
@@ -49,11 +49,11 @@ export function SandboxWalletTab({ tab }: { tab: WalletTabId }) {
         <div className="wallet-tx-summary">
           <div className="wallet-tx-summary-item">
             <span className="wallet-tx-summary-label">Balance</span>
-            <span className="wallet-tx-summary-value">{BALANCE} BTC</span>
+            <span className="wallet-tx-summary-value">{walletBalance()} BTC</span>
           </div>
           <div className="wallet-tx-summary-item">
             <span className="wallet-tx-summary-label">Transactions</span>
-            <span className="wallet-tx-summary-value">{TRANSACTIONS.length}</span>
+            <span className="wallet-tx-summary-value">{transactions().length}</span>
           </div>
         </div>
         <div className="wallet-tx-table-wrap">
@@ -62,8 +62,8 @@ export function SandboxWalletTab({ tab }: { tab: WalletTabId }) {
               <tr><th>Date</th><th>Value</th><th>Balance</th></tr>
             </thead>
             <tbody>
-              {TRANSACTIONS.map((tx) => (
-                <tr key={tx.date}><td>{tx.date}</td><td className="in">{tx.value}</td><td>{tx.balance}</td></tr>
+              {transactions().map((tx) => (
+                <tr key={`${tx.date} ${tx.value}`}><td>{tx.date}</td><td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td><td>{tx.balance}</td></tr>
               ))}
             </tbody>
           </table>
@@ -77,7 +77,7 @@ export function SandboxWalletTab({ tab }: { tab: WalletTabId }) {
       <div className="send-form-screen">
         <div className="send-form-heading wallet-tab-heading">
           <div className="wallet-tab-title"><ArrowUpRight strokeWidth={2} /><span>Send Bitcoin</span></div>
-          <span className="send-form-balance">Balance {BALANCE} BTC</span>
+          <span className="send-form-balance">Balance {walletBalance()} BTC</span>
         </div>
         <div className="send-form-fields">
           <label className="tx-sim-field">

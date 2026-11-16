@@ -25,6 +25,7 @@ import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
+import { STORY_ADDRESSES, formatBtc, recordTx, resolveLedger, toTxRow, type TxRow } from '@/lib/walletLedger';
 
 type ReceiveScenarioProps = {
   onBack: () => void;
@@ -62,18 +63,13 @@ const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['address', 'phrase', 'pin'], correctId: 'address' },
 ];
 
-type TransactionRow = {
-  date: string;
-  value: string;
-  balance: string;
-  incoming: boolean;
-  fresh?: boolean;
-};
+type TransactionRow = TxRow & { fresh?: boolean };
 
 // A valid native SegWit address: the first receive address of the public BIP84
 // test wallet (m/84'/0'/0'/0/0), so it belongs to no real person. Lesson 5's
 // withdrawal uses the next one (…/0/1): a fresh address for every payment.
-const RECEIVE_ADDRESS = 'bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu';
+const RECEIVE_ADDRESS = STORY_ADDRESSES.receive;
+const RECEIVE_SATS = 10_000_000;
 
 function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
@@ -341,6 +337,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     if (trimmed === RECEIVE_ADDRESS) {
       setWarned(false);
       setChatInput('');
+      recordTx({ kind: 'receive', amount_sats: RECEIVE_SATS, fee_sats: 0, address: RECEIVE_ADDRESS });
       setStage('sending');
       setSendingStep(0);
     } else {
@@ -460,10 +457,10 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
   }, [spotlight]);
 
   // The wallet is brand new (Lesson 2 left it empty), so this is its first payment.
-  const balance = txArrived ? '0.10000' : '0.00000';
-  const transactions: TransactionRow[] = txArrived
-    ? [{ date: '2026-09-21 09:48', value: '+0.10000 BTC', balance: '0.10000 BTC', incoming: true, fresh: true }]
-    : [];
+  // The row comes from the saved payment, stamped when the address was sent.
+  const received = txArrived ? resolveLedger('receive')[0] : null;
+  const balance = formatBtc(received?.balance_sats ?? 0);
+  const transactions: TransactionRow[] = received ? [{ ...toTxRow(received), fresh: true }] : [];
 
   const cableEl = (
     <div className={`connect-cable is-linked${isMobile ? (viewingDevice ? ' cable-device-panel' : ' cable-under-wallet') : ''}`} aria-hidden="true">
@@ -632,7 +629,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                               </thead>
                               <tbody>
                                 {transactions.map((tx) => (
-                                  <tr key={tx.date} className={tx.fresh ? 'fresh' : undefined}>
+                                  <tr key={`${tx.date} ${tx.value}`} className={tx.fresh ? 'fresh' : undefined}>
                                     <td>{tx.date}</td>
                                     <td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td>
                                     <td>{tx.balance}</td>

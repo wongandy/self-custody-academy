@@ -24,6 +24,7 @@ import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
+import { STORY_ADDRESSES, formatBtc as formatWalletBtc, recordTx, resolveLedger, toSats, toTxRow, type WalletTx } from '@/lib/walletLedger';
 
 type SendScenarioProps = {
   completed: boolean;
@@ -69,7 +70,7 @@ const TX_SHOW_DELAY_MS = 1200;
 type NudgeKind = 'generic' | 'max' | 'send-reject';
 const SEND_AMOUNT = '0.01';
 // Maria's own address (the BIP173 example address), not the learner's device address.
-const MARIA_ADDRESS = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
+const MARIA_ADDRESS = STORY_ADDRESSES.maria;
 // Made-up transaction ID for the sent payment (random hex, not a real transaction).
 const SENT_TXID = 'a3f1c9e07b52d84f6e19c3a7d05b8e2f41c6d9a8b7e03f5c2d14a96e8b70c3f5';
 
@@ -82,17 +83,9 @@ const FEE_OPTIONS: FeeOption[] = [
 // The mentor's lines live in the dictionary (`lesson6`); every locale has the same list lengths.
 const INTRO_COUNT = en.lesson6.intro.length;
 
-// The wallet as Lesson 5 left it: Lesson 3's 0.1 BTC plus the Lesson 5 withdrawal.
-const WALLET_BALANCE = '0.14998';
-const STARTING_TRANSACTIONS = [
-  { date: '2026-10-20 14:32', value: '+0.04998 BTC', balance: '0.14998 BTC' },
-  { date: '2026-09-21 09:48', value: '+0.10000 BTC', balance: '0.10000 BTC' },
-];
-
 // Amounts are worked out in satoshis so the fee isn't lost to floating-point rounding.
-const SATS_PER_BTC = 100_000_000;
-const toSats = (btc: string) => Math.round(Number(btc) * SATS_PER_BTC);
-const formatBtc = (sats: number) => (sats / SATS_PER_BTC).toFixed(8);
+// Form fields show all 8 decimals; the transaction list uses the wallet's format.
+const formatBtc = (sats: number) => (sats / 100_000_000).toFixed(8);
 
 function useTypewriter(text: string, speed = 6, resetKey = '') {
   const [displayed, setDisplayed] = useState('');
@@ -156,6 +149,12 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   // The sent payment appears in Transactions a moment after the tab opens, so it
   // slides in like the incoming payment in Lesson 3.
   const [txShown, setTxShown] = useState(false);
+  // The wallet as Lessons 3 and 5 left it, with the dates and amounts they saved.
+  const [history] = useState(() => resolveLedger('send').slice(0, -1));
+  const walletBalanceSats = history[history.length - 1]?.balance_sats ?? 0;
+  const walletBalance = formatWalletBtc(walletBalanceSats);
+  // The payment as saved when the learner approved it on the device.
+  const [sentTx, setSentTx] = useState<WalletTx | null>(null);
   const txShowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [addressCopied, setAddressCopied] = useState(false);
   const [addressWrong, setAddressWrong] = useState(false);
@@ -274,7 +273,6 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   const selectedFee = FEE_OPTIONS.find((option) => option.id === feeLevel) ?? FEE_OPTIONS[1];
   // What leaves the wallet is the amount plus the fee; the balance after uses the fee actually chosen.
   const totalSentSats = toSats(SEND_AMOUNT) + toSats(selectedFee.fee);
-  const sentBalance = formatBtc(toSats(WALLET_BALANCE) - totalSentSats);
   // The amount as typed, in satoshis; null while it isn't a positive number yet.
   const amountTrimmed = amount.trim();
   const amountSats = amountTrimmed !== '' && Number.isFinite(Number(amountTrimmed)) && Number(amountTrimmed) > 0
@@ -282,7 +280,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     : null;
   const amountIsRequested = amountSats === toSats(SEND_AMOUNT);
   // Cairn's own check, as in a real wallet: the amount plus the fee must fit in the balance.
-  const insufficientFunds = amountSats !== null && amountSats + toSats(selectedFee.fee) > toSats(WALLET_BALANCE);
+  const insufficientFunds = amountSats !== null && amountSats + toSats(selectedFee.fee) > walletBalanceSats;
   const formValid = recipient.trim() === MARIA_ADDRESS && amountIsRequested;
 
   const expectedAction: ExpectedAction =
@@ -486,9 +484,9 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   // and Maria explains what it's for and that she only needs the lesson amount.
   const handleMax = useCallback(() => {
     if (softwareLocked || (stage !== 'enter-amount' && !sandbox)) return;
-    setAmount(formatBtc(toSats(WALLET_BALANCE) - toSats(selectedFee.fee)));
+    setAmount(formatBtc(walletBalanceSats - toSats(selectedFee.fee)));
     showNudge('max');
-  }, [softwareLocked, stage, selectedFee.fee, showNudge]);
+  }, [softwareLocked, stage, walletBalanceSats, selectedFee.fee, showNudge]);
 
   const handleSendReject = useCallback(() => showNudge('send-reject'), [showNudge]);
 
@@ -530,9 +528,19 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
   }, [sandbox, softwareLocked, stage, handleUnexpectedAction]);
 
   const handleHardwareConfirm = useCallback(() => {
+    setSentTx(recordTx({
+      kind: 'send',
+      amount_sats: -totalSentSats,
+      fee_sats: toSats(selectedFee.fee),
+      fee_rate: selectedFee.rate,
+      address: MARIA_ADDRESS,
+    }));
     setSent(true);
     setStage('tx-sent');
-  }, []);
+  }, [totalSentSats, selectedFee.fee, selectedFee.rate]);
+
+  const sentRow = txShown && sentTx ? toTxRow(sentTx) : null;
+  const historyRows = history.map(toTxRow).reverse();
 
   const cableEl = (
     <div className={`connect-cable is-linked${isMobile ? (viewingDevice ? ' cable-device-panel' : ' cable-under-wallet') : ''}`} aria-hidden="true">
@@ -635,11 +643,11 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                             <div className="wallet-tx-summary">
                               <div className="wallet-tx-summary-item">
                                 <span className="wallet-tx-summary-label">Balance</span>
-                                <span className="wallet-tx-summary-value">{txShown ? `${sentBalance} BTC` : `${WALLET_BALANCE} BTC`}</span>
+                                <span className="wallet-tx-summary-value">{sentRow ? sentRow.balance : `${walletBalance} BTC`}</span>
                               </div>
                               <div className="wallet-tx-summary-item">
                                 <span className="wallet-tx-summary-label">Transactions</span>
-                                <span className="wallet-tx-summary-value">{txShown ? STARTING_TRANSACTIONS.length + 1 : STARTING_TRANSACTIONS.length}</span>
+                                <span className="wallet-tx-summary-value">{historyRows.length + (sentRow ? 1 : 0)}</span>
                               </div>
                             </div>
                             <div className="wallet-tx-table-wrap">
@@ -648,11 +656,11 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                                   <tr><th>Date</th><th>Value</th><th>Balance</th></tr>
                                 </thead>
                                 <tbody>
-                                  {txShown && (
-                                    <tr className="fresh"><td>2026-11-04 10:24</td><td className="out">-{formatBtc(totalSentSats)} BTC</td><td>{sentBalance} BTC</td></tr>
+                                  {sentRow && (
+                                    <tr className="fresh"><td>{sentRow.date}</td><td className="out">{sentRow.value}</td><td>{sentRow.balance}</td></tr>
                                   )}
-                                  {STARTING_TRANSACTIONS.map((tx) => (
-                                    <tr key={tx.date}><td>{tx.date}</td><td className="in">{tx.value}</td><td>{tx.balance}</td></tr>
+                                  {historyRows.map((tx) => (
+                                    <tr key={`${tx.date} ${tx.value}`}><td>{tx.date}</td><td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td><td>{tx.balance}</td></tr>
                                   ))}
                                 </tbody>
                               </table>
@@ -664,7 +672,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                           <div className="send-form-screen">
                             <div className="send-form-heading wallet-tab-heading">
                               <div className="wallet-tab-title"><ArrowUpRight strokeWidth={2} /><span>Send Bitcoin</span></div>
-                              <span className="send-form-balance">Balance {WALLET_BALANCE} BTC</span>
+                              <span className="send-form-balance">Balance {walletBalance} BTC</span>
                             </div>
                             <div className="send-form-fields">
                               <label className="tx-sim-field">
