@@ -19,3 +19,15 @@ export type MentorId = keyof typeof MENTORS;
 export const WALLET_LESSONS_MENTOR = 'andy' as MentorId;
 
 export const walletLessonsMentor = MENTORS[WALLET_LESSONS_MENTOR];
+
+/**
+ * Fetch and decode every mentor portrait up front so the lesson screens don't
+ * pop the image in after the bubble has already rendered.
+ */
+export function preloadMentorPortraits() {
+  for (const { portrait } of Object.values(MENTORS)) {
+    const img = new Image();
+    img.src = portrait;
+    img.decode?.().catch(() => {});
+  }
+}
