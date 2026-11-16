@@ -29,6 +29,7 @@ import { getWalletName, walletWindowTitle } from '@/lib/walletName';
 import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
+import { STORY_ADDRESSES, formatBtc, recordTx, resolveLedger, toTxRow, type TxRow } from '@/lib/walletLedger';
 
 type WithdrawScenarioProps = {
   completed: boolean;
@@ -42,7 +43,9 @@ const NETWORK_FEE = 0.00002;
 // The next receive address of the same public BIP84 test wallet Lesson 3 uses
 // (m/84'/0'/0'/0/1): Cairn hands out a fresh address for every payment, and
 // it belongs to no real person.
-const WITHDRAW_ADDRESS = 'bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g';
+const WITHDRAW_ADDRESS = STORY_ADDRESSES.withdraw;
+// What lands in the wallet: the 0.05 BTC withdrawn minus the exchange's network fee.
+const WITHDRAW_RECEIVED_SATS = 4_998_000;
 
 // The scan plays in stages slow enough to follow: the camera opens and the code
 // drifts into the frame, the scan line sweeps it, the decoded address shows,
@@ -97,13 +100,7 @@ const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['extra', 'balance', 'exchange'], correctId: 'extra' },
 ];
 
-type TransactionRow = {
-  date: string;
-  value: string;
-  balance: string;
-  incoming: boolean;
-  fresh?: boolean;
-};
+type TransactionRow = TxRow & { fresh?: boolean };
 
 type MobilePanel = 'exchange' | 'software' | 'device';
 
@@ -489,6 +486,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   }, []);
 
   const handleConfirm = useCallback(() => {
+    recordTx({ kind: 'withdraw', amount_sats: WITHDRAW_RECEIVED_SATS, fee_sats: 0, address: WITHDRAW_ADDRESS });
     setExchangeScreen('success');
     setStage((current) => (current === 'confirm' ? 'success' : current));
   }, []);
@@ -601,13 +599,13 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   }, [spotlight]);
 
   // Lesson 3 left 0.1 BTC in the wallet; the withdrawal arrives on top of it.
-  const balance = txArrived ? '0.14998' : '0.10000';
-  const baseTransactions: TransactionRow[] = [
-    { date: '2026-09-21 09:48', value: '+0.10000 BTC', balance: '0.10000 BTC', incoming: true },
-  ];
-  const transactions: TransactionRow[] = txArrived
-    ? [{ date: '2026-10-20 14:32', value: '+0.04998 BTC', balance: '0.14998 BTC', incoming: true, fresh: true }, ...baseTransactions]
-    : baseTransactions;
+  // Lesson 3's saved payment, then the withdrawal saved when the learner confirmed it.
+  const ledger = resolveLedger('withdraw');
+  const shown = txArrived ? ledger : ledger.slice(0, -1);
+  const balance = formatBtc(shown[shown.length - 1]?.balance_sats ?? 0);
+  const transactions: TransactionRow[] = shown
+    .map((tx, i): TransactionRow => ({ ...toTxRow(tx), fresh: txArrived && i === ledger.length - 1 }))
+    .reverse();
 
   // Phones: on the hardware wallet panel the cord comes in from above; on the
   // wallet software panel it hangs under the laptop. Laptops: between the two.
@@ -1001,7 +999,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                                     </thead>
                                     <tbody>
                                       {transactions.map((tx) => (
-                                        <tr key={tx.date} className={tx.fresh ? 'fresh' : undefined}>
+                                        <tr key={`${tx.date} ${tx.value}`} className={tx.fresh ? 'fresh' : undefined}>
                                           <td>{tx.date}</td>
                                           <td className={tx.incoming ? 'in' : 'out'}>{tx.value}</td>
                                           <td>{tx.balance}</td>
