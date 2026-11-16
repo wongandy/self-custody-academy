@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Public pages. Keep in step with SCREEN_PATHS in src/App.tsx and slugs in src/lib/lessons.ts (a test checks). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://selfcustody.academy/</loc></url>
+  <url><loc>https://selfcustody.academy/get-started</loc></url>
+  <url><loc>https://selfcustody.academy/choose-your-journey</loc></url>
+  <url><loc>https://selfcustody.academy/roadmap</loc></url>
+  <url><loc>https://selfcustody.academy/lessons/set-up-hardware-wallet</loc></url>
+  <url><loc>https://selfcustody.academy/lessons/connect-wallet-software</loc></url>
+  <url><loc>https://selfcustody.academy/lessons/receive-bitcoin</loc></url>
+  <url><loc>https://selfcustody.academy/lessons/recover-hardware-wallet</loc></url>
+  <url><loc>https://selfcustody.academy/lessons/withdraw-from-exchange</loc></url>
+  <url><loc>https://selfcustody.academy/lessons/send-bitcoin</loc></url>
+  <url><loc>https://selfcustody.academy/about</loc></url>
+  <url><loc>https://selfcustody.academy/contact-us</loc></url>
+  <url><loc>https://selfcustody.academy/tip-jar</loc></url>
+</urlset>

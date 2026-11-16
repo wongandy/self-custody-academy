@@ -36,6 +36,12 @@ const en = {
     homeAria: 'Self Custody Academy home',
     backHome: 'Back to home',
     backRoadmap: 'Back to roadmap',
+    leaveLesson: {
+      title: 'Leave this lesson?',
+      body: "You'll go back to the roadmap, and this lesson will start from the beginning next time.",
+      stay: 'Stay',
+      leave: 'Leave lesson',
+    },
     toLight: 'Switch to light mode',
     toDark: 'Switch to dark mode',
     signOut: 'Sign out',

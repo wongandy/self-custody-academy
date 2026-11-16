@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LogOut, Moon, Sun, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Moon, Sun } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
 import PathSelector from '@/components/PathSelector';
@@ -12,6 +12,7 @@ import RecoverScenario from '@/components/RecoverScenario';
 import DevicePlayground from '@/components/DevicePlayground'; // TEMPORARY: Lesson 7 playground
 import AuthScreen from '@/components/AuthScreen';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
+import LeaveLessonDialog from '@/components/LeaveLessonDialog';
 import { AboutPage, CODE_ORANGE_URL, ContactPage } from '@/components/InfoPages';
 import { DonatePage } from '@/components/DonatePage';
 import heroImage from '@/components/hero.webp';
@@ -19,8 +20,12 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { clearLocalProgress, getLocalLessons, mergeLessons, normalizeLessons, setLocalLessons } from '@/lib/localProgress';
 import { applyTheme, getStoredTheme, type Theme } from '@/lib/theme';
-import { useI18n } from '@/lib/i18n';
+import { fmt, useI18n } from '@/lib/i18n';
 import { clearStoredMnemonic } from '@/lib/walletSession';
+import { LESSONS, lessonPath } from '@/lib/lessons';
+import { inAppClick } from '@/lib/links';
+import { applyPageMeta, type PageMeta } from '@/lib/pageMeta';
+import type { Dictionary } from '@/locales/en';
 
 function CustodyIllustration() {
   const { t } = useI18n();
@@ -37,6 +42,10 @@ const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 's
 
 // Pages that have their own URL. Every other screen lives at "/".
 const SCREEN_PATHS: Partial<Record<Screen, string>> = {
+  'andy-intro': '/get-started',
+  'path-selector': '/choose-your-journey',
+  roadmap: '/roadmap',
+  ...Object.fromEntries(LESSONS.map((lesson) => [`scenario-${lesson.number}`, lessonPath(lesson)])),
   about: '/about',
   contact: '/contact-us',
   donate: '/tip-jar',
@@ -49,10 +58,46 @@ const PATH_ALIASES: Record<string, Screen> = {
   '/donate': 'donate',
 };
 
+/** Real lessons (not the temporary playground): leaving one asks first and progress is loaded. */
+function isLessonScreen(screen: Screen): boolean {
+  return screen !== 'scenario-7' && SCENARIO_SCREENS.includes(screen);
+}
+
 function screenFromPath(pathname: string): Screen | null {
   const path = pathname.replace(/\/+$/, '') || '/';
   const match = Object.entries(SCREEN_PATHS).find(([, p]) => p === path);
   return match ? (match[0] as Screen) : PATH_ALIASES[path] ?? null;
+}
+
+/** Title and description for each page's <head>; pages without their own URL get the home page's. */
+function pageMeta(screen: Screen, t: Dictionary): PageMeta {
+  const path = SCREEN_PATHS[screen] ?? '/';
+  const lessonNumber = SCENARIO_SCREENS.indexOf(screen) + 1;
+  switch (screen) {
+    case 'andy-intro':
+      return { path, title: t.home.getStarted, description: t.andyIntro.lines[0] };
+    case 'path-selector':
+      return { path, title: t.pathSelector.title, description: t.pathSelector.subtitle };
+    case 'roadmap':
+      return { path, title: t.roadmap.label, description: t.pathSelector.fundamentalsDesc };
+    case 'about':
+      return { path, title: t.home.footerAbout, description: t.about.intro[0] };
+    case 'contact':
+      return { path, title: t.home.footerContact, description: t.contact.intro };
+    case 'donate':
+      return { path, title: t.home.footerDonate, description: t.donate.lead };
+    case 'scenario-7':
+      return { path, title: 'Device playground', noindex: true };
+    default:
+      if (isLessonScreen(screen)) {
+        return {
+          path,
+          title: `${fmt(t.roadmap.lessonLabel, { n: lessonNumber })}: ${t.roadmap.titles[lessonNumber - 1]}`,
+          description: t.roadmap.descriptions[lessonNumber - 1],
+        };
+      }
+      return { path: '/' };
+  }
 }
 
 function App() {
@@ -123,14 +168,29 @@ function App() {
     setScreen('roadmap');
   }, []);
 
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    setConfirmLeave(false);
   }, [screen]);
 
   // The path the app last put in (or read from) the address bar. popstate also fires
   // when only the #hash changes, e.g. when Supabase clears the token from a
   // password-reset link, and that must not navigate away from the current screen.
   const lastPathRef = useRef(window.location.pathname);
+
+  // Staying after pressing Back puts the lesson's URL back in the address bar.
+  const stayInLesson = useCallback(() => {
+    setConfirmLeave(false);
+    const target = SCREEN_PATHS[screenRef.current] ?? '/';
+    if (window.location.pathname !== target) {
+      window.history.pushState(null, '', target);
+      lastPathRef.current = target;
+    }
+  }, []);
 
   // Keep the address bar in sync with the pages that have their own URL.
   useEffect(() => {
@@ -146,12 +206,22 @@ function App() {
     }
   }, [screen]);
 
-  // Browser back / forward between "/", "/about" and "/contact-us".
+  useEffect(() => {
+    applyPageMeta(pageMeta(screen, t));
+  }, [screen, t]);
+
+  // Browser back / forward between pages that have their own URL.
   useEffect(() => {
     const onPopState = () => {
       const path = window.location.pathname;
       if (path === lastPathRef.current) return;
       lastPathRef.current = path;
+      // Back from inside a lesson asks first, like the header arrow. Leaving then
+      // goes to the roadmap; staying pushes the lesson's URL back.
+      if (isLessonScreen(screenRef.current)) {
+        setConfirmLeave(true);
+        return;
+      }
       setScreen(screenFromPath(path) ?? 'home');
     };
     window.addEventListener('popstate', onPopState);
@@ -167,7 +237,8 @@ function App() {
 
   useEffect(() => {
     if (!isReady) return;
-    if (screen === 'roadmap') {
+    // Lessons need progress too when opened straight from a link or a reload.
+    if (screen === 'roadmap' || isLessonScreen(screen)) {
       if (user) {
         loadRemoteProgress();
       } else {
@@ -243,19 +314,19 @@ function App() {
               if (screen === 'andy-intro' || screen === 'path-selector') {
                 setScreen('home');
               } else {
-                goToRoadmap();
+                setConfirmLeave(true);
               }
             }}
             aria-label={screen === 'andy-intro' || screen === 'path-selector' ? t.header.backHome : t.header.backRoadmap}
           >
-            <X size={20} strokeWidth={2.4} />
+            <ArrowLeft size={20} strokeWidth={2.4} />
           </button>
         ) : (
           <a
             className="brand"
             href="/"
             aria-label={t.header.homeAria}
-            onClick={() => setScreen('home')}
+            onClick={inAppClick(() => setScreen('home'))}
           >
             {/* <span className="brand-mark">
               <img src={bitcoinImage} alt="Bitcoin" className="brand-logo-image" />
@@ -290,6 +361,8 @@ function App() {
         </div>
       </header>
 
+      {confirmLeave && isInScenario && <LeaveLessonDialog onStay={stayInLesson} onLeave={goToRoadmap} />}
+
       {screen === 'home' && (
         <main id="top" className="hero-section">
           <div className="hero-visual">
@@ -304,13 +377,13 @@ function App() {
               Build confidence through hands-on lessons, helpful challenges, and a safe space to learn before your real sats are on the line.
             </p> */}
             <div className="hero-actions">
-              <button
+              <a
                 className="primary-button"
-                type="button"
-                onClick={() => setScreen('andy-intro')}
+                href={SCREEN_PATHS['andy-intro']}
+                onClick={inAppClick(() => setScreen('andy-intro'))}
               >
                 <span>{t.home.getStarted}</span>
-              </button>
+              </a>
               <button className="profile-link" type="button" onClick={handleProfileLink}>
                 {t.home.haveAccount}
               </button>
@@ -338,6 +411,7 @@ function App() {
 
       {screen === 'path-selector' && (
         <PathSelector
+          fundamentalsHref={SCREEN_PATHS.roadmap ?? '/'}
           onSelectFundamentals={() => {
             setRoadmapAnimate(true);
             setScreen('roadmap');
@@ -436,32 +510,32 @@ function App() {
           </div>
           <div className="footer-end">
             <nav className="footer-links" aria-label={t.home.footerNavAria}>
-              <button
-                type="button"
+              <a
+                href={SCREEN_PATHS.about}
                 className={`footer-link${screen === 'about' ? ' is-active' : ''}`}
                 aria-current={screen === 'about' ? 'page' : undefined}
-                onClick={() => setScreen('about')}
+                onClick={inAppClick(() => setScreen('about'))}
               >
                 {t.home.footerAbout}
-              </button>
+              </a>
               <span className="footer-separator" aria-hidden="true">•</span>
-              <button
-                type="button"
+              <a
+                href={SCREEN_PATHS.contact}
                 className={`footer-link${screen === 'contact' ? ' is-active' : ''}`}
                 aria-current={screen === 'contact' ? 'page' : undefined}
-                onClick={() => setScreen('contact')}
+                onClick={inAppClick(() => setScreen('contact'))}
               >
                 {t.home.footerContact}
-              </button>
+              </a>
               <span className="footer-separator" aria-hidden="true">•</span>
-              <button
-                type="button"
+              <a
+                href={SCREEN_PATHS.donate}
                 className={`footer-link${screen === 'donate' ? ' is-active' : ''}`}
                 aria-current={screen === 'donate' ? 'page' : undefined}
-                onClick={() => setScreen('donate')}
+                onClick={inAppClick(() => setScreen('donate'))}
               >
                 {t.home.footerDonate}
-              </button>
+              </a>
             </nav>
             <span className="footer-divider" aria-hidden="true" />
             <a

@@ -1,7 +1,10 @@
 import { ArrowRight } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { inAppClick } from '@/lib/links';
 
 type PathSelectorProps = {
+  /** The roadmap's URL, so the card is a real link. */
+  fundamentalsHref: string;
   onSelectFundamentals: () => void;
 };
 
@@ -58,7 +61,7 @@ function DeeperArt() {
   );
 }
 
-function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
+function PathSelector({ fundamentalsHref, onSelectFundamentals }: PathSelectorProps) {
   const { t } = useI18n();
   const p = t.pathSelector;
 
@@ -72,7 +75,7 @@ function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
         </div>
 
         <div className="path-selector-options" aria-label={p.pathsAria}>
-          <button className="path-card path-card-fundamentals" type="button" onClick={onSelectFundamentals}>
+          <a className="path-card path-card-fundamentals" href={fundamentalsHref} onClick={inAppClick(onSelectFundamentals)}>
             <div className="path-card-symbols" aria-hidden="true"><FundamentalsArt /></div>
             <h2>{p.fundamentals}</h2>
             <p className="path-card-description">{p.fundamentalsDesc}</p>
@@ -82,7 +85,7 @@ function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
             <div className="path-card-footer">
               <span className="path-card-action">{p.startLearning} <ArrowRight size={16} strokeWidth={2.3} /></span>
             </div>
-          </button>
+          </a>
 
           <div className="path-card path-card-deeper" aria-disabled="true">
             <div className="path-card-symbols" aria-hidden="true"><DeeperArt /></div>

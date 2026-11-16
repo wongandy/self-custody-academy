@@ -341,6 +341,74 @@ html.theme-light {
   transform: scale(0.96);
 }
 
+/* ── Leave-lesson confirmation ── */
+
+.leave-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 9, 10, 0.72);
+  backdrop-filter: blur(4px);
+  animation: event-lightbox-in 200ms ease;
+}
+
+.leave-dialog {
+  width: 100%;
+  max-width: 380px;
+  padding: 24px;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: var(--shadow-lg);
+}
+
+.leave-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.leave-dialog p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.leave-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.leave-dialog-actions .primary-button {
+  padding: 12px 18px;
+}
+
+.leave-dialog-leave {
+  padding: 12px 16px;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-strong);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 180ms ease;
+}
+
+.leave-dialog-leave:hover {
+  border-color: rgba(232, 113, 113, 0.6);
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -755,6 +823,7 @@ html.theme-light {
 
 .footer-link {
   position: relative;
+  display: inline-block;
   padding: 6px 0;
   color: inherit;
   border: 0;
@@ -2739,7 +2808,7 @@ html.theme-light {
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.roadmap-card:hover:not(:disabled) {
+.roadmap-card:hover:not([aria-disabled="true"]) {
   transform: translateY(-3px);
   border-color: rgba(247, 147, 26, 0.55);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
@@ -2750,7 +2819,7 @@ html.theme-light {
   outline-offset: 4px;
 }
 
-.roadmap-card:disabled {
+.roadmap-card[aria-disabled="true"] {
   cursor: not-allowed;
 }
 
@@ -2789,7 +2858,7 @@ html.theme-light {
   overflow: hidden;
 }
 
-.roadmap-card:hover:not(:disabled) .roadmap-card-img {
+.roadmap-card:hover:not([aria-disabled="true"]) .roadmap-card-img {
   scale: 1.04;
 }
 
@@ -2883,7 +2952,7 @@ html.theme-light {
   box-shadow: 0 0 0 1px rgba(247, 147, 26, 0.5), 0 0 34px rgba(247, 147, 26, 0.22);
 }
 
-.roadmap-card.available:hover:not(:disabled) {
+.roadmap-card.available:hover:not([aria-disabled="true"]) {
   border-color: #f7931a;
   box-shadow: 0 0 0 1px rgba(247, 147, 26, 0.7), 0 14px 40px rgba(247, 147, 26, 0.3);
 }
@@ -2894,7 +2963,7 @@ html.theme-light {
 
 /* Finished cards stay neutral like not-started ones; only the green check (and Replay)
    mark them, so the orange recommended card is the one that stands out. */
-.roadmap-card.complete:hover:not(:disabled) .roadmap-card-badge.is-replay {
+.roadmap-card.complete:hover:not([aria-disabled="true"]) .roadmap-card-badge.is-replay {
   color: var(--text);
 }
 
@@ -3217,12 +3286,12 @@ html.theme-light {
     transition: none;
   }
 
-  .roadmap-card:hover:not(:disabled),
+  .roadmap-card:hover:not([aria-disabled="true"]),
   .roadmap-cta:hover:not(:disabled) {
     transform: none;
   }
 
-  .roadmap-card:hover:not(:disabled) .roadmap-card-img {
+  .roadmap-card:hover:not([aria-disabled="true"]) .roadmap-card-img {
     scale: none;
   }
 }
@@ -9443,7 +9512,7 @@ html.theme-light {
   --art-accent: #f7931a;
 }
 
-.theme-light .roadmap-card:hover:not(:disabled) {
+.theme-light .roadmap-card:hover:not([aria-disabled="true"]) {
   box-shadow: 0 14px 30px rgba(60, 40, 20, 0.12);
 }
 
