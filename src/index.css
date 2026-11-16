@@ -10190,7 +10190,6 @@ html.theme-light {
 .path-card-symbols,
 .path-card h2,
 .path-card-description,
-.path-card-includes,
 .path-card-action {
   position: relative;
   z-index: 1;
@@ -10263,7 +10262,7 @@ html.theme-light {
   z-index: 1;
 }
 
-.path-card-topics li {
+.path-card-topics > * {
   padding: 5px 11px;
   color: var(--muted);
   font-size: 12px;
@@ -10287,19 +10286,6 @@ html.theme-light {
   color: var(--text);
   font-size: 15px;
   line-height: 1.45;
-}
-
-.path-card-includes {
-  max-width: 500px;
-  margin: 18px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-.path-card-includes strong {
-  color: var(--text);
-  font-weight: 700;
 }
 
 .path-card-action {
@@ -10431,12 +10417,6 @@ html.theme-light {
     font-size: 14px;
   }
 
-  .path-card-includes {
-    margin-top: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
   .path-card-footer {
     flex-direction: column;
     align-items: stretch;
@@ -10454,7 +10434,7 @@ html.theme-light {
     margin-top: 10px;
   }
 
-  .path-card-topics li {
+  .path-card-topics > * {
     padding: 3px 9px;
     font-size: 11px;
   }
@@ -10509,8 +10489,7 @@ html.theme-light {
 
 /* Very short phones: drop the secondary copy */
 @media (max-height: 640px) and (max-width: 700px) {
-  .path-selector-heading p,
-  .path-card-includes {
+  .path-selector-heading p {
     display: none;
   }
 }
