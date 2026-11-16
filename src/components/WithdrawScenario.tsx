@@ -307,13 +307,22 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   useLaptopCableAlign(laptopBodyRef, !spotlight);
   useDeviceFit(deviceStageRef, isMobile && !spotlight && !check.active && viewingDevice);
 
-  // The scan button chip in the mentor's lines matches the one in the address field.
+  // The scan button chip matches the one in the address field; the lines about
+  // confirming on the device mirror its checkmark button instead.
+  const deviceCheckLine = [l5.compareCheck, l5.compareCheckMobile, l5.verifyReject]
+    .some((line) => message === withIconMark(line));
   const renderMentorText = (text: string) =>
     renderWithIcon(
       text,
-      <span className="mentor-copy-button-indicator" aria-hidden="true">
-        <ScanLine size={12} strokeWidth={2.2} />
-      </span>,
+      deviceCheckLine ? (
+        <span className="mentor-copy-button-indicator device" aria-hidden="true">
+          <Check size={12} strokeWidth={2.6} />
+        </span>
+      ) : (
+        <span className="mentor-copy-button-indicator" aria-hidden="true">
+          <ScanLine size={12} strokeWidth={2.2} />
+        </span>
+      ),
     );
 
   const handleMobileSwitch = useCallback((panel: MobilePanel) => {

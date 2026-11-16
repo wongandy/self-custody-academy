@@ -17,7 +17,7 @@ import { DeviceSwitcher } from '@/components/DeviceSwitcher';
 import { ReceiveQrCode } from '@/components/ReceiveQrCode';
 import { walletLessonsMentor as mentor } from '@/lib/mentors';
 import en from '@/locales/en';
-import { fmt, useI18n } from '@/lib/i18n';
+import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { useDeviceFit } from '@/lib/useDeviceFit';
@@ -174,7 +174,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
       : stage === 'copy-now' && viewingDevice
         ? 'software'
         : null;
-  const message = nudgeActive
+  const message = withIconMark(nudgeActive
     ? nudgeKind === 'early-copy' ? l5.copyTooEarly : nudgeKind === 'verify-reject' ? l5.verifyReject : t.common[mentor.nudge]
     : check.active
       ? check.mentorLine
@@ -198,7 +198,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                     ? l5.openTx
                     : stage === 'waiting'
                       ? l5.waiting
-                      : l5.finished;
+                      : l5.finished);
   const bubbleKey = nudgeActive
     ? `nudge-${nudgeKind}`
     : check.active
@@ -213,6 +213,15 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
             ? `sending-${sendingStep}`
             : stage;
   const { displayed, done, skip } = useTypewriter(message, 6, bubbleKey);
+
+  // Lines that name the device's checkmark button show a chip that mirrors it.
+  const renderMentorText = (text: string) =>
+    renderWithIcon(
+      text,
+      <span className="mentor-copy-button-indicator device" aria-hidden="true">
+        <Check size={12} strokeWidth={2.6} />
+      </span>,
+    );
 
   const spotlight = stage === 'intro';
   useLaptopCableAlign(laptopBodyRef, !spotlight);
@@ -716,9 +725,9 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
             <div className={`mentor-bubble-content${stage === 'hand-over' ? ' has-chat' : ''}`} key={bubbleKey}>
               <span className="mentor-bubble-name">{mentor.name}</span>
               <div className="mentor-bubble-text-wrap">
-                <p className="mentor-bubble-text-ghost">{message}</p>
+                <p className="mentor-bubble-text-ghost">{renderMentorText(message)}</p>
                 <p className="mentor-bubble-text">
-                  {displayed}
+                  {renderMentorText(displayed)}
                   {!done && <span className="typewriter-cursor" />}
                 </p>
               </div>
