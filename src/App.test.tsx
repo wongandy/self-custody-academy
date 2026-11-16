@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -59,6 +61,108 @@ describe('browser back / forward', () => {
     });
     expect(window.location.pathname).toBe('/contact-us');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(en.contact.titleEm);
+  });
+});
+
+describe('pages with their own URL', () => {
+  const lessonCard = (title: string) => screen.findByRole('link', { name: new RegExp(`: ${title}`) });
+
+  it('gives the intro page its URL', async () => {
+    window.history.replaceState(null, '', '/');
+    const user = userEvent.setup();
+    renderApp();
+    await user.click(screen.getByRole('link', { name: en.home.getStarted }));
+    expect(window.location.pathname).toBe('/get-started');
+    expect(screen.getByRole('button', { name: en.header.backHome })).toBeInTheDocument();
+  });
+
+  it('opens the journey page from its URL', () => {
+    window.history.replaceState(null, '', '/choose-your-journey');
+    renderApp();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(en.pathSelector.title);
+  });
+
+  it('opens the roadmap, and each lesson at its own URL', async () => {
+    window.history.replaceState(null, '', '/roadmap');
+    const user = userEvent.setup();
+    renderApp();
+    await user.click(await lessonCard(en.roadmap.titles[2]));
+    expect(window.location.pathname).toBe('/lessons/receive-bitcoin');
+    expect(screen.getByRole('button', { name: en.header.backRoadmap })).toBeInTheDocument();
+  });
+
+  it('opens a lesson straight from its URL', () => {
+    window.history.replaceState(null, '', '/lessons/send-bitcoin');
+    renderApp();
+    expect(window.location.pathname).toBe('/lessons/send-bitcoin');
+    expect(screen.getByRole('button', { name: en.header.backRoadmap })).toBeInTheDocument();
+  });
+
+  it('sends an unknown lesson URL home', () => {
+    window.history.replaceState(null, '', '/lessons/nope');
+    renderApp();
+    expect(window.location.pathname).toBe('/');
+    expect(screen.getByRole('link', { name: en.home.getStarted })).toBeInTheDocument();
+  });
+
+  async function pressBackInLesson() {
+    window.history.replaceState(null, '', '/roadmap');
+    const user = userEvent.setup();
+    renderApp();
+    await user.click(await lessonCard(en.roadmap.titles[2]));
+    await act(async () => {
+      window.history.pushState(null, '', '/roadmap');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(en.header.leaveLesson.title);
+    return user;
+  }
+
+  it('asks before Back leaves a lesson; Stay keeps the lesson and its URL', async () => {
+    const user = await pressBackInLesson();
+    await user.click(screen.getByRole('button', { name: en.header.leaveLesson.stay }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe('/lessons/receive-bitcoin');
+    expect(screen.getByRole('button', { name: en.header.backRoadmap })).toBeInTheDocument();
+  });
+
+  it('asks before Back leaves a lesson; Leave goes to the roadmap', async () => {
+    const user = await pressBackInLesson();
+    await user.click(screen.getByRole('button', { name: en.header.leaveLesson.leave }));
+    expect(window.location.pathname).toBe('/roadmap');
+    expect(await lessonCard(en.roadmap.titles[0])).toBeInTheDocument();
+  });
+});
+
+describe('search engine tags', () => {
+  const canonical = () => document.head.querySelector('link[rel="canonical"]')?.getAttribute('href');
+
+  it('opens every sitemap URL as its own page', () => {
+    const xml = readFileSync(resolve(__dirname, '../public/sitemap.xml'), 'utf8');
+    const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    expect(urls.length).toBeGreaterThan(10);
+    for (const url of urls) {
+      const path = new URL(url).pathname;
+      window.history.replaceState(null, '', path);
+      const { unmount } = renderApp();
+      expect(window.location.pathname).toBe(path);
+      expect(canonical()).toBe(url);
+      unmount();
+    }
+  });
+
+  it("gives a lesson its own title, description and canonical URL", () => {
+    window.history.replaceState(null, '', '/lessons/receive-bitcoin');
+    renderApp();
+    expect(document.title).toBe(`Lesson 3: ${en.roadmap.titles[2]} · Self-Custody Academy`);
+    expect(document.head.querySelector('meta[name="description"]')?.getAttribute('content')).toBe(en.roadmap.descriptions[2]);
+    expect(canonical()).toBe('https://selfcustody.academy/lessons/receive-bitcoin');
+  });
+
+  it('keeps the temporary playground out of search results', () => {
+    window.history.replaceState(null, '', '/test');
+    renderApp();
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex');
   });
 });
 

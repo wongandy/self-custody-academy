@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { fmt, useI18n } from '@/lib/i18n';
-import { LESSONS, firstUnfinished } from '@/lib/lessons';
+import { LESSONS, firstUnfinished, lessonPath } from '@/lib/lessons';
+import { inAppClick } from '@/lib/links';
 import LessonArt from '@/components/roadmap/LessonArt';
 
 type RoadmapProps = {
@@ -57,7 +58,7 @@ function revealInRow(scroller: HTMLElement | null, el: HTMLElement | null, smoot
  * Scroll the page so `el` is centered in the visible space between the fixed header and
  * `dockHeight` (the mobile bottom dock, 0 on desktop). Returns true if it started a smooth scroll.
  */
-function glideToLesson(el: HTMLButtonElement | null, dockHeight = 0): boolean {
+function glideToLesson(el: HTMLElement | null, dockHeight = 0): boolean {
   if (!el) return false;
   const rect = el.getBoundingClientRect();
   const topMargin = 96;
@@ -115,7 +116,7 @@ function Roadmap({
   // Height of the mobile bottom dock (the sticky footer), so auto-scroll keeps cards clear of it.
   const dockHeightRef = useRef(0);
   const rowRevealedRef = useRef(false);
-  const lessonRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const lessonRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const celebrationDoneRef = useRef(onCelebrationDone);
   celebrationDoneRef.current = onCelebrationDone;
 
@@ -469,14 +470,18 @@ function Roadmap({
 
               return (
                 <li key={n}>
-                  <button
+                  {/* A real link so search engines find each lesson. While progress loads it's
+                      inert (an <a> can't be disabled): aria-disabled, and clicks do nothing. */}
+                  <a
                     className={`roadmap-card ${state} ${animate ? 'roadmap-card-reveal' : ''} ${cardCelebrationClass(n)}`}
-                    type="button"
+                    href={lessonPath(LESSONS[index])}
                     ref={(node) => {
                       lessonRefs.current[index] = node;
                     }}
-                    disabled={isLoading}
-                    onClick={() => onSelectScenario(n)}
+                    aria-disabled={isLoading || undefined}
+                    onClick={inAppClick(() => {
+                      if (!isLoading) onSelectScenario(n);
+                    })}
                     aria-label={`${lessonLabel}: ${title}${stateLabel ? `. ${stateLabel}` : ''}`}
                     style={revealDelay(200 + index * 140)}
                   >
@@ -504,7 +509,7 @@ function Roadmap({
                         {t.roadmap.replay}
                       </span>
                     )}
-                  </button>
+                  </a>
                 </li>
               );
             })}
