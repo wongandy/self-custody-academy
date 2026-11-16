@@ -76,7 +76,9 @@ function PathSelector({ onSelectFundamentals }: PathSelectorProps) {
             <div className="path-card-symbols" aria-hidden="true"><FundamentalsArt /></div>
             <h2>{p.fundamentals}</h2>
             <p className="path-card-description">{p.fundamentalsDesc}</p>
-            <p className="path-card-includes"><strong>{p.includesLabel}</strong> {p.fundamentalsIncludes}</p>
+            <span className="path-card-topics" role="list" aria-label={p.fundamentalsTopicsAria}>
+              {p.fundamentalsTopics.map((topic) => <span key={topic} role="listitem">{topic}</span>)}
+            </span>
             <div className="path-card-footer">
               <span className="path-card-action">{p.startLearning} <ArrowRight size={16} strokeWidth={2.3} /></span>
             </div>
