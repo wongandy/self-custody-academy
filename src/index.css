@@ -1023,7 +1023,17 @@ html.theme-light {
   outline-offset: 2px;
 }
 
-/* About page */
+/* About page: a narrower column than the other info pages, so the text (which is
+   at most ~640px wide) sits in the middle of the screen. The photo wall below
+   breaks out of it to the full 880px. */
+.about-page {
+  width: min(100% - 64px, 680px);
+}
+
+.about-page .polaroid-wall {
+  margin-inline: calc((min(100vw - 64px, 880px) - 100%) / -2);
+}
+
 .about-hero {
   display: flex;
   align-items: center;
