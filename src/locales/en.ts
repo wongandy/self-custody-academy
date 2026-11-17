@@ -45,6 +45,8 @@ const en = {
     toLight: 'Switch to light mode',
     toDark: 'Switch to dark mode',
     signOut: 'Sign out',
+    account: 'Account',
+    signedInAs: 'Signed in as',
     language: 'Language',
   },
   home: {

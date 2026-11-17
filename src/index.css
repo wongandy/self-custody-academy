@@ -341,6 +341,46 @@ html.theme-light {
   transform: scale(0.96);
 }
 
+/* Lesson name beside the back button while inside a lesson. */
+.header-lesson {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1 1 auto;
+  margin-right: 16px;
+}
+
+.header-lesson .close-button {
+  flex-shrink: 0;
+}
+
+.header-lesson-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.header-lesson-eyebrow {
+  color: var(--gold-light);
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.header-lesson-title {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Leave-lesson confirmation ── */
 
 .leave-dialog-backdrop {
@@ -2468,6 +2508,19 @@ html.theme-light {
     border-radius: 10px;
   }
 
+  .header-lesson {
+    gap: 10px;
+    margin-right: 10px;
+  }
+
+  .header-lesson-eyebrow {
+    font-size: 9px;
+  }
+
+  .header-lesson-title {
+    font-size: 13px;
+  }
+
   .header-actions {
     gap: 10px;
   }
@@ -2594,6 +2647,23 @@ html.theme-light {
 
   .character-proceed {
     width: 100%;
+  }
+}
+
+/* Narrowest phones: give the lesson title a little more room. Kept after the 600px
+   block above so these win. */
+@media (max-width: 380px) {
+  .site-header {
+    padding: 0 16px;
+  }
+
+  .header-actions,
+  .header-lesson {
+    gap: 8px;
+  }
+
+  .header-lesson {
+    margin-right: 8px;
   }
 }
 
@@ -3882,44 +3952,89 @@ html.theme-light {
   font-weight: 600;
 }
 
-/* ── Header account indicator ── */
+/* ── Header account menu ── */
 
-.header-account {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+.account-menu {
+  position: relative;
+}
+
+.account-toggle {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
   color: var(--muted);
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 9px;
-  letter-spacing: 0.04em;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
 }
 
-.header-account:hover {
-  color: var(--text);
+.account-toggle:hover,
+.account-toggle[aria-expanded='true'] {
+  color: var(--gold-light);
   border-color: rgba(241, 189, 105, 0.4);
   background: var(--panel);
 }
 
-.header-account-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-  flex-shrink: 0;
+.account-toggle:active {
+  transform: scale(0.94);
 }
 
-.header-account-email {
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.account-toggle:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+}
+
+/* Green "signed in" dot on the button's rim. */
+.account-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--green);
+  box-sizing: content-box;
+}
+
+.account-dropdown {
+  width: max-content;
+  min-width: 200px;
+  max-width: min(360px, calc(100vw - 40px));
+}
+
+.account-who {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.account-who-label {
+  color: var(--faint);
+  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.account-who-email {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.account-signout svg {
+  color: var(--muted);
 }
 
 /* ── Roadmap guest banner ── */
@@ -3963,10 +4078,6 @@ html.theme-light {
   .auth-portrait {
     width: 64px;
     height: 64px;
-  }
-
-  .header-account-email {
-    max-width: 90px;
   }
 
   .header-note {
@@ -9270,7 +9381,7 @@ html.theme-light {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.theme-light .header-account,
+.theme-light .account-toggle,
 .theme-light .theme-toggle,
 .theme-light .locale-toggle,
 .theme-light .close-button,
@@ -9281,6 +9392,8 @@ html.theme-light {
 }
 
 .theme-light .theme-toggle:hover,
+.theme-light .account-toggle:hover,
+.theme-light .account-toggle[aria-expanded='true'],
 .theme-light .locale-toggle:hover,
 .theme-light .locale-toggle[aria-expanded='true'],
 .theme-light .close-button:hover {
