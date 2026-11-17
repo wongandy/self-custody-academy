@@ -167,18 +167,14 @@ describe('search engine tags', () => {
 });
 
 describe('copying guest progress to the account', () => {
-  /** Signed in, with guest lessons in the browser; sign in again to land on the roadmap. */
+  /** Signed in, with guest lessons in the browser; Home's "My roadmap" opens the roadmap. */
   async function openRoadmapSignedIn() {
     window.history.replaceState(null, '', '/');
     setLocalLessons([1, 2]);
     supabaseMock.supabase.auth.getSession.mockResolvedValue({ data: { session: fakeSession({ locale: 'en' }) }, error: null });
-    supabaseMock.supabase.auth.signInWithPassword.mockResolvedValue({ data: {}, error: null });
     const user = userEvent.setup();
     renderApp();
-    await user.click(await screen.findByRole('button', { name: en.home.haveAccount }));
-    await user.type(screen.getByPlaceholderText(en.auth.emailPlaceholder), 'learner@example.com');
-    await user.type(screen.getByPlaceholderText(en.auth.passwordPlaceholder), 'hunter22');
-    await user.click(screen.getByRole('button', { name: en.auth.signIn }));
+    await user.click(await screen.findByRole('link', { name: en.header.myRoadmap }));
   }
 
   it('saves guest lessons to the account, then clears the browser copy', async () => {
@@ -233,6 +229,13 @@ describe('account menu', () => {
     expect(window.location.pathname).toBe('/roadmap');
     expect(await screen.findByText('3 of 6 lessons complete')).toBeInTheDocument();
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('offers My roadmap instead of the sign-in button on Home', async () => {
+    const user = renderSignedIn('/');
+    await user.click(await screen.findByRole('link', { name: en.header.myRoadmap }));
+    expect(window.location.pathname).toBe('/roadmap');
+    expect(screen.queryByRole('button', { name: en.home.haveAccount })).not.toBeInTheDocument();
   });
 
   it('loads saved progress on Home so it can offer the next lesson', async () => {
