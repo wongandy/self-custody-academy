@@ -10580,18 +10580,24 @@ html.theme-light {
   white-space: nowrap;
 }
 
-/* Mirrors .primary-button so the main action looks the same site-wide */
-.path-card-fundamentals .path-card-action {
-  gap: 14px;
+/* Both cards' actions share the .primary-button size and type */
+.path-card-fundamentals .path-card-action,
+.path-card-deeper .path-card-action {
   padding: 14px 18px;
-  color: #2a1606;
+  border: 1px solid transparent;
   border-radius: 10px;
-  background: linear-gradient(145deg, #ffaa3d, #f7931a);
-  box-shadow: 0 10px 28px rgba(247, 147, 26, 0.2);
   font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.11em;
+}
+
+/* Mirrors .primary-button so the main action looks the same site-wide */
+.path-card-fundamentals .path-card-action {
+  gap: 14px;
+  color: #2a1606;
+  background: linear-gradient(145deg, #ffaa3d, #f7931a);
+  box-shadow: 0 10px 28px rgba(247, 147, 26, 0.2);
   transition: background 180ms ease, box-shadow 180ms ease;
 }
 
@@ -10615,8 +10621,18 @@ html.theme-light {
   opacity: 0.8;
 }
 
+/* Ghost of the Start learning button: same size, but plainly not available yet */
 .path-card-deeper .path-card-action {
+  gap: 10px;
   color: currentColor;
+  background: rgba(192, 184, 40, 0.08);
+  border: 1px dashed rgba(192, 184, 40, 0.55);
+  cursor: default;
+}
+
+.theme-light .path-card-deeper .path-card-action {
+  background: rgba(150, 140, 20, 0.07);
+  border-color: rgba(130, 120, 10, 0.5);
 }
 
 .path-card-action svg {
@@ -10705,7 +10721,8 @@ html.theme-light {
     padding-top: 16px;
   }
 
-  .path-card-fundamentals .path-card-action {
+  .path-card-fundamentals .path-card-action,
+  .path-card-deeper .path-card-action {
     justify-content: center;
     padding: 15px 18px;
   }
@@ -10755,7 +10772,8 @@ html.theme-light {
     padding-top: 12px;
   }
 
-  .path-card-fundamentals .path-card-action {
+  .path-card-fundamentals .path-card-action,
+  .path-card-deeper .path-card-action {
     padding: 13px 18px;
   }
 
