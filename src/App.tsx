@@ -472,9 +472,20 @@ function App() {
               >
                 <span>{t.home.getStarted}</span>
               </a>
-              <button className="profile-link" type="button" onClick={handleProfileLink}>
-                {t.home.haveAccount}
-              </button>
+              {/* Wait for the saved session so the wrong button doesn't flash first. */}
+              {!isReady ? null : user ? (
+                <a
+                  className="profile-link"
+                  href={SCREEN_PATHS.roadmap}
+                  onClick={inAppClick(() => setScreen('roadmap'))}
+                >
+                  {t.header.myRoadmap}
+                </a>
+              ) : (
+                <button className="profile-link" type="button" onClick={handleProfileLink}>
+                  {t.home.haveAccount}
+                </button>
+              )}
             </div>
             {/* <div className="trust-row">
               <div className="trust-item">
