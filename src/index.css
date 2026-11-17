@@ -4037,6 +4037,121 @@ html.theme-light {
   color: var(--muted);
 }
 
+/* Fingers get a 44px target without changing the 38px button's size. */
+.account-toggle::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+}
+
+.account-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.account-progress-text {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.account-progress-track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.account-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gold-light);
+}
+
+.account-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  color: var(--text);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 150ms ease;
+}
+
+.account-item svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.account-item:focus-visible,
+.account-item:active {
+  background: var(--panel-strong);
+  outline: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .account-item:hover {
+    background: var(--panel-strong);
+  }
+}
+
+.account-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.account-item-label {
+  font-weight: 600;
+}
+
+.account-item-sub {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-continue svg {
+  color: var(--gold-light);
+}
+
+.account-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--line);
+}
+
+.account-dropdown {
+  min-width: 240px;
+}
+
+@media (pointer: coarse) {
+  .account-item {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 600px) {
+  .account-dropdown {
+    max-width: calc(100vw - 32px);
+  }
+}
+
 /* ── Roadmap guest banner ── */
 
 .roadmap-guest-banner {

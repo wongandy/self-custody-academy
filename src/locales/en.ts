@@ -47,6 +47,8 @@ const en = {
     signOut: 'Sign out',
     account: 'Account',
     signedInAs: 'Signed in as',
+    myRoadmap: 'My roadmap',
+    continueLesson: 'Continue Lesson {n}',
     language: 'Language',
   },
   home: {

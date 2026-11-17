@@ -112,6 +112,8 @@ function App() {
     isRecovering || linkError ? 'auth' : screenFromPath(window.location.pathname) ?? 'home',
   );
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
+  // Whose saved progress `completedLessons` holds; the account menu shows it only once loaded.
+  const [progressUserId, setProgressUserId] = useState<string | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'register' | 'login'>(linkError ? 'login' : 'register');
@@ -154,6 +156,7 @@ function App() {
     const local = getLocalLessons();
     const merged = mergeLessons(remote, local);
     setCompletedLessons(merged);
+    setProgressUserId(user.id);
     if (merged.length > remote.length) {
       const { error: saveError } = await supabase
         .from('learning_progress')
@@ -173,6 +176,18 @@ function App() {
   }, []);
 
   const [confirmLeave, setConfirmLeave] = useState(false);
+  // Where "Leave lesson" goes: the roadmap, or the page picked in the account menu.
+  const leaveTargetRef = useRef<Screen>('roadmap');
+  const askToLeave = useCallback((target: Screen = 'roadmap') => {
+    leaveTargetRef.current = target;
+    setConfirmLeave(true);
+  }, []);
+  const leaveLesson = useCallback(() => {
+    const target = leaveTargetRef.current;
+    leaveTargetRef.current = 'roadmap';
+    setRoadmapAnimate(false);
+    setScreen(target);
+  }, []);
   const screenRef = useRef(screen);
   screenRef.current = screen;
 
@@ -189,6 +204,7 @@ function App() {
   // Staying after pressing Back puts the lesson's URL back in the address bar.
   const stayInLesson = useCallback(() => {
     setConfirmLeave(false);
+    leaveTargetRef.current = 'roadmap';
     const target = SCREEN_PATHS[screenRef.current] ?? '/';
     if (window.location.pathname !== target) {
       window.history.pushState(null, '', target);
@@ -223,14 +239,14 @@ function App() {
       // Back from inside a lesson asks first, like the header arrow. Leaving then
       // goes to the roadmap; staying pushes the lesson's URL back.
       if (isLessonScreen(screenRef.current)) {
-        setConfirmLeave(true);
+        askToLeave();
         return;
       }
       setScreen(screenFromPath(path) ?? 'home');
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+  }, [askToLeave]);
 
   useEffect(() => {
     if (isRecovering) {
@@ -250,6 +266,14 @@ function App() {
       }
     }
   }, [screen, user, isReady, loadRemoteProgress, loadLocalProgress]);
+
+  // Signed in on any other page: load progress once so the account menu can offer
+  // "Continue Lesson N". The roadmap and lessons load it themselves above.
+  useEffect(() => {
+    if (!isReady || !user || progressUserId === user.id) return;
+    if (screenRef.current === 'roadmap' || isLessonScreen(screenRef.current)) return;
+    loadRemoteProgress();
+  }, [user, isReady, progressUserId, loadRemoteProgress]);
 
   const completeScenario = useCallback(
     async (scenarioNumber: number) => {
@@ -302,10 +326,22 @@ function App() {
     clearStoredMnemonic();
     clearLedger();
     setCompletedLessons([]);
+    setProgressUserId(null);
     setScreen('home');
   }, [signOut]);
 
   const isInScenario = SCENARIO_SCREENS.includes(screen);
+
+  // Lessons don't save mid-way, so leaving one from the menu asks first, like the back arrow.
+  const openFromAccountMenu = (target: Screen) => {
+    if (target === screen) return;
+    if (isInScenario) {
+      askToLeave(target);
+      return;
+    }
+    setRoadmapAnimate(false);
+    setScreen(target);
+  };
   // Lesson shown beside the back button (not on the temporary playground).
   const headerLesson = isLessonScreen(screen) ? SCENARIO_SCREENS.indexOf(screen) + 1 : null;
   const showFooter = screen === 'home' || screen === 'about' || screen === 'contact' || screen === 'donate';
@@ -322,7 +358,7 @@ function App() {
                 if (screen === 'andy-intro' || screen === 'path-selector') {
                   setScreen('home');
                 } else {
-                  setConfirmLeave(true);
+                  askToLeave();
                 }
               }}
               aria-label={screen === 'andy-intro' || screen === 'path-selector' ? t.header.backHome : t.header.backRoadmap}
@@ -366,11 +402,20 @@ function App() {
             <Sun size={16} strokeWidth={2.1} className="theme-toggle-icon theme-toggle-sun" />
             <Moon size={16} strokeWidth={2.1} className="theme-toggle-icon theme-toggle-moon" />
           </button>
-          {user && <AccountMenu email={user.email ?? ''} onSignOut={handleSignOut} />}
+          {user && (
+            <AccountMenu
+              email={user.email ?? ''}
+              completedLessons={progressUserId === user.id ? completedLessons : null}
+              currentLesson={headerLesson}
+              onOpenRoadmap={() => openFromAccountMenu('roadmap')}
+              onContinueLesson={(n) => openFromAccountMenu(`scenario-${n}` as Screen)}
+              onSignOut={handleSignOut}
+            />
+          )}
         </div>
       </header>
 
-      {confirmLeave && isInScenario && <LeaveLessonDialog onStay={stayInLesson} onLeave={goToRoadmap} />}
+      {confirmLeave && isInScenario && <LeaveLessonDialog onStay={stayInLesson} onLeave={leaveLesson} />}
 
       {screen === 'home' && (
         <main id="top" className="hero-section">
