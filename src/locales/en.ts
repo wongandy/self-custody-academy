@@ -297,28 +297,16 @@ const en = {
     ],
     recoverLater: "We'll cover wallet recovery later. Select Create Wallet for now.",
     sendBlocked: "Signing transactions isn't part of this lesson — you'll learn it later.",
-    knowledgePrompts: [
-      'Before we wrap up, two quick questions to make sure the key ideas stick.',
-      'Good job. One more question about what makes a hardware wallet secure.',
-    ],
+    knowledgePrompts: ['Before you go, one quick question.'],
     questions: [
       {
-        question: 'Where should you keep your 12-word recovery phrase?',
+        question: 'Where should you keep your recovery phrase?',
         options: {
-          photo: "Take a photo of it — it's always in my pocket",
-          paper: 'Write it on paper and store it somewhere safe and private',
-          phone: 'Save it in a note on my phone',
+          photo: 'In a photo on your phone',
+          paper: 'On paper, somewhere private',
+          phone: 'In a notes app',
         },
-        correctLine: 'Exactly. Write it down and keep it private. Anyone who gets your recovery phrase can control your Bitcoin.',
-      },
-      {
-        question: 'Your hardware wallet keeps your Bitcoin safe because…',
-        options: {
-          offline: 'Your private keys never leave the device — even when you send Bitcoin',
-          app: 'It runs a security app that scans every transaction for threats',
-          backup: 'It automatically backs your Bitcoin up to the company that made it',
-        },
-        correctLine: 'Right. Your keys never leave the secure chip, so your Bitcoin stays safe even on a compromised computer.',
+        correctLine: 'Right. Anyone with those 12 words controls your Bitcoin.',
       },
     ],
   },
@@ -361,28 +349,16 @@ const en = {
     ],
     openTransactions: "Now let's look at your wallet's history. Click the Transactions tab.",
     connected: "Empty for now — that's normal for a brand-new wallet. From here on, this tab shows your balance and every payment you receive or send.",
-    knowledgePrompts: [
-      'Nice work. Before we wrap up, two quick questions about connecting your wallet.',
-      'Good job. One more question about where your keys live.',
-    ],
+    knowledgePrompts: ['Before you go, one quick question.'],
     questions: [
       {
-        question: 'What can the wallet software do with your xpub?',
+        question: 'What can wallet software do with your xpub?',
         options: {
-          view: 'See your balance and create receive addresses',
-          spend: 'Spend your Bitcoin without the hardware wallet',
-          recover: 'Restore your wallet, just like a recovery phrase',
+          view: 'View your balance',
+          spend: 'Spend your Bitcoin',
+          recover: 'Restore your wallet',
         },
-        correctLine: 'Exactly. The xpub lets the software watch your wallet and create addresses, but it can never spend. Spending still needs your hardware wallet.',
-      },
-      {
-        question: 'Once your hardware wallet is connected to the wallet software, where are your private keys?',
-        options: {
-          device: 'Still on the hardware wallet',
-          laptop: 'Copied onto the laptop',
-          cloud: "Uploaded to the wallet software's servers",
-        },
-        correctLine: 'Right. Your private keys never leave the device. The software only ever receives public information.',
+        correctLine: 'Right. It can watch, but only your hardware wallet can spend.',
       },
     ],
   },
@@ -417,28 +393,16 @@ const en = {
     chatAria: 'Paste the receive address',
     pasteAria: 'Paste from clipboard',
     sendAria: 'Send address to {name}',
-    knowledgePrompts: [
-      'Nice work. Before we wrap up, two quick questions about receiving Bitcoin.',
-      "Good job. One more question about what's safe to share.",
-    ],
+    knowledgePrompts: ['Before you go, one quick question.'],
     questions: [
       {
-        question: 'Why verify the receive address on your hardware wallet before sharing it?',
+        question: 'Why check the address on your device?',
         options: {
-          match: "To confirm the address really came from your device and wasn't swapped",
-          faster: 'To make the payment arrive faster',
-          fee: 'To lower the network fee',
+          match: 'To catch a swapped address',
+          faster: 'To make it arrive faster',
+          fee: 'To lower the fee',
         },
-        correctLine: "Exactly. Malware on a computer can swap an address. Checking it on your device's screen catches that.",
-      },
-      {
-        question: 'To receive Bitcoin from someone, what do you give them?',
-        options: {
-          address: 'Your receive address',
-          phrase: 'Your 12-word recovery phrase',
-          pin: 'Your device PIN',
-        },
-        correctLine: 'Right. A receive address is safe to share. Never give anyone your recovery phrase.',
+        correctLine: 'Right. Malware can swap an address, but not what your device shows.',
       },
     ],
   },
@@ -472,28 +436,16 @@ const en = {
     wordsMissing: 'I could not find your simulation phrase. You may need to redo Lesson 1 to generate a new wallet.',
     showPhrase: 'Show recovery phrase',
     hidePhrase: 'Hide recovery phrase',
-    knowledgePrompts: [
-      'Before we wrap up, two quick questions about recovering your wallet.',
-      'Nice. One more question about what happens if you lose your device.',
-    ],
+    knowledgePrompts: ['Before you go, one quick question.'],
     questions: [
       {
-        question: 'What do you need to restore your wallet after a factory reset?',
+        question: 'Your device breaks. What happens to your Bitcoin?',
         options: {
-          phrase: 'Your 12-word recovery phrase',
-          pin: 'Just the device PIN',
-          support: "A call to the hardware wallet company's support team",
+          safe: "It's safe, restore it with your phrase",
+          gone: "It's lost forever",
+          company: 'The maker sends it back',
         },
-        correctLine: 'Exactly. Your recovery phrase is the only thing that can bring your wallet back, so keep it safe.',
-      },
-      {
-        question: 'If your hardware wallet is lost or broken, what happens to your Bitcoin?',
-        options: {
-          safe: 'It stays safe on the blockchain, and you can restore it on a new device with your recovery phrase',
-          gone: "It's gone forever along with the device",
-          company: 'The manufacturer can send it back to you',
-        },
-        correctLine: 'Right. Your Bitcoin never lived on the device. With your recovery phrase, you can recover it on any compatible device.',
+        correctLine: 'Right. It lives on the blockchain, and your phrase restores it anywhere.',
       },
     ],
   },
@@ -526,28 +478,16 @@ const en = {
     openTxMobile: 'Tap WALLET SOFTWARE, then open the Transactions tab to watch for it.',
     waiting: 'It should show up in a few seconds. Real payments take about 10 minutes to confirm.',
     finished: "There it is — 0.04998 BTC, a little under 0.05 because the network fee came out of the amount. Your balance is now 0.14998 BTC, and it's in your custody.",
-    knowledgePrompts: [
-      'Nice work. Before we wrap up, two quick questions about safely withdrawing Bitcoin.',
-      'Good job. One more question about the withdrawal details.',
-    ],
+    knowledgePrompts: ['Before you go, one quick question.'],
     questions: [
       {
-        question: 'Why scan the QR code instead of typing the address?',
+        question: 'Why scan the QR code instead of typing?',
         options: {
-          fee: 'Scanning lowers the network fee',
-          typo: "Scanning copies every character exactly, so there's no risk of a typo",
-          faster: 'Scanned withdrawals confirm faster',
+          fee: 'It lowers the fee',
+          typo: 'No risk of typos',
+          faster: 'It confirms faster',
         },
-        correctLine: 'Exactly. One wrong character can send your Bitcoin somewhere else for good. Scanning avoids typos — and you still check the result.',
-      },
-      {
-        question: 'What is the network fee when you withdraw Bitcoin?',
-        options: {
-          extra: 'A small charge for processing the transaction, taken from the amount you withdraw',
-          balance: 'The amount removed from your hardware wallet balance',
-          exchange: 'A fee that replaces the Bitcoin being sent',
-        },
-        correctLine: 'Right. The network fee pays for processing the transaction and comes out of the amount you withdraw, so you receive slightly less.',
+        correctLine: 'Right. One wrong character can send your Bitcoin away for good.',
       },
     ],
   },
@@ -578,28 +518,16 @@ const en = {
     sendReject: "Good instinct — if anything looked wrong, X would cancel it and nothing would be sent. Everything checks out, so press the checkmark.",
     finished: "There it is. Remember the habit: check the address, amount and fee on your hardware wallet's screen before you approve.",
     copyAddressAria: "Copy {name}'s address",
-    knowledgePrompts: [
-      'Before we wrap up, two quick questions about sending Bitcoin.',
-      'Good job. One more question about approving a payment.',
-    ],
+    knowledgePrompts: ['Before you go, one quick question.'],
     questions: [
       {
-        question: 'What does choosing a higher fee usually do?',
+        question: "Why approve on your hardware wallet's screen?",
         options: {
-          faster: 'Helps your transaction confirm faster, but costs more',
-          more: 'Sends more Bitcoin to the recipient',
-          refund: 'Lets you cancel the payment later',
+          verify: 'To check the real details',
+          backup: 'To back up the payment',
+          speed: 'To send it faster',
         },
-        correctLine: 'Exactly. A higher fee rate gets miners to include your payment sooner. The recipient still receives the same amount.',
-      },
-      {
-        question: "Why approve the payment on your hardware wallet's screen?",
-        options: {
-          verify: 'To check the real recipient, amount and fee before signing',
-          backup: 'To back up the transaction to the device',
-          speed: 'To make the transaction broadcast faster',
-        },
-        correctLine: "Right. The hardware wallet's screen is the one you can trust. If the details there don't match, don't confirm.",
+        correctLine: "Right. Trust the device's screen. If anything's off, don't confirm.",
       },
     ],
   },

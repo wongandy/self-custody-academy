@@ -31,7 +31,6 @@ type KnowledgeQuestion = {
 
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { id: 'recovery-phrase', textIndex: 0, optionIds: ['photo', 'paper', 'phone'], correctId: 'paper' },
-  { id: 'keys-offline', textIndex: 1, optionIds: ['offline', 'app', 'backup'], correctId: 'offline' },
 ];
 
 function shuffled<T>(items: T[]): T[] {
@@ -483,9 +482,11 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
         </div>
         {knowledgeCheckActive && (
           <div className="knowledge-check-card" role="group" aria-label={t.quiz.groupAria}>
-            <div className="knowledge-check-header">
-              <span>{fmt(t.quiz.progress, { current: quizIndex + 1, total: quiz.length })}</span>
-            </div>
+            {quiz.length > 1 && (
+              <div className="knowledge-check-header">
+                <span>{fmt(t.quiz.progress, { current: quizIndex + 1, total: quiz.length })}</span>
+              </div>
+            )}
             <p className="knowledge-check-question">{currentQuizText?.question}</p>
             <div className="knowledge-check-options">
               {(currentQuizEntry?.optionIds ?? []).map((optionId) => {

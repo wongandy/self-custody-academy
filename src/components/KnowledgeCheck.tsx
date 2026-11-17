@@ -122,9 +122,11 @@ export function KnowledgeCheckCard({ check, ready }: { check: KnowledgeCheck; re
   const canAnswer = ready && !check.answered;
   return (
     <div className="knowledge-check-card" role="group" aria-label={t.quiz.groupAria}>
-      <div className="knowledge-check-header">
-        <span>{fmt(t.quiz.progress, { current: check.index + 1, total: check.total })}</span>
-      </div>
+      {check.total > 1 && (
+        <div className="knowledge-check-header">
+          <span>{fmt(t.quiz.progress, { current: check.index + 1, total: check.total })}</span>
+        </div>
+      )}
       <p className="knowledge-check-question">{check.text.question}</p>
       <div className="knowledge-check-options">
         {check.options.map((optionId) => {

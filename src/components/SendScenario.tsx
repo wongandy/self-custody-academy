@@ -58,7 +58,6 @@ const CONTINUE_STAGES = new Set<SendStage>(['intro', 'explain-fees', 'finished']
 
 // Answer key for the check-in; the wording is `lesson6.questions`, in this order.
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
-  { optionIds: ['faster', 'more', 'refund'], correctId: 'faster' },
   { optionIds: ['verify', 'backup', 'speed'], correctId: 'verify' },
 ];
 
