@@ -18,12 +18,13 @@ function renderMenu({
     onOpenRoadmap: vi.fn(),
     onContinueLesson: vi.fn(),
     onSignOut: vi.fn(),
+    onToggleTheme: vi.fn(),
   };
   const user = userEvent.setup();
   render(
     <LocaleProvider>
       <div data-testid="outside">outside</div>
-      <AccountMenu email={EMAIL} completedLessons={completedLessons} currentLesson={currentLesson} {...props} />
+      <AccountMenu email={EMAIL} completedLessons={completedLessons} currentLesson={currentLesson} theme="dark" {...props} />
     </LocaleProvider>,
   );
   const toggle = () => screen.getByRole('button', { name: `${en.header.account}: ${EMAIL}` });
@@ -52,6 +53,7 @@ describe('AccountMenu', () => {
     expect(items.map((el) => el.textContent)).toEqual([
       `Continue Lesson 4${en.roadmap.titles[3]}`,
       en.header.myRoadmap,
+      en.header.toLight,
       en.header.signOut,
     ]);
   });
@@ -163,12 +165,25 @@ describe('AccountMenu', () => {
     expect(menu()).not.toBeInTheDocument();
   });
 
+  it('offers the theme and language toggles (shown on phones only)', async () => {
+    const { user, open, onToggleTheme } = renderMenu();
+    await open();
+    await user.click(screen.getByRole('menuitem', { name: en.header.toLight }));
+    expect(onToggleTheme).toHaveBeenCalledTimes(1);
+    expect(menu()).toBeInTheDocument();
+
+    expect(screen.getByRole('menuitemradio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
+    await user.click(screen.getByRole('menuitemradio', { name: 'ไทย' }));
+    expect(screen.getByRole('menuitemradio', { name: 'ไทย' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('menuitem', { name: th.header.myRoadmap })).toBeInTheDocument();
+  });
+
   it('speaks Thai', async () => {
     window.localStorage.setItem('sca-locale', 'th');
     const user = userEvent.setup();
     render(
       <LocaleProvider>
-        <AccountMenu email={EMAIL} completedLessons={[1]} onOpenRoadmap={vi.fn()} onContinueLesson={vi.fn()} onSignOut={vi.fn()} />
+        <AccountMenu email={EMAIL} completedLessons={[1]} onOpenRoadmap={vi.fn()} onContinueLesson={vi.fn()} onSignOut={vi.fn()} theme="dark" onToggleTheme={vi.fn()} />
       </LocaleProvider>,
     );
     await user.click(screen.getByRole('button', { name: `${th.header.account}: ${EMAIL}` }));

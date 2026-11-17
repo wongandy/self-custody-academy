@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Moon, RotateCcw, Sun } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
 import PathSelector from '@/components/PathSelector';
@@ -122,6 +122,14 @@ function App() {
   const [roadmapAnimate, setRoadmapAnimate] = useState(false);
   const [justCompletedScenario, setJustCompletedScenario] = useState<number | null>(null);
   const [theme, setTheme] = useState<Theme>(getStoredTheme);
+  // Bumped by the header's Replay button: remounts the open lesson so it starts over.
+  const [lessonRun, setLessonRun] = useState(0);
+  const [confirmReplay, setConfirmReplay] = useState(false);
+  const replayLesson = useCallback(() => {
+    setConfirmReplay(false);
+    setLessonRun((run) => run + 1);
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
 
   useEffect(() => {
     applyTheme(theme);
@@ -194,6 +202,7 @@ function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     setConfirmLeave(false);
+    setConfirmReplay(false);
   }, [screen]);
 
   // The path the app last put in (or read from) the address bar. popstate also fires
@@ -391,9 +400,21 @@ function App() {
         <div className="header-actions">
           {/* TEMPORARY: Lesson 7 playground puts its dev controls here */}
           {screen === 'scenario-7' && <div id="playground-header-slot" className="playground-header-slot" />}
-          <LocaleSwitcher />
+          {headerLesson !== null && (
+            <button
+              className="theme-toggle header-replay"
+              type="button"
+              onClick={() => setConfirmReplay(true)}
+              title={t.header.replayLesson}
+              aria-label={t.header.replayLesson}
+            >
+              <RotateCcw size={16} strokeWidth={2.1} aria-hidden="true" />
+            </button>
+          )}
+          {/* Signed in on a phone, these two live in the account menu instead. */}
+          <LocaleSwitcher className={user ? 'header-prefs-in-menu' : undefined} />
           <button
-            className="theme-toggle"
+            className={`theme-toggle${user ? ' header-prefs-in-menu' : ''}`}
             type="button"
             onClick={toggleTheme}
             title={theme === 'dark' ? t.header.toLight : t.header.toDark}
@@ -410,12 +431,21 @@ function App() {
               onOpenRoadmap={() => openFromAccountMenu('roadmap')}
               onContinueLesson={(n) => openFromAccountMenu(`scenario-${n}` as Screen)}
               onSignOut={handleSignOut}
+              theme={theme}
+              onToggleTheme={toggleTheme}
             />
           )}
         </div>
       </header>
 
       {confirmLeave && isInScenario && <LeaveLessonDialog onStay={stayInLesson} onLeave={leaveLesson} />}
+      {confirmReplay && isInScenario && (
+        <LeaveLessonDialog
+          copy={t.header.replayLessonConfirm}
+          onStay={() => setConfirmReplay(false)}
+          onLeave={replayLesson}
+        />
+      )}
 
       {screen === 'home' && (
         <main id="top" className="hero-section">
@@ -492,12 +522,14 @@ function App() {
 
       {screen === 'scenario-1' && (
         <ScenarioBriefing
+          key={lessonRun}
           onComplete={() => handleScenarioComplete(1)}
         />
       )}
 
       {screen === 'scenario-2' && (
         <ConnectScenario
+          key={lessonRun}
           completed={completedLessons.includes(2)}
           onComplete={() => handleScenarioComplete(2)}
         />
@@ -505,6 +537,7 @@ function App() {
 
       {screen === 'scenario-3' && (
         <ReceiveScenario
+          key={lessonRun}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(3)}
         />
@@ -512,6 +545,7 @@ function App() {
 
       {screen === 'scenario-4' && (
         <RecoverScenario
+          key={lessonRun}
           completed={completedLessons.includes(4)}
           onClose={goToRoadmap}
           onComplete={() => handleScenarioComplete(4)}
@@ -521,6 +555,7 @@ function App() {
 
       {screen === 'scenario-5' && (
         <WithdrawScenario
+          key={lessonRun}
           completed={completedLessons.includes(5)}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(5)}
@@ -529,6 +564,7 @@ function App() {
 
       {screen === 'scenario-6' && (
         <SendScenario
+          key={lessonRun}
           completed={completedLessons.includes(6)}
           onBack={goToRoadmap}
           onComplete={() => handleScenarioComplete(6)}

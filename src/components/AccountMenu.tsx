@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Map as MapIcon, Play } from 'lucide-react';
-import { fmt, useI18n } from '@/lib/i18n';
+import { Languages, LogOut, Map as MapIcon, Moon, Play, Sun } from 'lucide-react';
+import { LOCALES, fmt, useI18n } from '@/lib/i18n';
 import { LESSONS, firstUnfinished, lessonPath } from '@/lib/lessons';
 import { inAppClick } from '@/lib/links';
+import type { Theme } from '@/lib/theme';
 
 type Props = {
   email: string;
@@ -13,14 +14,26 @@ type Props = {
   onOpenRoadmap: () => void;
   onContinueLesson: (lesson: number) => void;
   onSignOut: () => void;
+  /** On phones the header's theme and language toggles move into this menu. */
+  theme: Theme;
+  onToggleTheme: () => void;
 };
 
 /**
  * Round account button in the header. Its menu gets a signed-in learner back to
  * their lessons from any page; signing out sits last so it can't happen by accident.
  */
-function AccountMenu({ email, completedLessons, currentLesson = null, onOpenRoadmap, onContinueLesson, onSignOut }: Props) {
-  const { t } = useI18n();
+function AccountMenu({
+  email,
+  completedLessons,
+  currentLesson = null,
+  onOpenRoadmap,
+  onContinueLesson,
+  onSignOut,
+  theme,
+  onToggleTheme,
+}: Props) {
+  const { t, locale, setLocale } = useI18n();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const initial = email.trim().charAt(0).toUpperCase() || '?';
@@ -107,6 +120,38 @@ function AccountMenu({ email, completedLessons, currentLesson = null, onOpenRoad
             <MapIcon size={15} strokeWidth={2.2} />
             <span className="account-item-label">{t.header.myRoadmap}</span>
           </a>
+
+          {/* Phone-only: the header has no room for these there. */}
+          <div className="account-prefs">
+            <div className="account-divider" role="separator" />
+            <button className="account-item" type="button" role="menuitem" onClick={onToggleTheme}>
+              {theme === 'dark' ? <Sun size={15} strokeWidth={2.2} /> : <Moon size={15} strokeWidth={2.2} />}
+              <span className="account-item-label">{theme === 'dark' ? t.header.toLight : t.header.toDark}</span>
+            </button>
+            <div className="account-item account-language" role="group" aria-label={t.header.language}>
+              <Languages size={15} strokeWidth={2.2} />
+              <span className="account-item-label">{t.header.language}</span>
+              <span className="account-language-options">
+                {LOCALES.map((option) => {
+                  const active = option.code === locale;
+                  return (
+                    <button
+                      key={option.code}
+                      className={`account-language-option${active ? ' active' : ''}`}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={active}
+                      aria-label={option.label}
+                      lang={option.code}
+                      onClick={() => setLocale(option.code)}
+                    >
+                      {option.short}
+                    </button>
+                  );
+                })}
+              </span>
+            </div>
+          </div>
 
           <div className="account-divider" role="separator" />
           <button

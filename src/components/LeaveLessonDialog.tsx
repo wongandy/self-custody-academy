@@ -1,15 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { useI18n } from '@/lib/i18n';
 
+type Copy = { title: string; body: string; stay: string; leave: string };
+
 type Props = {
   onStay: () => void;
   onLeave: () => void;
+  /** Wording to show; defaults to leaving the lesson. Replay passes its own. */
+  copy?: Copy;
 };
 
-// Asks before leaving a lesson: lessons don't save mid-lesson progress.
-export default function LeaveLessonDialog({ onStay, onLeave }: Props) {
+// Asks before leaving (or replaying) a lesson: lessons don't save mid-lesson progress.
+export default function LeaveLessonDialog({ onStay, onLeave, copy: customCopy }: Props) {
   const { t } = useI18n();
-  const copy = t.header.leaveLesson;
+  const copy = customCopy ?? t.header.leaveLesson;
   const stayRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {

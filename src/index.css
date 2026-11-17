@@ -355,6 +355,25 @@ html.theme-light {
   flex-shrink: 0;
 }
 
+/* Replay: an icon button with the header controls (uses .theme-toggle); the arrow turns on hover. */
+.header-replay svg {
+  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-replay:hover svg {
+  transform: rotate(-360deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-replay svg {
+    transition: none;
+  }
+
+  .header-replay:hover svg {
+    transform: none;
+  }
+}
+
 .header-lesson-label {
   display: flex;
   flex-direction: column;
@@ -2513,6 +2532,7 @@ html.theme-light {
     margin-right: 10px;
   }
 
+
   .header-lesson-eyebrow {
     font-size: 9px;
   }
@@ -4120,9 +4140,64 @@ html.theme-light {
   }
 }
 
+/* Theme and language rows: phone-only, standing in for the header toggles. */
+.account-prefs {
+  display: none;
+}
+
+.account-language {
+  cursor: default;
+}
+
+.account-language:active {
+  background: transparent;
+}
+
+.account-language-options {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.account-language-option {
+  min-width: 36px;
+  padding: 5px 8px;
+  color: var(--muted);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.account-language-option.active {
+  color: var(--gold-light);
+  background: var(--panel-strong);
+  font-weight: 700;
+}
+
+.account-language-option:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 1px;
+}
+
 @media (max-width: 600px) {
   .account-dropdown {
     max-width: calc(100vw - 32px);
+  }
+
+  .account-prefs {
+    display: block;
+  }
+
+  .header-prefs-in-menu {
+    display: none;
   }
 }
 

@@ -42,6 +42,13 @@ const en = {
       stay: 'Stay',
       leave: 'Leave lesson',
     },
+    replayLesson: 'Replay lesson',
+    replayLessonConfirm: {
+      title: 'Replay this lesson?',
+      body: "You'll start again from the beginning. Where you are now won't be kept.",
+      stay: 'Keep going',
+      leave: 'Replay lesson',
+    },
     toLight: 'Switch to light mode',
     toDark: 'Switch to dark mode',
     signOut: 'Sign out',

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Languages } from 'lucide-react';
 import { LOCALES, useI18n } from '@/lib/i18n';
 
-function LocaleSwitcher() {
+function LocaleSwitcher({ className }: { className?: string }) {
   const { locale, setLocale, t } = useI18n();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,7 @@ function LocaleSwitcher() {
   }, [open]);
 
   return (
-    <div className="locale-switcher" ref={rootRef}>
+    <div className={`locale-switcher${className ? ` ${className}` : ''}`} ref={rootRef}>
       <button
         className="locale-toggle"
         type="button"
