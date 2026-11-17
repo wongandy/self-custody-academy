@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronRight, FileText } from 'lucide-react';
+import { Check, ChevronRight, FileText } from 'lucide-react';
 import HardwareWallet, { type WalletPhase, type ExpectedAction } from '@/components/HardwareWallet';
 import { loadMnemonic, persistMnemonic } from '@/lib/walletSession';
 import { generateMnemonic } from '@/lib/bip39';
@@ -195,13 +195,24 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
           : `intro-${introStep}`;
   const { displayed, done, skip } = useTypewriter(mentorMessage, 6, bubbleKey);
 
-  // The paper-button line marks where the icon goes with `{icon}`; it appears once typing reaches it.
+  // Lines mark where a button icon goes with `{icon}`; it appears once typing reaches it.
+  // The settings and reset-warning lines point at the device's checkmark (named only by the chip, so it carries
+  // a spoken label); the recovery-phrase line points at the paper button below the portrait.
+  const checkmarkLine =
+    mentorMessage === withIconMark(l3.walletSettings) ||
+    mentorMessage === withIconMark(l3.walletResetWarn);
   const renderMentorText = (text: string) =>
     renderWithIcon(
       text,
-      <span className="mentor-copy-button-indicator paper" aria-hidden="true">
-        <FileText size={12} strokeWidth={2.2} />
-      </span>,
+      checkmarkLine ? (
+        <span className="mentor-copy-button-indicator device" role="img" aria-label={t.common.checkmarkButton}>
+          <Check size={12} strokeWidth={2.6} />
+        </span>
+      ) : (
+        <span className="mentor-copy-button-indicator paper" aria-hidden="true">
+          <FileText size={12} strokeWidth={2.2} />
+        </span>
+      ),
     );
 
   const canContinue = nudgeActive || check.active
@@ -390,8 +401,11 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
   });
 
   // The paper button must not compete with the continue arrow: while the
-  // continue button is active, the reveal stays inert.
-  const paperEnabled = !canContinue;
+  // continue button is active, the reveal stays inert. The exception is the
+  // last intro line, which tells the learner to press it: there it opens the
+  // words in place, and the continue arrow still moves on to the typing screen.
+  const onIntroFinal = isInRecoverIntro && recoverIntroStep === recoverIntroFinal;
+  const paperEnabled = !canContinue || onIntroFinal;
 
   const handlePaperClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
