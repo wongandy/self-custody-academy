@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, LogOut, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
 import PathSelector from '@/components/PathSelector';
@@ -12,6 +12,7 @@ import RecoverScenario from '@/components/RecoverScenario';
 import DevicePlayground from '@/components/DevicePlayground'; // TEMPORARY: Lesson 7 playground
 import AuthScreen from '@/components/AuthScreen';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
+import AccountMenu from '@/components/AccountMenu';
 import LeaveLessonDialog from '@/components/LeaveLessonDialog';
 import { AboutPage, CODE_ORANGE_URL, ContactPage } from '@/components/InfoPages';
 import { DonatePage } from '@/components/DonatePage';
@@ -305,26 +306,36 @@ function App() {
   }, [signOut]);
 
   const isInScenario = SCENARIO_SCREENS.includes(screen);
+  // Lesson shown beside the back button (not on the temporary playground).
+  const headerLesson = isLessonScreen(screen) ? SCENARIO_SCREENS.indexOf(screen) + 1 : null;
   const showFooter = screen === 'home' || screen === 'about' || screen === 'contact' || screen === 'donate';
 
   return (
     <div className={`app-shell theme-${theme}`}>
       <header className="site-header">
         {isInScenario || screen === 'andy-intro' || screen === 'path-selector' ? (
-          <button
-            className="close-button"
-            type="button"
-            onClick={() => {
-              if (screen === 'andy-intro' || screen === 'path-selector') {
-                setScreen('home');
-              } else {
-                setConfirmLeave(true);
-              }
-            }}
-            aria-label={screen === 'andy-intro' || screen === 'path-selector' ? t.header.backHome : t.header.backRoadmap}
-          >
-            <ArrowLeft size={20} strokeWidth={2.4} />
-          </button>
+          <div className="header-lesson">
+            <button
+              className="close-button"
+              type="button"
+              onClick={() => {
+                if (screen === 'andy-intro' || screen === 'path-selector') {
+                  setScreen('home');
+                } else {
+                  setConfirmLeave(true);
+                }
+              }}
+              aria-label={screen === 'andy-intro' || screen === 'path-selector' ? t.header.backHome : t.header.backRoadmap}
+            >
+              <ArrowLeft size={20} strokeWidth={2.4} />
+            </button>
+            {headerLesson !== null && (
+              <div className="header-lesson-label">
+                <span className="header-lesson-eyebrow">{fmt(t.roadmap.lessonLabel, { n: headerLesson })}</span>
+                <span className="header-lesson-title">{t.roadmap.titles[headerLesson - 1]}</span>
+              </div>
+            )}
+          </div>
         ) : (
           <a
             className="brand"
@@ -355,13 +366,7 @@ function App() {
             <Sun size={16} strokeWidth={2.1} className="theme-toggle-icon theme-toggle-sun" />
             <Moon size={16} strokeWidth={2.1} className="theme-toggle-icon theme-toggle-moon" />
           </button>
-          {user && (
-            <button className="header-account" type="button" onClick={handleSignOut} title={t.header.signOut}>
-              <span className="header-account-dot" />
-              <span className="header-account-email">{user.email}</span>
-              <LogOut size={14} strokeWidth={2.2} />
-            </button>
-          )}
+          {user && <AccountMenu email={user.email ?? ''} onSignOut={handleSignOut} />}
         </div>
       </header>
 

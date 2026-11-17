@@ -40,6 +40,8 @@ const th: Dictionary = {
     toLight: 'เปลี่ยนเป็นโหมดสว่าง',
     toDark: 'เปลี่ยนเป็นโหมดมืด',
     signOut: 'ออกจากระบบ',
+    account: 'บัญชี',
+    signedInAs: 'เข้าสู่ระบบด้วย',
     language: 'ภาษา',
   },
   home: {
