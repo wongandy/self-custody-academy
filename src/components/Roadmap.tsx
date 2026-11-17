@@ -14,7 +14,7 @@ type RoadmapProps = {
   animate?: boolean;
   justCompletedScenario?: number | null;
   onCelebrationDone?: () => void;
-  /** 'map': round lesson pictures joined by a winding road (TEMPORARY: only on /map-test). */
+  /** 'map' (default): round lesson pictures joined by a winding road. 'cards': the earlier card grid. */
   layout?: 'cards' | 'map';
 };
 
@@ -26,6 +26,8 @@ const scenarios = LESSONS;
 // Desktop shows the path as one row of this many cards; more than that scrolls sideways.
 const ROW_QUERY = '(min-width: 1100px)';
 const CARDS_PER_ROW = 6;
+// The progress bar (and its thin copy under the header) is switched off for now; it may come back.
+const SHOW_PROGRESS_BAR = false;
 
 function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -152,7 +154,7 @@ function Roadmap({
   animate = false,
   justCompletedScenario = null,
   onCelebrationDone,
-  layout = 'cards',
+  layout = 'map',
 }: RoadmapProps) {
   const isMap = layout === 'map';
   const { t } = useI18n();
@@ -179,6 +181,7 @@ function Roadmap({
   const [scrollEdges, setScrollEdges] = useState({ atStart: true, atEnd: false });
 
   // Once the progress bar has scrolled up under the fixed header, show a thin copy of it there.
+  // Both bars are hidden for now (SHOW_PROGRESS_BAR); flip the flag to bring them back.
   const progressRef = useRef<HTMLDivElement | null>(null);
   const [showMiniProgress, setShowMiniProgress] = useState(false);
   // The fixed header is 64px on wider screens and 56px on phones: measure it so the line sits flush under it.
@@ -468,17 +471,19 @@ function Roadmap({
           </span>
         </div>
 
-        <div
-          ref={progressRef}
-          className="roadmap-progress"
-          role="progressbar"
-          aria-label={t.roadmap.label}
-          aria-valuemin={0}
-          aria-valuemax={total}
-          aria-valuenow={doneCount}
-        >
-          <span className="roadmap-progress-fill" style={{ width: `${(doneCount / total) * 100}%` }} />
-        </div>
+        {SHOW_PROGRESS_BAR && (
+          <div
+            ref={progressRef}
+            className="roadmap-progress"
+            role="progressbar"
+            aria-label={t.roadmap.label}
+            aria-valuemin={0}
+            aria-valuemax={total}
+            aria-valuenow={doneCount}
+          >
+            <span className="roadmap-progress-fill" style={{ width: `${(doneCount / total) * 100}%` }} />
+          </div>
+        )}
 
         {errorMessage && <p className="roadmap-error">{t.roadmap.error}</p>}
         {isLoading && <p className="roadmap-loading">{t.roadmap.loading}</p>}
@@ -677,14 +682,16 @@ function Roadmap({
       </section>
 
       {/* Decorative copy of the progress bar; the real one above keeps role="progressbar". */}
-      <div
-        className={`roadmap-mini-progress ${showMiniProgress ? 'is-visible' : ''}`}
-        // Overlap the header's 1px bottom border so the line and the header read as one edge.
-        style={{ top: headerHeight - 1 }}
-        aria-hidden="true"
-      >
-        <span style={{ width: `${(doneCount / total) * 100}%` }} />
-      </div>
+      {SHOW_PROGRESS_BAR && (
+        <div
+          className={`roadmap-mini-progress ${showMiniProgress ? 'is-visible' : ''}`}
+          // Overlap the header's 1px bottom border so the line and the header read as one edge.
+          style={{ top: headerHeight - 1 }}
+          aria-hidden="true"
+        >
+          <span style={{ width: `${(doneCount / total) * 100}%` }} />
+        </div>
+      )}
     </main>
   );
 }

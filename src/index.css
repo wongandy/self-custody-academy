@@ -3396,7 +3396,7 @@ html.theme-light {
   }
 }
 
-/* ── Map layout (TEMPORARY: only on /map-test) ──
+/* ── Map layout (the roadmap's default) ──
    Round lesson pictures on a winding road. Desktop: serpentine rows of three (the cell for each
    lesson is set inline in Roadmap.tsx). Phones: one column zig-zagging left and right.
    The road is three strokes of one SVG path: dark edge, surface, dashed lane. */
@@ -10705,16 +10705,6 @@ html.theme-light {
   text-align: center;
 }
 
-.path-selector-kicker {
-  display: block;
-  margin-bottom: 18px;
-  color: var(--gold-light);
-  font-family: 'DM Mono', 'Noto Sans Thai', monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 .path-selector-heading h1 {
   margin: 0;
   color: var(--text);
@@ -10990,10 +10980,6 @@ html.theme-light {
     display: flex;
     flex-direction: column;
     justify-content: center;
-  }
-
-  .path-selector-kicker {
-    margin-bottom: 12px;
   }
 
   .path-selector-heading h1 {
