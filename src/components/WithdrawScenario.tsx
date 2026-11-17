@@ -307,10 +307,9 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   useLaptopCableAlign(laptopBodyRef, !spotlight);
   useDeviceFit(deviceStageRef, isMobile && !spotlight && !check.active && viewingDevice);
 
-  // The scan button chip matches the one in the address field; the lines about
-  // confirming on the device mirror its checkmark button instead.
-  const deviceCheckLine = [l5.compareCheck, l5.compareCheckMobile, l5.verifyReject]
-    .some((line) => message === withIconMark(line));
+  // The scan button chip matches the one in the address field; the compare line's
+  // chip mirrors the device's checkmark button instead.
+  const deviceCheckLine = message === withIconMark(l5.compareCheck);
   const renderMentorText = (text: string) =>
     renderWithIcon(
       text,
