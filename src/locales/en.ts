@@ -177,7 +177,6 @@ const en = {
     ],
   },
   pathSelector: {
-    kicker: 'Your learning journey',
     title: 'Choose your path',
     subtitle: 'Start with the essential skills, or explore what comes next as your confidence grows.',
     pathsAria: 'Learning paths',

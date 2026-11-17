@@ -18,7 +18,6 @@ function PathSelector({ fundamentalsHref, onSelectFundamentals }: PathSelectorPr
     <main className="path-selector-page">
       <div className="path-selector-content">
         <div className="path-selector-heading">
-          <span className="path-selector-kicker">{p.kicker}</span>
           <h1>{p.title}</h1>
           <p>{p.subtitle}</p>
         </div>
