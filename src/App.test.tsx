@@ -205,3 +205,101 @@ describe('copying guest progress to the account', () => {
     expect(getLocalLessons()).toEqual([1, 2]);
   });
 });
+
+describe('account menu', () => {
+  const accountButton = () => screen.findByRole('button', { name: `${en.header.account}: learner@example.com` });
+
+  /** Signed in already (a saved session), with `lessons` saved to the account. */
+  function renderSignedIn(path: string, lessons: number[] = [1, 2, 3]) {
+    window.history.replaceState(null, '', path);
+    supabaseMock.supabase.auth.getSession.mockResolvedValue({ data: { session: fakeSession({ locale: 'en' }) }, error: null });
+    supabaseMock.db.maybeSingle.mockResolvedValue({ data: { completed_lessons: lessons }, error: null });
+    const user = userEvent.setup();
+    renderApp();
+    return user;
+  }
+
+  it('is not shown to guests', async () => {
+    window.history.replaceState(null, '', '/about');
+    renderApp();
+    await screen.findByRole('heading', { level: 1 });
+    expect(screen.queryByRole('button', { name: new RegExp(`^${en.header.account}:`) })).not.toBeInTheDocument();
+  });
+
+  it('takes a signed-in learner from any page to their roadmap', async () => {
+    const user = renderSignedIn('/about');
+    await user.click(await accountButton());
+    await user.click(screen.getByRole('menuitem', { name: en.header.myRoadmap }));
+    expect(window.location.pathname).toBe('/roadmap');
+    expect(await screen.findByText('3 of 6 lessons complete')).toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('loads saved progress on Home so it can offer the next lesson', async () => {
+    const user = renderSignedIn('/');
+    await user.click(await accountButton());
+    const next = await screen.findByRole('menuitem', { name: /Continue Lesson 4/ });
+    expect(screen.getByRole('menu')).toHaveTextContent('3 of 6 lessons complete');
+    await user.click(next);
+    expect(window.location.pathname).toBe('/lessons/recover-hardware-wallet');
+    expect(screen.getByRole('button', { name: en.header.backRoadmap })).toBeInTheDocument();
+  });
+
+  it('loads progress only once while moving between pages', async () => {
+    const user = renderSignedIn('/');
+    await user.click(await accountButton());
+    await screen.findByRole('menuitem', { name: /Continue Lesson 4/ });
+    await user.click(screen.getByRole('link', { name: en.home.footerAbout }));
+    await user.click(screen.getByRole('link', { name: en.home.footerContact }));
+    expect(window.location.pathname).toBe('/contact-us');
+    expect(supabaseMock.db.maybeSingle).toHaveBeenCalledTimes(1);
+  });
+
+  it('only signs out from the Sign out item', async () => {
+    const user = renderSignedIn('/about');
+    await user.click(await accountButton());
+    expect(supabaseMock.supabase.auth.signOut).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('menuitem', { name: en.header.signOut }));
+    await waitFor(() => expect(supabaseMock.supabase.auth.signOut).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(window.location.pathname).toBe('/'));
+  });
+
+  it('asks before leaving a lesson for the roadmap; Stay keeps the lesson', async () => {
+    const user = renderSignedIn('/lessons/receive-bitcoin');
+    await user.click(await accountButton());
+    await user.click(screen.getByRole('menuitem', { name: en.header.myRoadmap }));
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(en.header.leaveLesson.title);
+    await user.click(screen.getByRole('button', { name: en.header.leaveLesson.stay }));
+    expect(window.location.pathname).toBe('/lessons/receive-bitcoin');
+  });
+
+  it('asks before leaving a lesson for another one; Leave opens the chosen lesson', async () => {
+    const user = renderSignedIn('/lessons/send-bitcoin');
+    await user.click(await accountButton());
+    await user.click(await screen.findByRole('menuitem', { name: /Continue Lesson 4/ }));
+    await user.click(screen.getByRole('button', { name: en.header.leaveLesson.leave }));
+    expect(window.location.pathname).toBe('/lessons/recover-hardware-wallet');
+  });
+
+  it('after a menu trip, the back arrow still leaves for the roadmap', async () => {
+    const user = renderSignedIn('/lessons/send-bitcoin');
+    await user.click(await accountButton());
+    await user.click(await screen.findByRole('menuitem', { name: /Continue Lesson 4/ }));
+    await user.click(screen.getByRole('button', { name: en.header.leaveLesson.stay }));
+    await user.click(screen.getByRole('button', { name: en.header.backRoadmap }));
+    await user.click(screen.getByRole('button', { name: en.header.leaveLesson.leave }));
+    expect(window.location.pathname).toBe('/roadmap');
+  });
+
+  it('browser Back after the menu returns to the page before', async () => {
+    const user = renderSignedIn('/about');
+    await user.click(await accountButton());
+    await user.click(screen.getByRole('menuitem', { name: en.header.myRoadmap }));
+    await act(async () => {
+      window.history.back();
+      await new Promise((resolve) => window.addEventListener('popstate', resolve, { once: true }));
+    });
+    expect(window.location.pathname).toBe('/about');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(en.about.titleEm);
+  });
+});

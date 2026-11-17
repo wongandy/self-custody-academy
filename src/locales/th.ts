@@ -42,6 +42,8 @@ const th: Dictionary = {
     signOut: 'ออกจากระบบ',
     account: 'บัญชี',
     signedInAs: 'เข้าสู่ระบบด้วย',
+    myRoadmap: 'เส้นทางการเรียนของฉัน',
+    continueLesson: 'เรียนต่อบทที่ {n}',
     language: 'ภาษา',
   },
   home: {
