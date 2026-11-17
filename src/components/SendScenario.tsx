@@ -16,7 +16,7 @@ import HardwareWallet, { type ExpectedAction } from '@/components/HardwareWallet
 import { DeviceSwitcher } from '@/components/DeviceSwitcher';
 import { walletLessonsMentor as mentor } from '@/lib/mentors';
 import en from '@/locales/en';
-import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
+import { fmt, useI18n } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
 import { useLaptopCableAlign } from '@/lib/useLaptopCableAlign';
 import { useDeviceFit } from '@/lib/useDeviceFit';
@@ -202,7 +202,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
       : stage === 'tx-sent' && viewingDevice
         ? 'software'
         : null;
-  const message = withIconMark(nudgeActive
+  const message = nudgeActive
     ? nudgeKind === 'max'
       ? fmt(l6.maxNudge, { amount: SEND_AMOUNT })
       : nudgeKind === 'send-reject'
@@ -236,7 +236,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                         ? l6.hardwareReview
                         : stage === 'tx-sent'
                           ? l6.txSent
-                          : l6.finished);
+                          : l6.finished;
   const bubbleKey = nudgeActive
     ? `nudge-${nudgeKind}`
     : check.active
@@ -251,15 +251,6 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
           ? `intro-${introStep}`
           : stage;
   const { displayed, done, skip } = useTypewriter(message, 6, bubbleKey);
-
-  // Lines that name the device's checkmark button show a chip that mirrors it.
-  const renderMentorText = (text: string) =>
-    renderWithIcon(
-      text,
-      <span className="mentor-copy-button-indicator device" aria-hidden="true">
-        <Check size={12} strokeWidth={2.6} />
-      </span>,
-    );
 
   const spotlight = stage === 'intro';
   useLaptopCableAlign(laptopBodyRef, !spotlight);
@@ -874,9 +865,9 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
             <div className={`mentor-bubble-content${showAddressInBubble ? ' has-chat' : ''}`} key={bubbleKey}>
               <span className="mentor-bubble-name">{mentor.name}</span>
               <div className="mentor-bubble-text-wrap">
-                <p className="mentor-bubble-text-ghost">{renderMentorText(message)}</p>
+                <p className="mentor-bubble-text-ghost">{message}</p>
                 <p className="mentor-bubble-text">
-                  {renderMentorText(displayed)}
+                  {displayed}
                   {!done && <span className="typewriter-cursor" />}
                 </p>
               </div>
