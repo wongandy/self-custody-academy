@@ -42,12 +42,12 @@ describe('AccountMenu', () => {
     expect(menu()).not.toBeInTheDocument();
   });
 
-  it('opens to the email, progress, Continue, My roadmap and Sign out, in that order', async () => {
+  it('opens to the email, Continue, My roadmap and Sign out, in that order, with no progress row', async () => {
     const { open, toggle } = renderMenu();
     await open();
     expect(toggle()).toHaveAttribute('aria-expanded', 'true');
     expect(menu()).toHaveTextContent(EMAIL);
-    expect(menu()).toHaveTextContent('3 of 6 lessons complete');
+    expect(menu()).not.toHaveTextContent('lessons complete');
     const items = screen.getAllByRole('menuitem');
     expect(items.map((el) => el.textContent)).toEqual([
       `Continue Lesson 4${en.roadmap.titles[3]}`,
@@ -66,7 +66,6 @@ describe('AccountMenu', () => {
   it('offers Lesson 1 to a learner who has not finished any', async () => {
     const { open } = renderMenu({ completedLessons: [] });
     await open();
-    expect(menu()).toHaveTextContent('0 of 6 lessons complete');
     expect(screen.getByRole('menuitem', { name: /Continue Lesson 1/ })).toHaveAttribute('href', '/lessons/set-up-hardware-wallet');
   });
 
@@ -76,18 +75,17 @@ describe('AccountMenu', () => {
     expect(screen.getByRole('menuitem', { name: /Continue Lesson 2/ })).toBeInTheDocument();
   });
 
-  it('drops Continue and says the path is complete once every lesson is done', async () => {
+  it('drops Continue once every lesson is done', async () => {
     const { open } = renderMenu({ completedLessons: [1, 2, 3, 4, 5, 6] });
     await open();
-    expect(menu()).toHaveTextContent(en.roadmap.pathComplete);
+    expect(menu()).not.toHaveTextContent(en.roadmap.pathComplete);
     expect(screen.queryByRole('menuitem', { name: /Continue/ })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: en.header.myRoadmap })).toBeInTheDocument();
   });
 
-  it('hides progress and Continue until progress has loaded', async () => {
+  it('hides Continue until progress has loaded', async () => {
     const { open } = renderMenu({ completedLessons: null });
     await open();
-    expect(menu()).not.toHaveTextContent('lessons complete');
     expect(screen.queryByRole('menuitem', { name: /Continue/ })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: en.header.myRoadmap })).toBeInTheDocument();
   });
@@ -176,6 +174,5 @@ describe('AccountMenu', () => {
     await user.click(screen.getByRole('button', { name: `${th.header.account}: ${EMAIL}` }));
     expect(screen.getByRole('menuitem', { name: th.header.myRoadmap })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: new RegExp(th.header.continueLesson.replace('{n}', '2')) })).toBeInTheDocument();
-    expect(menu()).toHaveTextContent('เรียนจบแล้ว 1 จาก 6 บท');
   });
 });

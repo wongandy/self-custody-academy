@@ -27,8 +27,6 @@ function AccountMenu({ email, completedLessons, currentLesson = null, onOpenRoad
   // Let a long email wrap after the @ so the domain stays whole.
   const at = email.indexOf('@');
 
-  const total = LESSONS.length;
-  const done = completedLessons ? LESSONS.filter((lesson) => completedLessons.includes(lesson.number)).length : 0;
   const next = completedLessons ? firstUnfinished(new Set(completedLessons)) : null;
   const nextLesson = next !== null && next !== currentLesson ? LESSONS.find((lesson) => lesson.number === next) : undefined;
 
@@ -89,16 +87,6 @@ function AccountMenu({ email, completedLessons, currentLesson = null, onOpenRoad
                 email
               )}
             </span>
-            {completedLessons && (
-              <div className="account-progress">
-                <span className="account-progress-text">
-                  {done === total ? t.roadmap.pathComplete : fmt(t.roadmap.progress, { completed: done, total })}
-                </span>
-                <span className="account-progress-track" aria-hidden="true">
-                  <span className="account-progress-fill" style={{ width: `${(done / total) * 100}%` }} />
-                </span>
-              </div>
-            )}
           </div>
 
           {nextLesson && (
