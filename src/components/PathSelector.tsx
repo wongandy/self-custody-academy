@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Clock } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { inAppClick } from '@/lib/links';
 import fundamentalsImage from '@/components/path-fundamentals.webp';
@@ -48,7 +48,7 @@ function PathSelector({ fundamentalsHref, onSelectFundamentals }: PathSelectorPr
               {p.deeperTopics.map((topic) => <li key={topic}>{topic}</li>)}
             </ul>
             <div className="path-card-footer">
-              <span className="path-card-action">{p.comingSoon}</span>
+              <span className="path-card-action"><Clock size={15} strokeWidth={2.2} aria-hidden="true" /> {p.comingSoon}</span>
             </div>
           </div>
         </div>
