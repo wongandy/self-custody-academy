@@ -239,7 +239,6 @@ describe('account menu', () => {
     const user = renderSignedIn('/');
     await user.click(await accountButton());
     const next = await screen.findByRole('menuitem', { name: /Continue Lesson 4/ });
-    expect(screen.getByRole('menu')).toHaveTextContent('3 of 6 lessons complete');
     await user.click(next);
     expect(window.location.pathname).toBe('/lessons/recover-hardware-wallet');
     expect(screen.getByRole('button', { name: en.header.backRoadmap })).toBeInTheDocument();

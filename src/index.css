@@ -4045,32 +4045,6 @@ html.theme-light {
   border-radius: inherit;
 }
 
-.account-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.account-progress-text {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.account-progress-track {
-  height: 4px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--line);
-}
-
-.account-progress-fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--gold-light);
-}
-
 .account-item {
   width: 100%;
   display: flex;
