@@ -280,7 +280,7 @@ const en = {
     createIntro: 'First, your device creates a 12-word recovery phrase, which your private keys come from. Press{icon} to continue.',
     createWords: [
       'This is your 12-word recovery phrase. Write it on paper — never photograph it or type it into a computer.',
-      'Keep it somewhere safe and private, and never share it with anyone. Whoever gets it can steal your Bitcoin.',
+      'Keep it somewhere safe and private, and never share it with anyone. Whoever gets it can steal your Bitcoin. Press{icon} to continue.',
     ],
     createQuiz: 'Now prove you wrote it down. Pick the correct word for the position shown, then press{icon}.',
     createDone: [

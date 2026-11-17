@@ -186,7 +186,10 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   // Only the power-on line uses the power button — every other `{icon}` line is the checkmark.
   // After the menu line spells out "checkmark button", later lines show the chip alone,
   // so there the chip carries a spoken label instead of being hidden from screen readers.
-  const iconOnlyLine = baseMentorMessage === l1.createIntro || baseMentorMessage === l1.createQuiz;
+  const iconOnlyLine =
+    baseMentorMessage === l1.createIntro ||
+    baseMentorMessage === l1.createWords[CREATE_WORDS_COUNT - 1] ||
+    baseMentorMessage === l1.createQuiz;
   const renderMentorText = (text: string) =>
     renderWithIcon(
       text,
