@@ -3396,6 +3396,255 @@ html.theme-light {
   }
 }
 
+/* ── Map layout (TEMPORARY: only on /map-test) ──
+   Round lesson pictures on a winding road. Desktop: serpentine rows of three (the cell for each
+   lesson is set inline in Roadmap.tsx). Phones: one column zig-zagging left and right.
+   The road is three strokes of one SVG path: dark edge, surface, dashed lane. */
+
+.roadmap-page.is-map {
+  --road-edge: #3a3129;
+  --road-surface: #2a2622;
+  --road-lane: rgba(239, 228, 210, 0.32);
+  --map-ring: #4a3f35;
+}
+
+.theme-light .roadmap-page.is-map {
+  --road-edge: #5a3e2b;
+  --road-surface: #efe4d2;
+  --road-lane: rgba(90, 62, 43, 0.45);
+  --map-ring: #5a3e2b;
+}
+
+.roadmap-page.is-map .roadmap-track {
+  /* The road SVG and the grid share this box, so the measured centres line up. */
+  width: min(100%, 920px);
+  margin: 0 auto;
+}
+
+.map-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 64px 24px;
+  margin: 0;
+  padding: 8px 0 0;
+  list-style: none;
+}
+
+.map-grid > li {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.map-road path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.map-road-edge {
+  stroke: var(--road-edge);
+  stroke-width: 32;
+}
+
+.map-road-surface {
+  stroke: var(--road-surface);
+  stroke-width: 25;
+}
+
+.map-road-lane {
+  stroke: var(--road-lane);
+  stroke-width: 2.5;
+  stroke-dasharray: 9 11;
+  transition: stroke 300ms ease;
+}
+
+.map-road.done .map-road-lane {
+  stroke: #f7931a;
+  stroke-width: 4;
+  stroke-dasharray: none;
+}
+
+.map-road-lane.celebration-seg-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: celebration-seg-draw-line 700ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.map-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 220px;
+  color: var(--text);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.map-node:focus-visible {
+  outline: none;
+}
+
+.map-node:focus-visible .map-node-circle {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 5px;
+}
+
+.map-node[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.map-node-circle {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 168px;
+  aspect-ratio: 1;
+  border: 3px solid var(--map-ring);
+  border-radius: 50%;
+  background: #fbf5ea;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+/* The picture is clipped to the circle; the check badge sits outside that clip, on the rim. */
+.map-node-circle .roadmap-card-img {
+  height: 100%;
+  border-radius: 50%;
+  clip-path: circle(50%);
+}
+
+.map-node:hover:not([aria-disabled="true"]) .map-node-circle {
+  transform: translateY(-3px);
+}
+
+.map-node:hover:not([aria-disabled="true"]) .roadmap-card-img {
+  scale: 1.04;
+}
+
+.map-node .roadmap-card-check {
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+}
+
+.map-node.available .map-node-circle {
+  border-color: #f7931a;
+  box-shadow: 0 0 0 4px rgba(247, 147, 26, 0.28), 0 0 38px rgba(247, 147, 26, 0.35);
+}
+
+.map-node-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  max-width: 190px;
+}
+
+.map-node.available .roadmap-card-eyebrow {
+  color: var(--gold-light);
+}
+
+.map-node-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.map-node .roadmap-card-badge {
+  position: static;
+  margin-top: 7px;
+  transform: none;
+}
+
+.theme-light .map-node-circle {
+  box-shadow: 0 8px 20px rgba(60, 40, 20, 0.14);
+}
+
+.theme-light .map-node.available .map-node-circle {
+  box-shadow: 0 0 0 4px rgba(247, 147, 26, 0.25), 0 10px 30px rgba(247, 147, 26, 0.3);
+}
+
+.map-node.celebration-checkmark .roadmap-card-check {
+  animation: celebration-checkmark-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.map-node.celebration-checkmark .map-node-circle {
+  animation: celebration-card-glow 1000ms ease-out both;
+}
+
+.map-node.celebration-next-pulse {
+  animation: celebration-next-pulse 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (max-width: 767px) {
+  .map-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 52px;
+  }
+
+  /* One column: ignore the inline serpentine cells and zig-zag instead. Each label sits
+     beside its circle, on the side away from the road, which runs between the rows. */
+  .map-grid > li {
+    grid-row: auto !important;
+    grid-column: auto !important;
+  }
+
+  .map-node {
+    flex-direction: row;
+    gap: 16px;
+    max-width: none;
+    text-align: left;
+  }
+
+  .map-grid > li:nth-child(even) .map-node {
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+
+  .map-node-label {
+    flex: 1;
+    align-items: flex-start;
+    max-width: none;
+  }
+
+  .map-grid > li:nth-child(even) .map-node-label {
+    align-items: flex-end;
+  }
+
+  .map-node-circle {
+    width: 120px;
+  }
+
+  .map-road-edge {
+    stroke-width: 26;
+  }
+
+  .map-road-surface {
+    stroke-width: 20;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-node-circle,
+  .map-road-lane {
+    transition: none;
+  }
+
+  .map-node:hover:not([aria-disabled="true"]) .map-node-circle {
+    transform: none;
+  }
+
+  .map-node:hover:not([aria-disabled="true"]) .roadmap-card-img {
+    scale: none;
+  }
+}
+
 /* ── Scenario briefing page ── */
 
 .scenario-page {
