@@ -14,6 +14,8 @@ type RoadmapProps = {
   animate?: boolean;
   justCompletedScenario?: number | null;
   onCelebrationDone?: () => void;
+  /** 'map': round lesson pictures joined by a winding road (TEMPORARY: only on /map-test). */
+  layout?: 'cards' | 'map';
 };
 
 type CelebrationPhase = 'idle' | 'pre' | 'checkmark' | 'path' | 'pulse' | 'done';
@@ -94,6 +96,54 @@ function connectorPath(a: Box, b: Box): string {
   return `M${x1} ${a.t + a.h}V${ym}H${x2}V${b.t}`;
 }
 
+type Pt = { x: number; y: number };
+
+/** Centre of `el` in `ancestor`'s coordinates (offsets ignore the reveal transforms). */
+function centreWithin(el: HTMLElement, ancestor: HTMLElement): Pt {
+  let x = el.offsetWidth / 2;
+  let y = el.offsetHeight / 2;
+  let node: HTMLElement | null = el;
+  while (node && node !== ancestor) {
+    x += node.offsetLeft;
+    y += node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return { x, y };
+}
+
+/**
+ * Map layout: a curved road from circle centre a to circle centre b (the ends hide under the circles).
+ * Same row: a gentle S across. Same column (a row wrap on desktop): a U-turn that bulges outward.
+ * Otherwise (the phone zig-zag, labels beside the circles): drops out of the bottom of one
+ * circle and swings across the gap between rows into the top of the next.
+ */
+function roadPath(a: Pt, b: Pt, index: number, width: number): string {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const r = (n: number) => Math.round(n);
+  if (Math.abs(dy) < 2) {
+    const k = dx * 0.42;
+    const wobble = index % 2 ? 16 : -16;
+    return `M${r(a.x)} ${r(a.y)}C${r(a.x + k)} ${r(a.y + wobble)} ${r(b.x - k)} ${r(b.y - wobble)} ${r(b.x)} ${r(b.y)}`;
+  }
+  if (Math.abs(dx) < 2) {
+    const right = a.x > width / 2;
+    // The curve reaches 3/4 of the control offset; keep that inside the board.
+    const room = (right ? width - a.x : a.x) - 14;
+    const bulge = Math.min(dy * 0.6, room / 0.75) * (right ? 1 : -1);
+    return `M${r(a.x)} ${r(a.y)}C${r(a.x + bulge)} ${r(a.y)} ${r(b.x + bulge)} ${r(b.y)} ${r(b.x)} ${r(b.y)}`;
+  }
+  const k = dy * 0.75;
+  return `M${r(a.x)} ${r(a.y)}C${r(a.x)} ${r(a.y + k)} ${r(b.x)} ${r(b.y - k)} ${r(b.x)} ${r(b.y)}`;
+}
+
+/** Map layout: grid cell for lesson `index` in 3-wide serpentine rows (1 2 3 / 6 5 4 / …). */
+function serpentineCell(index: number) {
+  const row = Math.floor(index / 3);
+  const col = row % 2 ? 3 - (index % 3) : (index % 3) + 1;
+  return { gridRow: row + 1, gridColumn: col };
+}
+
 function Roadmap({
   completedLessons,
   isLoading,
@@ -102,7 +152,9 @@ function Roadmap({
   animate = false,
   justCompletedScenario = null,
   onCelebrationDone,
+  layout = 'cards',
 }: RoadmapProps) {
+  const isMap = layout === 'map';
   const { t } = useI18n();
   const [revealed, setRevealed] = useState(!animate);
   const [celebrationPhase, setCelebrationPhase] = useState<CelebrationPhase>('idle');
@@ -117,11 +169,13 @@ function Roadmap({
   const dockHeightRef = useRef(0);
   const rowRevealedRef = useRef(false);
   const lessonRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+  // Map layout: the round pictures, whose centres the road runs through.
+  const circleRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const celebrationDoneRef = useRef(onCelebrationDone);
   celebrationDoneRef.current = onCelebrationDone;
 
   const isRowLayout = useMediaQuery(ROW_QUERY);
-  const isScrollable = isRowLayout && scenarios.length > CARDS_PER_ROW;
+  const isScrollable = !isMap && isRowLayout && scenarios.length > CARDS_PER_ROW;
   const [scrollEdges, setScrollEdges] = useState({ atStart: true, atEnd: false });
 
   // Once the progress bar has scrolled up under the fixed header, show a thin copy of it there.
@@ -214,6 +268,17 @@ function Roadmap({
     const grid = gridRef.current;
     if (!grid) return;
     const measure = () => {
+      if (isMap) {
+        const centres: Pt[] = [];
+        for (const el of circleRefs.current) {
+          if (!el) return;
+          centres.push(centreWithin(el, grid));
+        }
+        const width = grid.offsetWidth;
+        const paths = centres.slice(0, -1).map((a, i) => roadPath(a, centres[i + 1], i, width));
+        setConnectors({ w: width, h: grid.offsetHeight, paths });
+        return;
+      }
       const boxes: Box[] = [];
       for (const el of lessonRefs.current) {
         if (!el) return;
@@ -228,7 +293,7 @@ function Roadmap({
     const observer = new ResizeObserver(measure);
     observer.observe(grid);
     return () => observer.disconnect();
-  }, [isScrollable, updateScrollEdges]);
+  }, [isMap, isScrollable, updateScrollEdges]);
 
   useEffect(() => {
     if (!justCompletedScenario || !completedLessons.includes(justCompletedScenario)) {
@@ -384,12 +449,12 @@ function Roadmap({
 
   return (
     <main
-      className={`roadmap-page ${animate ? 'is-revealing' : ''} ${revealed ? 'is-revealed' : ''}`}
+      className={`roadmap-page ${isMap ? 'is-map' : ''} ${animate ? 'is-revealing' : ''} ${revealed ? 'is-revealed' : ''}`}
       onClickCapture={(e) => {
         if (!animate || revealed) return;
         if (e.button !== 0) return;
         const target = e.target as HTMLElement | null;
-        if (target && target.closest('.roadmap-card, .roadmap-cta')) return;
+        if (target && target.closest('.roadmap-card, .map-node, .roadmap-cta')) return;
         e.preventDefault();
         e.stopPropagation();
         skipReveal();
@@ -449,7 +514,18 @@ function Roadmap({
             fill="none"
             aria-hidden="true"
           >
-            {connectors.paths.map((d, i) => (
+            {isMap && connectors.paths.map((d, i) => (
+              <g key={i} className={`map-road ${isSegComplete(i) ? 'done' : 'todo'}`}>
+                <path className="map-road-edge" d={d} />
+                <path className="map-road-surface" d={d} />
+                <path
+                  className={`map-road-lane ${segCelebrationClass(i)}`}
+                  d={d}
+                  pathLength={segCelebrationClass(i) ? 1 : undefined}
+                />
+              </g>
+            ))}
+            {!isMap && connectors.paths.map((d, i) => (
               <path
                 key={i}
                 className={`roadmap-connector ${isSegComplete(i) ? 'done' : 'todo'} ${segCelebrationClass(i)}`}
@@ -460,13 +536,62 @@ function Roadmap({
             ))}
           </svg>
 
-          <ol className="roadmap-grid" ref={gridRef} aria-label={fmt(t.roadmap.boardAria, { n: scenarios.length })}>
+          <ol className={isMap ? 'map-grid' : 'roadmap-grid'} ref={gridRef} aria-label={fmt(t.roadmap.boardAria, { n: scenarios.length })}>
             {scenarios.map((scenario, index) => {
               const n = scenario.number;
               const state = getNodeState(n);
               const title = t.roadmap.titles[index];
               const lessonLabel = fmt(t.roadmap.lessonLabel, { n });
               const stateLabel = state === 'complete' ? t.roadmap.completed : state === 'available' ? nextLabel : '';
+
+              if (isMap) {
+                return (
+                  <li key={n} style={serpentineCell(index)}>
+                    <a
+                      className={`map-node ${state} ${animate ? 'roadmap-card-reveal' : ''} ${cardCelebrationClass(n)}`}
+                      href={lessonPath(LESSONS[index])}
+                      ref={(node) => {
+                        lessonRefs.current[index] = node;
+                      }}
+                      aria-disabled={isLoading || undefined}
+                      onClick={inAppClick(() => {
+                        if (!isLoading) onSelectScenario(n);
+                      })}
+                      aria-label={`${lessonLabel}: ${title}${stateLabel ? `. ${stateLabel}` : ''}`}
+                      style={revealDelay(200 + index * 140)}
+                    >
+                      <span
+                        className="map-node-circle"
+                        ref={(node) => {
+                          circleRefs.current[index] = node;
+                        }}
+                      >
+                        <LessonArt n={n} />
+                        {state === 'complete' && (
+                          <span className="roadmap-card-check" aria-hidden="true">
+                            <Check size={14} strokeWidth={3.2} />
+                          </span>
+                        )}
+                      </span>
+                      <span className="map-node-label">
+                        <span className="roadmap-card-eyebrow">{lessonLabel}</span>
+                        <span className="map-node-title">{title}</span>
+                        {state === 'available' && (
+                          <span className="roadmap-card-badge is-next" aria-hidden="true">
+                            {nextLabel}
+                          </span>
+                        )}
+                        {state === 'complete' && (
+                          <span className="roadmap-card-badge is-replay" aria-hidden="true">
+                            <RotateCcw size={12} strokeWidth={2.4} />
+                            {t.roadmap.replay}
+                          </span>
+                        )}
+                      </span>
+                    </a>
+                  </li>
+                );
+              }
 
               return (
                 <li key={n}>
