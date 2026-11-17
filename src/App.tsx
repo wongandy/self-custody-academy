@@ -38,7 +38,7 @@ function CustodyIllustration() {
   );
 }
 
-type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'scenario-7' | 'auth' | 'about' | 'contact' | 'donate';
+type Screen = 'home' | 'andy-intro' | 'path-selector' | 'roadmap' | 'scenario-1' | 'scenario-2' | 'scenario-3' | 'scenario-4' | 'scenario-5' | 'scenario-6' | 'scenario-7' | 'auth' | 'about' | 'contact' | 'donate' | 'map-test';
 
 const SCENARIO_SCREENS: Screen[] = ['scenario-1', 'scenario-2', 'scenario-3', 'scenario-4', 'scenario-5', 'scenario-6', 'scenario-7'];
 
@@ -53,6 +53,8 @@ const SCREEN_PATHS: Partial<Record<Screen, string>> = {
   donate: '/tip-jar',
   // TEMPORARY: Lesson 7 device playground, reachable only by typing the URL
   'scenario-7': '/test',
+  // TEMPORARY: map-style roadmap preview, reachable only by typing the URL
+  'map-test': '/map-test',
 };
 
 // Old URLs that still open their page (the address bar then shows the new one).
@@ -90,6 +92,8 @@ function pageMeta(screen: Screen, t: Dictionary): PageMeta {
       return { path, title: t.home.footerDonate, description: t.donate.lead };
     case 'scenario-7':
       return { path, title: 'Device playground', noindex: true };
+    case 'map-test':
+      return { path, title: t.roadmap.label, noindex: true };
     default:
       if (isLessonScreen(screen)) {
         return {
@@ -267,7 +271,7 @@ function App() {
   useEffect(() => {
     if (!isReady) return;
     // Lessons need progress too when opened straight from a link or a reload.
-    if (screen === 'roadmap' || isLessonScreen(screen)) {
+    if (screen === 'roadmap' || screen === 'map-test' || isLessonScreen(screen)) {
       if (user) {
         loadRemoteProgress();
       } else {
@@ -280,7 +284,7 @@ function App() {
   // "Continue Lesson N". The roadmap and lessons load it themselves above.
   useEffect(() => {
     if (!isReady || !user || progressUserId === user.id) return;
-    if (screenRef.current === 'roadmap' || isLessonScreen(screenRef.current)) return;
+    if (screenRef.current === 'roadmap' || screenRef.current === 'map-test' || isLessonScreen(screenRef.current)) return;
     loadRemoteProgress();
   }, [user, isReady, progressUserId, loadRemoteProgress]);
 
@@ -503,8 +507,9 @@ function App() {
         />
       )}
 
-      {screen === 'roadmap' && (
+      {(screen === 'roadmap' || screen === 'map-test') && (
         <Roadmap
+          layout={screen === 'map-test' ? 'map' : 'cards'}
           completedLessons={completedLessons}
           isLoading={progressLoading}
           errorMessage={progressError}
