@@ -14,7 +14,7 @@ type RoadmapProps = {
   animate?: boolean;
   justCompletedScenario?: number | null;
   onCelebrationDone?: () => void;
-  /** 'map': round lesson pictures joined by a winding road (TEMPORARY: only on /map-test). */
+  /** 'map': round lesson pictures joined by a winding road (TEMPORARY: only on /roadmap-test). */
   layout?: 'cards' | 'map';
 };
 
