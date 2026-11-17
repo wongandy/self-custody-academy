@@ -9858,10 +9858,6 @@ html.theme-light {
   background: #d8c838;
 }
 
-.theme-light .path-card-art {
-  filter: none;
-}
-
 .theme-light .path-card-deeper {
   background: linear-gradient(160deg, #fbfbf7 40%, #f6f3e2);
   box-shadow: none;
@@ -10552,7 +10548,7 @@ html.theme-light {
   background: #c2b82c;
 }
 
-.path-card-symbols,
+.path-card-banner-wrap,
 .path-card h2,
 .path-card-description,
 .path-card-action {
@@ -10568,39 +10564,39 @@ html.theme-light {
   text-transform: uppercase;
 }
 
-.path-card-symbols {
+/* Painted scenes: the whole picture, uncropped, centred in each card */
+.path-card-banner-wrap {
   width: 100%;
-  min-height: 116px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  margin: 0 0 10px;
+  margin: 0 0 18px;
 }
 
-.path-card-art {
-  width: min(100%, 240px);
-  height: auto;
-  overflow: visible;
-  filter: drop-shadow(0 0 18px rgba(255, 190, 92, 0.18));
+.path-card-banner {
+  display: block;
+  height: 220px;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 1200 / 560;
+  object-fit: contain;
+  border: 1px solid rgba(217, 148, 60, 0.55);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  transition: transform 420ms ease;
 }
 
-.path-art-back {
-  opacity: 0.45;
-  transition: transform 320ms ease, opacity 320ms ease;
+.path-card-fundamentals:hover .path-card-banner {
+  transform: scale(1.03);
 }
 
-.path-art-front {
-  transition: transform 320ms ease;
+/* Going Deeper is still "coming soon", so its picture is muted */
+.path-card-deeper .path-card-banner {
+  border-color: rgba(192, 184, 40, 0.5);
+  filter: saturate(0.55);
+  opacity: 0.8;
 }
 
-.path-card-fundamentals:hover .path-art-back {
-  opacity: 0.7;
-  transform: translate(-6px, 2px);
-}
-
-.path-card-fundamentals:hover .path-art-front {
-  transform: translate(4px, -4px);
-}
+/* Going Deeper keeps its drawing, in a slot as tall as the picture so the titles line up */
 
 .path-card-footer {
   width: 100%;
@@ -10614,7 +10610,6 @@ html.theme-light {
   position: relative;
   z-index: 1;
 }
-
 
 .path-card-topics {
   display: flex;
@@ -10660,18 +10655,24 @@ html.theme-light {
   white-space: nowrap;
 }
 
-/* Mirrors .primary-button so the main action looks the same site-wide */
-.path-card-fundamentals .path-card-action {
-  gap: 14px;
+/* Both cards' actions share the .primary-button size and type */
+.path-card-fundamentals .path-card-action,
+.path-card-deeper .path-card-action {
   padding: 14px 18px;
-  color: #2a1606;
+  border: 1px solid transparent;
   border-radius: 10px;
-  background: linear-gradient(145deg, #ffaa3d, #f7931a);
-  box-shadow: 0 10px 28px rgba(247, 147, 26, 0.2);
   font-family: 'Manrope', 'Noto Sans Thai', sans-serif;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.11em;
+}
+
+/* Mirrors .primary-button so the main action looks the same site-wide */
+.path-card-fundamentals .path-card-action {
+  gap: 14px;
+  color: #2a1606;
+  background: linear-gradient(145deg, #ffaa3d, #f7931a);
+  box-shadow: 0 10px 28px rgba(247, 147, 26, 0.2);
   transition: background 180ms ease, box-shadow 180ms ease;
 }
 
@@ -10691,17 +10692,22 @@ html.theme-light {
   opacity: 0.08;
 }
 
-.path-card-deeper .path-card-art {
-  opacity: 0.55;
-  filter: none;
-}
-
 .path-card-deeper h2 {
   opacity: 0.8;
 }
 
+/* Ghost of the Start learning button: same size, but plainly not available yet */
 .path-card-deeper .path-card-action {
+  gap: 10px;
   color: currentColor;
+  background: rgba(192, 184, 40, 0.08);
+  border: 1px dashed rgba(192, 184, 40, 0.55);
+  cursor: default;
+}
+
+.theme-light .path-card-deeper .path-card-action {
+  background: rgba(150, 140, 20, 0.07);
+  border-color: rgba(130, 120, 10, 0.5);
 }
 
 .path-card-action svg {
@@ -10763,13 +10769,14 @@ html.theme-light {
     border-radius: 20px;
   }
 
-  .path-card-symbols {
-    min-height: 0;
-    margin: 0 0 10px;
+  .path-card-banner-wrap {
+    margin-bottom: 12px;
   }
 
-  .path-card-art {
-    width: 168px;
+  .path-card-banner {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
   }
 
   .path-card h2 {
@@ -10789,7 +10796,8 @@ html.theme-light {
     padding-top: 16px;
   }
 
-  .path-card-fundamentals .path-card-action {
+  .path-card-fundamentals .path-card-action,
+  .path-card-deeper .path-card-action {
     justify-content: center;
     padding: 15px 18px;
   }
@@ -10831,19 +10839,16 @@ html.theme-light {
     gap: 10px;
   }
 
-  .path-card-symbols {
-    margin: 0 0 6px;
-  }
-
-  .path-card-art {
-    width: 100px;
+  .path-card-banner-wrap {
+    margin-bottom: 8px;
   }
 
   .path-card-footer {
     padding-top: 12px;
   }
 
-  .path-card-fundamentals .path-card-action {
+  .path-card-fundamentals .path-card-action,
+  .path-card-deeper .path-card-action {
     padding: 13px 18px;
   }
 
@@ -10881,11 +10886,8 @@ html.theme-light {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .path-art-back, .path-art-front { transition: none; }
+  .path-card-banner { transition: none; }
 }
-
-.path-art-solid { fill: #33373a; }
-.theme-light .path-art-solid { fill: #fffaf2; }
 
 /* ── Cairn wallet software: one look for every tab (lessons 2, 3, 5, 6) ──
    Each tab opens with the same heading (sidebar icon + bold title), uses the
