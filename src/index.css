@@ -4828,6 +4828,15 @@ html.theme-light {
   transform: translateY(-1px);
 }
 
+/* Drop the browser's white focus ring; keyboard focus shows as the green hover border instead. */
+.hw-btn:focus {
+  outline: none;
+}
+
+.hw-btn:focus-visible {
+  border-color: rgba(167, 232, 67, 0.6);
+}
+
 .hw-btn:active {
   transform: translateY(0);
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
