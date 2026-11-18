@@ -1288,6 +1288,9 @@ html.theme-light {
 .polaroid--2 { --tilt: 2.5deg; margin-left: -26px; z-index: 2; }
 .polaroid--3 { --tilt: -1.5deg; margin-left: -22px; margin-top: -10px; z-index: 1; }
 
+/* The second photo overlaps the first one's right edge, so keep its caption clear of it. */
+.polaroid.polaroid--1 figcaption { padding-right: 32px; }
+
 /* Washi tape on top of each photo. */
 .polaroid::before {
   content: '';
@@ -1457,6 +1460,7 @@ html.theme-light {
   }
 
   .polaroid--1 { --tilt: -2deg; }
+  .polaroid.polaroid--1 figcaption { padding-right: 4px; }
   .polaroid--2 { --tilt: 2deg; }
   .polaroid--3 { --tilt: -1.5deg; }
 

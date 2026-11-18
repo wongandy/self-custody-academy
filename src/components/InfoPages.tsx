@@ -36,7 +36,7 @@ const DOING_ICONS = [GraduationCap, Mic, Users];
 
 // Photos for the "Out in the wild" wall, in the same order as `about.events` in the locales.
 const EVENT_PHOTOS = [
-  { src: eventBitJakarta, width: 1024, height: 768 },
+  { src: eventBitJakarta, width: 1024, height: 768, link: { text: 'AmityAge', href: 'https://www.amityage.com/' } },
   { src: eventBitmelaPanel, width: 1280, height: 961, link: { text: 'Bitmela', href: 'https://thebitmela.com/' } },
   { src: eventBitmelaAndy, width: 768, height: 1024 },
 ];
@@ -149,18 +149,24 @@ function EventWall() {
   );
 }
 
-// Turns each "Code Orange" mention into a link to the school's site.
-function withCodeOrangeLink(text: string) {
-  const parts = text.split('Code Orange');
-  return parts.flatMap((part, i) =>
-    i === 0
-      ? [part]
-      : [
-          <a key={i} href={CODE_ORANGE_URL} target="_blank" rel="noopener noreferrer">
-            Code Orange
-          </a>,
-          part,
-        ],
+// Names in the "What I'm up to" list that link out to their sites.
+const DOING_LINKS: Record<string, string> = {
+  'Code Orange': CODE_ORANGE_URL,
+  Bitmela: 'https://thebitmela.com/',
+  'Bitcoin Thailand Conference': 'https://bitcointhailand.co/',
+};
+const DOING_LINK_PATTERN = new RegExp(`(${Object.keys(DOING_LINKS).join('|')})`);
+
+// Turns each mention of a name in DOING_LINKS into a link to its site.
+function withDoingLinks(text: string) {
+  return text.split(DOING_LINK_PATTERN).map((part, i) =>
+    i % 2 === 1 ? (
+      <a key={i} href={DOING_LINKS[part]} target="_blank" rel="noopener noreferrer">
+        {part}
+      </a>
+    ) : (
+      part
+    ),
   );
 }
 
@@ -210,7 +216,7 @@ export function AboutPage() {
                 </span>
                 <div>
                   <h3>{title}</h3>
-                  <p>{withCodeOrangeLink(body)}</p>
+                  <p>{withDoingLinks(body)}</p>
                 </div>
               </li>
             );

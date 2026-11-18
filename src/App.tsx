@@ -83,7 +83,7 @@ function pageMeta(screen: Screen, t: Dictionary): PageMeta {
     case 'roadmap':
       return { path, title: t.roadmap.label, description: t.pathSelector.fundamentalsDesc };
     case 'about':
-      return { path, title: t.home.footerAbout, description: t.about.intro[0] };
+      return { path, title: t.home.footerAbout, description: t.about.intro.join(' ') };
     case 'contact':
       return { path, title: t.home.footerContact, description: t.contact.intro };
     case 'donate':
