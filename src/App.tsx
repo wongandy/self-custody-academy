@@ -364,7 +364,7 @@ function App() {
   };
   // Lesson shown beside the back button (not on the temporary playground).
   const headerLesson = isLessonScreen(screen) ? SCENARIO_SCREENS.indexOf(screen) + 1 : null;
-  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact' || screen === 'donate';
+  const showFooter = screen === 'home' || screen === 'roadmap' || screen === 'about' || screen === 'contact' || screen === 'donate';
 
   return (
     <div className={`app-shell theme-${theme}`}>
