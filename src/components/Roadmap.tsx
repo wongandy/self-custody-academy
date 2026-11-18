@@ -159,7 +159,9 @@ function Roadmap({
   const isMap = layout === 'map';
   const { t } = useI18n();
   const [revealed, setRevealed] = useState(!animate);
-  const [celebrationPhase, setCelebrationPhase] = useState<CelebrationPhase>('idle');
+  // Start hidden ('pre') when arriving from a finished lesson, so the check never shows before it pops in.
+  const [celebrationPhase, setCelebrationPhase] = useState<CelebrationPhase>(() =>
+    justCompletedScenario && completedLessons.includes(justCompletedScenario) ? 'pre' : 'idle');
   const [connectors, setConnectors] = useState<{ w: number; h: number; paths: string[] }>({ w: 0, h: 0, paths: [] });
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneRef = useRef(true);
@@ -298,8 +300,14 @@ function Roadmap({
     return () => observer.disconnect();
   }, [isMap, isScrollable, updateScrollEdges]);
 
+  // The celebration keys off these two stable values, not the array: arriving here reloads
+  // progress (a new array, same contents), and restarting on that used to cancel it before it played.
+  const completedRef = useRef(completedLessons);
+  completedRef.current = completedLessons;
+  const justDone = !!justCompletedScenario && completedLessons.includes(justCompletedScenario);
+
   useEffect(() => {
-    if (!justCompletedScenario || !completedLessons.includes(justCompletedScenario)) {
+    if (!justCompletedScenario || !justDone) {
       setCelebrationPhase('idle');
       doneRef.current = true;
       return;
@@ -307,6 +315,7 @@ function Roadmap({
 
     doneRef.current = false;
     arrivalScrolledRef.current = true;
+    setCelebrationPhase('pre');
 
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -321,40 +330,42 @@ function Roadmap({
     const runCelebration = () => {
       if (cancelled) return;
 
-      const next = firstUnfinished(new Set(completedLessons)) ?? justCompletedScenario;
-      revealInRow(scrollerRef.current, lessonRefs.current[next - 1] ?? null, true);
-      const gliding = glideToLesson(lessonRefs.current[next - 1] ?? null, dockHeightRef.current);
+      const done = completedRef.current;
+      // Glide to the lesson just finished, so the learner sees its check land.
+      const target = lessonRefs.current[justCompletedScenario - 1] ?? null;
+      revealInRow(scrollerRef.current, target, true);
+      const gliding = glideToLesson(target, dockHeightRef.current);
 
       if (prefersReduced) {
-        finish();
+        // No motion, but the "Lesson complete" chip still shows for a moment.
+        setCelebrationPhase('pulse');
+        timers.push(setTimeout(finish, 2600));
         return;
       }
 
       setCelebrationPhase('pre');
       const lead = gliding ? 700 : 0;
-      const isLast = completedLessons.length >= scenarios.length;
+      const isLast = done.length >= scenarios.length;
 
       timers.push(setTimeout(() => setCelebrationPhase('checkmark'), lead + 100));
 
       if (!isLast) {
-        timers.push(setTimeout(() => setCelebrationPhase('path'), lead + 550));
-        timers.push(setTimeout(() => setCelebrationPhase('pulse'), lead + 1250));
-        timers.push(setTimeout(finish, lead + 1900));
-      } else {
-        timers.push(setTimeout(finish, lead + 900));
+        timers.push(setTimeout(() => setCelebrationPhase('path'), lead + 650));
+        timers.push(setTimeout(() => setCelebrationPhase('pulse'), lead + 1350));
       }
+      timers.push(setTimeout(finish, lead + 2800));
     };
 
     timers.push(setTimeout(runCelebration, 60));
 
+    // No "done" call here: React's dev StrictMode runs this cleanup straight after mounting,
+    // and telling App the celebration ended then cancelled it before it played.
+    // App clears it itself when the learner leaves the roadmap.
     return () => {
       cancelled = true;
       timers.forEach(clearTimeout);
-      if (!doneRef.current) {
-        celebrationDoneRef.current?.();
-      }
     };
-  }, [justCompletedScenario, completedLessons]);
+  }, [justCompletedScenario, justDone]);
 
   const celebrating = celebrationPhase !== 'idle' && celebrationPhase !== 'done';
   const justCompleted = justCompletedScenario ?? 0;
@@ -436,6 +447,10 @@ function Roadmap({
   const segCelebrationClass = (segIndex: number) =>
     celebrationPhase === 'path' && segJustLit(segIndex) ? 'celebration-seg-draw' : '';
 
+  // The just-finished lesson says so under its title until the celebration ends.
+  const showJustCompleted = (scenarioNumber: number) =>
+    celebrating && scenarioNumber === justCompleted && celebrationPhase !== 'pre';
+
   const cardCelebrationClass = (scenarioNumber: number) => {
     if (celebrating && scenarioNumber === justCompleted && celebrationPhase !== 'pre') return 'celebration-checkmark';
     if (celebrating && scenarioNumber === nextAfterCelebration && celebrationPhase === 'pulse') return 'celebration-next-pulse';
@@ -484,6 +499,12 @@ function Roadmap({
             <span className="roadmap-progress-fill" style={{ width: `${(doneCount / total) * 100}%` }} />
           </div>
         )}
+
+        <p className="visually-hidden" aria-live="polite">
+          {justCompleted && celebrating && celebrationPhase !== 'pre'
+            ? fmt(t.roadmap.justCompletedAnnounce, { n: justCompleted })
+            : ''}
+        </p>
 
         {errorMessage && <p className="roadmap-error">{t.roadmap.error}</p>}
         {isLoading && <p className="roadmap-loading">{t.roadmap.loading}</p>}
@@ -586,7 +607,13 @@ function Roadmap({
                             {nextLabel}
                           </span>
                         )}
-                        {state === 'complete' && (
+                        {state === 'complete' && showJustCompleted(n) && (
+                          <span className="roadmap-card-badge is-just-done" aria-hidden="true">
+                            <Check size={12} strokeWidth={3} />
+                            {t.roadmap.justCompleted}
+                          </span>
+                        )}
+                        {state === 'complete' && !showJustCompleted(n) && (
                           <span className="roadmap-card-badge is-replay" aria-hidden="true">
                             <RotateCcw size={12} strokeWidth={2.4} />
                             {t.roadmap.replay}
@@ -633,7 +660,13 @@ function Roadmap({
                         {nextLabel}
                       </span>
                     )}
-                    {state === 'complete' && (
+                    {state === 'complete' && showJustCompleted(n) && (
+                      <span className="roadmap-card-badge is-just-done" aria-hidden="true">
+                        <Check size={12} strokeWidth={3} />
+                        {t.roadmap.justCompleted}
+                      </span>
+                    )}
+                    {state === 'complete' && !showJustCompleted(n) && (
                       <span className="roadmap-card-badge is-replay" aria-hidden="true">
                         <RotateCcw size={12} strokeWidth={2.4} />
                         {t.roadmap.replay}

@@ -114,6 +114,8 @@ function App() {
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   // Whose saved progress `completedLessons` holds; the account menu shows it only once loaded.
   const [progressUserId, setProgressUserId] = useState<string | null>(null);
+  const progressUserIdRef = useRef(progressUserId);
+  progressUserIdRef.current = progressUserId;
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'register' | 'login'>(linkError ? 'login' : 'register');
@@ -163,7 +165,10 @@ function App() {
     const remote = normalizeLessons(data?.completed_lessons);
     const local = getLocalLessons();
     const merged = mergeLessons(remote, local);
-    setCompletedLessons(merged);
+    // Keep what this session already holds for the same account: a lesson finished a moment ago
+    // may not be in the fetched row yet (its save can still be in flight).
+    const sameUser = progressUserIdRef.current === user.id;
+    setCompletedLessons((prev) => (sameUser ? mergeLessons(merged, prev) : merged));
     setProgressUserId(user.id);
     if (merged.length > remote.length) {
       const { error: saveError } = await supabase
@@ -317,6 +322,12 @@ function App() {
     },
     [completeScenario, user],
   );
+
+  // The roadmap celebrates a just-finished lesson once. Leaving for anything but the roadmap
+  // (or the sign-up that Lesson 1 detours through) drops it, so it never replays later.
+  useEffect(() => {
+    if (screen !== 'roadmap' && screen !== 'auth') setJustCompletedScenario(null);
+  }, [screen]);
 
   const handleAuthSuccess = useCallback(() => {
     setRoadmapAnimate(false);

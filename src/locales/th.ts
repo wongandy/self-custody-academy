@@ -217,6 +217,8 @@ const th: Dictionary = {
     startHere: 'เริ่มที่นี่',
     completed: 'เรียนจบแล้ว',
     replay: 'เรียนซ้ำ',
+    justCompleted: 'จบบทเรียนแล้ว',
+    justCompletedAnnounce: 'จบบทที่ {n} แล้ว',
     startLessonCta: 'เริ่มบทที่ {n}',
   },
   auth: {
