@@ -79,23 +79,24 @@ const en = {
     titleEm: "Andy",
     titleAfter: " 👋",
     intro: [
-      "I'm a Bitcoiner who's a little obsessed with self-custody. I built this site so you can practice holding your own keys without risking a single sat.",
-      "Over the years I've met so many people who were afraid to take their Bitcoin into their own hands. Afraid of losing their seed phrase, sending to the wrong address, or making one mistake they can't undo. My mission is to bridge that gap: to replace that fear with confidence, so anyone can self-custody their Bitcoin.",
+      "I'm a Bitcoiner who's a little obsessed with self-custody.",
+      "Most people learn it from videos and articles but never try it hands-on. Setting up a wallet feels daunting, and one mistake feels costly.",
+      "So I built this site to let you practice self-custody risk-free, until you're ready to do it for real.",
     ],
     quote: "Bitcoin is freedom. Holding your own keys is how you keep it.",
     doingTitle: "What I'm up to",
     doing: [
       { title: "Teaching", body: "I run regular workshops at Code Orange." },
-      { title: "Speaking", body: "I'm on self-custody panels at Bitcoin conferences like Bitshala." },
+      { title: "Speaking", body: "I spoke on a self-custody panel at Bitmela, and I'm presenting this project at Bitcoin Thailand Conference." },
       { title: "Meetups", body: "I host Bitcoin meetups in Cebu City. Come say hi!" },
     ],
     eventsTitle: 'Out in the wild',
     eventsIntro: 'A few moments from teaching and talking self-custody across Asia.',
     events: [
       {
-        caption: 'Teaching self-custody at Bitcoin Individual Treasury',
+        caption: "Covering self-custody at AmityAge's Bitcoin Individual Treasury workshop",
         place: 'Jakarta, Indonesia · Jul 2026',
-        alt: 'Andy presenting on self-custody to a room at Bitcoin Individual Treasury in Jakarta',
+        alt: "Andy presenting on self-custody to a room at AmityAge's Bitcoin Individual Treasury workshop in Jakarta",
       },
       {
         caption: 'Self-custody panel at Bitmela: the risks, the rewards, the best tools',
