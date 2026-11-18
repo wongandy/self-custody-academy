@@ -222,6 +222,8 @@ const en = {
     startHere: 'Start here',
     completed: 'Completed',
     replay: 'Replay',
+    justCompleted: 'Lesson complete',
+    justCompletedAnnounce: 'Lesson {n} complete',
     startLessonCta: 'Start Lesson {n}',
   },
   auth: {
