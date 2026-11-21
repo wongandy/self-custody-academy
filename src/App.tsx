@@ -49,7 +49,7 @@ const SCREEN_PATHS: Partial<Record<Screen, string>> = {
   roadmap: '/roadmap',
   ...Object.fromEntries(LESSONS.map((lesson) => [`scenario-${lesson.number}`, lessonPath(lesson)])),
   about: '/about',
-  contact: '/contact-us',
+  contact: '/contact',
   donate: '/tip-jar',
   // TEMPORARY: Lesson 7 device playground, reachable only by typing the URL
   'scenario-7': '/test',
@@ -58,6 +58,7 @@ const SCREEN_PATHS: Partial<Record<Screen, string>> = {
 // Old URLs that still open their page (the address bar then shows the new one).
 const PATH_ALIASES: Record<string, Screen> = {
   '/donate': 'donate',
+  '/contact-us': 'contact',
 };
 
 /** Real lessons (not the temporary playground): leaving one asks first and progress is loaded. */
