@@ -190,8 +190,8 @@ const en = {
     deeper: 'Going Deeper',
     deeperDesc: 'Advanced security for protecting larger amounts.',
     comingSoonLabel: 'Coming soon:',
-    deeperIncludes: 'passphrases, multisig setups, watch-only wallets, and more.',
-    deeperTopics: ['Passphrases', 'Multisig setups', 'Watch-only wallets'],
+    deeperIncludes: 'passphrases, multisig setups, air-gapped signing, and more.',
+    deeperTopics: ['Passphrases', 'Multisig setups', 'Air-gapped signing'],
   },
   roadmap: {
     label: 'Your learning path',
