@@ -68,8 +68,8 @@ const en = {
     footerMode: 'Simulation only',
     footerNoBtc: 'No real BTC',
     footerSupportedBy: 'Supported by',
-    footerAbout: 'About us',
-    footerContact: 'Contact us',
+    footerAbout: 'About',
+    footerContact: 'Contact',
     footerDonate: 'Tip jar',
     footerNavAria: 'Site links',
   },
@@ -155,8 +155,8 @@ const en = {
     note: 'Every sat goes straight to my wallet. No accounts, no tracking, nothing is stored here.',
   },
   contact: {
-    eyebrow: 'Contact us',
-    titleBefore: "We'd love to ",
+    eyebrow: 'Contact',
+    titleBefore: "I'd love to ",
     titleEm: 'hear from you',
     titleAfter: '.',
     intro: 'Have a question, feedback on a lesson, or spotted a bug? Get in touch.',
@@ -169,7 +169,7 @@ const en = {
     sentBody: "Thanks for reaching out. I'll get back to you by email.",
     sendAnother: 'Send another message',
     errorBody: "Sorry, your message couldn't be sent. Please try again in a moment.",
-    note: 'We will never ask for your seed phrase, private keys or passwords. Anyone who does is a scammer.',
+    note: 'I will never ask for your seed phrase, private keys or passwords. Anyone who does is a scammer.',
   },
   andyIntro: {
     lines: [
