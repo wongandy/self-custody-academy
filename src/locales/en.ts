@@ -64,7 +64,7 @@ const en = {
     titleEm: 'self-custody',
     titleAfter: ' and secure your Bitcoin.',
     getStarted: 'Get started',
-    haveAccount: 'I already have an account',
+    haveAccount: 'Sign in',
     footerMode: 'Simulation only',
     footerNoBtc: 'No real BTC',
     footerSupportedBy: 'Supported by',
