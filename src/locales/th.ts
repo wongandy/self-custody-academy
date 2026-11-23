@@ -59,7 +59,7 @@ const th: Dictionary = {
     titleEm: 'การเก็บรักษาบิตคอยน์ด้วยตัวเอง',
     titleAfter: ' และปกป้องบิตคอยน์ของคุณ',
     getStarted: 'เริ่มต้นเลย',
-    haveAccount: 'ฉันมีบัญชีอยู่แล้ว',
+    haveAccount: 'เข้าสู่ระบบ',
     footerMode: 'จำลองเท่านั้น',
     footerNoBtc: 'ไม่ใช้ BTC จริง',
     footerSupportedBy: 'สนับสนุนโดย',
