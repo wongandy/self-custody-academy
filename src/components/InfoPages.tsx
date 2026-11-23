@@ -13,20 +13,20 @@ export const CODE_ORANGE_URL = 'https://codeorange.dev/';
 
 const ANDY_LINKS = [
   {
+    label: 'GitHub',
+    href: 'https://github.com/wongandy/self-custody-academy',
+    icon: (
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+      </svg>
+    ),
+  },
+  {
     label: 'X',
     href: 'https://x.com/andywong311',
     icon: (
       <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ),
-  },
-  {
-    label: 'LinkedIn',
-    href: 'https://linkedin.com/in/andy-wong-5051911b8',
-    icon: (
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
-        <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z" />
       </svg>
     ),
   },
@@ -36,7 +36,7 @@ const DOING_ICONS = [GraduationCap, Mic, Users];
 
 // Photos for the "Out in the wild" wall, in the same order as `about.events` in the locales.
 const EVENT_PHOTOS = [
-  { src: eventBitJakarta, width: 1024, height: 768 },
+  { src: eventBitJakarta, width: 1024, height: 768, link: { text: 'AmityAge', href: 'https://www.amityage.com/' } },
   { src: eventBitmelaPanel, width: 1280, height: 961, link: { text: 'Bitmela', href: 'https://thebitmela.com/' } },
   { src: eventBitmelaAndy, width: 768, height: 1024 },
 ];
@@ -149,18 +149,24 @@ function EventWall() {
   );
 }
 
-// Turns each "Code Orange" mention into a link to the school's site.
-function withCodeOrangeLink(text: string) {
-  const parts = text.split('Code Orange');
-  return parts.flatMap((part, i) =>
-    i === 0
-      ? [part]
-      : [
-          <a key={i} href={CODE_ORANGE_URL} target="_blank" rel="noopener noreferrer">
-            Code Orange
-          </a>,
-          part,
-        ],
+// Names in the "What I'm up to" list that link out to their sites.
+const DOING_LINKS: Record<string, string> = {
+  'Code Orange': CODE_ORANGE_URL,
+  Bitmela: 'https://thebitmela.com/',
+  'Bitcoin Thailand Conference': 'https://bitcointhailand.co/',
+};
+const DOING_LINK_PATTERN = new RegExp(`(${Object.keys(DOING_LINKS).join('|')})`);
+
+// Turns each mention of a name in DOING_LINKS into a link to its site.
+function withDoingLinks(text: string) {
+  return text.split(DOING_LINK_PATTERN).map((part, i) =>
+    i % 2 === 1 ? (
+      <a key={i} href={DOING_LINKS[part]} target="_blank" rel="noopener noreferrer">
+        {part}
+      </a>
+    ) : (
+      part
+    ),
   );
 }
 
@@ -210,7 +216,7 @@ export function AboutPage() {
                 </span>
                 <div>
                   <h3>{title}</h3>
-                  <p>{withCodeOrangeLink(body)}</p>
+                  <p>{withDoingLinks(body)}</p>
                 </div>
               </li>
             );

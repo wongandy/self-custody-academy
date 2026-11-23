@@ -29,7 +29,6 @@ const NUDGE_DURATION_MS = 1250;
 
 // Answer key for the check-in; the wording is `lesson4.questions`, in this order.
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
-  { optionIds: ['phrase', 'pin', 'support'], correctId: 'phrase' },
   { optionIds: ['safe', 'gone', 'company'], correctId: 'safe' },
 ];
 

@@ -49,7 +49,7 @@ const SCREEN_PATHS: Partial<Record<Screen, string>> = {
   roadmap: '/roadmap',
   ...Object.fromEntries(LESSONS.map((lesson) => [`scenario-${lesson.number}`, lessonPath(lesson)])),
   about: '/about',
-  contact: '/contact-us',
+  contact: '/contact',
   donate: '/tip-jar',
   // TEMPORARY: Lesson 7 device playground, reachable only by typing the URL
   'scenario-7': '/test',
@@ -58,6 +58,7 @@ const SCREEN_PATHS: Partial<Record<Screen, string>> = {
 // Old URLs that still open their page (the address bar then shows the new one).
 const PATH_ALIASES: Record<string, Screen> = {
   '/donate': 'donate',
+  '/contact-us': 'contact',
 };
 
 /** Real lessons (not the temporary playground): leaving one asks first and progress is loaded. */
@@ -83,7 +84,7 @@ function pageMeta(screen: Screen, t: Dictionary): PageMeta {
     case 'roadmap':
       return { path, title: t.roadmap.label, description: t.pathSelector.fundamentalsDesc };
     case 'about':
-      return { path, title: t.home.footerAbout, description: t.about.intro[0] };
+      return { path, title: t.home.footerAbout, description: t.about.intro.join(' ') };
     case 'contact':
       return { path, title: t.home.footerContact, description: t.contact.intro };
     case 'donate':
@@ -114,6 +115,8 @@ function App() {
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   // Whose saved progress `completedLessons` holds; the account menu shows it only once loaded.
   const [progressUserId, setProgressUserId] = useState<string | null>(null);
+  const progressUserIdRef = useRef(progressUserId);
+  progressUserIdRef.current = progressUserId;
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'register' | 'login'>(linkError ? 'login' : 'register');
@@ -163,7 +166,10 @@ function App() {
     const remote = normalizeLessons(data?.completed_lessons);
     const local = getLocalLessons();
     const merged = mergeLessons(remote, local);
-    setCompletedLessons(merged);
+    // Keep what this session already holds for the same account: a lesson finished a moment ago
+    // may not be in the fetched row yet (its save can still be in flight).
+    const sameUser = progressUserIdRef.current === user.id;
+    setCompletedLessons((prev) => (sameUser ? mergeLessons(merged, prev) : merged));
     setProgressUserId(user.id);
     if (merged.length > remote.length) {
       const { error: saveError } = await supabase
@@ -318,6 +324,12 @@ function App() {
     [completeScenario, user],
   );
 
+  // The roadmap celebrates a just-finished lesson once. Leaving for anything but the roadmap
+  // (or the sign-up that Lesson 1 detours through) drops it, so it never replays later.
+  useEffect(() => {
+    if (screen !== 'roadmap' && screen !== 'auth') setJustCompletedScenario(null);
+  }, [screen]);
+
   const handleAuthSuccess = useCallback(() => {
     setRoadmapAnimate(false);
     setScreen(authReturnScreen);
@@ -353,7 +365,7 @@ function App() {
   };
   // Lesson shown beside the back button (not on the temporary playground).
   const headerLesson = isLessonScreen(screen) ? SCENARIO_SCREENS.indexOf(screen) + 1 : null;
-  const showFooter = screen === 'home' || screen === 'about' || screen === 'contact' || screen === 'donate';
+  const showFooter = screen === 'home' || screen === 'roadmap' || screen === 'about' || screen === 'contact' || screen === 'donate';
 
   return (
     <div className={`app-shell theme-${theme}`}>

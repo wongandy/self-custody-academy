@@ -97,7 +97,6 @@ const COMPARE_STAGES = new Set<MentorStage>(['compare-check', 'scanned']);
 // Answer key for the check-in; the wording is `lesson5.questions`, in this order.
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['fee', 'typo', 'faster'], correctId: 'typo' },
-  { optionIds: ['extra', 'balance', 'exchange'], correctId: 'extra' },
 ];
 
 type TransactionRow = TxRow & { fresh?: boolean };

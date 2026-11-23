@@ -60,7 +60,6 @@ const CONTINUE_STAGES = new Set<MentorStage>(['intro', 'sending', 'finished']);
 // Answer key for the check-in; the wording is `lesson3.questions`, in this order.
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
   { optionIds: ['match', 'faster', 'fee'], correctId: 'match' },
-  { optionIds: ['address', 'phrase', 'pin'], correctId: 'address' },
 ];
 
 type TransactionRow = TxRow & { fresh?: boolean };

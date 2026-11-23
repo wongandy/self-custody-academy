@@ -56,11 +56,18 @@ describe('browser back / forward', () => {
     window.history.replaceState(null, '', '/about');
     renderApp();
     await act(async () => {
-      window.history.pushState(null, '', '/contact-us');
+      window.history.pushState(null, '', '/contact');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
-    expect(window.location.pathname).toBe('/contact-us');
+    expect(window.location.pathname).toBe('/contact');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(en.contact.titleEm);
+  });
+
+  it('opens the contact page from its old /contact-us address', () => {
+    window.history.replaceState(null, '', '/contact-us');
+    renderApp();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(en.contact.titleEm);
+    expect(window.location.pathname).toBe('/contact');
   });
 });
 
@@ -253,7 +260,7 @@ describe('account menu', () => {
     await screen.findByRole('menuitem', { name: /Continue Lesson 4/ });
     await user.click(screen.getByRole('link', { name: en.home.footerAbout }));
     await user.click(screen.getByRole('link', { name: en.home.footerContact }));
-    expect(window.location.pathname).toBe('/contact-us');
+    expect(window.location.pathname).toBe('/contact');
     expect(supabaseMock.db.maybeSingle).toHaveBeenCalledTimes(1);
   });
 
