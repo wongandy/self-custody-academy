@@ -367,11 +367,11 @@ const en = {
     knowledgePrompts: ['Before you go, one quick question.'],
     questions: [
       {
-        question: 'What can wallet software do with your xpub?',
+        question: 'Cairn is paired with your device. What can it do?',
         options: {
-          view: 'View your balance',
-          spend: 'Spend your Bitcoin',
-          recover: 'Restore your wallet',
+          view: 'See your balance',
+          spend: 'Spend your bitcoin',
+          phrase: 'See your recovery phrase',
         },
         correctLine: 'Right. It can watch, but only your hardware wallet can spend.',
       },
