@@ -54,7 +54,7 @@ const NUDGE_DURATION_MS = 1250;
 
 // Answer key for the check-in; the wording is `lesson2.questions`, in this order.
 const KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
-  { optionIds: ['view', 'spend', 'recover'], correctId: 'view' },
+  { optionIds: ['view', 'spend', 'phrase'], correctId: 'view' },
 ];
 
 // One speaking turn per line, in order. With Maria switched on
