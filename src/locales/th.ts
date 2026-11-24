@@ -84,9 +84,10 @@ const th: Dictionary = {
       { title: "สอน", body: "ผมจัดเวิร์กช็อปที่ Code Orange เป็นประจำ" },
       { title: "เป็นวิทยากร", body: "ผมเคยร่วมเวทีเสวนาเรื่องการเก็บรักษาด้วยตัวเองที่งาน Bitmela และนำเสนอโปรเจกต์นี้ที่งาน Bitcoin Thailand Conference" },
       { title: "มีตอัป", body: "ผมจัดมีตอัป Bitcoin ที่เมืองเซบู แวะมาทักทายกันได้!" },
+      { title: "เรียนรู้", body: "ผมผ่านการอบรมที่ Bitcoin Educators Academy ของ AmityAge ฝึกอธิบาย Bitcoin ให้เข้าใจง่ายและตอบคำถามยากๆ" },
     ],
     eventsTitle: 'ภาพจากงานจริง',
-    eventsIntro: 'บางช่วงเวลาจากการสอนและพูดคุยเรื่อง self-custody ทั่วเอเชีย',
+    eventsIntro: 'บางช่วงเวลาจากการสอน พูดคุย และเรียนรู้เรื่อง Bitcoin ทั่วเอเชีย',
     events: [
       {
         caption: 'บรรยายหัวข้อ self-custody ในเวิร์กช็อป Bitcoin Individual Treasury ของ AmityAge',
@@ -102,6 +103,11 @@ const th: Dictionary = {
         caption: 'ถือไมค์ อธิบายว่าทำไมต้องถือกุญแจเอง',
         place: 'ชัยปุระ อินเดีย · ต.ค. 2026',
         alt: 'แอนดี้พูดผ่านไมโครโฟนระหว่างการเสวนา self-custody ที่งาน Bitmela',
+      },
+      {
+        caption: 'เรียนวิธีสอน Bitcoin ที่ Bitcoin Educators Academy ของ AmityAge',
+        place: 'เชียงใหม่ ไทย · พ.ย. 2026',
+        alt: 'แอนดี้และเพื่อนร่วมรุ่น Bitcoin Educators Academy ถือใบประกาศนียบัตรที่เชียงใหม่',
       },
     ],
     eventsEnlarge: 'ดูภาพใหญ่',

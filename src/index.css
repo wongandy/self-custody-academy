@@ -1213,6 +1213,10 @@ html.theme-light {
   transform: rotate(-6deg);
 }
 
+.about-doing li:nth-child(4) .about-doing-icon {
+  transform: rotate(4deg);
+}
+
 .about-doing h3 {
   margin: 0 0 2px;
   color: var(--text);
@@ -1258,13 +1262,19 @@ html.theme-light {
   line-height: 1.6;
 }
 
+/* Two rows of two: odd photos hug the middle from the left, even ones from the right. */
 .polaroid-wall {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
   align-items: center;
   justify-content: center;
+  row-gap: 30px;
   margin-top: 36px;
   padding: 12px 0 8px;
 }
+
+.polaroid:nth-child(odd) { justify-self: end; }
+.polaroid:nth-child(even) { justify-self: start; }
 
 .polaroid {
   --tilt: 0deg;
@@ -1286,10 +1296,12 @@ html.theme-light {
 
 .polaroid--1 { --tilt: -3.5deg; margin-top: 18px; z-index: 1; }
 .polaroid--2 { --tilt: 2.5deg; margin-left: -26px; z-index: 2; }
-.polaroid--3 { --tilt: -1.5deg; margin-left: -22px; margin-top: -10px; z-index: 1; }
+.polaroid--3 { --tilt: -1.5deg; margin-top: -10px; z-index: 1; }
+.polaroid--4 { --tilt: 3deg; margin-left: -22px; margin-top: 14px; z-index: 2; }
 
-/* The second photo overlaps the first one's right edge, so keep its caption clear of it. */
-.polaroid.polaroid--1 figcaption { padding-right: 32px; }
+/* The even photos overlap the odd ones' right edge, so keep those captions clear of it. */
+.polaroid.polaroid--1 figcaption,
+.polaroid.polaroid--3 figcaption { padding-right: 28px; }
 
 /* Washi tape on top of each photo. */
 .polaroid::before {
@@ -1307,6 +1319,7 @@ html.theme-light {
 
 .polaroid--2::before { transform: translateX(-50%) rotate(5deg); }
 .polaroid--3::before { transform: translateX(-50%) rotate(-2deg); }
+.polaroid--4::before { transform: translateX(-50%) rotate(-4deg); }
 
 .polaroid:hover,
 .polaroid:focus-within {
@@ -1449,7 +1462,8 @@ html.theme-light {
 
 @media (max-width: 760px) {
   .polaroid-wall {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    justify-items: center;
     gap: 34px;
   }
 
@@ -1457,12 +1471,15 @@ html.theme-light {
   .polaroid--portrait {
     width: min(320px, 100%);
     margin: 0;
+    justify-self: center;
   }
 
   .polaroid--1 { --tilt: -2deg; }
-  .polaroid.polaroid--1 figcaption { padding-right: 4px; }
+  .polaroid.polaroid--1 figcaption,
+  .polaroid.polaroid--3 figcaption { padding-right: 4px; }
   .polaroid--2 { --tilt: 2deg; }
   .polaroid--3 { --tilt: -1.5deg; }
+  .polaroid--4 { --tilt: 2deg; }
 
   .event-lightbox {
     flex-wrap: wrap;

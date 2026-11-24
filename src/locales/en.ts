@@ -89,9 +89,10 @@ const en = {
       { title: "Teaching", body: "I run regular workshops at Code Orange." },
       { title: "Speaking", body: "I spoke on a self-custody panel at Bitmela, and I'm presenting this project at Bitcoin Thailand Conference." },
       { title: "Meetups", body: "I host Bitcoin meetups in Cebu City. Come say hi!" },
+      { title: "Learning", body: "I trained at AmityAge's Bitcoin Educators Academy, learning to explain Bitcoin simply and answer the tough questions." },
     ],
     eventsTitle: 'Out in the wild',
-    eventsIntro: 'A few moments from teaching and talking self-custody across Asia.',
+    eventsIntro: 'A few moments from teaching, talking and learning Bitcoin across Asia.',
     events: [
       {
         caption: "Covering self-custody at AmityAge's Bitcoin Individual Treasury workshop",
@@ -107,6 +108,11 @@ const en = {
         caption: 'Mic in hand, making the case for holding your own keys',
         place: 'Jaipur, India · Oct 2026',
         alt: 'Andy speaking into a microphone during the Bitmela self-custody panel',
+      },
+      {
+        caption: "Learning how to teach Bitcoin at AmityAge's Bitcoin Educators Academy",
+        place: 'Chiang Mai, Thailand · Nov 2026',
+        alt: "Andy and the Bitcoin Educators Academy class holding up their certificates in Chiang Mai",
       },
     ],
     eventsEnlarge: 'View larger',
