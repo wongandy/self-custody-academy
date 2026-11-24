@@ -1,54 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
 import { useI18n } from '@/lib/i18n';
+import { useTypewriter } from '@/lib/useTypewriter';
 
 type Props = {
   onProceed: () => void;
+  /** What Andy says; defaults to his welcome (`andyIntro.lines`). */
+  lines?: readonly string[];
 };
 
-function useTypewriter(text: string, speed = 6) {
-  const [displayed, setDisplayed] = useState('');
-  const [done, setDone] = useState(false);
-  const indexRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    setDisplayed('');
-    setDone(false);
-    indexRef.current = 0;
-
-    if (!text) {
-      setDone(true);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      indexRef.current += 1;
-      setDisplayed(text.slice(0, indexRef.current));
-
-      if (indexRef.current >= text.length) {
-        setDone(true);
-        clearInterval(timer);
-      }
-    }, speed);
-
-    timerRef.current = timer;
-    return () => clearInterval(timer);
-  }, [text, speed]);
-
-  const skip = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setDisplayed(text);
-    setDone(true);
-  }, [text]);
-
-  return { displayed, done, skip };
-}
-
-function AndyIntro({ onProceed }: Props) {
+function AndyIntro({ onProceed, lines }: Props) {
   const { t } = useI18n();
-  const ANDY_MESSAGES = t.andyIntro.lines;
+  const ANDY_MESSAGES = lines ?? t.andyIntro.lines;
   const [messageIndex, setMessageIndex] = useState(0);
   const currentMessage = ANDY_MESSAGES[messageIndex];
   const { displayed, done, skip } = useTypewriter(currentMessage);
