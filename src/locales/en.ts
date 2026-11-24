@@ -177,6 +177,12 @@ const en = {
       "Jump into any lesson that catches your eye, or follow them in order — it's up to you.",
     ],
   },
+  andyFinale: {
+    lines: [
+      "You did it, all six lessons done! You set up a hardware wallet, received bitcoin, recovered your wallet, withdrew from an exchange and sent a payment. That's real self-custody.",
+      "Going Deeper is up next: passphrases, multisig and air-gapped signing. I'm still building those lessons, so check back soon. Until then, replay any lesson whenever you want a refresher.",
+    ],
+  },
   pathSelector: {
     title: 'Choose your path',
     subtitle: 'Start with the essential skills, or explore what comes next as your confidence grows.',

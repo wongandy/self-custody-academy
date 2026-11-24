@@ -124,6 +124,9 @@ function App() {
   const [, setActiveScenario] = useState(1);
   const [roadmapAnimate, setRoadmapAnimate] = useState(false);
   const [justCompletedScenario, setJustCompletedScenario] = useState<number | null>(null);
+  // The lesson just finished was the last one left: Andy's full-page word comes first, then
+  // the roadmap plays its checkmark. Replaying a lesson after the path is done doesn't set it.
+  const [showFinale, setShowFinale] = useState(false);
   const [theme, setTheme] = useState<Theme>(getStoredTheme);
   // Bumped by the header's Replay button: remounts the open lesson so it starts over.
   const [lessonRun, setLessonRun] = useState(0);
@@ -313,6 +316,10 @@ function App() {
     (scenarioNumber: number) => {
       completeScenario(scenarioNumber);
       setJustCompletedScenario(scenarioNumber);
+      const before = new Set(completedLessons);
+      const finishesPath =
+        !before.has(scenarioNumber) && LESSONS.every((l) => l.number === scenarioNumber || before.has(l.number));
+      setShowFinale(finishesPath);
       if (scenarioNumber === 1 && !user) {
         setAuthMode('register');
         setAuthReturnScreen('roadmap');
@@ -321,13 +328,16 @@ function App() {
         goToRoadmap();
       }
     },
-    [completeScenario, user],
+    [completeScenario, completedLessons, user],
   );
 
   // The roadmap celebrates a just-finished lesson once. Leaving for anything but the roadmap
   // (or the sign-up that Lesson 1 detours through) drops it, so it never replays later.
   useEffect(() => {
-    if (screen !== 'roadmap' && screen !== 'auth') setJustCompletedScenario(null);
+    if (screen !== 'roadmap' && screen !== 'auth') {
+      setJustCompletedScenario(null);
+      setShowFinale(false);
+    }
   }, [screen]);
 
   const handleAuthSuccess = useCallback(() => {
@@ -365,7 +375,7 @@ function App() {
   };
   // Lesson shown beside the back button (not on the temporary playground).
   const headerLesson = isLessonScreen(screen) ? SCENARIO_SCREENS.indexOf(screen) + 1 : null;
-  const showFooter = screen === 'home' || screen === 'roadmap' || screen === 'about' || screen === 'contact' || screen === 'donate';
+  const showFooter = screen === 'home' || (screen === 'roadmap' && !showFinale) || screen === 'about' || screen === 'contact' || screen === 'donate';
 
   return (
     <div className={`app-shell theme-${theme}`}>
@@ -526,7 +536,17 @@ function App() {
         />
       )}
 
-      {screen === 'roadmap' && (
+      {screen === 'roadmap' && showFinale && (
+        <AndyIntro
+          lines={t.andyFinale.lines}
+          onProceed={() => {
+            setShowFinale(false);
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+          }}
+        />
+      )}
+
+      {screen === 'roadmap' && !showFinale && (
         <Roadmap
           completedLessons={completedLessons}
           isLoading={progressLoading}

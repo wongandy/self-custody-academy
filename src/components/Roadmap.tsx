@@ -348,9 +348,9 @@ function Roadmap({
       const isLast = done.length >= scenarios.length;
 
       timers.push(setTimeout(() => setCelebrationPhase('checkmark'), lead + 100));
-
+      // The road into the lesson draws in every time; the pulse needs a next lesson to light up.
+      timers.push(setTimeout(() => setCelebrationPhase('path'), lead + 650));
       if (!isLast) {
-        timers.push(setTimeout(() => setCelebrationPhase('path'), lead + 650));
         timers.push(setTimeout(() => setCelebrationPhase('pulse'), lead + 1350));
       }
       timers.push(setTimeout(finish, lead + 2800));
