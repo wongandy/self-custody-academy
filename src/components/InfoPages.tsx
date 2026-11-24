@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, MapPin, Mic, Send, Users, X } from 'lucide-react';
+import { BookOpen, CheckCircle2,ChevronLeft, ChevronRight, GraduationCap, MapPin, Mic, Send, Users, X } from 'lucide-react';
 import andyPortrait from '@/components/Andy.webp';
 import eventBitJakarta from '@/components/event-bit-jakarta.webp';
 import eventBitmelaPanel from '@/components/event-bitmela-panel.webp';
 import eventBitmelaAndy from '@/components/event-bitmela-andy.webp';
+import eventEducatorAcademy from '@/components/event-educator-academy.webp';
 import { useI18n } from '@/lib/i18n';
 
 // Web3Forms access key. Messages sent through the contact form are delivered
@@ -32,13 +33,14 @@ const ANDY_LINKS = [
   },
 ];
 
-const DOING_ICONS = [GraduationCap, Mic, Users];
+const DOING_ICONS = [GraduationCap, Mic, Users, BookOpen];
 
 // Photos for the "Out in the wild" wall, in the same order as `about.events` in the locales.
 const EVENT_PHOTOS = [
   { src: eventBitJakarta, width: 1024, height: 768, link: { text: 'AmityAge', href: 'https://www.amityage.com/' } },
   { src: eventBitmelaPanel, width: 1280, height: 961, link: { text: 'Bitmela', href: 'https://thebitmela.com/' } },
   { src: eventBitmelaAndy, width: 768, height: 1024 },
+  { src: eventEducatorAcademy, width: 1024, height: 768, link: { text: 'AmityAge', href: 'https://www.amityage.com/' } },
 ];
 
 // Turns the first mention of `link.text` in a caption into a link.
@@ -154,6 +156,7 @@ const DOING_LINKS: Record<string, string> = {
   'Code Orange': CODE_ORANGE_URL,
   Bitmela: 'https://thebitmela.com/',
   'Bitcoin Thailand Conference': 'https://bitcointhailand.co/',
+  AmityAge: 'https://www.amityage.com/',
 };
 const DOING_LINK_PATTERN = new RegExp(`(${Object.keys(DOING_LINKS).join('|')})`);
 
