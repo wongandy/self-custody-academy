@@ -854,9 +854,9 @@ html.theme-light {
   align-items: center;
   justify-content: space-between;
   gap: 16px 24px;
-  color: var(--faint);
+  color: var(--muted);
   border-top: 1px solid var(--line);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1;
   padding: 10px 32px;
 }
@@ -1003,8 +1003,9 @@ html.theme-light {
     display: none;
   }
 
+  /* Taller tap targets on phones. */
   .footer-link {
-    padding: 8px 4px;
+    padding: 14px 6px;
   }
 }
 
@@ -2640,7 +2641,7 @@ html.theme-light {
 
   .site-footer {
     min-height: 50px;
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .footer-backer {
@@ -9939,7 +9940,7 @@ html.theme-light {
 }
 
 .theme-light .site-footer {
-  color: var(--faint);
+  color: var(--muted);
 }
 
 /* Buttons */
