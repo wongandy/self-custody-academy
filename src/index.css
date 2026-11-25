@@ -5337,6 +5337,18 @@ html.theme-light {
   border-color: rgba(232, 113, 113, 0.15);
 }
 
+/* Lesson 1: while Andy waits on Continue, the device's buttons go dark and flat so they
+   don't read as the next thing to press. Clicks on them point at Continue instead. */
+.hw-wallet-slot.device-idle .hw-btn,
+.hw-wallet-slot.device-idle .hw-btn:hover {
+  opacity: 0.4;
+  filter: saturate(0.15);
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.06);
+  transform: none;
+  cursor: default;
+}
+
 /* ── Mentor chat bubble (Lesson 1) ── */
 
 .scenario-page-fit {
