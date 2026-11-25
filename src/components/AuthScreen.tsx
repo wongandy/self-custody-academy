@@ -358,19 +358,15 @@ function AuthScreen({ mode, onSuccess, onSwitchMode, onSkip, title, subtitle }: 
   return (
     <main className="auth-page">
       <div className="auth-card">
+        {/* Andy greets on the two "front door" screens (sign up and sign in); the
+            task screens (reset password, new password, check your email) use an icon. */}
         <div className="auth-icon-row">
-          {isRegister ? (
-            <div className="auth-portrait" aria-label={t.common.academyMentorAria} role="img">
-              <div className="auth-portrait-glow" />
-              <div className="auth-portrait-ring">
-                <img className="auth-portrait-image" src={andyPortrait} alt={t.common.academyMentorAria} />
-              </div>
+          <div className="auth-portrait" aria-label={t.common.academyMentorAria} role="img">
+            <div className="auth-portrait-glow" />
+            <div className="auth-portrait-ring">
+              <img className="auth-portrait-image" src={andyPortrait} alt={t.common.academyMentorAria} />
             </div>
-          ) : (
-            <div className="auth-icon-badge">
-              <LockKeyhole size={28} strokeWidth={1.8} />
-            </div>
-          )}
+          </div>
         </div>
 
         <h1>{title ?? defaultTitle}</h1>
