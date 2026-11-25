@@ -4,6 +4,18 @@ import { inAppClick } from '@/lib/links';
 import fundamentalsImage from '@/components/path-fundamentals.webp';
 import deeperImage from '@/components/path-deeper.webp';
 
+/**
+ * Fetch and decode both path pictures ahead of time (while Andy's intro is up)
+ * so the cards don't show up first and their pictures pop in after.
+ */
+export function preloadPathImages() {
+  for (const src of [fundamentalsImage, deeperImage]) {
+    const img = new Image();
+    img.src = src;
+    img.decode?.().catch(() => {});
+  }
+}
+
 type PathSelectorProps = {
   /** The roadmap's URL, so the card is a real link. */
   fundamentalsHref: string;
@@ -25,7 +37,7 @@ function PathSelector({ fundamentalsHref, onSelectFundamentals }: PathSelectorPr
         <div className="path-selector-options" aria-label={p.pathsAria}>
           <a className="path-card path-card-fundamentals" href={fundamentalsHref} onClick={inAppClick(onSelectFundamentals)}>
             <div className="path-card-banner-wrap" aria-hidden="true">
-              <img className="path-card-banner" src={fundamentalsImage} alt="" width={1200} height={560} decoding="async" />
+              <img className="path-card-banner" src={fundamentalsImage} alt="" width={960} height={448} decoding="async" />
             </div>
             <h2>{p.fundamentals}</h2>
             <p className="path-card-description">{p.fundamentalsDesc}</p>
@@ -39,7 +51,7 @@ function PathSelector({ fundamentalsHref, onSelectFundamentals }: PathSelectorPr
 
           <div className="path-card path-card-deeper" aria-disabled="true">
             <div className="path-card-banner-wrap" aria-hidden="true">
-              <img className="path-card-banner" src={deeperImage} alt="" width={1200} height={560} decoding="async" />
+              <img className="path-card-banner" src={deeperImage} alt="" width={960} height={448} decoding="async" />
             </div>
             <h2>{p.deeper}</h2>
             <p className="path-card-description">{p.deeperDesc}</p>

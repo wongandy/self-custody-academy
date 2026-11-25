@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Moon, RotateCcw, Sun } from 'lucide-react';
 import AndyIntro from '@/components/AndyIntro';
 import Roadmap from '@/components/Roadmap';
-import PathSelector from '@/components/PathSelector';
+import PathSelector, { preloadPathImages } from '@/components/PathSelector';
 import ScenarioBriefing from '@/components/ScenarioBriefing';
 import WithdrawScenario from '@/components/WithdrawScenario';
 import ConnectScenario from '@/components/ConnectScenario';
@@ -247,6 +247,11 @@ function App() {
   useEffect(() => {
     applyPageMeta(pageMeta(screen, t));
   }, [screen, t]);
+
+  // The path pictures load while the learner reads Andy's intro, so they're ready on the next page.
+  useEffect(() => {
+    if (screen === 'andy-intro') preloadPathImages();
+  }, [screen]);
 
   // Browser back / forward between pages that have their own URL.
   useEffect(() => {
