@@ -352,14 +352,14 @@ const en = {
     devicePrompt: 'Now confirm the pairing request on your hardware wallet by pressing the checkmark button.',
     // Phones show one device at a time: these three ask the learner to switch views.
     // Phones: Maria has just said "Paired", so the keystore explanation doesn't repeat it.
-    keystoreReadMobile: 'Cairn read three things from your device: the master fingerprint, the derivation path, and the xpub. The master fingerprint identifies your hardware wallet, and the derivation path tells Cairn where your addresses live.',
+    keystoreReadMobile: 'Cairn read three things from your device. The master fingerprint identifies your hardware wallet, and the derivation path tells Cairn where your addresses live.',
     connectDeviceMobile: 'Now click CONNECT HARDWARE WALLET under Keystores to send the pairing request.',
     headToDevice: 'One end of the cord is now plugged into your laptop. Tap HARDWARE WALLET to plug the other end into your device.',
     devicePlugged: 'The cord is in, so your hardware wallet is now connected to your laptop. Tap WALLET SOFTWARE to go back to Cairn.',
     pairingSent: 'Cairn has sent a pairing request to your hardware wallet. Tap HARDWARE WALLET to answer it.',
     devicePaired: 'Paired. Tap WALLET SOFTWARE to see what Cairn read from your hardware wallet.',
     keystoreDetails: [
-      'Paired! Cairn read three things from your device: the master fingerprint, the derivation path, and the xpub. The master fingerprint identifies your hardware wallet, and the derivation path tells Cairn where your addresses live.',
+      'Paired! Cairn read three things from your device. The master fingerprint identifies your hardware wallet, and the derivation path tells Cairn where your addresses live.',
       'The xpub lets Cairn see your balance and create addresses — but it can never spend. Your private keys never leave the device.',
     ],
     openTransactions: "Now let's look at your wallet's history. Click the Transactions tab.",
@@ -370,10 +370,10 @@ const en = {
         question: 'Cairn is paired with your device. What can it do?',
         options: {
           view: 'See your balance',
-          spend: 'Spend your bitcoin',
+          reset: 'Reset your hardware wallet',
           phrase: 'See your recovery phrase',
         },
-        correctLine: 'Right. It can watch, but only your hardware wallet can spend.',
+        correctLine: "Right. It can watch, but it can't control your hardware wallet.",
       },
     ],
   },
