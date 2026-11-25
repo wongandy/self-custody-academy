@@ -1109,7 +1109,6 @@ html.theme-light {
   background: #fff;
   border: 3px solid var(--gold);
   box-shadow: 0 0 0 8px rgba(247, 147, 26, 0.12);
-  transform: rotate(-4deg);
 }
 
 .about-avatar img {
