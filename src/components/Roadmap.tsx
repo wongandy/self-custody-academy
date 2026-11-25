@@ -100,6 +100,12 @@ function connectorPath(a: Box, b: Box): string {
 
 type Pt = { x: number; y: number };
 
+/** Map entrance timing (ms): circle i pops in, then the road to circle i+1 draws, then circle i+1 pops. */
+const MAP_NODE_STEP = 260;
+const mapNodeDelay = (index: number) => 200 + index * MAP_NODE_STEP;
+const mapSegDelay = (index: number) => mapNodeDelay(index) + 120;
+const MAP_REVEAL_END = mapNodeDelay(LESSONS.length - 1) + 600;
+
 /** Centre of `el` in `ancestor`'s coordinates (offsets ignore the reveal transforms). */
 function centreWithin(el: HTMLElement, ancestor: HTMLElement): Pt {
   let x = el.offsetWidth / 2;
@@ -162,7 +168,7 @@ function Roadmap({
   // Start hidden ('pre') when arriving from a finished lesson, so the check never shows before it pops in.
   const [celebrationPhase, setCelebrationPhase] = useState<CelebrationPhase>(() =>
     justCompletedScenario && completedLessons.includes(justCompletedScenario) ? 'pre' : 'idle');
-  const [connectors, setConnectors] = useState<{ w: number; h: number; paths: string[] }>({ w: 0, h: 0, paths: [] });
+  const [connectors, setConnectors] = useState<{ w: number; h: number; paths: string[]; holes?: { x: number; y: number; r: number }[] }>({ w: 0, h: 0, paths: [] });
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneRef = useRef(true);
   const arrivalScrolledRef = useRef(false);
@@ -240,11 +246,11 @@ function Roadmap({
       setRevealed(true);
       return;
     }
-    revealTimerRef.current = setTimeout(() => setRevealed(true), 1800);
+    revealTimerRef.current = setTimeout(() => setRevealed(true), isMap ? MAP_REVEAL_END : 1800);
     return () => {
       if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
     };
-  }, [animate]);
+  }, [animate, isMap]);
 
   const skipReveal = useCallback(() => {
     if (!animate) return;
@@ -281,7 +287,9 @@ function Roadmap({
         }
         const width = grid.offsetWidth;
         const paths = centres.slice(0, -1).map((a, i) => roadPath(a, centres[i + 1], i, width));
-        setConnectors({ w: width, h: grid.offsetHeight, paths });
+        // Circle footprints, cut out of the road while it draws so it can't show through a fading circle.
+        const holes = centres.map((c, i) => ({ ...c, r: (circleRefs.current[i]?.offsetWidth ?? 0) / 2 }));
+        setConnectors({ w: width, h: grid.offsetHeight, paths, holes });
         return;
       }
       const boxes: Box[] = [];
@@ -464,6 +472,8 @@ function Roadmap({
   const nextLabel = doneSet.size === 0 ? t.roadmap.startHere : t.roadmap.recommendedNext;
 
   const revealDelay = (ms: number) => (animate ? { animationDelay: `${ms}ms` } : undefined);
+  // Map entrance: each circle appears, then its road draws out to the next one.
+  const drawingRoad = isMap && animate && !revealed;
 
   return (
     <main
@@ -532,16 +542,32 @@ function Roadmap({
           <div className="roadmap-scroller" ref={scrollerRef} onScroll={isScrollable ? updateScrollEdges : undefined}>
           <div className="roadmap-track">
           <svg
-            className={`roadmap-connectors ${animate ? 'roadmap-reveal-fade' : ''}`}
-            style={revealDelay(200 + total * 140)}
+            className={`roadmap-connectors ${animate && !isMap ? 'roadmap-reveal-fade' : ''}`}
+            style={isMap ? undefined : revealDelay(200 + total * 140)}
             width={connectors.w}
             height={connectors.h}
             viewBox={`0 0 ${connectors.w || 1} ${connectors.h || 1}`}
             fill="none"
             aria-hidden="true"
           >
+            {drawingRoad && (
+              <defs>
+                {connectors.paths.map((d, i) => (
+                  <mask key={i} id={`map-road-mask-${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width={connectors.w} height={connectors.h}>
+                    <path className="map-road-reveal" d={d} pathLength={1} style={{ animationDelay: `${mapSegDelay(i)}ms` }} />
+                    {connectors.holes?.slice(i, i + 2).map((c, k) => (
+                      <circle key={k} cx={c.x} cy={c.y} r={c.r} fill="#000" />
+                    ))}
+                  </mask>
+                ))}
+              </defs>
+            )}
             {isMap && connectors.paths.map((d, i) => (
-              <g key={i} className={`map-road ${isSegComplete(i) ? 'done' : 'todo'}`}>
+              <g
+                key={i}
+                className={`map-road ${isSegComplete(i) ? 'done' : 'todo'}`}
+                mask={drawingRoad ? `url(#map-road-mask-${i})` : undefined}
+              >
                 <path className="map-road-edge" d={d} />
                 <path className="map-road-surface" d={d} />
                 <path
@@ -584,7 +610,7 @@ function Roadmap({
                         if (!isLoading) onSelectScenario(n);
                       })}
                       aria-label={`${lessonLabel}: ${title}${stateLabel ? `. ${stateLabel}` : ''}`}
-                      style={revealDelay(200 + index * 140)}
+                      style={revealDelay(mapNodeDelay(index))}
                     >
                       <span
                         className="map-node-circle"
@@ -698,7 +724,7 @@ function Roadmap({
           <div
             ref={footerRef}
             className={`roadmap-footer ${animate ? 'roadmap-reveal-fade' : ''}`}
-            style={revealDelay(300 + total * 140)}
+            style={revealDelay(isMap ? MAP_REVEAL_END - 500 : 300 + total * 140)}
           >
             <button
               className="roadmap-cta"
