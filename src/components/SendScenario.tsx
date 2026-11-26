@@ -25,6 +25,7 @@ import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 import { STORY_ADDRESSES, formatBtc as formatWalletBtc, recordTx, resolveLedger, toSats, toTxRow, type WalletTx } from '@/lib/walletLedger';
+import { useContinueNudge } from '@/lib/useContinueNudge';
 
 type SendScenarioProps = {
   completed: boolean;
@@ -265,6 +266,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
     if (stage === 'finished') setMobilePanel('software');
   }, [stage]);
   const interactionLocked = !done && !sandbox;
+  const { continueRef, pointToContinue } = useContinueNudge();
   const canContinue = done && !nudgeActive && !addressWrong && !check.active && CONTINUE_STAGES.has(stage);
   const softwareLocked = !sandbox && (interactionLocked || (canContinue && !nudgeActive) || stage === 'hardware-review');
   const deviceLocked = interactionLocked || (canContinue && !nudgeActive) || stage === 'tx-sent';
@@ -813,6 +815,8 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
                   mode="withdraw"
                   initialPhase="connect-done"
                   locked={deviceLocked}
+                  idle={canContinue && !sandbox}
+                  onIdlePress={pointToContinue}
                   expectedAction={expectedAction}
                   sendRequest={sendRequest}
                   sendAddress={MARIA_ADDRESS}
@@ -886,6 +890,7 @@ export default function SendScenario({ onComplete }: SendScenarioProps) {
             </div>
             {!showAddressInBubble && (
               <button
+                ref={continueRef}
                 className={`bubble-next ${canContinue ? 'ready' : ''}`}
                 type="button"
                 onClick={(e) => {

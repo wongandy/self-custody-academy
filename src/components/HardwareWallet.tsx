@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import {
   AlertTriangle,
   Check,
@@ -73,6 +73,9 @@ type HardwareWalletProps = {
   advanceFromRecoverIntro?: boolean;
   startAtMenu?: boolean;
   locked?: boolean;
+  /** The lesson waits on Continue: the buttons dim, and any press goes to `onIdlePress` instead. */
+  idle?: boolean;
+  onIdlePress?: (event: ReactMouseEvent) => void;
   mode?: 'setup' | 'recover' | 'withdraw';
   initialPhase?: WalletPhase;
   explicitReset?: boolean;
@@ -125,7 +128,7 @@ function buildTypeList(input: string): string[] {
   return [...words, ...letters];
 }
 
-export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onVerifyReject, onSendConfirm, onSendReject, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked: lockedProp = false, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction: expectedActionProp = NO_EXPECTED_ACTION }: HardwareWalletProps) {
+export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChange, onMenuSelectionChange, onReadyMenuSelect, onFactoryResetAttempt, onConnectConfirm, onVerifyConfirm, onVerifyReject, onSendConfirm, onSendReject, onUnexpectedAction, connectRequest = false, verifyRequest = false, verifyAddress, sendRequest = false, sendAddress, sendAmount, sendFee, advanceToReadyMenu = false, advanceFromRecoverIntro = false, startAtMenu = false, locked: lockedProp = false, idle = false, onIdlePress, mode = 'setup', initialPhase, explicitReset = false, expectedMnemonic, expectedAction: expectedActionProp = NO_EXPECTED_ACTION }: HardwareWalletProps) {
   // TEMPORARY (/test sandbox): every button works, whatever the mentor expects.
   const sandbox = useSandbox();
   const locked = sandbox ? false : lockedProp;
@@ -771,7 +774,10 @@ export default function HardwareWallet({ onComplete, onPowerChange, onPhaseChang
   const typeEnterDisabled = phase === 'recover-type' && typeList.length === 0;
 
   return (
-    <div className="hw-wallet-stage">
+    <div
+      className={idle ? 'hw-wallet-stage device-idle' : 'hw-wallet-stage'}
+      onClickCapture={idle ? onIdlePress : undefined}
+    >
       <div className="hw-wallet-device">
         <div className={isOn ? 'hw-power-led on' : 'hw-power-led'} aria-label={isOn ? 'Power on' : 'Power off'} />
         <div className="hw-wallet-bezel">

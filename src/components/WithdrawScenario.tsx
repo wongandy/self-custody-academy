@@ -30,6 +30,7 @@ import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 import { STORY_ADDRESSES, formatBtc, recordTx, resolveLedger, toTxRow, type TxRow } from '@/lib/walletLedger';
+import { useContinueNudge } from '@/lib/useContinueNudge';
 
 type WithdrawScenarioProps = {
   completed: boolean;
@@ -329,6 +330,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
   }, []);
 
   const interactionLocked = !done && !sandbox;
+  const { continueRef, pointToContinue } = useContinueNudge();
   const canContinue = done && !nudgeActive && !check.active && CONTINUE_STAGES.has(stage);
   // While the mentor is mid-line the devices freeze; once the line is done the
   // learner may press anything — presses that don't fit the step are nudged.
@@ -1039,6 +1041,8 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
                       mode="withdraw"
                       initialPhase="connect-done"
                       locked={deviceLocked}
+                      idle={canContinue && !sandbox}
+                      onIdlePress={pointToContinue}
                       expectedAction={expectedAction}
                       onUnexpectedAction={handleUnexpectedAction}
                       verifyRequest={verifyRequested}
@@ -1099,6 +1103,7 @@ function WithdrawMentorScene({ onFinish }: { onFinish: () => void }) {
               </div>
             </div>
             <button
+              ref={continueRef}
               className={`bubble-next ${canContinue ? 'ready' : ''}`}
               type="button"
               onClick={(e) => {

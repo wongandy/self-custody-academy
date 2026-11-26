@@ -5337,10 +5337,10 @@ html.theme-light {
   border-color: rgba(232, 113, 113, 0.15);
 }
 
-/* Lesson 1: while Andy waits on Continue, the device's buttons go dark and flat so they
-   don't read as the next thing to press. Clicks on them point at Continue instead. */
-.hw-wallet-slot.device-idle .hw-btn,
-.hw-wallet-slot.device-idle .hw-btn:hover {
+/* While the mentor waits on Continue, the device's buttons go dark and flat so they
+   don't read as the next thing to press. Presses on them point at Continue instead. */
+.hw-wallet-stage.device-idle .hw-btn,
+.hw-wallet-stage.device-idle .hw-btn:hover {
   opacity: 0.4;
   filter: saturate(0.15);
   box-shadow: none;

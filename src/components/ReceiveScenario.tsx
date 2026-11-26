@@ -26,6 +26,7 @@ import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 import { STORY_ADDRESSES, formatBtc, recordTx, resolveLedger, toTxRow, type TxRow } from '@/lib/walletLedger';
+import { useContinueNudge } from '@/lib/useContinueNudge';
 
 type ReceiveScenarioProps = {
   onBack: () => void;
@@ -238,6 +239,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
     }
   }, [stage]);
   const interactionLocked = !done && !sandbox;
+  const { continueRef, pointToContinue } = useContinueNudge();
   const canContinue = done && !nudgeActive && !check.active && CONTINUE_STAGES.has(stage);
   // While Maria is mid-line the devices freeze; once she finishes, the learner
   // may press device buttons — every press is gently nudged back on track.
@@ -675,6 +677,8 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
                   mode="withdraw"
                   initialPhase="connect-done"
                   locked={deviceLocked}
+                  idle={canContinue && !sandbox}
+                  onIdlePress={pointToContinue}
                   expectedAction={expectedAction}
                   onUnexpectedAction={handleUnexpectedAction}
                   verifyRequest={verifyRequested}
@@ -774,6 +778,7 @@ function ReceiveMentorScene({ onFinish }: { onFinish: () => void }) {
             </div>
             {stage !== 'hand-over' && (
               <button
+                ref={continueRef}
                 className={`bubble-next ${canContinue ? 'ready' : ''}`}
                 type="button"
                 onClick={(e) => {
