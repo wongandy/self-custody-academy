@@ -23,6 +23,22 @@
         }
       })();
     </script>
+    <!-- Google Analytics (GA4). Only loads on the live site, so local dev visits aren't counted. -->
+    <script>
+      (function () {
+        var host = window.location.hostname;
+        if (host !== 'selfcustody.academy' && host !== 'www.selfcustody.academy') return;
+        var id = 'G-M0WPNZRGZ1';
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', id);
+      })();
+    </script>
     <meta name="description" content="The most fun way to master self-custody and secure your Bitcoin. Learn by playing through real-world wallet scenarios." />
     <link rel="canonical" href="https://selfcustody.academy/" />
 
