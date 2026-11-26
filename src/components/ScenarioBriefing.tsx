@@ -3,6 +3,7 @@ import { Check, CheckCircle2, ChevronRight, Power, XCircle } from 'lucide-react'
 import HardwareWallet, { type ExpectedAction, type WalletPhase } from '@/components/HardwareWallet';
 import { getSessionMnemonic, persistMnemonic } from '@/lib/walletSession';
 import { useFitScale } from '@/lib/useFitScale';
+import { useContinueNudge } from '@/lib/useContinueNudge';
 import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
 import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
@@ -112,7 +113,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
   const [nudgeActive, setNudgeActive] = useState(false);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
-  const nextButtonRef = useRef<HTMLButtonElement>(null);
+  const { continueRef, pointToContinue } = useContinueNudge();
   const bubbleRef = useRef<HTMLDivElement>(null);
   const walletSlotRef = useFitScale();
   const flipRects = useRef<{ portrait: DOMRect; bubble: DOMRect } | null>(null);
@@ -291,30 +292,6 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
     }
   };
 
-  // Clicking the device while Andy waits on Continue does nothing on the device itself,
-  // so the Continue button jumps and flashes to show where to click instead.
-  const pointToContinue = () => {
-    const button = nextButtonRef.current;
-    if (!button) return;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    button.animate(
-      reduceMotion
-        ? [
-            { boxShadow: '0 0 0 0 rgba(241, 189, 105, 0)' },
-            { boxShadow: '0 0 0 8px rgba(241, 189, 105, 0.6)' },
-            { boxShadow: '0 0 0 0 rgba(241, 189, 105, 0)' },
-          ]
-        : [
-            { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(241, 189, 105, 0)' },
-            { transform: 'scale(1.35)', boxShadow: '0 0 0 10px rgba(241, 189, 105, 0.55)', offset: 0.3 },
-            { transform: 'scale(0.95)', offset: 0.6 },
-            { transform: 'scale(1.12)', offset: 0.8 },
-            { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(241, 189, 105, 0)' },
-          ],
-      { duration: 650, easing: 'ease-out' },
-    );
-  };
-
   const handleOptionSelect = (optionId: string) => {
     if (!knowledgeCheckCanAnswer || !currentQuizEntry) return;
     setWrongOptionId(null);
@@ -454,11 +431,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
       <div className={`scenario-mentor-layout ${spotlight ? 'spotlight' : ''} ${knowledgeCheckActive ? 'knowledge-check-layout' : ''}`}>
         {knowledgeCheckActive && <div className="knowledge-check-kicker">{t.quiz.checkIn}</div>}
         {!knowledgeCheckActive && (
-          <div
-            ref={walletSlotRef}
-            className={`hw-wallet-slot fit-slot${walletVisible ? '' : ' hidden'}${canContinue ? ' device-idle' : ''}`}
-            onClickCapture={canContinue ? pointToContinue : undefined}
-          >
+          <div ref={walletSlotRef} className={walletVisible ? 'hw-wallet-slot fit-slot' : 'hw-wallet-slot fit-slot hidden'}>
             <HardwareWallet
               onComplete={() => {}}
               onPhaseChange={setWalletPhase}
@@ -469,6 +442,8 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
               advanceToReadyMenu={readyMenuSeen}
               expectedAction={expectedAction}
               locked={deviceLocked}
+              idle={canContinue}
+              onIdlePress={pointToContinue}
             />
           </div>
         )}
@@ -496,7 +471,7 @@ function ScenarioBriefing({ onComplete }: ScenarioBriefingProps) {
               </div>
             </div>
             <button
-              ref={nextButtonRef}
+              ref={continueRef}
               className={`bubble-next ${canContinue ? 'ready' : ''}`}
               type="button"
               onClick={(e) => {

@@ -12,6 +12,7 @@ import { useSandbox } from '@/lib/sandbox';
 import { SandboxWalletTab, type WalletTabId } from '@/components/SandboxWalletTab';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 import { setWalletName as saveWalletName, walletWindowTitle } from '@/lib/walletName';
+import { useContinueNudge } from '@/lib/useContinueNudge';
 
 type ConnectScenarioProps = {
   completed: boolean;
@@ -298,6 +299,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
   const shownTab: WalletTabId = (sandbox && sandboxTab) || activeTab;
   const trimmedWalletName = walletName.trim();
 
+  const { continueRef, pointToContinue } = useContinueNudge();
   const canContinue = nudgeActive || check.active
     ? false
     : arrivalWaiting
@@ -1051,6 +1053,8 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
                     mode="withdraw"
                     initialPhase="ready-menu"
                     locked={deviceLocked}
+                    idle={canContinue && !sandbox}
+                    onIdlePress={pointToContinue}
                     connectRequest={connectRequested}
                     expectedAction={expectedAction}
                     onUnexpectedAction={handleUnexpectedAction}
@@ -1107,6 +1111,7 @@ export default function ConnectScenario({ onComplete }: ConnectScenarioProps) {
               </div>
             </div>
             <button
+              ref={continueRef}
               className={`bubble-next ${canContinue ? 'ready' : ''}`}
               type="button"
               onClick={(e) => {

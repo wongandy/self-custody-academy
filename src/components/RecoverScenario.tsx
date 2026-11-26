@@ -7,6 +7,7 @@ import andyPortrait from '@/components/Andy.webp';
 import en from '@/locales/en';
 import { fmt, renderWithIcon, useI18n, withIconMark } from '@/lib/i18n';
 import { useFitScale } from '@/lib/useFitScale';
+import { useContinueNudge } from '@/lib/useContinueNudge';
 import { KnowledgeCheckCard, KnowledgeCheckKicker, useKnowledgeCheck, type KnowledgeQuestion } from '@/components/KnowledgeCheck';
 
 type RecoverScenarioProps = {
@@ -214,6 +215,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
       ),
     );
 
+  const { continueRef, pointToContinue } = useContinueNudge();
   const canContinue = nudgeActive || check.active
     ? false
     : !introDone
@@ -430,6 +432,8 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
                 initialPhase="menu"
                 explicitReset
                 locked={deviceLocked}
+                idle={canContinue}
+                onIdlePress={pointToContinue}
                 advanceFromRecoverIntro={advanceFromIntro}
                 expectedMnemonic={expectedMnemonic ?? undefined}
                 expectedAction={expectedAction}
@@ -478,6 +482,7 @@ export default function RecoverScenario({ onComplete, onBack }: RecoverScenarioP
               </div>
             </div>
             <button
+              ref={continueRef}
               className={`bubble-next ${canContinue ? 'ready' : ''}`}
               type="button"
               onClick={(e) => {
